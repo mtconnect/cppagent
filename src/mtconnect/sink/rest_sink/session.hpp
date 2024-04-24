@@ -25,6 +25,7 @@
 #include <memory>
 
 #include "mtconnect/config.hpp"
+#include "mtconnect/observation/change_observer.hpp"
 #include "routing.hpp"
 
 namespace mtconnect::sink::rest_sink {
@@ -117,6 +118,12 @@ namespace mtconnect::sink::rest_sink {
       m_message = msg;
       m_unauthorized = true;
     }
+    
+    /// @brief Add an observer to the list for cleanup later.
+    void addObserver(std::weak_ptr<observation::AsyncObserver> observer)
+    {
+      m_observers.push_back(observer);
+    }
 
   protected:
     Dispatch m_dispatch;
@@ -127,6 +134,7 @@ namespace mtconnect::sink::rest_sink {
     bool m_allowPuts {false};
     std::set<boost::asio::ip::address> m_allowPutsFrom;
     boost::asio::ip::tcp::endpoint m_remote;
+    std::list<std::weak_ptr<observation::AsyncObserver>> m_observers;
   };
 
 }  // namespace mtconnect::sink::rest_sink

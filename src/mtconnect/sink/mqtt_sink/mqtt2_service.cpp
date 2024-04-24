@@ -205,6 +205,11 @@ namespace mtconnect {
           auto client = m_client.lock();
           return client && client->isRunning() && client->isConnected();
         }
+        
+        bool cancel() override
+        {
+          return true;
+        }
 
         DevicePtr m_device;
         std::weak_ptr<MqttClient> m_client;

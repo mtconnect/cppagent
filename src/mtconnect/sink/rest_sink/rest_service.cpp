@@ -937,6 +937,7 @@ namespace mtconnect {
         if (sink && isRunning())
         {
           m_session->fail(status, message);
+          cancel();
         }
         else
         {
@@ -961,6 +962,13 @@ namespace mtconnect {
         {
           return server->isRunning();
         }
+      }
+      
+      bool cancel() override
+      {
+        observation::AsyncObserver::cancel();
+        m_session.reset();        
+        return true;
       }
 
       std::weak_ptr<sink::Sink>
@@ -1015,6 +1023,7 @@ namespace mtconnect {
       asyncResponse->m_sink = getptr();
       asyncResponse->m_pretty = pretty;
       asyncResponse->m_requestId = requestId;
+      session->addObserver(asyncResponse);
 
       if (m_logStreamData)
       {

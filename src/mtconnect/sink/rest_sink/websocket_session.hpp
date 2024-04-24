@@ -96,6 +96,29 @@ namespace mtconnect::sink::rest_sink {
                                             beast::bind_front_handler(&WebsocketSession::onAccept,
                                                                       derived().shared_ptr())));
     }
+    
+    void close() override
+    {
+      NAMED_SCOPE("PlainWebsocketSession::close");
+      if (!m_isOpen)
+        return;
+      
+      auto ptr = derived().shared_ptr();
+      
+      m_request.reset();
+      m_requests.clear();
+      for (auto obs : m_observers)
+      {
+        auto optr = obs.lock();
+        if (optr)
+        {
+          optr->cancel();
+        }
+      }
+      closeStream();
+      
+      m_isOpen = false;
+    }
 
     void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override
     {
@@ -128,7 +151,9 @@ namespace mtconnect::sink::rest_sink {
           req.m_streaming = true;
 
           if (complete)
+          {
             complete();
+          }
         }
         else
         {
@@ -145,6 +170,12 @@ namespace mtconnect::sink::rest_sink {
                     std::optional<std::string> requestId = std::nullopt) override
     {
       NAMED_SCOPE("WebsocketSession::writeChunk");
+      
+      if (!derived().stream().is_open())
+      {
+        return;
+      }
+      
       if (requestId)
       {
         LOG(trace) << "Waiting for mutex";
@@ -173,6 +204,8 @@ namespace mtconnect::sink::rest_sink {
         fail(status::internal_server_error, "Error occurred in accpet", ec);
         return;
       }
+      
+      m_isOpen = true;
 
       derived().stream().async_read(
           m_buffer, beast::bind_front_handler(&WebsocketSession::onRead, derived().shared_ptr()));
@@ -188,7 +221,7 @@ namespace mtconnect::sink::rest_sink {
       if (it != m_requests.end())
       {
         auto &req = it->second;
-        req.m_complete = complete;
+        req.m_complete = std::move(complete);
         req.m_streamBuffer.emplace();
         std::ostream str(&req.m_streamBuffer.value());
 
@@ -236,6 +269,7 @@ namespace mtconnect::sink::rest_sink {
           if (req.m_complete)
           {
             boost::asio::post(derived().stream().get_executor(), req.m_complete);
+            req.m_complete = nullptr;
           }
 
           if (!req.m_streaming)
@@ -277,6 +311,12 @@ namespace mtconnect::sink::rest_sink {
 
       using namespace rapidjson;
       using namespace std;
+      
+      if (len == 0)
+      {
+        LOG(trace) << "Empty message received";
+        return;
+      }
 
       // Parse the buffer as a JSON request with parameters matching
       // REST API
@@ -395,6 +435,7 @@ namespace mtconnect::sink::rest_sink {
     std::mutex m_mutex;
     std::atomic_bool m_busy;
     std::deque<Message> m_messageQueue;
+    bool m_isOpen { false };
   };
 
   template <class Derived>
@@ -412,19 +453,15 @@ namespace mtconnect::sink::rest_sink {
     {
       beast::get_lowest_layer(m_stream).expires_never();
     }
-    ~PlainWebsocketSession() { close(); }
-
-    void close() override
-    {
-      NAMED_SCOPE("PlainWebsocketSession::close");
-
-      m_request.reset();
-      closeStream();
+    ~PlainWebsocketSession() 
+    { 
+      if (m_isOpen)
+        close();
     }
 
     void closeStream() override
     {
-      if (m_stream.is_open())
+      if (m_isOpen && m_stream.is_open())
         m_stream.close(beast::websocket::close_code::none);
     }
 
@@ -455,23 +492,19 @@ namespace mtconnect::sink::rest_sink {
     {
       beast::get_lowest_layer(m_stream).expires_never();
     }
-    ~TlsWebsocketSession() { close(); }
-
+    ~TlsWebsocketSession() 
+    {
+      if (m_isOpen)
+        close();
+    }
+    
     auto &stream() { return m_stream; }
 
     auto getExecutor() { return m_stream.get_executor(); }
 
-    void close() override
-    {
-      NAMED_SCOPE("TlsWebsocketSession::close");
-
-      m_request.reset();
-      closeStream();
-    }
-
     void closeStream() override
     {
-      if (m_stream.is_open())
+      if (m_isOpen && m_stream.is_open())
         m_stream.close(beast::websocket::close_code::none);
     }
 
