@@ -144,13 +144,7 @@ namespace mtconnect::observation {
     ///@}
 
     /// @brief clear the observer information.
-    void clear()
-    {
-      std::unique_lock<std::recursive_mutex> lock(m_mutex);
-      m_timer.cancel();
-      m_signalers.clear();
-      m_handler.clear();
-    }
+    void clear();
 
   private:
     boost::asio::io_context::strand &m_strand;

@@ -29,14 +29,25 @@ using namespace std;
 namespace mtconnect::observation {
   ChangeObserver::~ChangeObserver()
   {
+    std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
+    clear();
+  }
+  
+  void ChangeObserver::clear()
+  {
+    std::unique_lock<std::recursive_mutex> lock(m_mutex);
+    m_timer.cancel();
+    m_handler.clear();
     for (const auto signaler : m_signalers)
       signaler->removeObserver(this);
+    m_signalers.clear();
   }
 
   void ChangeObserver::addSignaler(ChangeSignaler *sig) { m_signalers.emplace_back(sig); }
 
   bool ChangeObserver::removeSignaler(ChangeSignaler *sig)
   {
+    std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
     auto newEndPos = std::remove(m_signalers.begin(), m_signalers.end(), sig);
     if (newEndPos == m_signalers.end())
       return false;

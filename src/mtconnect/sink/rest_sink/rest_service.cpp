@@ -1093,12 +1093,14 @@ namespace mtconnect {
         if (m_logStreamData)
           asyncResponse->m_log << content << endl;
 
-        asyncResponse->m_session->writeChunk(
-            content,
-            asio::bind_executor(m_strand,
-                                boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)),
-            asyncResponse->getRequestId());
-
+        if (asyncResponse->m_session)
+        {
+          asyncResponse->m_session->writeChunk(
+              content,
+              asio::bind_executor(m_strand,
+                                  boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)),
+              asyncResponse->getRequestId());
+        }
         return end;
       }
 
@@ -1106,9 +1108,12 @@ namespace mtconnect {
       {
         LOG(error) << asyncResponse->m_session->getRemote().address()
                    << ": Error processing request: " << re.what();
-        ResponsePtr resp = std::make_unique<Response>(re);
-        asyncResponse->m_session->writeResponse(std::move(resp));
-        asyncResponse->m_session->close();
+        if (asyncResponse->m_session)
+        {
+          ResponsePtr resp = std::make_unique<Response>(re);
+          asyncResponse->m_session->writeResponse(std::move(resp));
+          asyncResponse->m_session->close();
+        }
       }
 
       catch (...)
@@ -1197,7 +1202,7 @@ namespace mtconnect {
         if (!service || !m_server || !m_server->isRunning())
         {
           LOG(warning) << "Trying to send chunk when service has stopped";
-          if (service)
+          if (service && asyncResponse->m_session)
           {
             asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
                                            "Agent shutting down, aborting stream");
@@ -1209,31 +1214,38 @@ namespace mtconnect {
         {
           LOG(warning) << "Unexpected error streamNextCurrent, aborting";
           LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
-          asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
-                                         "Unexpected error streamNextCurrent, aborting");
+          if (asyncResponse->m_session)
+            asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
+                                           "Unexpected error streamNextCurrent, aborting");
           return;
         }
 
-        asyncResponse->m_session->writeChunk(
-            fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt,
-                             asyncResponse->m_pretty, asyncResponse->getRequestId()),
-            boost::asio::bind_executor(
-                m_strand,
-                [this, asyncResponse]() {
-                  asyncResponse->m_timer.expires_from_now(asyncResponse->getInterval());
-                  asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
-                      m_strand,
-                      boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
-                }),
-            asyncResponse->getRequestId());
+        if (asyncResponse->m_session)
+        {
+          asyncResponse->m_session->writeChunk(
+              fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt,
+                               asyncResponse->m_pretty, asyncResponse->getRequestId()),
+              boost::asio::bind_executor(
+                  m_strand,
+                  [this, asyncResponse]() {
+                    asyncResponse->m_timer.expires_from_now(asyncResponse->getInterval());
+                    asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
+                        m_strand,
+                        boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
+                  }),
+              asyncResponse->getRequestId());
+        }
       }
       catch (RequestError &re)
       {
         LOG(error) << asyncResponse->m_session->getRemote().address()
                    << ": Error processing request: " << re.what();
-        ResponsePtr resp = std::make_unique<Response>(re);
-        asyncResponse->m_session->writeResponse(std::move(resp));
-        asyncResponse->m_session->close();
+        if (asyncResponse->m_session)
+        {
+          ResponsePtr resp = std::make_unique<Response>(re);
+          asyncResponse->m_session->writeResponse(std::move(resp));
+          asyncResponse->m_session->close();
+        }
       }
 
       catch (...)
@@ -1241,7 +1253,10 @@ namespace mtconnect {
         std::stringstream txt;
         txt << asyncResponse->m_session->getRemote().address() << ": Unknown Error thrown";
         LOG(error) << txt.str();
-        asyncResponse->m_session->fail(boost::beast::http::status::not_found, txt.str());
+        if (asyncResponse->m_session)
+        {
+          asyncResponse->m_session->fail(boost::beast::http::status::not_found, txt.str());
+        }
       }
     }
 
