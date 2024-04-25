@@ -142,13 +142,14 @@ namespace mtconnect::observation {
     /// @brief try to lock the mutex
     auto try_lock() { return m_mutex.try_lock(); }
     ///@}
-    
+
     /// @brief clear the observer information.
     void clear()
     {
       std::unique_lock<std::recursive_mutex> lock(m_mutex);
-      m_signalers.clear(); 
+      m_signalers.clear();
       m_handler.clear();
+      m_timer.cancel();
     }
 
   private:
@@ -245,7 +246,7 @@ namespace mtconnect::observation {
 
     /// @brief method to determine if the sink is running
     virtual bool isRunning() = 0;
-    
+
     /// @brief Stop all timers and release resources.
     virtual bool cancel()
     {
@@ -265,9 +266,15 @@ namespace mtconnect::observation {
     auto getSequence() const { return m_sequence; }
     auto isEndOfBuffer() const { return m_endOfBuffer; }
     const auto &getFilter() const { return m_filter; }
-
+    const auto &getRequestId() const { return m_requestId; }
     ///@}
-    ///
+
+    ///@{
+    /// @name setters
+
+    /// @brief sets the optonal request id for webservices.
+    void setRequestId(const std::optional<std::string> &id) { m_requestId = id; }
+    ///@}
 
     mutable bool m_endOfBuffer {false};  //! Public indicator that we are at the end of the buffer
 
@@ -291,5 +298,6 @@ namespace mtconnect::observation {
 
     ChangeObserver m_observer;                    //! the change observer
     mtconnect::buffer::CircularBuffer &m_buffer;  //! reference to the circular buffer
+    std::optional<std::string> m_requestId;       //! request id
   };
 }  // namespace mtconnect::observation

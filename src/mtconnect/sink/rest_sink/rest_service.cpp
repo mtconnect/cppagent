@@ -115,7 +115,8 @@ namespace mtconnect {
            {"pretty", QUERY, "Instructs the result to be pretty printed"},
            {"format", QUERY, "The format of the response document: 'xml' or 'json'"},
            {"heartbeat", QUERY,
-            "Time in ms between publishing a empty document when no data has changed"}});
+            "Time in ms between publishing a empty document when no data has changed"},
+           {"requestId", PATH, "webservice request id"}});
 
       createProbeRoutings();
       createCurrentRoutings();
@@ -763,6 +764,11 @@ namespace mtconnect {
         return true;
       };
 
+      auto cancelHandler = [&](SessionPtr session, RequestPtr request) -> bool {
+        auto requestId = *request->parameter<string>("requestId");
+        return session->cancelRequest(requestId);
+      };
+
       string qp(
           "path={string}&from={unsigned_integer}&"
           "interval={integer}&count={integer:100}&"
@@ -780,6 +786,9 @@ namespace mtconnect {
                     "optionally filtered by the `path` and starting at `from`. By default, from is "
                     "the first available observation known to the agent")
           .command("sample");
+      m_server
+          ->addRouting({boost::beast::http::verb::get, "/cancel/requestId={string}", cancelHandler})
+          .document("MTConnect WebServices Cancel Stream", "Cancels a streaming sample request");
     }
 
     void RestService::createPutObservationRoutings()
@@ -963,11 +972,11 @@ namespace mtconnect {
           return server->isRunning();
         }
       }
-      
+
       bool cancel() override
       {
         observation::AsyncObserver::cancel();
-        m_session.reset();        
+        m_session.reset();
         return true;
       }
 
@@ -979,7 +988,6 @@ namespace mtconnect {
       rest_sink::SessionPtr m_session;
       ofstream m_log;
       bool m_pretty {false};
-      std::optional<std::string> m_requestId;
     };
 
     void RestService::streamSampleRequest(rest_sink::SessionPtr session, const Printer *printer,
@@ -1022,7 +1030,7 @@ namespace mtconnect {
       asyncResponse->m_printer = printer;
       asyncResponse->m_sink = getptr();
       asyncResponse->m_pretty = pretty;
-      asyncResponse->m_requestId = requestId;
+      asyncResponse->setRequestId(requestId);
       session->addObserver(asyncResponse);
 
       if (m_logStreamData)
@@ -1067,7 +1075,7 @@ namespace mtconnect {
         string content = fetchSampleData(asyncResponse->m_printer, asyncResponse->getFilter(),
                                          asyncResponse->m_count, from, nullopt, end,
                                          asyncObserver->m_endOfBuffer, asyncResponse->m_pretty,
-                                         asyncResponse->m_requestId);
+                                         asyncResponse->getRequestId());
 
         if (m_logStreamData)
           asyncResponse->m_log << content << endl;
@@ -1076,7 +1084,7 @@ namespace mtconnect {
             content,
             asio::bind_executor(m_strand,
                                 boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)),
-            asyncResponse->m_requestId);
+            asyncResponse->getRequestId());
 
         return end;
       }

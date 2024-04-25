@@ -96,15 +96,15 @@ namespace mtconnect::sink::rest_sink {
                                             beast::bind_front_handler(&WebsocketSession::onAccept,
                                                                       derived().shared_ptr())));
     }
-    
+
     void close() override
     {
       NAMED_SCOPE("PlainWebsocketSession::close");
       if (!m_isOpen)
         return;
-      
+
       auto ptr = derived().shared_ptr();
-      
+
       m_request.reset();
       m_requests.clear();
       for (auto obs : m_observers)
@@ -116,7 +116,7 @@ namespace mtconnect::sink::rest_sink {
         }
       }
       closeStream();
-      
+
       m_isOpen = false;
     }
 
@@ -170,12 +170,12 @@ namespace mtconnect::sink::rest_sink {
                     std::optional<std::string> requestId = std::nullopt) override
     {
       NAMED_SCOPE("WebsocketSession::writeChunk");
-      
+
       if (!derived().stream().is_open())
       {
         return;
       }
-      
+
       if (requestId)
       {
         LOG(trace) << "Waiting for mutex";
@@ -204,7 +204,7 @@ namespace mtconnect::sink::rest_sink {
         fail(status::internal_server_error, "Error occurred in accpet", ec);
         return;
       }
-      
+
       m_isOpen = true;
 
       derived().stream().async_read(
@@ -311,7 +311,7 @@ namespace mtconnect::sink::rest_sink {
 
       using namespace rapidjson;
       using namespace std;
-      
+
       if (len == 0)
       {
         LOG(trace) << "Empty message received";
@@ -435,7 +435,7 @@ namespace mtconnect::sink::rest_sink {
     std::mutex m_mutex;
     std::atomic_bool m_busy;
     std::deque<Message> m_messageQueue;
-    bool m_isOpen { false };
+    bool m_isOpen {false};
   };
 
   template <class Derived>
@@ -453,8 +453,8 @@ namespace mtconnect::sink::rest_sink {
     {
       beast::get_lowest_layer(m_stream).expires_never();
     }
-    ~PlainWebsocketSession() 
-    { 
+    ~PlainWebsocketSession()
+    {
       if (m_isOpen)
         close();
     }
@@ -492,12 +492,12 @@ namespace mtconnect::sink::rest_sink {
     {
       beast::get_lowest_layer(m_stream).expires_never();
     }
-    ~TlsWebsocketSession() 
+    ~TlsWebsocketSession()
     {
       if (m_isOpen)
         close();
     }
-    
+
     auto &stream() { return m_stream; }
 
     auto getExecutor() { return m_stream.get_executor(); }

@@ -118,11 +118,25 @@ namespace mtconnect::sink::rest_sink {
       m_message = msg;
       m_unauthorized = true;
     }
-    
+
     /// @brief Add an observer to the list for cleanup later.
     void addObserver(std::weak_ptr<observation::AsyncObserver> observer)
     {
       m_observers.push_back(observer);
+    }
+
+    bool cancelRequest(const std::string &requestId)
+    {
+      for (auto &obs : m_observers)
+      {
+        auto pobs = obs.lock();
+        if (pobs && pobs->getRequestId() == requestId)
+        {
+          pobs->cancel();
+          return true;
+        }
+      }
+      return false;
     }
 
   protected:
