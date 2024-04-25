@@ -47,7 +47,8 @@ namespace mtconnect::observation {
 
   void ChangeObserver::handler(boost::system::error_code ec)
   {
-    boost::asio::post(m_strand, boost::bind(m_handler, ec));
+    if (m_handler)
+      boost::asio::post(m_strand, boost::bind(m_handler, ec));
   }
 
   // Signaler Management

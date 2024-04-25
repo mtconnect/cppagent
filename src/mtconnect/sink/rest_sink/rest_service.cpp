@@ -116,7 +116,7 @@ namespace mtconnect {
            {"format", QUERY, "The format of the response document: 'xml' or 'json'"},
            {"heartbeat", QUERY,
             "Time in ms between publishing a empty document when no data has changed"},
-           {"requestId", PATH, "webservice request id"}});
+           {"id", PATH, "webservice request id"}});
 
       createProbeRoutings();
       createCurrentRoutings();
@@ -762,8 +762,21 @@ namespace mtconnect {
       };
 
       auto cancelHandler = [&](SessionPtr session, RequestPtr request) -> bool {
-        auto requestId = *request->parameter<string>("requestId");
-        return session->cancelRequest(requestId);
+        if (request->m_requestId)
+        {
+          auto requestId = *request->m_requestId;
+          auto success = session->cancelRequest(requestId);
+          auto response = make_unique<Response>(
+              status::ok, "{ \"success\": \""s + (success ? "true" : "false") + "\"}",
+              "application/json");
+
+          respond(session, std::move(response), request->m_requestId);
+          return true;
+        }
+        else
+        {
+          return false;
+        }
       };
 
       string qp(
@@ -783,9 +796,9 @@ namespace mtconnect {
                     "optionally filtered by the `path` and starting at `from`. By default, from is "
                     "the first available observation known to the agent")
           .command("sample");
-      m_server
-          ->addRouting({boost::beast::http::verb::get, "/cancel/requestId={string}", cancelHandler})
-          .document("MTConnect WebServices Cancel Stream", "Cancels a streaming sample request");
+      m_server->addRouting({boost::beast::http::verb::get, "/cancel/id={string}", cancelHandler})
+          .document("MTConnect WebServices Cancel Stream", "Cancels a streaming sample request")
+          .command("cancel");
     }
 
     void RestService::createPutObservationRoutings()

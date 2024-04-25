@@ -147,9 +147,9 @@ namespace mtconnect::observation {
     void clear()
     {
       std::unique_lock<std::recursive_mutex> lock(m_mutex);
+      m_timer.cancel();
       m_signalers.clear();
       m_handler.clear();
-      m_timer.cancel();
     }
 
   private:
