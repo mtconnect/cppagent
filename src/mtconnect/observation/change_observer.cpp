@@ -100,7 +100,7 @@ namespace mtconnect::observation {
                                buffer::CircularBuffer &buffer, FilterSet &&filter,
                                std::chrono::milliseconds interval,
                                std::chrono::milliseconds heartbeat)
-    : m_interval(interval),
+    : AsyncResponse(interval),
       m_heartbeat(heartbeat),
       m_last(std::chrono::system_clock::now()),
       m_filter(std::move(filter)),

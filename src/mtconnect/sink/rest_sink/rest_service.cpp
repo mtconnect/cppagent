@@ -1119,20 +1119,30 @@ namespace mtconnect {
       return 0;
     }
 
-    struct AsyncCurrentResponse
+    struct AsyncCurrentResponse : public AsyncResponse
     {
-      AsyncCurrentResponse(rest_sink::SessionPtr session, asio::io_context &context)
-        : m_session(session), m_timer(context)
+      AsyncCurrentResponse(rest_sink::SessionPtr session, asio::io_context &context,
+                           chrono::milliseconds interval)
+        : AsyncResponse(interval), m_session(session), m_timer(context)
       {}
+
+      auto getptr() { return dynamic_pointer_cast<AsyncCurrentResponse>(shared_from_this()); }
+
+      bool cancel() override
+      {
+        m_timer.cancel();
+        m_session.reset();
+        return true;
+      }
+
+      bool isRunning() override { return (bool)m_session; }
 
       std::weak_ptr<Sink> m_service;
       rest_sink::SessionPtr m_session;
-      chrono::milliseconds m_interval;
       const Printer *m_printer {nullptr};
       FilterSetOpt m_filter;
       boost::asio::steady_timer m_timer;
       bool m_pretty {false};
-      std::optional<std::string> m_requestId;
     };
 
     void RestService::streamCurrentRequest(SessionPtr session, const Printer *printer,
@@ -1149,17 +1159,18 @@ namespace mtconnect {
         dev = checkDevice(printer, *device);
       }
 
-      auto asyncResponse = make_shared<AsyncCurrentResponse>(session, m_context);
+      auto asyncResponse =
+          make_shared<AsyncCurrentResponse>(session, m_context, chrono::milliseconds {interval});
       if (path || device || deviceType)
       {
         asyncResponse->m_filter = make_optional<FilterSet>();
         checkPath(printer, path, dev, *asyncResponse->m_filter, deviceType);
       }
-      asyncResponse->m_interval = chrono::milliseconds {interval};
       asyncResponse->m_printer = printer;
       asyncResponse->m_service = getptr();
       asyncResponse->m_pretty = pretty;
-      asyncResponse->m_requestId = requestId;
+      asyncResponse->setRequestId(requestId);
+      session->addObserver(asyncResponse);
 
       asyncResponse->m_session->beginStreaming(
           printer->mimeType(),
@@ -1202,16 +1213,16 @@ namespace mtconnect {
 
         asyncResponse->m_session->writeChunk(
             fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt,
-                             asyncResponse->m_pretty, asyncResponse->m_requestId),
+                             asyncResponse->m_pretty, asyncResponse->getRequestId()),
             boost::asio::bind_executor(
                 m_strand,
                 [this, asyncResponse]() {
-                  asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval);
+                  asyncResponse->m_timer.expires_from_now(asyncResponse->getInterval());
                   asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
                       m_strand,
                       boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
                 }),
-            asyncResponse->m_requestId);
+            asyncResponse->getRequestId());
       }
       catch (RequestError &re)
       {
