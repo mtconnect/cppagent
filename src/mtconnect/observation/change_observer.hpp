@@ -194,6 +194,32 @@ namespace mtconnect::observation {
     std::list<ChangeObserver *> m_observers;
   };
 
+  /// @brief Abstract class for things asynchronouos timers
+  class AGENT_LIB_API AsyncResponse : public std::enable_shared_from_this<AsyncResponse>
+  {
+  public:
+    AsyncResponse(std::chrono::milliseconds interval) : m_interval(interval) {}
+
+    virtual bool cancel() = 0;
+
+    /// @brief method to determine if the sink is running
+    virtual bool isRunning() = 0;
+
+    /// @brief get the request id for webservices
+    const auto &getRequestId() const { return m_requestId; }
+
+    /// @brief sets the optonal request id for webservices.
+    void setRequestId(const std::optional<std::string> &id) { m_requestId = id; }
+
+    /// @brief Get the interval
+    const auto &getInterval() const { return m_interval; }
+
+  protected:
+    std::chrono::milliseconds m_interval {
+        0};  //! the minimum amout of time to wait before calling the handler
+    std::optional<std::string> m_requestId;  //! request id
+  };
+
   /// @brief Asyncronous change context for waiting for changes
   ///
   /// This class must be subclassed and provide a fail and isRunning method.
@@ -205,7 +231,7 @@ namespace mtconnect::observation {
   ///
   /// The handler and sequence numbers are handled inside the circular buffer lock to prevent race
   /// conditions with incoming data.
-  class AGENT_LIB_API AsyncObserver : public std::enable_shared_from_this<AsyncObserver>
+  class AGENT_LIB_API AsyncObserver : public AsyncResponse
   {
   public:
     /// @Brief callback when observations are ready
@@ -226,7 +252,7 @@ namespace mtconnect::observation {
     virtual ~AsyncObserver() = default;
 
     /// @brief Get a shared pointed
-    auto getptr() const { return const_cast<AsyncObserver *>(this)->shared_from_this(); }
+    auto getptr() { return std::dynamic_pointer_cast<AsyncObserver>(shared_from_this()); }
 
     /// @brief sets up the `ChangeObserver` using the filter and initializes the references to the
     /// buffer
@@ -244,11 +270,8 @@ namespace mtconnect::observation {
     /// @brief abstract call to failure handler
     virtual void fail(boost::beast::http::status status, const std::string &message) = 0;
 
-    /// @brief method to determine if the sink is running
-    virtual bool isRunning() = 0;
-
     /// @brief Stop all timers and release resources.
-    virtual bool cancel()
+    bool cancel() override
     {
       m_observer.clear();
       return true;
@@ -266,14 +289,6 @@ namespace mtconnect::observation {
     auto getSequence() const { return m_sequence; }
     auto isEndOfBuffer() const { return m_endOfBuffer; }
     const auto &getFilter() const { return m_filter; }
-    const auto &getRequestId() const { return m_requestId; }
-    ///@}
-
-    ///@{
-    /// @name setters
-
-    /// @brief sets the optonal request id for webservices.
-    void setRequestId(const std::optional<std::string> &id) { m_requestId = id; }
     ///@}
 
     mutable bool m_endOfBuffer {false};  //! Public indicator that we are at the end of the buffer
@@ -288,8 +303,6 @@ namespace mtconnect::observation {
 
   protected:
     SequenceNumber_t m_sequence {0};  //! the current sequence number
-    std::chrono::milliseconds m_interval {
-        0};  //! the minimum amout of time to wait before calling the handler
     std::chrono::milliseconds m_heartbeat {
         0};  //! the maximum amount of time to wait before sending a heartbeat
     std::chrono::system_clock::time_point m_last;  //! the last time the handler completed
@@ -298,6 +311,5 @@ namespace mtconnect::observation {
 
     ChangeObserver m_observer;                    //! the change observer
     mtconnect::buffer::CircularBuffer &m_buffer;  //! reference to the circular buffer
-    std::optional<std::string> m_requestId;       //! request id
   };
 }  // namespace mtconnect::observation

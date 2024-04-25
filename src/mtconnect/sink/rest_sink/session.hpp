@@ -120,7 +120,7 @@ namespace mtconnect::sink::rest_sink {
     }
 
     /// @brief Add an observer to the list for cleanup later.
-    void addObserver(std::weak_ptr<observation::AsyncObserver> observer)
+    void addObserver(std::weak_ptr<observation::AsyncResponse> observer)
     {
       m_observers.push_back(observer);
     }
@@ -148,7 +148,7 @@ namespace mtconnect::sink::rest_sink {
     bool m_allowPuts {false};
     std::set<boost::asio::ip::address> m_allowPutsFrom;
     boost::asio::ip::tcp::endpoint m_remote;
-    std::list<std::weak_ptr<observation::AsyncObserver>> m_observers;
+    std::list<std::weak_ptr<observation::AsyncResponse>> m_observers;
   };
 
 }  // namespace mtconnect::sink::rest_sink
