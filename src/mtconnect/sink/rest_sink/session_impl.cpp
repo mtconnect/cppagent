@@ -527,7 +527,7 @@ namespace mtconnect::sink::rest_sink {
       if (!m_closing)
       {
         m_closing = true;
-        
+
         // Release all references from observers.
         for (auto obs : m_observers)
         {
@@ -538,7 +538,6 @@ namespace mtconnect::sink::rest_sink {
           }
         }
 
-        
         // Set the timeout.
         beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
 
