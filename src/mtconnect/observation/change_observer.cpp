@@ -32,7 +32,7 @@ namespace mtconnect::observation {
     std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
     clear();
   }
-  
+
   void ChangeObserver::clear()
   {
     std::unique_lock<std::recursive_mutex> lock(m_mutex);
