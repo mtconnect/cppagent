@@ -42,6 +42,7 @@ namespace mtconnect::sink::rest_sink {
     std::optional<boost::asio::streambuf> m_streamBuffer;
     Complete m_complete;
     bool m_streaming {false};
+    RequestPtr m_request;
   };
 
   /// @brief A websocket session that provides a pubsub interface using REST parameters
@@ -342,7 +343,10 @@ namespace mtconnect::sink::rest_sink {
       {
         // Extract the parameters from the json doc to map them to the REST
         // protocol parameters
-        m_request->m_verb = beast::http::verb::get;
+        auto request = make_unique<Request>(*m_request);
+
+        request->m_verb = beast::http::verb::get;
+        request->m_parameters.clear();
         const auto &object = doc.GetObject();
 
         for (auto &it : object)
@@ -353,58 +357,56 @@ namespace mtconnect::sink::rest_sink {
               // Skip nulls
               break;
             case rapidjson::kFalseType:
-              m_request->m_parameters.emplace(make_pair(it.name.GetString(), false));
+              request->m_parameters.emplace(make_pair(it.name.GetString(), false));
               break;
             case rapidjson::kTrueType:
-              m_request->m_parameters.emplace(make_pair(it.name.GetString(), true));
+              request->m_parameters.emplace(make_pair(it.name.GetString(), true));
               break;
             case rapidjson::kObjectType:
               break;
             case rapidjson::kArrayType:
               break;
             case rapidjson::kStringType:
-              m_request->m_parameters.emplace(
+              request->m_parameters.emplace(
                   make_pair(it.name.GetString(), string(it.value.GetString())));
 
               break;
             case rapidjson::kNumberType:
               if (it.value.Is<int>())
-                m_request->m_parameters.emplace(
-                    make_pair(it.name.GetString(), it.value.Get<int>()));
+                request->m_parameters.emplace(make_pair(it.name.GetString(), it.value.Get<int>()));
               else if (it.value.Is<unsigned>())
-                m_request->m_parameters.emplace(
+                request->m_parameters.emplace(
                     make_pair(it.name.GetString(), it.value.Get<unsigned>()));
               else if (it.value.Is<int64_t>())
-                m_request->m_parameters.emplace(
+                request->m_parameters.emplace(
                     make_pair(it.name.GetString(), (uint64_t)it.value.Get<int64_t>()));
               else if (it.value.Is<uint64_t>())
-                m_request->m_parameters.emplace(
+                request->m_parameters.emplace(
                     make_pair(it.name.GetString(), it.value.Get<uint64_t>()));
               else if (it.value.Is<double>())
-                m_request->m_parameters.emplace(
+                request->m_parameters.emplace(
                     make_pair(it.name.GetString(), it.value.Get<double>()));
 
               break;
           }
         }
 
-        if (m_request->m_parameters.count("request") > 0)
+        if (request->m_parameters.count("request") > 0)
         {
-          m_request->m_command = get<string>(m_request->m_parameters["request"]);
-          m_request->m_parameters.erase("request");
+          request->m_command = get<string>(request->m_parameters["request"]);
+          request->m_parameters.erase("request");
         }
-        if (m_request->m_parameters.count("id") > 0)
+        if (request->m_parameters.count("id") > 0)
         {
-          auto &v = m_request->m_parameters["id"];
+          auto &v = request->m_parameters["id"];
           string id = visit(overloaded {[](monostate m) { return ""s; },
                                         [](auto v) { return boost::lexical_cast<string>(v); }},
                             v);
-          m_request->m_requestId = id;
-          m_request->m_parameters.erase("id");
+          request->m_requestId = id;
+          request->m_parameters.erase("id");
         }
 
-        auto &id = *(m_request->m_requestId);
-
+        auto &id = *(request->m_requestId);
         auto res = m_requests.emplace(id, id);
         if (!res.second)
         {
@@ -412,14 +414,17 @@ namespace mtconnect::sink::rest_sink {
           boost::system::error_code ec;
           fail(status::bad_request, "Duplicate request Id", ec);
         }
-
-        if (!m_dispatch(derived().shared_ptr(), m_request))
+        else
         {
-          ostringstream txt;
-          txt << "Failed to find handler for " << buffer;
-          LOG(error) << txt.str();
-          boost::system::error_code ec;
-          fail(status::bad_request, "Duplicate request Id", ec);
+          res.first->second.m_request = std::move(request);
+          if (!m_dispatch(derived().shared_ptr(), res.first->second.m_request))
+          {
+            ostringstream txt;
+            txt << "Failed to find handler for " << buffer;
+            LOG(error) << txt.str();
+            boost::system::error_code ec;
+            fail(status::bad_request, "Duplicate request Id", ec);
+          }
         }
       }
 

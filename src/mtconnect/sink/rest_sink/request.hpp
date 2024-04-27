@@ -57,6 +57,9 @@ namespace mtconnect::sink::rest_sink {
   /// The request can be a simple reply response or streaming request
   struct Request
   {
+    Request() = default;
+    Request(const Request &request) = default;
+
     boost::beast::http::verb m_verb;  ///< GET, PUT, POST, or DELETE
     std::string m_body;               ///< The body of the request
     std::string m_accepts;            ///< The accepts header
