@@ -213,7 +213,7 @@ namespace mtconnect {
       /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Assets response document
       ResponsePtr assetIdsRequest(const printer::Printer *p, const std::list<std::string> &ids,
-                                  bool pretty = false);
+                                  const bool removed, bool pretty = false);
 
       /// @brief Asset request handler to update an asset
       /// @param p printer for the response document

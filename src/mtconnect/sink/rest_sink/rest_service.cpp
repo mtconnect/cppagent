@@ -534,13 +534,14 @@ namespace mtconnect {
         if (asset)
         {
           auto printer = m_sinkContract->getPrinter(acceptFormat(request->m_accepts));
+          const auto removed = *request->parameter<bool>("removed");
 
           list<string> ids;
           stringstream str(*asset);
           string id;
           while (getline(str, id, ';'))
-            ids.emplace_back(id);
-          respond(session, assetIdsRequest(printer, ids));
+                  ids.emplace_back(id);
+          respond(session, assetIdsRequest(printer, ids, removed));
         }
         else
         {
@@ -563,11 +564,13 @@ namespace mtconnect {
           .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`");
       m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler})
           .document("MTConnect asset request", "Returns up to `count` assets for deivce `device`");
-      m_server->addRouting({boost::beast::http::verb::get, "/assets/{assetIds}", idHandler})
+
+      qp = "removed={bool:false}";      
+      m_server->addRouting({boost::beast::http::verb::get, "/assets/{assetIds}?" + qp, idHandler})
           .document(
               "MTConnect assets request",
               "Returns a set assets identified by asset ids `asset` separated by semi-colon (;)");
-      m_server->addRouting({boost::beast::http::verb::get, "/asset/{assetIds}", idHandler})
+      m_server->addRouting({boost::beast::http::verb::get, "/asset/{assetIds}?" + qp, idHandler})
           .document("MTConnect asset request",
                     "Returns a set of assets identified by asset ids `asset` separated by "
                     "semi-colon (;)");
@@ -1155,12 +1158,13 @@ namespace mtconnect {
     }
 
     ResponsePtr RestService::assetIdsRequest(const Printer *printer,
-                                             const std::list<std::string> &ids, bool pretty)
+                                             const std::list<std::string> &ids, 
+                                             const bool removed, bool pretty)
     {
       using namespace rest_sink;
 
       AssetList list;
-      if (m_sinkContract->getAssetStorage()->getAssets(list, ids) == 0)
+      if (m_sinkContract->getAssetStorage()->getAssets(list, ids, !removed) == 0)
       {
         stringstream str;
         str << "Cannot find asset for asset Ids: ";
