@@ -201,6 +201,11 @@ namespace mtconnect {
           }
         }
       }
+      
+      if (const auto &init = maybeGet<string>("InitialValue"); init)
+      {
+        m_initialValue = *init;
+      }
 
       if (const auto &init = maybeGet<string>("InitialValue"); init)
       {

@@ -301,7 +301,7 @@ namespace mtconnect {
       {
         if (item.expired())
           continue;
-
+        
         auto di = item.lock();
         if (di->hasInitialValue())
         {
@@ -309,7 +309,7 @@ namespace mtconnect {
         }
       }
     }
-
+    
     std::lock_guard<buffer::CircularBuffer> lock(m_circularBuffer);
     if (m_circularBuffer.addToBuffer(observation) != 0)
     {
@@ -476,11 +476,11 @@ namespace mtconnect {
           changed = receiveDevice(device, true) || changed;
           if (changed)
           {
-            if (source)
+          if (source)
+          {
+            auto s = findSource(*source);
+            if (s)
             {
-              auto s = findSource(*source);
-              if (s)
-              {
                 s->setOptions({{config::Device, uuid}});
               }
             }
@@ -578,7 +578,7 @@ namespace mtconnect {
         LOG(error) << "Device does not have a name: " << *device->getUuid();
         return false;
       }
-      
+
       verifyDevice(device);
       createUniqueIds(device);
 
@@ -1016,7 +1016,7 @@ namespace mtconnect {
       if (m_agentDevice)
       {
         auto d = m_agentDevice->getDeviceDataItem("device_removed");
-        if (d)
+          if (d)
           m_loopback->receive(d, oldUuid);
       }
     }
@@ -1463,12 +1463,12 @@ namespace mtconnect {
                  {
                    try
                    {
-                     double fact_value = stod(factor);
-                     double off_value = stod(offset);
+                   double fact_value = stod(factor);
+                   double off_value = stod(offset);
 
-                     device_model::data_item::UnitConversion conv(fact_value, off_value);
-                     di->setConverter(conv);
-                   }
+                   device_model::data_item::UnitConversion conv(fact_value, off_value);
+                   di->setConverter(conv);
+                 }
                    catch (std::exception e)
                    {
                      LOG(error) << "Cannot convert factor " << factor << " or " << offset
