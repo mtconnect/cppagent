@@ -3075,3 +3075,26 @@ TEST_F(AgentTest, should_set_sender_from_config_in_XML_header)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@sender", "MachineXXX");
   }
 }
+
+TEST_F(AgentTest, should_initialize_observaton_to_initial_value_when_available)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.2", 4, true);
+
+  auto device = m_agentTestHelper->getAgent()->getDeviceByName("LinuxCNC");
+  ASSERT_TRUE(device);
+
+  addAdapter();
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount", "UNAVAILABLE");
+  }
+  
+  m_agentTestHelper->m_adapter->processData("2024-01-22T20:00:00Z|avail|AVAILABLE");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount", "0");
+  }
+
+}

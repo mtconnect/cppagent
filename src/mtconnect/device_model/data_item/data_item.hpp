@@ -139,7 +139,11 @@ namespace mtconnect {
         /// @brief get the topic name leaf node for this data item
         /// @return the topic name
         const auto &getTopicName() const { return m_topicName; }
-
+        
+        /// @brief get the initial value if one is set
+        /// @return optional initial value
+        const auto &getInitialValue() const { return m_initialValue; }
+        
         Category getCategory() const { return m_category; }
         Representation getRepresentation() const { return m_representation; }
         SpecialClass getSpecialClass() const { return m_specialClass; }
@@ -169,6 +173,7 @@ namespace mtconnect {
         bool isDiscrete() const { return m_discrete; }
         bool isThreeSpace() const { return m_specialClass == THREE_SPACE_CLS; }
         bool isOrphan() const { return m_component.expired(); }
+        bool hasInitialValue() const { return bool(m_initialValue); }
         ///@}
 
         void makeDiscrete()
@@ -279,6 +284,7 @@ namespace mtconnect {
         std::optional<std::string> m_source;
         std::string m_preferredName;
         std::optional<std::string> m_constantValue;
+        std::optional<std::string> m_initialValue;
         std::optional<double> m_minimumDelta;
         std::optional<double> m_minimumPeriod;
         std::string m_key;
@@ -300,9 +306,6 @@ namespace mtconnect {
 
         // The reset trigger;
         std::string m_resetTrigger;
-
-        // Initial value
-        std::string m_initialValue;
 
         // Component that data item is associated with
         std::weak_ptr<Component> m_component;
