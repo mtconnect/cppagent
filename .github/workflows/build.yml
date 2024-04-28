@@ -170,8 +170,9 @@ jobs:
         key: ${{ runner.os }}-build-${{ matrix.shared }}-${{ hashFiles('**/conanfile.py') }}
                       
     - name: Install Conan
-      uses: turtlebrowser/get-conan@v1.2
-      
+      run: |
+        brew install conan
+        
     - name: Setup Conan
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
