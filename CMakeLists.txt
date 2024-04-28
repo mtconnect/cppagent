@@ -2,8 +2,13 @@
 set(AGENT_VERSION_MAJOR 2)
 set(AGENT_VERSION_MINOR 5)
 set(AGENT_VERSION_PATCH 0)
+<<<<<<< HEAD
 set(AGENT_VERSION_BUILD 0)
 set(AGENT_VERSION_RC "RC2")
+=======
+set(AGENT_VERSION_BUILD 8)
+set(AGENT_VERSION_RC "")
+>>>>>>> de28136e (version 2.3.0.8)
 
 # This minimum version is to support Visual Studio 2019 and C++ feature checking and FetchContent
 cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
