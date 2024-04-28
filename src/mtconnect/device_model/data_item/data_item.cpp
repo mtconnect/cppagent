@@ -70,7 +70,7 @@ namespace mtconnect {
             {"Definition", ValueType::ENTITY, definition, false},
             {"Constraints", ValueType::ENTITY_LIST, constraints, false},
             {"Relationships", ValueType::ENTITY_LIST, relationships, false},
-            {"InitialValue", ValueType::DOUBLE, false},
+            {"InitialValue", ValueType::STRING, false},
             {"ResetTrigger", false}});
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           auto ptr = make_shared<DataItem>(name, props);
@@ -200,6 +200,11 @@ namespace mtconnect {
             m_minimumDelta = c->getValue<double>();
           }
         }
+      }
+      
+      if (const auto &init = maybeGet<string>("InitialValue"); init)
+      {
+        m_initialValue = *init;
       }
 
       if (const auto &filters = getList("Filters"))

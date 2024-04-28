@@ -280,6 +280,24 @@ namespace mtconnect {
   // ---------------------------------------
   void Agent::receiveObservation(observation::ObservationPtr observation)
   {
+    // Check for availability
+    if (observation->getDataItem()->getType() == "AVAILABILITY" && !observation->isUnavailable())
+    {
+      // Set all the initial values.
+      auto device = observation->getDataItem()->getComponent()->getDevice();
+      for (auto item : device->getDeviceDataItems())
+      {
+        if (item.expired())
+          continue;
+        
+        auto di = item.lock();
+        if (di->hasInitialValue())
+        {
+          m_loopback->receive(di, *di->getInitialValue());
+        }
+      }
+    }
+    
     std::lock_guard<buffer::CircularBuffer> lock(m_circularBuffer);
     if (m_circularBuffer.addToBuffer(observation) != 0)
     {
