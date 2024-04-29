@@ -3174,7 +3174,6 @@ TEST_F(AgentTest, should_not_set_validation_flag_in_header_when_validation_is_fa
   }
 }
 
-  
 TEST_F(AgentTest, should_initialize_observaton_to_initial_value_when_available)
 {
   m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.2", 4, true);
@@ -3188,7 +3187,7 @@ TEST_F(AgentTest, should_initialize_observaton_to_initial_value_when_available)
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount", "UNAVAILABLE");
   }
-  
+
   m_agentTestHelper->m_adapter->processData("2024-01-22T20:00:00Z|avail|AVAILABLE");
 
   {
