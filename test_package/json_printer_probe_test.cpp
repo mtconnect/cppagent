@@ -246,7 +246,7 @@ TEST_F(JsonPrinterProbeTest, InitialValue)
 
   json count = ::find(items, "/DataItem/id", "d2e9e4a0");
   ASSERT_TRUE(count.is_object());
-  ASSERT_EQ(1.0, count.at("/DataItem/InitialValue"_json_pointer).get<double>());
+  ASSERT_EQ("1", count.at("/DataItem/InitialValue"_json_pointer).get<string>());
 }
 
 TEST_F(JsonPrinterProbeTest, DataItemFilters)
