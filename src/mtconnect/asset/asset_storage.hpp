@@ -112,8 +112,9 @@ namespace mtconnect {
       /// @brief get a list of assets given a list of asset ids
       /// @param[out] list list of assets
       /// @param[in] ids assetIds to find
+      /// @param[in] active `false` to skip removed assets
       /// @return the number of assets found
-      virtual size_t getAssets(AssetList &list, const std::list<std::string> &ids) const = 0;
+      virtual size_t getAssets(AssetList &list, const std::list<std::string> &ids, const bool active = true) const = 0;
       ///@}
 
       /// @name Count related methods

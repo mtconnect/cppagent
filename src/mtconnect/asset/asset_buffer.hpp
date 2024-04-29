@@ -234,12 +234,13 @@ namespace mtconnect::asset {
       return list.size();
     }
 
-    virtual size_t getAssets(AssetList &list, const std::list<std::string> &ids) const override
+    virtual size_t getAssets(AssetList &list, const std::list<std::string> &ids, const bool active = true) const override
     {
       for (auto id : ids)
       {
         if (auto asset = AssetBuffer::getAsset(id); asset)
-          list.emplace_back(asset);
+          if (!active || !asset->isRemoved())
+            list.emplace_back(asset);
       }
 
       return list.size();
