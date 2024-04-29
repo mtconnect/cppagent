@@ -149,8 +149,45 @@ jobs:
       shell: bash
       run: |
         export CTEST_OUTPUT_ON_FAILURE=TRUE
-        conan create . --build=missing -pr conan/profiles/gcc  -o shared=${{ matrix.shared }} -o with_docs=False
-        
+        conan create . --build=missing -pr conan/profiles/gcc  -o shared=${{ matrix.shared }} -o with_docs=False -o cpack=True -o cpack_name=dist -o cpack_destination=${{ github.workspace }}
+
+    - name: Cleanse package version
+      run: |
+        if [[ $PACKAGE_VERSION == v*.*.*.* ]]; then
+          echo "PACKAGE_VERSION=${PACKAGE_VERSION:1}" >> $GITHUB_ENV
+        elif [[ $PACKAGE_VERSION == [0-9].*.*.* ]]; then
+          echo "PACKAGE_VERSION=${PACKAGE_VERSION:0}" >> $GITHUB_ENV
+        else
+          echo "PACKAGE_VERSION=0.0.0.0" >> $GITHUB_ENV
+        fi
+    - name: Prepare Debian Package
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        mkdir -p pkgroot/home/edge/
+        ls -lah pkgroot
+        tar -xzf dist.tar.gz -C pkgroot/
+        mv pkgroot/dist pkgroot/usr
+    - name: Create Debian Package
+      id: create_debian_package
+      uses: jiro4989/build-deb-action@v3
+      with:
+        package: mtconnect-agent
+        package_root: ${{ github.workspace}}/pkgroot
+        version: ${{ env.PACKAGE_VERSION }}
+        arch: amd64
+        desc: "MTConnect Agent for Ununtu"
+        maintainer: Datanomix <support@datanomix.io>
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.shared == 'False' }}
+      with:
+        name: Version ${{ github.ref_name }}
+        draft: true
+        files: |
+          ${{ github.workspace }}/${{ steps.create_debian_package.outputs.file_name }}
+        token: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+
   build_macos:
     runs-on: macos-latest
     name: "MacOS Latest, Shared: ${{ matrix.shared }}"
