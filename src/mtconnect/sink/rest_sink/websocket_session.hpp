@@ -104,7 +104,14 @@ namespace mtconnect::sink::rest_sink {
       if (!m_isOpen)
         return;
 
-      auto ptr = derived().shared_ptr();
+      m_isOpen = false;
+
+      auto wptr = weak_from_this();
+      std::shared_ptr<Session> ptr;
+      if (!wptr.expired())
+      {
+        ptr = wptr.lock();
+      }
 
       m_request.reset();
       m_requests.clear();
@@ -117,8 +124,6 @@ namespace mtconnect::sink::rest_sink {
         }
       }
       closeStream();
-
-      m_isOpen = false;
     }
 
     void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override
