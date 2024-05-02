@@ -241,7 +241,11 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief Sets the command associated with this routing for use with websockets
     /// @param command the command
-    void command(const std::string &command) { m_command = command; }
+    auto &command(const std::string &command)
+    {
+      m_command = command;
+      return *this;
+    }
 
   protected:
     void pathParameters(std::string s)
