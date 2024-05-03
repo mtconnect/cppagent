@@ -35,7 +35,7 @@ class MTConnectAgentConan(ConanFile):
         "with_ruby": True,
         "development": False,
         "shared": False,
-        "winver": "0x600",
+        "winver": "0x602",
         "with_docs": False,
         "cpack": False,
         "agent_prefix": None,
@@ -227,6 +227,7 @@ class MTConnectAgentConan(ConanFile):
             winver=str(self.options.winver)
             self.cpp_info.defines.append("WINVER=" + winver)
             self.cpp_info.defines.append("_WIN32_WINNT=" + winver)
+            self.cpp_info.defines.append("BOOST_USE_WINAPI_VERSION=" + winver)
 
     def package(self):
         cmake = CMake(self)
