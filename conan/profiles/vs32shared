@@ -4,7 +4,6 @@ include(default)
 compiler=msvc
 compiler.cppstd=17
 arch=x86
-winver=0x0600
 compiler.runtime=dynamic
 compiler.runtime_type=Release
 build_type=Release
@@ -12,3 +11,4 @@ build_type=Release
 
 [options]
 shared=True
+winver=0x0600

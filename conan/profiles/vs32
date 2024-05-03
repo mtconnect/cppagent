@@ -3,10 +3,10 @@ include(default)
 [settings]
 compiler=msvc
 compiler.cppstd=17
-winver=0x0600
 arch=x86
 compiler.runtime=static
 compiler.runtime_type=Release
 build_type=Release
 
-
+[options]
+winver=0x0600
