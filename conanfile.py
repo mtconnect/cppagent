@@ -139,7 +139,7 @@ class MTConnectAgentConan(ConanFile):
         if self.options.shared:
             self.options["boost/*"].shared = True
             self.package_type = "shared-library"
-
+            
         if is_msvc(self):
             self.options["boost/*"].extra_b2_flags = ("define=BOOST_USE_WINAPI_VERSION=" + str(self.options.winver))
             
