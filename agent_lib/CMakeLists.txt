@@ -244,12 +244,10 @@ set(AGENT_SOURCES
 
 # src/sink/mqtt_sink HEADER_FILE_ONLY
 
-        "${SOURCE_DIR}/sink/mqtt_sink/mqtt_legacy_service.hpp"
 	"${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.hpp"
 
 #src/sink/mqtt_sink SOURCE_FILES_ONLY
 
-        "${SOURCE_DIR}/sink/mqtt_sink/mqtt_legacy_service.cpp"
 	"${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.cpp"
         
 # src/sink/rest_sink HEADER_FILE_ONLY
@@ -333,7 +331,6 @@ if(MSVC)
 
   # The modules including Beast required the /bigobj option in Windows
   set_property(SOURCE    
-    "${SOURCE_DIR}/sink/mqtt_sink/mqtt_legacy_service.cpp"
     "${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.cpp"
     "${SOURCE_DIR}/sink/rest_sink/session_impl.cpp"
     "${SOURCE_DIR}/source/adapter/mqtt/mqtt_adapter.cpp"

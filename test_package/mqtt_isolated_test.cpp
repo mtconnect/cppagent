@@ -181,7 +181,7 @@ protected:
   std::unique_ptr<printer::JsonPrinter> m_jsonPrinter;
   std::shared_ptr<mtconnect::mqtt_server::MqttServer> m_server;
   std::shared_ptr<MqttClient> m_client;
-  std::shared_ptr<MqttLegacyService> m_service;
+  std::shared_ptr<MqttService> m_service;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   uint16_t m_port {0};
 };

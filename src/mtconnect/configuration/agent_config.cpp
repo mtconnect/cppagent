@@ -58,7 +58,6 @@
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/printer/xml_printer.hpp"
-#include "mtconnect/sink/mqtt_sink/mqtt_legacy_service.hpp"
 #include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
 #include "mtconnect/sink/rest_sink/rest_service.hpp"
 #include "mtconnect/source/adapter/agent_adapter/agent_adapter.hpp"
@@ -112,7 +111,6 @@ namespace mtconnect::configuration {
 
     bool success = false;
 
-    sink::mqtt_sink::MqttLegacyService::registerFactory(m_sinkFactory);
     sink::mqtt_sink::MqttService::registerFactory(m_sinkFactory);
     sink::rest_sink::RestService::registerFactory(m_sinkFactory);
     adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);

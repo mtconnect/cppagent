@@ -531,7 +531,7 @@ namespace mtconnect {
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
         auto removed = *request->parameter<bool>("removed");
         auto count = *request->parameter<int32_t>("count");
-        auto pretty = *request->parameter<bool>("pretty");
+        auto pretty = request->parameter<bool>("pretty").value_or(false);
         auto format = request->parameter<string>("format");
         auto printer = getPrinter(request->m_accepts, format);
 
@@ -548,7 +548,7 @@ namespace mtconnect {
         if (asset)
         {
           auto format = request->parameter<string>("format");
-          auto pretty = *request->parameter<bool>("pretty");
+          auto pretty = request->parameter<bool>("pretty").value_or(false);
           auto printer = m_sinkContract->getPrinter(acceptFormat(request->m_accepts, format));
 
           list<string> ids;
