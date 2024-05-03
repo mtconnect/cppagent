@@ -362,10 +362,12 @@ namespace mtconnect::sink::rest_sink {
               // Skip nulls
               break;
             case rapidjson::kFalseType:
-              request->m_parameters.emplace(make_pair(it.name.GetString(), false));
+              request->m_parameters.emplace(
+                  make_pair(it.name.GetString(), ParameterValue(bool(false))));
               break;
             case rapidjson::kTrueType:
-              request->m_parameters.emplace(make_pair(it.name.GetString(), true));
+              request->m_parameters.emplace(
+                  make_pair(it.name.GetString(), ParameterValue(bool(true))));
               break;
             case rapidjson::kObjectType:
               break;
@@ -373,24 +375,25 @@ namespace mtconnect::sink::rest_sink {
               break;
             case rapidjson::kStringType:
               request->m_parameters.emplace(
-                  make_pair(it.name.GetString(), string(it.value.GetString())));
+                  make_pair(it.name.GetString(), ParameterValue(it.value.GetString())));
 
               break;
             case rapidjson::kNumberType:
               if (it.value.Is<int>())
-                request->m_parameters.emplace(make_pair(it.name.GetString(), it.value.Get<int>()));
+                request->m_parameters.emplace(
+                    make_pair(it.name.GetString(), ParameterValue(it.value.Get<int>())));
               else if (it.value.Is<unsigned>())
                 request->m_parameters.emplace(
-                    make_pair(it.name.GetString(), it.value.Get<unsigned>()));
+                    make_pair(it.name.GetString(), ParameterValue(it.value.Get<unsigned>())));
               else if (it.value.Is<int64_t>())
-                request->m_parameters.emplace(
-                    make_pair(it.name.GetString(), (uint64_t)it.value.Get<int64_t>()));
+                request->m_parameters.emplace(make_pair(
+                    it.name.GetString(), ParameterValue((uint64_t)it.value.Get<int64_t>())));
               else if (it.value.Is<uint64_t>())
                 request->m_parameters.emplace(
-                    make_pair(it.name.GetString(), it.value.Get<uint64_t>()));
+                    make_pair(it.name.GetString(), ParameterValue(it.value.Get<uint64_t>())));
               else if (it.value.Is<double>())
                 request->m_parameters.emplace(
-                    make_pair(it.name.GetString(), it.value.Get<double>()));
+                    make_pair(it.name.GetString(), ParameterValue(it.value.Get<double>())));
 
               break;
           }
