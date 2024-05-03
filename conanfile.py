@@ -35,7 +35,7 @@ class MTConnectAgentConan(ConanFile):
         "with_ruby": True,
         "development": False,
         "shared": False,
-        "winver": "0x602",
+        "winver": "0x0602",
         "with_docs": False,
         "cpack": False,
         "agent_prefix": None,
@@ -139,6 +139,9 @@ class MTConnectAgentConan(ConanFile):
         if self.options.shared:
             self.options["boost/*"].shared = True
             self.package_type = "shared-library"
+
+        if is_msvc(self):
+            self.options["boost/*"].extra_b2_flags = ("define=BOOST_USE_WINAPI_VERSION=" + str(self.options.winver))
             
         # Make sure shared builds use shared boost
         if is_msvc(self) and self.options.shared:
