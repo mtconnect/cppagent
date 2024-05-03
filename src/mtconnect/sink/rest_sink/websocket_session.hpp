@@ -100,7 +100,7 @@ namespace mtconnect::sink::rest_sink {
 
     void close() override
     {
-      NAMED_SCOPE("PlainWebsocketSession::close");
+      //NAMED_SCOPE("PlainWebsocketSession::close");
       if (!m_isOpen)
         return;
 
@@ -128,7 +128,7 @@ namespace mtconnect::sink::rest_sink {
 
     void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override
     {
-      NAMED_SCOPE("WebsocketSession::writeResponse");
+      //NAMED_SCOPE("WebsocketSession::writeResponse");
       if (!response->m_requestId)
       {
         boost::system::error_code ec;
@@ -140,7 +140,7 @@ namespace mtconnect::sink::rest_sink {
 
     void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override
     {
-      NAMED_SCOPE("WebsocketSession::writeFailureResponse");
+      //NAMED_SCOPE("WebsocketSession::writeFailureResponse");
       writeChunk(response->m_body, complete, response->m_requestId);
     }
 
@@ -175,7 +175,7 @@ namespace mtconnect::sink::rest_sink {
     void writeChunk(const std::string &chunk, Complete complete,
                     std::optional<std::string> requestId = std::nullopt) override
     {
-      NAMED_SCOPE("WebsocketSession::writeChunk");
+      //NAMED_SCOPE("WebsocketSession::writeChunk");
 
       if (!derived().stream().is_open())
       {
@@ -219,7 +219,7 @@ namespace mtconnect::sink::rest_sink {
 
     void send(const std::string body, Complete complete, const std::string &requestId)
     {
-      NAMED_SCOPE("WebsocketSession::send");
+      //NAMED_SCOPE("WebsocketSession::send");
 
       using namespace std::placeholders;
 
@@ -255,7 +255,7 @@ namespace mtconnect::sink::rest_sink {
 
     void sent(beast::error_code ec, std::size_t len, const std::string &id)
     {
-      NAMED_SCOPE("WebsocketSession::sent");
+      //NAMED_SCOPE("WebsocketSession::sent");
 
       if (ec)
       {
@@ -310,7 +310,7 @@ namespace mtconnect::sink::rest_sink {
 
     void onRead(beast::error_code ec, std::size_t len)
     {
-      NAMED_SCOPE("PlainWebsocketSession::onRead");
+      //NAMED_SCOPE("PlainWebsocketSession::onRead");
 
       if (ec)
         return fail(boost::beast::http::status::internal_server_error, "shutdown", ec);
