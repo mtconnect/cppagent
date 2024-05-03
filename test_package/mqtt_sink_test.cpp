@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
 using json = nlohmann::json;
 
-class MqttSink2Test : public testing::Test
+class MqttSinkTest : public testing::Test
 {
 protected:
   void SetUp() override
@@ -62,6 +62,7 @@ protected:
   void TearDown() override
   {
     const auto agent = m_agentTestHelper->getAgent();
+    m_agentTestHelper->m_ioContext.run_for(500ms);
     if (agent)
     {
       m_agentTestHelper->getAgent()->stop();
@@ -184,7 +185,7 @@ protected:
   uint16_t m_port {0};
 };
 
-TEST_F(MqttSink2Test, mqtt_sink_flat_formatt_check)
+TEST_F(MqttSinkTest, mqtt_sink_flat_formatt_check)
 {
   ConfigOptions options {{MqttMaxTopicDepth, 9}, {ProbeTopic, "Device/F/l/a/t/F/o/r/m/a/t"s}};
   createServer(options);
@@ -198,7 +199,7 @@ TEST_F(MqttSink2Test, mqtt_sink_flat_formatt_check)
   ASSERT_TRUE(waitFor(10s, [&service]() { return service->isConnected(); }));
 }
 
-TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe)
+TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe)
 {
   ConfigOptions options;
   createServer(options);
@@ -237,7 +238,7 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe)
   ASSERT_TRUE(waitFor(1s, [&gotDevice]() { return gotDevice; }));
 }
 
-TEST_F(MqttSink2Test, mqtt_sink_should_publish_Sample)
+TEST_F(MqttSinkTest, mqtt_sink_should_publish_Sample)
 {
   ConfigOptions options;
   createServer(options);
@@ -274,7 +275,7 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Sample)
   ASSERT_TRUE(waitFor(10s, [&gotSample]() { return gotSample; }));
 }
 
-TEST_F(MqttSink2Test, mqtt_sink_should_publish_Current)
+TEST_F(MqttSinkTest, mqtt_sink_should_publish_Current)
 {
   ConfigOptions options;
   createServer(options);
@@ -311,7 +312,7 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Current)
   ASSERT_TRUE(waitFor(1s, [&gotCurrent]() { return gotCurrent; }));
 }
 
-TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe_with_uuid_first)
+TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe_with_uuid_first)
 {
   ConfigOptions options;
   createServer(options);
@@ -350,7 +351,7 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe_with_uuid_first)
   ASSERT_TRUE(waitFor(1s, [&gotDevice]() { return gotDevice; }));
 }
 
-TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe_no_device_in_format)
+TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe_no_device_in_format)
 {
   ConfigOptions options;
   createServer(options);
@@ -389,7 +390,7 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe_no_device_in_format)
   ASSERT_TRUE(waitFor(1s, [&gotDevice]() { return gotDevice; }));
 }
 
-TEST_F(MqttSink2Test, mqtt_sink_should_publish_agent_device)
+TEST_F(MqttSinkTest, mqtt_sink_should_publish_agent_device)
 {
   ConfigOptions options;
   createServer(options);
