@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.2" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:1.2 http://www.mtconnect.org/schemas/MTConnectDevices_1.2.xsd">
-  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.2" assetBufferSize="1024" assetCount="0"/>
+  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.2" assetBufferSize="1024" assetCount="0" />
   <Devices>
     <Device uuid="000" name="LinuxCNC" id="d" mtconnectVersion="1.7">
       <Description manufacturer="NIST" serialNumber="1122">Linux CNC Device</Description>

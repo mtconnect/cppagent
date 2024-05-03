@@ -113,8 +113,10 @@ namespace mtconnect {
            {"from", QUERY, "Sequence number at to start reporting observations"},
            {"interval", QUERY, "Time in ms between publishing data–starts streaming"},
            {"pretty", QUERY, "Instructs the result to be pretty printed"},
+           {"format", QUERY, "The format of the response document: 'xml' or 'json'"},
            {"heartbeat", QUERY,
-            "Time in ms between publishing a empty document when no data has changed"}});
+            "Time in ms between publishing a empty document when no data has changed"},
+           {"id", PATH, "webservice request id"}});
 
       createProbeRoutings();
       createCurrentRoutings();
@@ -122,6 +124,7 @@ namespace mtconnect {
       createAssetRoutings();
       createPutObservationRoutings();
       createFileRoutings();
+      m_server->addCommands();
 
       makeLoopbackSource(m_sinkContract->m_pipelineContext);
     }
@@ -434,8 +437,10 @@ namespace mtconnect {
     // Request Routings
     // -----------------------------------------------------------
 
-    static inline void respond(rest_sink::SessionPtr session, rest_sink::ResponsePtr &&response)
+    static inline void respond(rest_sink::SessionPtr session, rest_sink::ResponsePtr &&response,
+                               std::optional<std::string> id = std::nullopt)
     {
+      response->m_requestId = id;
       session->writeResponse(std::move(response));
     }
 
@@ -472,8 +477,8 @@ namespace mtconnect {
         auto device = request->parameter<string>("device");
         auto pretty = *request->parameter<bool>("pretty");
         auto deviceType = request->parameter<string>("deviceType");
-
-        auto printer = printerForAccepts(request->m_accepts);
+        auto format = request->parameter<string>("format");
+        auto printer = getPrinter(request->m_accepts, format);
 
         if (device && !ends_with(request->m_path, string("probe")) &&
             m_sinkContract->findDeviceByUUIDorName(*device) == nullptr)
@@ -484,33 +489,37 @@ namespace mtconnect {
           return false;
         }
 
-        respond(session, probeRequest(printer, device, pretty, deviceType));
+        respond(session, probeRequest(printer, device, pretty, deviceType, request->m_requestId),
+                request->m_requestId);
         return true;
       };
 
       m_server
           ->addRouting({boost::beast::http::verb::get,
-                        "/probe?pretty={bool:false}&deviceType={string}", handler})
+                        "/probe?pretty={bool:false}&deviceType={string}&format={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for all "
                     "devices.");
       m_server
           ->addRouting({boost::beast::http::verb::get,
-                        "/{device}/probe?pretty={bool:false}&deviceType={string}", handler})
+                        "/{device}/probe?pretty={bool:false}&deviceType={string}&format={string}",
+                        handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for "
-                    "device identified by `device` matching `name` or `uuid`.");
+                    "device identified by `device` matching `name` or `uuid`.")
+          .command("probe");
 
       // Must be last
       m_server
-          ->addRouting(
-              {boost::beast::http::verb::get, "/?pretty={bool:false}&deviceType={string}", handler})
+          ->addRouting({boost::beast::http::verb::get,
+                        "/?pretty={bool:false}&deviceType={string}&format={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for all "
                     "devices.");
       m_server
           ->addRouting({boost::beast::http::verb::get,
-                        "/{device}?pretty={bool:false}&deviceType={string}", handler})
+                        "/{device}?pretty={bool:false}&deviceType={string}&format={string}",
+                        handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for "
                     "device identified by `device` matching `name` or `uuid`.");
@@ -522,10 +531,14 @@ namespace mtconnect {
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
         auto removed = *request->parameter<bool>("removed");
         auto count = *request->parameter<int32_t>("count");
-        auto printer = printerForAccepts(request->m_accepts);
+        auto pretty = request->parameter<bool>("pretty").value_or(false);
+        auto format = request->parameter<string>("format");
+        auto printer = getPrinter(request->m_accepts, format);
 
-        respond(session, assetRequest(printer, count, removed, request->parameter<string>("type"),
-                                      request->parameter<string>("device")));
+        respond(session,
+                assetRequest(printer, count, removed, request->parameter<string>("type"),
+                             request->parameter<string>("device"), pretty, request->m_requestId),
+                request->m_requestId);
         return true;
       };
 
@@ -533,6 +546,7 @@ namespace mtconnect {
         auto asset = request->parameter<string>("assetIds");
         if (asset)
         {
+          auto pretty = request->parameter<bool>("pretty").value_or(false);
           auto printer = m_sinkContract->getPrinter(acceptFormat(request->m_accepts));
 
           list<string> ids;
@@ -540,21 +554,24 @@ namespace mtconnect {
           string id;
           while (getline(str, id, ';'))
             ids.emplace_back(id);
-          respond(session, assetIdsRequest(printer, ids));
+          respond(session, assetIdsRequest(printer, ids, pretty, request->m_requestId),
+                  request->m_requestId);
         }
         else
         {
-          auto printer = printerForAccepts(request->m_accepts);
+          auto format = request->parameter<string>("format");
+          auto printer = getPrinter(request->m_accepts, format);
           auto error = printError(printer, "INVALID_REQUEST", "No asset given");
-          respond(session, make_unique<Response>(rest_sink::status::bad_request, error,
-                                                 printer->mimeType()));
+          respond(session,
+                  make_unique<Response>(rest_sink::status::bad_request, error, printer->mimeType()),
+                  request->m_requestId);
         }
         return true;
       };
 
       string qp(
           "type={string}&removed={bool:false}&"
-          "count={integer:100}&device={string}&pretty={bool:false}");
+          "count={integer:100}&device={string}&pretty={bool:false}&format={string}");
       m_server->addRouting({boost::beast::http::verb::get, "/assets?" + qp, handler})
           .document("MTConnect assets request", "Returns up to `count` assets");
       m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler})
@@ -575,11 +592,13 @@ namespace mtconnect {
       if (m_server->arePutsAllowed())
       {
         auto putHandler = [&](SessionPtr session, RequestPtr request) -> bool {
-          auto printer = printerForAccepts(request->m_accepts);
+          auto format = request->parameter<string>("format");
+          auto printer = getPrinter(request->m_accepts, format);
           respond(session,
                   putAssetRequest(printer, request->m_body, request->parameter<string>("type"),
                                   request->parameter<string>("device"),
-                                  request->parameter<string>("assetId")));
+                                  request->parameter<string>("assetId")),
+                  request->m_requestId);
           return true;
         };
 
@@ -590,17 +609,22 @@ namespace mtconnect {
             list<string> ids;
             stringstream str(*asset);
             string id;
-            auto printer = printerForAccepts(request->m_accepts);
+            auto format = request->parameter<string>("format");
+            auto printer = getPrinter(request->m_accepts, format);
 
             while (getline(str, id, ';'))
               ids.emplace_back(id);
-            respond(session, deleteAssetRequest(printer, ids));
+            respond(session, deleteAssetRequest(printer, ids), request->m_requestId);
           }
           else
           {
-            respond(session, deleteAllAssetsRequest(printerForAccepts(request->m_accepts),
-                                                    request->parameter<string>("device"),
-                                                    request->parameter<string>("type")));
+            auto format = request->parameter<string>("format");
+            auto printer = getPrinter(request->m_accepts, format);
+
+            respond(session,
+                    deleteAllAssetsRequest(printer, request->parameter<string>("device"),
+                                           request->parameter<string>("type")),
+                    request->m_requestId);
           }
           return true;
         };
@@ -612,37 +636,47 @@ namespace mtconnect {
           {
             m_server
                 ->addRouting(
-                    {t, "/" + asset + "/{assetId}?device={string}&type={string}", putHandler})
+                    {t, "/" + asset + "/{assetId}?device={string}&type={string}&format={string}",
+                     putHandler})
                 .document("Upload an asset by identified by `assetId`",
                           "Updates or adds an asset with the asset XML in the body");
-            m_server->addRouting({t, "/" + asset + "?device={string}&type={string}", putHandler})
+            m_server
+                ->addRouting(
+                    {t, "/" + asset + "?device={string}&type={string}&format={string}", putHandler})
                 .document("Upload an asset by identified by `assetId`",
                           "Updates or adds an asset with the asset XML in the body");
-            m_server->addRouting({t, "/{device}/" + asset + "/{assetId}?type={string}", putHandler})
+            m_server
+                ->addRouting({t, "/{device}/" + asset + "/{assetId}?type={string}&format={string}",
+                              putHandler})
                 .document("Upload an asset by identified by `assetId`",
                           "Updates or adds an asset with the asset XML in the body");
-            m_server->addRouting({t, "/{device}/" + asset + "?type={string}", putHandler})
+            m_server
+                ->addRouting(
+                    {t, "/{device}/" + asset + "?type={string}&format={string}", putHandler})
                 .document("Upload an asset by identified by `assetId`",
                           "Updates or adds an asset with the asset XML in the body");
           }
 
           m_server
               ->addRouting({boost::beast::http::verb::delete_,
-                            "/" + asset + "?device={string}&type={string}", deleteHandler})
+                            "/" + asset + "?device={string}&type={string}&format={string}",
+                            deleteHandler})
               .document("Delete all assets for a device and type",
                         "Device and type are optional. If they are not given, it assumes there is "
                         "no constraint");
           m_server
-              ->addRouting(
-                  {boost::beast::http::verb::delete_, "/" + asset + "/{assetId}", deleteHandler})
+              ->addRouting({boost::beast::http::verb::delete_,
+                            "/" + asset + "/{assetId}?format={string}", deleteHandler})
               .document("Delete asset identified by `assetId`",
                         "Marks the asset as removed and creates an AssetRemoved event");
           m_server
               ->addRouting({boost::beast::http::verb::delete_,
-                            "/{device}/" + asset + "?type={string}", deleteHandler})
+                            "/{device}/" + asset + "?type={string}&format={string}", deleteHandler})
               .document("Delete all assets for a device and type",
                         "Device and type are optional. If they are not given, it assumes there is "
-                        "no constraint");
+                        "no constraint")
+              .command("asset");
+          ;
         }
       }
     }
@@ -654,19 +688,26 @@ namespace mtconnect {
         auto interval = request->parameter<int32_t>("interval");
         if (interval)
         {
-          streamCurrentRequest(
-              session, printerForAccepts(request->m_accepts), *interval,
-              request->parameter<string>("device"), request->parameter<string>("path"),
-              *request->parameter<bool>("pretty"), request->parameter<string>("deviceType"));
+          auto format = request->parameter<string>("format");
+          auto printer = getPrinter(request->m_accepts, format);
+
+          streamCurrentRequest(session, printer, *interval, request->parameter<string>("device"),
+                               request->parameter<string>("path"),
+                               *request->parameter<bool>("pretty"),
+                               request->parameter<string>("deviceType"), request->m_requestId);
         }
         else
         {
-          respond(session, currentRequest(printerForAccepts(request->m_accepts),
-                                          request->parameter<string>("device"),
-                                          request->parameter<uint64_t>("at"),
-                                          request->parameter<string>("path"),
-                                          *request->parameter<bool>("pretty"),
-                                          request->parameter<string>("deviceType")));
+          auto format = request->parameter<string>("format");
+          auto printer = getPrinter(request->m_accepts, format);
+
+          respond(
+              session,
+              currentRequest(printer, request->parameter<string>("device"),
+                             request->parameter<uint64_t>("at"), request->parameter<string>("path"),
+                             *request->parameter<bool>("pretty"),
+                             request->parameter<string>("deviceType"), request->m_requestId),
+              request->m_requestId);
         }
         return true;
       };
@@ -674,7 +715,7 @@ namespace mtconnect {
       string qp(
           "path={string}&at={unsigned_integer}&"
           "interval={integer}&pretty={bool:false}&"
-          "deviceType={string}");
+          "deviceType={string}&format={string}");
       m_server->addRouting({boost::beast::http::verb::get, "/current?" + qp, handler})
           .document("MTConnect current request",
                     "Gets a stapshot of the state of all the observations for all devices "
@@ -682,7 +723,8 @@ namespace mtconnect {
       m_server->addRouting({boost::beast::http::verb::get, "/{device}/current?" + qp, handler})
           .document("MTConnect current request",
                     "Gets a stapshot of the state of all the observations for device `device` "
-                    "optionally filtered by the `path`");
+                    "optionally filtered by the `path`")
+          .command("current");
     }
 
     void RestService::createSampleRoutings()
@@ -692,24 +734,49 @@ namespace mtconnect {
         auto interval = request->parameter<int32_t>("interval");
         if (interval)
         {
+          auto format = request->parameter<string>("format");
+          auto printer = getPrinter(request->m_accepts, format);
+
           streamSampleRequest(
-              session, printerForAccepts(request->m_accepts), *interval,
-              *request->parameter<int32_t>("heartbeat"), *request->parameter<int32_t>("count"),
-              request->parameter<string>("device"), request->parameter<uint64_t>("from"),
-              request->parameter<string>("path"), *request->parameter<bool>("pretty"),
-              request->parameter<string>("deviceType"));
+              session, printer, *interval, *request->parameter<int32_t>("heartbeat"),
+              *request->parameter<int32_t>("count"), request->parameter<string>("device"),
+              request->parameter<uint64_t>("from"), request->parameter<string>("path"),
+              *request->parameter<bool>("pretty"), request->parameter<string>("deviceType"),
+              request->m_requestId);
         }
         else
         {
-          respond(
-              session,
-              sampleRequest(
-                  printerForAccepts(request->m_accepts), *request->parameter<int32_t>("count"),
-                  request->parameter<string>("device"), request->parameter<uint64_t>("from"),
-                  request->parameter<uint64_t>("to"), request->parameter<string>("path"),
-                  *request->parameter<bool>("pretty"), request->parameter<string>("deviceType")));
+          auto format = request->parameter<string>("format");
+          auto printer = getPrinter(request->m_accepts, format);
+
+          respond(session,
+                  sampleRequest(
+                      printer, *request->parameter<int32_t>("count"),
+                      request->parameter<string>("device"), request->parameter<uint64_t>("from"),
+                      request->parameter<uint64_t>("to"), request->parameter<string>("path"),
+                      *request->parameter<bool>("pretty"), request->parameter<string>("deviceType"),
+                      request->m_requestId),
+                  request->m_requestId);
         }
         return true;
+      };
+
+      auto cancelHandler = [&](SessionPtr session, RequestPtr request) -> bool {
+        if (request->m_requestId)
+        {
+          auto requestId = *request->m_requestId;
+          auto success = session->cancelRequest(requestId);
+          auto response = make_unique<Response>(
+              status::ok, "{ \"success\": \""s + (success ? "true" : "false") + "\"}",
+              "application/json");
+
+          respond(session, std::move(response), request->m_requestId);
+          return true;
+        }
+        else
+        {
+          return false;
+        }
       };
 
       string qp(
@@ -717,7 +784,7 @@ namespace mtconnect {
           "interval={integer}&count={integer:100}&"
           "heartbeat={integer:10000}&to={unsigned_integer}&"
           "pretty={bool:false}&"
-          "deviceType={string}");
+          "deviceType={string}&format={string}");
       m_server->addRouting({boost::beast::http::verb::get, "/sample?" + qp, handler})
           .document("MTConnect sample request",
                     "Gets a time series of at maximum `count` observations for all devices "
@@ -727,7 +794,11 @@ namespace mtconnect {
           .document("MTConnect sample request",
                     "Gets a time series of at maximum `count` observations for device `device` "
                     "optionally filtered by the `path` and starting at `from`. By default, from is "
-                    "the first available observation known to the agent");
+                    "the first available observation known to the agent")
+          .command("sample");
+      m_server->addRouting({boost::beast::http::verb::get, "/cancel/id={string}", cancelHandler})
+          .document("MTConnect WebServices Cancel Stream", "Cancels a streaming sample request")
+          .command("cancel");
     }
 
     void RestService::createPutObservationRoutings()
@@ -744,9 +815,11 @@ namespace mtconnect {
             if (ts)
               queries.erase("time");
             auto device = request->parameter<string>("device");
+            auto format = request->parameter<string>("format");
+            auto printer = getPrinter(request->m_accepts, format);
 
-            respond(session, putObservationRequest(printerForAccepts(request->m_accepts), *device,
-                                                   queries, ts));
+            respond(session, putObservationRequest(printer, *device, queries, ts),
+                    request->m_requestId);
             return true;
           }
           else
@@ -776,7 +849,8 @@ namespace mtconnect {
 
     ResponsePtr RestService::probeRequest(const Printer *printer,
                                           const std::optional<std::string> &device, bool pretty,
-                                          const std::optional<std::string> &deviceType)
+                                          const std::optional<std::string> &deviceType,
+                                          const std::optional<std::string> &requestId)
     {
       NAMED_SCOPE("RestService::probeRequest");
 
@@ -805,7 +879,7 @@ namespace mtconnect {
                               m_sinkContract->getCircularBuffer().getSequence(),
                               uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
                               uint32_t(m_sinkContract->getAssetStorage()->getCount()), deviceList,
-                              &counts, false, pretty),
+                              &counts, false, pretty, requestId),
           printer->mimeType());
     }
 
@@ -813,7 +887,8 @@ namespace mtconnect {
                                             const std::optional<std::string> &device,
                                             const std::optional<SequenceNumber_t> &at,
                                             const std::optional<std::string> &path, bool pretty,
-                                            const std::optional<std::string> &deviceType)
+                                            const std::optional<std::string> &deviceType,
+                                            const std::optional<std::string> &requestId)
     {
       using namespace rest_sink;
       DevicePtr dev {nullptr};
@@ -830,7 +905,7 @@ namespace mtconnect {
 
       // Check if there is a frequency to stream data or not
       return make_unique<Response>(rest_sink::status::ok,
-                                   fetchCurrentData(printer, filter, at, pretty),
+                                   fetchCurrentData(printer, filter, at, pretty, requestId),
                                    printer->mimeType());
     }
 
@@ -839,7 +914,8 @@ namespace mtconnect {
                                            const std::optional<SequenceNumber_t> &from,
                                            const std::optional<SequenceNumber_t> &to,
                                            const std::optional<std::string> &path, bool pretty,
-                                           const std::optional<std::string> &deviceType)
+                                           const std::optional<std::string> &deviceType,
+                                           const std::optional<std::string> &requestId)
     {
       using namespace rest_sink;
       DevicePtr dev {nullptr};
@@ -860,7 +936,7 @@ namespace mtconnect {
 
       return make_unique<Response>(
           rest_sink::status::ok,
-          fetchSampleData(printer, filter, count, from, to, end, endOfBuffer, pretty),
+          fetchSampleData(printer, filter, count, from, to, end, endOfBuffer, pretty, requestId),
           printer->mimeType());
     }
 
@@ -880,6 +956,7 @@ namespace mtconnect {
         if (sink && isRunning())
         {
           m_session->fail(status, message);
+          cancel();
         }
         else
         {
@@ -906,6 +983,13 @@ namespace mtconnect {
         }
       }
 
+      bool cancel() override
+      {
+        observation::AsyncObserver::cancel();
+        m_session.reset();
+        return true;
+      }
+
       std::weak_ptr<sink::Sink>
           m_sink;  //!  weak shared pointer to the sink. handles shutdown timer race
       int m_count {0};
@@ -921,7 +1005,8 @@ namespace mtconnect {
                                           const int count, const std::optional<std::string> &device,
                                           const std::optional<SequenceNumber_t> &from,
                                           const std::optional<std::string> &path, bool pretty,
-                                          const std::optional<std::string> &deviceType)
+                                          const std::optional<std::string> &deviceType,
+                                          const std::optional<std::string> &requestId)
     {
       NAMED_SCOPE("RestService::streamSampleRequest");
 
@@ -955,6 +1040,8 @@ namespace mtconnect {
       asyncResponse->m_printer = printer;
       asyncResponse->m_sink = getptr();
       asyncResponse->m_pretty = pretty;
+      asyncResponse->setRequestId(requestId);
+      session->addObserver(asyncResponse);
 
       if (m_logStreamData)
       {
@@ -972,7 +1059,8 @@ namespace mtconnect {
       session->beginStreaming(
           printer->mimeType(),
           asio::bind_executor(m_strand,
-                              boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
+                              boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)),
+          requestId);
     }
 
     SequenceNumber_t RestService::streamNextSampleChunk(
@@ -996,15 +1084,20 @@ namespace mtconnect {
 
         string content = fetchSampleData(asyncResponse->m_printer, asyncResponse->getFilter(),
                                          asyncResponse->m_count, from, nullopt, end,
-                                         asyncObserver->m_endOfBuffer, asyncResponse->m_pretty);
+                                         asyncObserver->m_endOfBuffer, asyncResponse->m_pretty,
+                                         asyncResponse->getRequestId());
 
         if (m_logStreamData)
           asyncResponse->m_log << content << endl;
 
-        asyncResponse->m_session->writeChunk(
-            content, asio::bind_executor(
-                         m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
-
+        if (asyncResponse->m_session)
+        {
+          asyncResponse->m_session->writeChunk(
+              content,
+              asio::bind_executor(m_strand,
+                                  boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)),
+              asyncResponse->getRequestId());
+        }
         return end;
       }
 
@@ -1012,9 +1105,12 @@ namespace mtconnect {
       {
         LOG(error) << asyncResponse->m_session->getRemote().address()
                    << ": Error processing request: " << re.what();
-        ResponsePtr resp = std::make_unique<Response>(re);
-        asyncResponse->m_session->writeResponse(std::move(resp));
-        asyncResponse->m_session->close();
+        if (asyncResponse->m_session)
+        {
+          ResponsePtr resp = std::make_unique<Response>(re);
+          asyncResponse->m_session->writeResponse(std::move(resp));
+          asyncResponse->m_session->close();
+        }
       }
 
       catch (...)
@@ -1028,15 +1124,26 @@ namespace mtconnect {
       return 0;
     }
 
-    struct AsyncCurrentResponse
+    struct AsyncCurrentResponse : public AsyncResponse
     {
-      AsyncCurrentResponse(rest_sink::SessionPtr session, asio::io_context &context)
-        : m_session(session), m_timer(context)
+      AsyncCurrentResponse(rest_sink::SessionPtr session, asio::io_context &context,
+                           chrono::milliseconds interval)
+        : AsyncResponse(interval), m_session(session), m_timer(context)
       {}
+
+      auto getptr() { return dynamic_pointer_cast<AsyncCurrentResponse>(shared_from_this()); }
+
+      bool cancel() override
+      {
+        m_timer.cancel();
+        m_session.reset();
+        return true;
+      }
+
+      bool isRunning() override { return (bool)m_session; }
 
       std::weak_ptr<Sink> m_service;
       rest_sink::SessionPtr m_session;
-      chrono::milliseconds m_interval;
       const Printer *m_printer {nullptr};
       FilterSetOpt m_filter;
       boost::asio::steady_timer m_timer;
@@ -1047,7 +1154,8 @@ namespace mtconnect {
                                            const int interval,
                                            const std::optional<std::string> &device,
                                            const std::optional<std::string> &path, bool pretty,
-                                           const std::optional<std::string> &deviceType)
+                                           const std::optional<std::string> &deviceType,
+                                           const std::optional<std::string> &requestId)
     {
       checkRange(printer, interval, 0, numeric_limits<int>().max(), "interval");
       DevicePtr dev {nullptr};
@@ -1056,21 +1164,27 @@ namespace mtconnect {
         dev = checkDevice(printer, *device);
       }
 
-      auto asyncResponse = make_shared<AsyncCurrentResponse>(session, m_context);
+      auto asyncResponse =
+          make_shared<AsyncCurrentResponse>(session, m_context, chrono::milliseconds {interval});
       if (path || device || deviceType)
       {
         asyncResponse->m_filter = make_optional<FilterSet>();
         checkPath(printer, path, dev, *asyncResponse->m_filter, deviceType);
       }
-      asyncResponse->m_interval = chrono::milliseconds {interval};
       asyncResponse->m_printer = printer;
       asyncResponse->m_service = getptr();
       asyncResponse->m_pretty = pretty;
+      asyncResponse->setRequestId(requestId);
+      session->addObserver(asyncResponse);
 
       asyncResponse->m_session->beginStreaming(
-          printer->mimeType(), boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
-            streamNextCurrent(asyncResponse, boost::system::error_code {});
-          }));
+          printer->mimeType(),
+          boost::asio::bind_executor(m_strand,
+                                     [this, asyncResponse]() {
+                                       streamNextCurrent(asyncResponse,
+                                                         boost::system::error_code {});
+                                     }),
+          requestId);
     }
 
     void RestService::streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
@@ -1085,7 +1199,7 @@ namespace mtconnect {
         if (!service || !m_server || !m_server->isRunning())
         {
           LOG(warning) << "Trying to send chunk when service has stopped";
-          if (service)
+          if (service && asyncResponse->m_session)
           {
             asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
                                            "Agent shutting down, aborting stream");
@@ -1097,27 +1211,38 @@ namespace mtconnect {
         {
           LOG(warning) << "Unexpected error streamNextCurrent, aborting";
           LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
-          asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
-                                         "Unexpected error streamNextCurrent, aborting");
+          if (asyncResponse->m_session)
+            asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
+                                           "Unexpected error streamNextCurrent, aborting");
           return;
         }
 
-        asyncResponse->m_session->writeChunk(
-            fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt,
-                             asyncResponse->m_pretty),
-            boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
-              asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval);
-              asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
-                  m_strand, boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
-            }));
+        if (asyncResponse->m_session)
+        {
+          asyncResponse->m_session->writeChunk(
+              fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt,
+                               asyncResponse->m_pretty, asyncResponse->getRequestId()),
+              boost::asio::bind_executor(
+                  m_strand,
+                  [this, asyncResponse]() {
+                    asyncResponse->m_timer.expires_from_now(asyncResponse->getInterval());
+                    asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
+                        m_strand,
+                        boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
+                  }),
+              asyncResponse->getRequestId());
+        }
       }
       catch (RequestError &re)
       {
         LOG(error) << asyncResponse->m_session->getRemote().address()
                    << ": Error processing request: " << re.what();
-        ResponsePtr resp = std::make_unique<Response>(re);
-        asyncResponse->m_session->writeResponse(std::move(resp));
-        asyncResponse->m_session->close();
+        if (asyncResponse->m_session)
+        {
+          ResponsePtr resp = std::make_unique<Response>(re);
+          asyncResponse->m_session->writeResponse(std::move(resp));
+          asyncResponse->m_session->close();
+        }
       }
 
       catch (...)
@@ -1125,14 +1250,18 @@ namespace mtconnect {
         std::stringstream txt;
         txt << asyncResponse->m_session->getRemote().address() << ": Unknown Error thrown";
         LOG(error) << txt.str();
-        asyncResponse->m_session->fail(boost::beast::http::status::not_found, txt.str());
+        if (asyncResponse->m_session)
+        {
+          asyncResponse->m_session->fail(boost::beast::http::status::not_found, txt.str());
+        }
       }
     }
 
     ResponsePtr RestService::assetRequest(const Printer *printer, const int32_t count,
                                           const bool removed,
                                           const std::optional<std::string> &type,
-                                          const std::optional<std::string> &device, bool pretty)
+                                          const std::optional<std::string> &device, bool pretty,
+                                          const std::optional<std::string> &requestId)
     {
       using namespace rest_sink;
 
@@ -1150,12 +1279,13 @@ namespace mtconnect {
           status::ok,
           printer->printAssets(
               m_instanceId, uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
-              uint32_t(m_sinkContract->getAssetStorage()->getCount()), list, pretty),
+              uint32_t(m_sinkContract->getAssetStorage()->getCount()), list, pretty, requestId),
           printer->mimeType());
     }
 
     ResponsePtr RestService::assetIdsRequest(const Printer *printer,
-                                             const std::list<std::string> &ids, bool pretty)
+                                             const std::list<std::string> &ids, bool pretty,
+                                             const std::optional<std::string> &requestId)
     {
       using namespace rest_sink;
 
@@ -1168,9 +1298,9 @@ namespace mtconnect {
           str << id << ", ";
 
         auto message = str.str().substr(0, str.str().size() - 2);
-        return make_unique<Response>(status::not_found,
-                                     printError(printer, "ASSET_NOT_FOUND", message, pretty),
-                                     printer->mimeType());
+        return make_unique<Response>(
+            status::not_found, printError(printer, "ASSET_NOT_FOUND", message, pretty, requestId),
+            printer->mimeType());
       }
       else
       {
@@ -1178,7 +1308,7 @@ namespace mtconnect {
             status::ok,
             printer->printAssets(
                 m_instanceId, uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
-                uint32_t(m_sinkContract->getAssetStorage()->getCount()), list, pretty),
+                uint32_t(m_sinkContract->getAssetStorage()->getCount()), list, pretty, requestId),
             printer->mimeType());
       }
     }
@@ -1358,19 +1488,15 @@ namespace mtconnect {
       return "xml";
     }
 
-    const Printer *RestService::printerForAccepts(const std::string &accepts) const
-    {
-      return m_sinkContract->getPrinter(acceptFormat(accepts));
-    }
-
     string RestService::printError(const Printer *printer, const string &errorCode,
-                                   const string &text, bool pretty) const
+                                   const string &text, bool pretty,
+                                   const std::optional<std::string> &requestId) const
     {
       LOG(debug) << "Returning error " << errorCode << ": " << text;
       if (printer)
         return printer->printError(
             m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
-            m_sinkContract->getCircularBuffer().getSequence(), errorCode, text, pretty);
+            m_sinkContract->getCircularBuffer().getSequence(), errorCode, text, pretty, requestId);
       else
         return errorCode + ": " + text;
     }
@@ -1446,7 +1572,8 @@ namespace mtconnect {
     // -------------------------------------------
 
     string RestService::fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
-                                         const optional<SequenceNumber_t> &at, bool pretty)
+                                         const optional<SequenceNumber_t> &at, bool pretty,
+                                         const std::optional<std::string> &requestId)
     {
       ObservationList observations;
       SequenceNumber_t firstSeq, seq;
@@ -1470,13 +1597,14 @@ namespace mtconnect {
       }
 
       return printer->printSample(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
-                                  seq, firstSeq, seq - 1, observations, pretty);
+                                  seq, firstSeq, seq - 1, observations, pretty, requestId);
     }
 
     string RestService::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet,
                                         int count, const std::optional<SequenceNumber_t> &from,
                                         const std::optional<SequenceNumber_t> &to,
-                                        SequenceNumber_t &end, bool &endOfBuffer, bool pretty)
+                                        SequenceNumber_t &end, bool &endOfBuffer, bool pretty,
+                                        const std::optional<std::string> &requestId)
     {
       std::unique_ptr<ObservationList> observations;
       SequenceNumber_t firstSeq, lastSeq;
@@ -1506,7 +1634,7 @@ namespace mtconnect {
       }
 
       return printer->printSample(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
-                                  end, firstSeq, lastSeq, *observations, pretty);
+                                  end, firstSeq, lastSeq, *observations, pretty, requestId);
     }
 
   }  // namespace sink::rest_sink

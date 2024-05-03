@@ -57,6 +57,9 @@ namespace mtconnect::sink::rest_sink {
   /// The request can be a simple reply response or streaming request
   struct Request
   {
+    Request() = default;
+    Request(const Request &request) = default;
+
     boost::beast::http::verb m_verb;  ///< GET, PUT, POST, or DELETE
     std::string m_body;               ///< The body of the request
     std::string m_accepts;            ///< The accepts header
@@ -67,6 +70,9 @@ namespace mtconnect::sink::rest_sink {
     uint16_t m_foreignPort;           ///< The requestors Port
     QueryMap m_query;                 ///< The parsed query parameters
     ParameterMap m_parameters;        ///< The parsed path parameters
+
+    std::optional<std::string> m_requestId;  ///< Request id from websocket sub
+    std::optional<std::string> m_command;    ///< Specific request from websocket
 
     /// @brief Find a parameter by type
     /// @tparam T the type of the parameter

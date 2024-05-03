@@ -60,7 +60,8 @@ namespace mtconnect::printer {
   template <typename T>
   inline void header(AutoJsonObject<T> &obj, const string &version, const string &hostname,
                      const uint64_t instanceId, const unsigned int bufferSize,
-                     const string &schemaVersion, const string modelChangeTime, bool validation)
+                     const string &schemaVersion, const string modelChangeTime, bool validation,
+                     const std::optional<std::string> &requestId)
   {
     obj.AddPairs("version", version, "creationTime", getCurrentTime(GMT), "testIndicator", false,
                  "instanceId", instanceId, "sender", hostname, "schemaVersion", schemaVersion);
@@ -71,6 +72,8 @@ namespace mtconnect::printer {
       obj.AddPairs("bufferSize", bufferSize);
     if (validation)
       obj.AddPairs("validation", true);
+    if (requestId)
+      obj.AddPairs("requestId", *requestId);
   }
 
   template <typename T>
@@ -78,10 +81,11 @@ namespace mtconnect::printer {
                                const string &hostname, const uint64_t instanceId,
                                const unsigned int bufferSize, const unsigned int assetBufferSize,
                                const unsigned int assetCount, const string &schemaVersion,
-                               const string modelChangeTime, const bool validation)
+                               const string modelChangeTime, const bool validation,
+                               const std::optional<std::string> &requestId)
   {
     header(obj, version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime,
-           validation);
+           validation, requestId);
     obj.AddPairs("assetBufferSize", assetBufferSize, "assetCount", assetCount);
   }
 
@@ -90,10 +94,11 @@ namespace mtconnect::printer {
                            const uint64_t instanceId, const unsigned int bufferSize,
                            const uint64_t nextSequence, const uint64_t firstSequence,
                            const uint64_t lastSequence, const string &schemaVersion,
-                           const string modelChangeTime, const bool validation)
+                           const string modelChangeTime, const bool validation,
+                           const std::optional<std::string> &requestId)
   {
     header(obj, version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime,
-           validation);
+           validation, requestId);
     obj.AddPairs("nextSequence", nextSequence, "lastSequence", lastSequence, "firstSequence",
                  firstSequence);
   }
@@ -113,7 +118,8 @@ namespace mtconnect::printer {
 
   std::string JsonPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
                                        const uint64_t nextSeq, const ProtoErrorList &list,
-                                       bool pretty) const
+                                       bool pretty,
+                                       const std::optional<std::string> requestId) const
   {
     defaultSchemaVersion();
 
@@ -127,7 +133,7 @@ namespace mtconnect::printer {
         {
           AutoJsonObject obj(writer, "Header");
           header(obj, m_version, m_senderName, instanceId, bufferSize, *m_schemaVersion,
-                 m_modelChangeTime, m_validation);
+                 m_modelChangeTime, m_validation, requestId);
         }
         {
           if (m_jsonVersion > 1)
@@ -170,7 +176,8 @@ namespace mtconnect::printer {
                                       const unsigned int assetCount,
                                       const std::list<DevicePtr> &devices,
                                       const std::map<std::string, size_t> *count,
-                                      bool includeHidden, bool pretty) const
+                                      bool includeHidden, bool pretty,
+                                      const std::optional<std::string> requestId) const
   {
     defaultSchemaVersion();
 
@@ -184,7 +191,7 @@ namespace mtconnect::printer {
       {
         AutoJsonObject obj(writer, "Header");
         probeAssetHeader(obj, m_version, m_senderName, instanceId, bufferSize, assetBufferSize,
-                         assetCount, *m_schemaVersion, m_modelChangeTime, m_validation);
+                         assetCount, *m_schemaVersion, m_modelChangeTime, m_validation, requestId);
       }
       {
         obj.Key("Devices");
@@ -197,7 +204,8 @@ namespace mtconnect::printer {
 
   std::string JsonPrinter::printAssets(const uint64_t instanceId, const unsigned int bufferSize,
                                        const unsigned int assetCount, const asset::AssetList &asset,
-                                       bool pretty) const
+                                       bool pretty,
+                                       const std::optional<std::string> requestId) const
   {
     defaultSchemaVersion();
 
@@ -211,7 +219,7 @@ namespace mtconnect::printer {
       {
         AutoJsonObject obj(writer, "Header");
         probeAssetHeader(obj, m_version, m_senderName, instanceId, 0, bufferSize, assetCount,
-                         *m_schemaVersion, m_modelChangeTime, m_validation);
+                         *m_schemaVersion, m_modelChangeTime, m_validation, requestId);
       }
       {
         obj.Key("Assets");
@@ -397,7 +405,8 @@ namespace mtconnect::printer {
   std::string JsonPrinter::printSample(const uint64_t instanceId, const unsigned int bufferSize,
                                        const uint64_t nextSeq, const uint64_t firstSeq,
                                        const uint64_t lastSeq, ObservationList &observations,
-                                       bool pretty) const
+                                       bool pretty,
+                                       const std::optional<std::string> requestId) const
   {
     defaultSchemaVersion();
 
@@ -409,7 +418,7 @@ namespace mtconnect::printer {
       {
         AutoJsonObject obj(writer, "Header");
         streamHeader(obj, m_version, m_senderName, instanceId, bufferSize, nextSeq, firstSeq,
-                     lastSeq, *m_schemaVersion, m_modelChangeTime, m_validation);
+                     lastSeq, *m_schemaVersion, m_modelChangeTime, m_validation, requestId);
       }
 
       {

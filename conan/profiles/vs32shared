@@ -10,3 +10,4 @@ build_type=Release
 
 [options]
 shared=True
+winver=0x0600

@@ -34,6 +34,7 @@
 #include "request.hpp"
 #include "response.hpp"
 #include "tls_dector.hpp"
+#include "websocket_session.hpp"
 
 namespace mtconnect::sink::rest_sink {
   namespace beast = boost::beast;  // from <boost/beast.hpp>
@@ -44,6 +45,7 @@ namespace mtconnect::sink::rest_sink {
   namespace algo = boost::algorithm;
   namespace sys = boost::system;
   namespace ssl = boost::asio::ssl;
+  namespace ws = boost::beast::websocket;
 
   using namespace std;
   using std::placeholders::_1;
@@ -243,7 +245,13 @@ namespace mtconnect::sink::rest_sink {
     LOG(info) << "ReST Request: From [" << m_request->m_foreignIp << ':' << remote.port()
               << "]: " << msg.method() << " " << msg.target();
 
-    if (!m_dispatch(shared_ptr(), m_request))
+    // Check if this is a websocket upgrade request. If so, begin a websocket session.
+    if (ws::is_upgrade(msg))
+    {
+      LOG(debug) << "Upgrading to websocket request";
+      upgrade(std::move(msg));
+    }
+    else if (!m_dispatch(shared_ptr(), m_request))
     {
       ostringstream txt;
       txt << "Failed to find handler for " << msg.method() << " " << msg.target();
@@ -279,7 +287,8 @@ namespace mtconnect::sink::rest_sink {
   }
 
   template <class Derived>
-  void SessionImpl<Derived>::beginStreaming(const std::string &mimeType, Complete complete)
+  void SessionImpl<Derived>::beginStreaming(const std::string &mimeType, Complete complete,
+                                            std::optional<std::string> requestId)
   {
     NAMED_SCOPE("SessionImpl::beginStreaming");
 
@@ -313,7 +322,8 @@ namespace mtconnect::sink::rest_sink {
   }
 
   template <class Derived>
-  void SessionImpl<Derived>::writeChunk(const std::string &body, Complete complete)
+  void SessionImpl<Derived>::writeChunk(const std::string &body, Complete complete,
+                                        std::optional<std::string> requestId)
   {
     NAMED_SCOPE("SessionImpl::writeChunk");
 
@@ -462,6 +472,12 @@ namespace mtconnect::sink::rest_sink {
     }
   }
 
+  SessionPtr HttpSession::upgradeToWebsocket(RequestMessage &&msg)
+  {
+    return std::make_shared<PlainWebsocketSession>(std::move(m_stream), std::move(m_request),
+                                                   std::move(msg), m_dispatch, m_errorFunction);
+  }
+
   /// @brief A secure https session
   class HttpsSession : public SessionImpl<HttpsSession>
   {
@@ -511,12 +527,30 @@ namespace mtconnect::sink::rest_sink {
       if (!m_closing)
       {
         m_closing = true;
+
+        // Release all references from observers.
+        for (auto obs : m_observers)
+        {
+          auto optr = obs.lock();
+          if (optr)
+          {
+            optr->cancel();
+          }
+        }
+
         // Set the timeout.
         beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
 
         // Perform the SSL shutdown
         m_stream.async_shutdown(beast::bind_front_handler(&HttpsSession::shutdown, shared_ptr()));
       }
+    }
+
+    /// @brief Upgrade the current connection to a websocket connection.
+    SessionPtr upgradeToWebsocket(RequestMessage &&msg)
+    {
+      return std::make_shared<TlsWebsocketSession>(std::move(m_stream), std::move(m_request),
+                                                   std::move(msg), m_dispatch, m_errorFunction);
     }
 
   protected:
@@ -541,6 +575,13 @@ namespace mtconnect::sink::rest_sink {
     beast::ssl_stream<beast::tcp_stream> m_stream;
     bool m_closing {false};
   };
+
+  template <class Derived>
+  void SessionImpl<Derived>::upgrade(RequestMessage &&msg)
+  {
+    LOG(debug) << "Upgrading session to websockets";
+    derived().upgradeToWebsocket(std::move(msg))->run();
+  }
 
   void TlsDector::run()
   {

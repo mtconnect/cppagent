@@ -53,8 +53,8 @@ namespace mtconnect::sink::rest_sink {
     /// @param[in] function the function to call if matches
     /// @param[in] swagger `true` if swagger related
     Routing(boost::beast::http::verb verb, const std::string &pattern, const Function function,
-            bool swagger = false)
-      : m_verb(verb), m_function(function), m_swagger(swagger)
+            bool swagger = false, std::optional<std::string> request = std::nullopt)
+      : m_verb(verb), m_command(request), m_function(function), m_swagger(swagger)
     {
       std::string s(pattern);
 
@@ -79,8 +79,12 @@ namespace mtconnect::sink::rest_sink {
     /// @param[in] function the function to call if matches
     /// @param[in] swagger `true` if swagger related
     Routing(boost::beast::http::verb verb, const std::regex &pattern, const Function function,
-            bool swagger = false)
-      : m_verb(verb), m_pattern(pattern), m_function(function), m_swagger(swagger)
+            bool swagger = false, std::optional<std::string> request = std::nullopt)
+      : m_verb(verb),
+        m_pattern(pattern),
+        m_command(request),
+        m_function(function),
+        m_swagger(swagger)
     {}
 
     /// @brief Added summary and description to the routing
@@ -165,46 +169,52 @@ namespace mtconnect::sink::rest_sink {
     {
       try
       {
-        request->m_parameters.clear();
-        std::smatch m;
-        if (m_verb == request->m_verb && std::regex_match(request->m_path, m, m_pattern))
+        if (!request->m_command)
         {
-          auto s = m.begin();
-          s++;
-          for (auto &p : m_pathParameters)
+          request->m_parameters.clear();
+          std::smatch m;
+          if (m_verb == request->m_verb && std::regex_match(request->m_path, m, m_pattern))
           {
-            if (s != m.end())
+            auto s = m.begin();
+            s++;
+            for (auto &p : m_pathParameters)
             {
-              ParameterValue v(s->str());
-              request->m_parameters.emplace(make_pair(p.m_name, v));
-              s++;
-            }
-          }
-
-          for (auto &p : m_queryParameters)
-          {
-            auto q = request->m_query.find(p.m_name);
-            if (q != request->m_query.end())
-            {
-              try
+              if (s != m.end())
               {
-                auto v = convertValue(q->second, p.m_type);
+                ParameterValue v(s->str());
                 request->m_parameters.emplace(make_pair(p.m_name, v));
+                s++;
               }
-              catch (ParameterError &e)
-              {
-                std::string msg =
-                    std::string("for query parameter '") + p.m_name + "': " + e.what();
-                throw ParameterError(msg);
-              }
-            }
-            else if (!std::holds_alternative<std::monostate>(p.m_default))
-            {
-              request->m_parameters.emplace(make_pair(p.m_name, p.m_default));
             }
           }
-          return m_function(session, request);
+          else
+          {
+            return false;
+          }
         }
+
+        for (auto &p : m_queryParameters)
+        {
+          auto q = request->m_query.find(p.m_name);
+          if (q != request->m_query.end())
+          {
+            try
+            {
+              auto v = convertValue(q->second, p.m_type);
+              request->m_parameters.emplace(make_pair(p.m_name, v));
+            }
+            catch (ParameterError &e)
+            {
+              std::string msg = std::string("for query parameter '") + p.m_name + "': " + e.what();
+              throw ParameterError(msg);
+            }
+          }
+          else if (!std::holds_alternative<std::monostate>(p.m_default))
+          {
+            request->m_parameters.emplace(make_pair(p.m_name, p.m_default));
+          }
+        }
+        return m_function(session, request);
       }
 
       catch (ParameterError &e)
@@ -224,6 +234,18 @@ namespace mtconnect::sink::rest_sink {
     const auto &getPath() const { return m_path; }
     /// @brief Get the routing `verb`
     const auto &getVerb() const { return m_verb; }
+
+    /// @brief Get the optional command associated with the routing
+    /// @returns optional routing
+    const auto &getCommand() const { return m_command; }
+
+    /// @brief Sets the command associated with this routing for use with websockets
+    /// @param command the command
+    auto &command(const std::string &command)
+    {
+      m_command = command;
+      return *this;
+    }
 
   protected:
     void pathParameters(std::string s)
@@ -360,6 +382,7 @@ namespace mtconnect::sink::rest_sink {
     std::optional<std::string> m_path;
     ParameterList m_pathParameters;
     QuerySet m_queryParameters;
+    std::optional<std::string> m_command;
     Function m_function;
 
     std::optional<std::string> m_summary;
