@@ -139,11 +139,11 @@ namespace mtconnect {
         /// @brief get the topic name leaf node for this data item
         /// @return the topic name
         const auto &getTopicName() const { return m_topicName; }
-        
+
         /// @brief get the initial value if one is set
         /// @return optional initial value
         const auto &getInitialValue() const { return m_initialValue; }
-        
+
         Category getCategory() const { return m_category; }
         Representation getRepresentation() const { return m_representation; }
         SpecialClass getSpecialClass() const { return m_specialClass; }

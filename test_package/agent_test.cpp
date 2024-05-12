@@ -3089,12 +3089,11 @@ TEST_F(AgentTest, should_initialize_observaton_to_initial_value_when_available)
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount", "UNAVAILABLE");
   }
-  
+
   m_agentTestHelper->m_adapter->processData("2024-01-22T20:00:00Z|avail|AVAILABLE");
 
   {
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:PartCount", "0");
   }
-
 }
