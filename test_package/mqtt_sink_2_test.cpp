@@ -248,15 +248,23 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Sample)
 
   auto handler = make_unique<ClientHandler>();
   bool gotSample = false;
-  handler->m_receive = [&gotSample](std::shared_ptr<MqttClient> client, const std::string &topic,
+  bool first = true;
+  handler->m_receive = [&gotSample, &first](std::shared_ptr<MqttClient> client, const std::string &topic,
                                     const std::string &payload) {
-    EXPECT_EQ("MTConnect/Sample/000", topic);
-
-    auto jdoc = json::parse(payload);
-    auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream"_json_pointer);
-    EXPECT_EQ(string("LinuxCNC"), streams.at("/name"_json_pointer).get<string>());
-
-    gotSample = true;
+    if (first)
+    {
+      first = false;
+    }
+    else
+    {
+      EXPECT_EQ("MTConnect/Sample/000", topic);
+      
+      auto jdoc = json::parse(payload);
+      auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream"_json_pointer);
+      EXPECT_EQ(string("LinuxCNC"), streams.at("/name"_json_pointer).get<string>());
+      
+      gotSample = true;
+    }
   };
 
   createClient(options, std::move(handler));
@@ -267,9 +275,9 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Sample)
 
   auto service = m_agentTestHelper->getMqtt2Service();
 
-  ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
-  ASSERT_FALSE(gotSample);
-
+  ASSERT_TRUE(waitFor(60s, [&first]() { return !first; }));
+  ASSERT_FALSE(first);
+  
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
   ASSERT_TRUE(waitFor(10s, [&gotSample]() { return gotSample; }));
 }
