@@ -550,12 +550,13 @@ namespace mtconnect {
           auto format = request->parameter<string>("format");
           auto pretty = request->parameter<bool>("pretty").value_or(false);
           auto printer = m_sinkContract->getPrinter(acceptFormat(request->m_accepts, format));
-
+          
           list<string> ids;
           stringstream str(*asset);
           string id;
           while (getline(str, id, ';'))
             ids.emplace_back(id);
+          
           respond(session, assetIdsRequest(printer, ids, pretty, request->m_requestId),
                   request->m_requestId);
         }

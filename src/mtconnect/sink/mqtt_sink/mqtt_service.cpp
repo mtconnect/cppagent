@@ -187,7 +187,7 @@ namespace mtconnect {
           }
         }
 
-        auto seq = m_sinkContract->getCircularBuffer().getSequence();
+        auto seq = publishCurrent(boost::system::error_code {});
         for (auto &dev : m_sinkContract->getDevices())
         {
           FilterSet filterSet = filterForDevice(dev);
@@ -199,10 +199,8 @@ namespace mtconnect {
           sampler->observe(seq, [this](const std::string &id) {
             return m_sinkContract->getDataItemById(id).get();
           });
-          sampler->handlerCompleted();
+          publishSample(sampler);
         }
-
-        publishCurrent(boost::system::error_code {});
       }
 
       /// @brief publish sample when observations arrive.
@@ -246,18 +244,20 @@ namespace mtconnect {
         return end;
       }
 
-      void MqttService::publishCurrent(boost::system::error_code ec)
+      SequenceNumber_t MqttService::publishCurrent(boost::system::error_code ec)
       {
+        SequenceNumber_t firstSeq, seq = 0;
+
         if (ec)
         {
           LOG(warning) << "Mqtt2Service::publishCurrent: " << ec.message();
-          return;
+          return 0;
         }
 
         if (!m_client->isRunning() || !m_client->isConnected())
         {
           LOG(warning) << "Mqtt2Service::publishCurrent: client stopped";
-          return;
+          return 0;
         }
 
         for (auto &device : m_sinkContract->getDevices())
@@ -266,7 +266,6 @@ namespace mtconnect {
           LOG(debug) << "Publishing current for: " << topic;
 
           ObservationList observations;
-          SequenceNumber_t firstSeq, seq;
           auto filterSet = filterForDevice(device);
 
           {
@@ -290,6 +289,8 @@ namespace mtconnect {
         m_currentTimer.expires_after(m_currentInterval);
         m_currentTimer.async_wait(boost::asio::bind_executor(
             m_strand, boost::bind(&MqttService::publishCurrent, this, _1)));
+          
+          return seq;
       }
 
       bool MqttService::publish(observation::ObservationPtr &observation)
@@ -327,8 +328,9 @@ namespace mtconnect {
 
         LOG(debug) << "Publishing Asset to topic: " << topic;
 
-        auto doc = m_jsonPrinter->print(asset);
-
+        asset::AssetList list {asset};
+        auto doc = m_printer->printAssets(
+            m_instanceId, uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()), 1, list);
         stringstream buffer;
         buffer << doc;
 

@@ -96,7 +96,7 @@ namespace mtconnect {
         void pubishInitialContent();
 
         /// @brief Publish a current using `CurrentInterval` option.
-        void publishCurrent(boost::system::error_code ec);
+        SequenceNumber_t publishCurrent(boost::system::error_code ec);
 
         /// @brief publish sample when observations arrive.
         SequenceNumber_t publishSample(std::shared_ptr<observation::AsyncObserver> sampler);
