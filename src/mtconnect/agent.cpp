@@ -289,7 +289,7 @@ namespace mtconnect {
       {
         if (item.expired())
           continue;
-        
+
         auto di = item.lock();
         if (di->hasInitialValue())
         {
@@ -297,7 +297,7 @@ namespace mtconnect {
         }
       }
     }
-    
+
     std::lock_guard<buffer::CircularBuffer> lock(m_circularBuffer);
     if (m_circularBuffer.addToBuffer(observation) != 0)
     {
