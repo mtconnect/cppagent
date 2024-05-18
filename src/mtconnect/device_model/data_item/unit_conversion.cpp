@@ -95,25 +95,33 @@ namespace mtconnect::device_model::data_item {
   {
     double power = 1.0, scale = 1.0;
 
-    if (unit.compare(0, 4, "KILO") == 0)
+    try
     {
-      scale = 1000;
-      unit.remove_prefix(4);
+      if (unit.compare(0, 4, "KILO") == 0)
+      {
+        scale = 1000;
+        unit.remove_prefix(4);
+      }
+      else if (unit.compare(0, 6, "CUBIC_") == 0)
+      {
+        unit.remove_prefix(6);
+        power = 3.0;
+      }
+      else if (unit.compare(0, 7, "SQUARE_") == 0)
+      {
+        unit.remove_prefix(7);
+        power = 2.0;
+      }
+      else if (auto p = unit.find('^'); p != string_view::npos)
+      {
+        power = stod(string(unit.substr(p + 1)));
+        unit.remove_suffix(unit.length() - p);
+      }
     }
-    else if (unit.compare(0, 6, "CUBIC_") == 0)
+    catch (std::exception e)
     {
-      unit.remove_prefix(6);
-      power = 3.0;
-    }
-    else if (unit.compare(0, 7, "SQUARE_") == 0)
-    {
-      unit.remove_prefix(7);
-      power = 2.0;
-    }
-    else if (auto p = unit.find('^'); p != string_view::npos)
-    {
-      power = stod(string(unit.substr(p + 1)));
-      unit.remove_suffix(unit.length() - p);
+      LOG(error) << "Invalid unit: " << unit << " -- " << e.what();
+      LOG(error) << "  ignoring";
     }
 
     return {scale, power};

@@ -123,7 +123,10 @@ namespace mtconnect::pipeline {
     {
       char *end {0};
       off = std::strtod(timestamp.data(), &end);
-      ;
+      if (end == timestamp.data())
+      {
+        return {n, duration};
+      }
     }
 
     if (!base)

@@ -536,7 +536,7 @@ namespace mtconnect {
         if (asset)
         {
           auto printer = m_sinkContract->getPrinter(acceptFormat(request->m_accepts));
-          
+
           list<string> ids;
           stringstream str(*asset);
           string id;

@@ -1469,11 +1469,19 @@ namespace mtconnect {
                    LOG(warning) << "Cannot find data item to calibrate for " << name;
                  else
                  {
-                   double fact_value = stod(factor);
-                   double off_value = stod(offset);
+                   try
+                   {
+                     double fact_value = stod(factor);
+                     double off_value = stod(offset);
 
-                   device_model::data_item::UnitConversion conv(fact_value, off_value);
-                   di->setConverter(conv);
+                     device_model::data_item::UnitConversion conv(fact_value, off_value);
+                     di->setConverter(conv);
+                   }
+                   catch (std::exception e)
+                   {
+                     LOG(error) << "Cannot convert factor " << factor << " or " << offset
+                                << " to double: " << e.what();
+                   }
                  }
                }
              }}};
