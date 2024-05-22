@@ -257,10 +257,6 @@ namespace mtconnect {
     for (auto source : m_sources)
       source->stop();
 
-    LOG(info) << "Shutting down sinks";
-    for (auto sink : m_sinks)
-      sink->stop();
-
     // Signal all observers
     LOG(info) << "Signaling observers to close sessions";
     for (auto di : m_dataItemMap)
@@ -269,6 +265,10 @@ namespace mtconnect {
       if (ldi)
         ldi->signalObservers(0);
     }
+
+    LOG(info) << "Shutting down sinks";
+    for (auto sink : m_sinks)
+      sink->stop();
 
     LOG(info) << "Shutting down completed";
 
@@ -1469,11 +1469,19 @@ namespace mtconnect {
                    LOG(warning) << "Cannot find data item to calibrate for " << name;
                  else
                  {
-                   double fact_value = stod(factor);
-                   double off_value = stod(offset);
+                   try
+                   {
+                     double fact_value = stod(factor);
+                     double off_value = stod(offset);
 
-                   device_model::data_item::UnitConversion conv(fact_value, off_value);
-                   di->setConverter(conv);
+                     device_model::data_item::UnitConversion conv(fact_value, off_value);
+                     di->setConverter(conv);
+                   }
+                   catch (std::exception e)
+                   {
+                     LOG(error) << "Cannot convert factor " << factor << " or " << offset
+                                << " to double: " << e.what();
+                   }
                  }
                }
              }}};

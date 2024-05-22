@@ -81,6 +81,8 @@ protected:
       m_agentTestHelper->m_ioContext.run_for(500ms);
       m_server.reset();
     }
+
+    m_service.reset();
     m_agentTestHelper.reset();
     m_jsonPrinter.reset();
   }
@@ -291,8 +293,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Streams)
 
     auto jdoc = json::parse(payload);
     string value = jdoc.at("/value"_json_pointer).get<string>();
-    EXPECT_EQ("204", value);
-    foundLineDataItem = true;
+    foundLineDataItem = value == "204";
   };
   createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());

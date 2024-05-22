@@ -581,9 +581,16 @@ namespace mtconnect {
       auto val = tree.get_optional<std::string>(e.first);
       if (val)
       {
-        auto v = ConvertOption(*val, e.second, options);
-        if (v.index() != 0)
-          options.insert_or_assign(e.first, v);
+        try
+        {
+          auto v = ConvertOption(*val, e.second, options);
+          if (v.index() != 0)
+            options.insert_or_assign(e.first, v);
+        }
+        catch (std::exception ex)
+        {
+          LOG(error) << "Cannot convert option " << val << ": " << ex.what();
+        }
       }
     }
   }
@@ -600,9 +607,16 @@ namespace mtconnect {
       auto val = tree.get_optional<std::string>(e.first);
       if (val)
       {
-        auto v = ConvertOption(*val, e.second, options);
-        if (v.index() != 0)
-          options.insert_or_assign(e.first, v);
+        try
+        {
+          auto v = ConvertOption(*val, e.second, options);
+          if (v.index() != 0)
+            options.insert_or_assign(e.first, v);
+        }
+        catch (std::exception ex)
+        {
+          LOG(error) << "Cannot convert option " << val << ": " << ex.what();
+        }
       }
       else if (options.find(e.first) == options.end())
         options.insert_or_assign(e.first, e.second);

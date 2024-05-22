@@ -10,7 +10,7 @@ class MqttcppConan(ConanFile):
     url = "https://github.com/redboltz/mqtt_cpp"
     description = "MQTT client/server for C++14 based on Boost.Asio"
     topics = ("mqtt")
-    requires = ["boost/1.82.0"]
+    requires = ["boost/1.85.0"]
     no_copy_source = True
     exports_sources = "include/*"
 

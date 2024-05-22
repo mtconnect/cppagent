@@ -35,7 +35,7 @@ class MTConnectAgentConan(ConanFile):
         "with_ruby": True,
         "development": False,
         "shared": False,
-        "winver": "0x600",
+        "winver": "0x0602",
         "with_docs": False,
         "cpack": False,
         "agent_prefix": None,
@@ -118,7 +118,7 @@ class MTConnectAgentConan(ConanFile):
             self.tool_requires_version("doxygen", [1, 9, 4])
 
     def requirements(self):
-        self.requires("boost/1.82.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
+        self.requires("boost/1.85.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("libxml2/2.10.3", headers=True, libs=True, visible=True, transitive_headers=True, transitive_libs=True)
         self.requires("date/2.4.1", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("nlohmann_json/3.9.1", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
@@ -139,6 +139,9 @@ class MTConnectAgentConan(ConanFile):
         if self.options.shared:
             self.options["boost/*"].shared = True
             self.package_type = "shared-library"
+
+        if is_msvc(self):
+            self.options["boost/*"].extra_b2_flags = ("define=BOOST_USE_WINAPI_VERSION=" + str(self.options.winver))
             
         # Make sure shared builds use shared boost
         if is_msvc(self) and self.options.shared:
@@ -227,6 +230,7 @@ class MTConnectAgentConan(ConanFile):
             winver=str(self.options.winver)
             self.cpp_info.defines.append("WINVER=" + winver)
             self.cpp_info.defines.append("_WIN32_WINNT=" + winver)
+            self.cpp_info.defines.append("BOOST_USE_WINAPI_VERSION=" + winver)
 
     def package(self):
         cmake = CMake(self)
