@@ -523,7 +523,7 @@ namespace mtconnect {
         auto removed = *request->parameter<bool>("removed");
         auto count = *request->parameter<int32_t>("count");
         auto printer = printerForAccepts(request->m_accepts);
-        auto pretty = *request->parameter<bool>("pretty");
+        auto pretty = request->parameter<bool>("pretty").value_or(false);
 
         respond(session, assetRequest(printer, count, removed, request->parameter<string>("type"),
                                       request->parameter<string>("device"), pretty));
@@ -532,7 +532,7 @@ namespace mtconnect {
 
       auto idHandler = [&](SessionPtr session, RequestPtr request) -> bool {
         auto asset = request->parameter<string>("assetIds");
-        auto pretty = *request->parameter<bool>("pretty");
+        auto pretty = request->parameter<bool>("pretty").value_or(false);
         if (asset)
         {
           auto printer = m_sinkContract->getPrinter(acceptFormat(request->m_accepts));

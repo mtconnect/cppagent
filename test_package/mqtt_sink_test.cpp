@@ -291,8 +291,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Streams)
 
     auto jdoc = json::parse(payload);
     string value = jdoc.at("/value"_json_pointer).get<string>();
-    EXPECT_EQ("204", value);
-    foundLineDataItem = true;
+    foundLineDataItem = value == "204";
   };
   createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());

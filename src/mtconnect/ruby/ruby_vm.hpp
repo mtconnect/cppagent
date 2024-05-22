@@ -53,7 +53,7 @@ namespace mtconnect::ruby {
 
     void lock() { m_mutex.lock(); }
     void unlock() { m_mutex.unlock(); }
-    void try_lock() { m_mutex.try_lock(); }
+    [[nodiscard]] bool try_lock() { return m_mutex.try_lock(); }
 
     static auto &rubyVM() { return *m_vm; }
     static bool hasVM() { return m_vm != nullptr; }
