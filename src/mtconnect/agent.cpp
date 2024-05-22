@@ -257,7 +257,7 @@ namespace mtconnect {
     for (auto source : m_sources)
       source->stop();
 
-   // Signal all observers
+    // Signal all observers
     LOG(info) << "Signaling observers to close sessions";
     for (auto di : m_dataItemMap)
     {
@@ -265,7 +265,7 @@ namespace mtconnect {
       if (ldi)
         ldi->signalObservers(0);
     }
-    
+
     LOG(info) << "Shutting down sinks";
     for (auto sink : m_sinks)
       sink->stop();

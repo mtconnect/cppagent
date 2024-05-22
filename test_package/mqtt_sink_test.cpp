@@ -81,7 +81,7 @@ protected:
       m_agentTestHelper->m_ioContext.run_for(500ms);
       m_server.reset();
     }
-    
+
     m_service.reset();
     m_agentTestHelper.reset();
     m_jsonPrinter.reset();
