@@ -412,8 +412,9 @@ namespace mtconnect {
       }
       RegCloseKey(mtc);
 
-      RegSetValueExA(agent, "ConfigurationFile", 0ul, REG_SZ, (const BYTE *)m_configFile.c_str(),
-                     m_configFile.string().size() + 1);
+      auto cfgFile = m_configFile.string();
+      RegSetValueExA(agent, "ConfigurationFile", 0ul, REG_SZ, (const BYTE *)cfgFile.c_str(),
+                     cfgFile.length() + 1);
       RegCloseKey(agent);
 
       LOG(info) << "Service installed successfully.";
