@@ -909,7 +909,7 @@ namespace mtconnect::configuration {
     string host, protocol, path;
     auto url = *GetOption<string>(options, configuration::Url);
 
-    boost::regex pat("^([^:]+)://([^:/]+)(:[0-9]+)?(/?.+)");
+    boost::regex pat("^([^:]+)://([^:/]+)(:[0-9]+)?(/.+)?");
     boost::match_results<string::const_iterator> match;
     if (boost::regex_match(url, match, pat))
     {

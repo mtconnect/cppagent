@@ -87,7 +87,7 @@ namespace mtconnect {
         m_password = GetOption<std::string>(options, configuration::MqttPassword);
 
         std::stringstream url;
-        url << "mqtt://" << m_host << ':' << m_port;
+        url << "mqtt://" << m_host << ':' << m_port << '/';
         m_url = url.str();
 
         // Some brokers require specific ClientID provided.
@@ -162,9 +162,6 @@ namespace mtconnect {
           LOG(info) << "MQTT " << m_url << ": connection closed";
           // Queue on a strand
           m_connected = false;
-          if (m_handler && m_handler->m_disconnected)
-            m_handler->m_disconnected(shared_from_this());
-          m_handler->m_disconnected(shared_from_this());
           if (m_running)
           {
             reconnect();
@@ -365,11 +362,16 @@ namespace mtconnect {
       void reconnect()
       {
         NAMED_SCOPE("MqttClientImpl::reconnect");
-
+        
         if (!m_running)
           return;
 
-        LOG(info) << "Start reconnect timer";
+        LOG(info) << "Calling handler disconnected";
+
+        if (m_handler && m_handler->m_disconnected)
+          m_handler->m_disconnected(shared_from_this());
+
+       LOG(info) << "Start reconnect timer";
 
         // Set an expiry time relative to now.
         m_reconnectTimer.expires_after(m_connectInterval);
