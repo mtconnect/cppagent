@@ -153,7 +153,7 @@ namespace mtconnect {
           else
           {
             LOG(info) << "MQTT ConnAck: MQTT connection failed: " << ec;
-            reconnect();
+            disconnected();
           }
           return true;
         });
@@ -164,7 +164,7 @@ namespace mtconnect {
           m_connected = false;
           if (m_running)
           {
-            reconnect();
+            disconnected();
             return true;
           }
           else
@@ -177,7 +177,7 @@ namespace mtconnect {
           LOG(error) << "error: " << ec.message();
           m_connected = false;
           if (m_running)
-            reconnect();
+            disconnected();
         });
 
         client->set_publish_handler([this](mqtt::optional<std::uint16_t> packet_id,
@@ -356,22 +356,30 @@ namespace mtconnect {
           m_handler->m_receive(shared_from_this(), string(topic), string(contents));
       }
 
-      /// <summary>
-      ///
-      /// </summary>
-      void reconnect()
+      void disconnected()
       {
-        NAMED_SCOPE("MqttClientImpl::reconnect");
-        
-        if (!m_running)
-          return;
+        NAMED_SCOPE("MqttClientImpl::disconnected");
 
         LOG(info) << "Calling handler disconnected";
 
         if (m_handler && m_handler->m_disconnected)
           m_handler->m_disconnected(shared_from_this());
 
-       LOG(info) << "Start reconnect timer";
+        if (m_running)
+          reconnect();
+      }
+
+      /// <summary>
+      ///
+      /// </summary>
+      void reconnect()
+      {
+        NAMED_SCOPE("MqttClientImpl::reconnect");
+
+        if (!m_running)
+          return;
+
+        LOG(info) << "Start reconnect timer";
 
         // Set an expiry time relative to now.
         m_reconnectTimer.expires_after(m_connectInterval);
