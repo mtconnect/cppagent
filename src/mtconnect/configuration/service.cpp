@@ -575,7 +575,7 @@ namespace mtconnect {
       boost::optional<std::string> command;
       boost::optional<std::string> config;
 
-      const char *argp[3] = {"agent", "run", (const char *) configFile};
+      const char *argp[3] = {"agent", "run", (const char *)configFile};
       auto options = g_service->parseOptions(3, argp, command, config);
       g_service->initialize(options);
 
