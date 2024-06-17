@@ -45125,6 +45125,15 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:string'/>
   </xs:simpleType>
+  <xs:simpleType name='ConditionIdType'>
+    <xs:annotation>
+      <xs:documentation>
+        Identifier of an individual condition activation provided by a piece of
+        equipment
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
   <xs:simpleType name='QualifierType'>
     <xs:annotation>
       <xs:documentation>
@@ -45192,7 +45201,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name='conditionId' type='IDType' use='required'>
+        <xs:attribute name='conditionId' type='ConditionIdType' use='required'>
           <xs:annotation>
             <xs:documentation>
               Identifier of an individual condition activation provided by a
