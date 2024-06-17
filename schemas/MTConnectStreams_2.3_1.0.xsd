@@ -45201,6 +45201,24 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element abstract='true' name='Condition' type='ConditionType'>
+    <xs:annotation>
+      <xs:documentation>
+        Description
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ActivatedConditionType' abstract='true'>
+    <xs:annotation>
+      <xs:documentation>
+        Condition that has transitioned from Normal to either Warning or Fault
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='ConditionType'>
         <xs:attribute name='conditionId' type='ConditionIdType' use='required'>
           <xs:annotation>
             <xs:documentation>
@@ -45212,10 +45230,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element abstract='true' name='Condition' type='ConditionType'>
+  <xs:element abstract='true' name='ActivatedCondition' type='ActivatedConditionType' substitutionGroup='Condition'>
     <xs:annotation>
       <xs:documentation>
-        Description
+        Condition that has transitioned from Normal to either Warning or Fault
       </xs:documentation>
     </xs:annotation>
   </xs:element>
@@ -45263,10 +45281,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='ConditionType'/>
+      <xs:extension base='ActivatedConditionType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='Warning' type='WarningType' substitutionGroup='Condition'>
+  <xs:element name='Warning' type='WarningType' substitutionGroup='ActivatedCondition'>
     <xs:annotation>
       <xs:documentation>
         {{term(condition state)}} that requires concern and supervision and may
@@ -45282,10 +45300,10 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:simpleContent>
-      <xs:extension base='ConditionType'/>
+      <xs:extension base='ActivatedConditionType'/>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:element name='Fault' type='FaultType' substitutionGroup='Condition'>
+  <xs:element name='Fault' type='FaultType' substitutionGroup='ActivatedCondition'>
     <xs:annotation>
       <xs:documentation>
         {{term(condition state)}} that requires intervention to continue
