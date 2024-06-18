@@ -950,10 +950,16 @@ namespace mtconnect::configuration {
         ConfigOptions adapterOptions = options;
 
         GetOptions(block.second, adapterOptions, options);
+        // Erase the host and port so they can be properly defaulted.
+        adapterOptions.erase(configuration::Host);
+        adapterOptions.erase(configuration::Port);
+
         AddOptions(block.second, adapterOptions,
                    {{configuration::Url, string()},
                     {configuration::Device, string()},
                     {configuration::UUID, string()},
+                    {configuration::Host, string()},
+                    {configuration::Port, int32_t()},
                     {configuration::Heartbeat, std::chrono::milliseconds()},
                     {configuration::Uuid, string()}});
 
