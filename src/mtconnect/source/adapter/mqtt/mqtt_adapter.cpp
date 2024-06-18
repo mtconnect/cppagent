@@ -85,8 +85,9 @@ namespace mtconnect {
       {
         m_options[configuration::MqttHost] = m_options[configuration::Host];
       }
-      
-      if (!HasOption(m_options, configuration::MqttPort) && HasOption(m_options, configuration::Port))
+
+      if (!HasOption(m_options, configuration::MqttPort) &&
+          HasOption(m_options, configuration::Port))
       {
         m_options[configuration::MqttPort] = m_options[configuration::Port];
       }
@@ -94,7 +95,7 @@ namespace mtconnect {
       {
         m_options[configuration::MqttPort] = 1883;
       }
-      
+
       m_handler = m_pipeline.makeHandler();
       auto clientHandler = make_unique<ClientHandler>();
 
