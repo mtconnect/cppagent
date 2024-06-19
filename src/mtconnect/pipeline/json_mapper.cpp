@@ -1028,7 +1028,7 @@ namespace mtconnect::pipeline {
     ParserContext context(m_context);
     context.m_forward = [this](entity::EntityPtr &&entity) { next(std::move(entity)); };
     context.m_source = source;
-    
+
     TopLevelHandler handler(context);
     if (device)
       handler.m_context.m_defaultDevice = device;
