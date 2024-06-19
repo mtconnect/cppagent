@@ -52,8 +52,8 @@ jobs:
 
       # the QEMU emulator lets us build for arm processors also
       # see https://github.com/docker/setup-qemu-action
-      - name: Set up QEMU emulator
-        uses: docker/setup-qemu-action@v3
+#     - name: Set up QEMU emulator
+#      uses: docker/setup-qemu-action@v3
 
       # see https://github.com/docker/setup-buildx-action
       - name: Set up Docker Buildx
