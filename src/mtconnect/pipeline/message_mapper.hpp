@@ -46,6 +46,7 @@ namespace mtconnect::pipeline {
 
     EntityPtr operator()(entity::EntityPtr &&entity) override
     {
+      auto source = entity->maybeGet<string>("source");
       auto data = std::dynamic_pointer_cast<DataMessage>(entity);
       if (data->m_dataItem)
       {
@@ -56,7 +57,11 @@ namespace mtconnect::pipeline {
           auto obs = observation::Observation::make(data->m_dataItem, props,
                                                     std::chrono::system_clock::now(), errors);
           if (errors.empty())
+          {
+            if (source)
+              data->m_dataItem->setDataSource(*source);
             return next(std::move(obs));
+          }
         }
         catch (entity::EntityError &e)
         {
