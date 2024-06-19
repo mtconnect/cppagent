@@ -137,6 +137,8 @@ namespace mtconnect::pipeline {
         }
         else
         {
+          if (m_source)
+            dataItem->setDataSource(*m_source);
           m_entities.push_back(obs);
           m_forward(std::move(obs));
         }
@@ -169,6 +171,7 @@ namespace mtconnect::pipeline {
     DevicePtr m_defaultDevice;
     optional<Timestamp> m_timestamp;
     optional<double> m_duration;
+    optional<string> m_source;
 
     EntityList m_entities;
     PipelineContextPtr m_pipelineContext;
@@ -1014,6 +1017,7 @@ namespace mtconnect::pipeline {
   {
     static const auto GetParseError = rj::GetParseError_En;
 
+    auto source = entity->maybeGet<string>("source");
     auto json = std::dynamic_pointer_cast<JsonMessage>(entity);
     DevicePtr device = json->m_device.lock();
     auto &body = entity->getValue<std::string>();
@@ -1023,7 +1027,8 @@ namespace mtconnect::pipeline {
     reader.IterativeParseInit();
     ParserContext context(m_context);
     context.m_forward = [this](entity::EntityPtr &&entity) { next(std::move(entity)); };
-
+    context.m_source = source;
+    
     TopLevelHandler handler(context);
     if (device)
       handler.m_context.m_defaultDevice = device;

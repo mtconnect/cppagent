@@ -173,7 +173,7 @@ namespace mtconnect::pipeline {
             std::tie(device, dataItem) = resolve(*topic);
           }
         }
-
+        
         result = std::make_shared<DataMessage>("DataMessage", props);
       }
       result->m_dataItem = dataItem;
