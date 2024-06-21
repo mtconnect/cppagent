@@ -87,7 +87,7 @@ namespace mtconnect {
         m_password = GetOption<std::string>(options, configuration::MqttPassword);
 
         std::stringstream url;
-        url << "mqtt://" << m_host << ':' << m_port;
+        url << "mqtt://" << m_host << ':' << m_port << '/';
         m_url = url.str();
 
         // Some brokers require specific ClientID provided.
@@ -153,7 +153,7 @@ namespace mtconnect {
           else
           {
             LOG(info) << "MQTT ConnAck: MQTT connection failed: " << ec;
-            reconnect();
+            disconnected();
           }
           return true;
         });
@@ -162,12 +162,10 @@ namespace mtconnect {
           LOG(info) << "MQTT " << m_url << ": connection closed";
           // Queue on a strand
           m_connected = false;
-          if (m_handler && m_handler->m_disconnected)
-            m_handler->m_disconnected(shared_from_this());
 
           if (m_running)
           {
-            reconnect();
+            disconnected();
             return true;
           }
           else
@@ -180,7 +178,7 @@ namespace mtconnect {
           LOG(error) << "error: " << ec.message();
           m_connected = false;
           if (m_running)
-            reconnect();
+            disconnected();
         });
 
         client->set_publish_handler([this](mqtt::optional<std::uint16_t> packet_id,
@@ -357,6 +355,19 @@ namespace mtconnect {
       {
         if (m_handler && m_handler->m_receive)
           m_handler->m_receive(shared_from_this(), string(topic), string(contents));
+      }
+
+      void disconnected()
+      {
+        NAMED_SCOPE("MqttClientImpl::disconnected");
+
+        LOG(info) << "Calling handler disconnected";
+
+        if (m_handler && m_handler->m_disconnected)
+          m_handler->m_disconnected(shared_from_this());
+
+        if (m_running)
+          reconnect();
       }
 
       /// <summary>

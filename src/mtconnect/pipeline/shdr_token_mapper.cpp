@@ -61,24 +61,6 @@ namespace mtconnect {
         return {key, nullopt};
     }
 
-    inline optional<double> getDuration(std::string &timestamp)
-    {
-      optional<double> duration;
-
-      auto pos = timestamp.find('@');
-      if (pos != string::npos)
-      {
-        auto read = pos + 1;
-        ;
-        duration = std::stod(timestamp, &read);
-        if (read == pos + 1)
-          duration.reset();
-        timestamp = timestamp.erase(pos);
-      }
-
-      return duration;
-    }
-
     // --------------------------------------
     // Mapping to data items
     static entity::Requirements s_condition {{"level", true},

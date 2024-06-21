@@ -82,9 +82,9 @@ namespace mtconnect::source::adapter {
     void buildObservationDelivery(pipeline::TransformPtr next);
 
   protected:
-    ConfigOptions m_options;
     StringList m_devices;
     std::optional<std::string> m_device;
     std::string m_identity;
+    ConfigOptions m_options;
   };
 }  // namespace mtconnect::source::adapter

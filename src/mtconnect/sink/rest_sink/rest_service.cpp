@@ -539,12 +539,14 @@ namespace mtconnect {
                 assetRequest(printer, count, removed, request->parameter<string>("type"),
                              request->parameter<string>("device"), pretty, request->m_requestId),
                 request->m_requestId);
+
         return true;
       };
 
       auto idHandler = [&](SessionPtr session, RequestPtr request) -> bool {
         auto asset = request->parameter<string>("assetIds");
-        auto pretty = *request->parameter<bool>("pretty");
+        auto pretty = request->parameter<bool>("pretty").value_or(false);
+
         if (asset)
         {
           auto pretty = request->parameter<bool>("pretty").value_or(false);
@@ -563,10 +565,12 @@ namespace mtconnect {
         {
           auto format = request->parameter<string>("format");
           auto printer = getPrinter(request->m_accepts, format);
-          auto error = printError(printer, "INVALID_REQUEST", "No asset given");
+          auto pretty = *request->parameter<bool>("pretty");
+          auto error = printError(printer, "INVALID_REQUEST", "No asset given", pretty);
           respond(session,
                   make_unique<Response>(rest_sink::status::bad_request, error, printer->mimeType()),
                   request->m_requestId);
+
         }
         return true;
       };

@@ -29,7 +29,7 @@
 # ---------------------------------------------------------------------
 
 # base image - alpine 3.18
-FROM alpine:3.18 AS os
+FROM alpine:3.19 AS os
 
 # ---------------------------------------------------------------------
 # build
@@ -63,7 +63,9 @@ RUN  apk --update add \
        python3 \
        ruby \
        ruby-rake \
-  && PIP_ROOT_USER_ACTION='ignore' pip install conan
+    && python3 -m venv /python/conan \
+    && . /python/conan/bin/activate \
+    && PIP_ROOT_USER_ACTION='ignore' pip install conan
 
 # make an agent directory and cd into it
 WORKDIR /root/agent
@@ -80,6 +82,7 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
      else \
        WITH_TESTS_ARG=""; \
      fi \
+  && . /python/conan/bin/activate \
   && conan profile detect \
   && conan create cppagent \
        --build=missing \

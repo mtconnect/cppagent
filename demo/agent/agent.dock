@@ -1,5 +1,5 @@
 Devices = Devices.xml
-SchemaVersion = 2.0
+SchemaVersion = 2.3
 WorkerThreads = 3
 MonitorConfigFiles = yes
 Port = 5000

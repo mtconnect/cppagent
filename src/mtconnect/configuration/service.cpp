@@ -412,8 +412,9 @@ namespace mtconnect {
       }
       RegCloseKey(mtc);
 
-      RegSetValueExA(agent, "ConfigurationFile", 0ul, REG_SZ, (const BYTE *)m_configFile.c_str(),
-                     m_configFile.string().size() + 1);
+      auto cfgFile = m_configFile.string();
+      RegSetValueExA(agent, "ConfigurationFile", 0ul, REG_SZ, (const BYTE *)cfgFile.c_str(),
+                     cfgFile.length() + 1);
       RegCloseKey(agent);
 
       LOG(info) << "Service installed successfully.";
@@ -574,9 +575,8 @@ namespace mtconnect {
       boost::optional<std::string> command;
       boost::optional<std::string> config;
 
-      const char *argp[3] = {"run", nullptr, nullptr};
-      argp[1] = (char *)configFile;
-      auto options = g_service->parseOptions(1, argp, command, config);
+      const char *argp[3] = {"agent", "run", (const char *)configFile};
+      auto options = g_service->parseOptions(3, argp, command, config);
       g_service->initialize(options);
 
       // Report running status when initialization is complete.
