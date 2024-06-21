@@ -9,6 +9,115 @@ import re
 
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
+    version = "2.3"
+    url = "https://github.com/mtconnect/cppagent.git"
+    license = "Apache License 2.0"
+    settings = "os", "compiler", "arch", "build_type"
+    options = { "without_ipv6": [True, False],
+                "with_ruby": [True, False], 
+                 "development" : [True, False],
+                 "shared": [True, False],
+                 "winver": [None, "ANY"],
+                 "with_docs" : [True, False],
+                 "cpack": [True, False],
+                 "agent_prefix": [None, "ANY"],
+                 "fPIC": [True, False],
+                 "cpack_destination": [None, "ANY"],
+                 "cpack_name": [None, "ANY"],
+                 "cpack_generator": [None, "ANY"]
+                 }
+    
+    description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
+    
+    build_policy = "missing"
+    default_options = {
+        "without_ipv6": False,
+        "with_ruby": True,
+        "development": False,
+        "shared": False,
+        "winver": "0x0602",
+        "with_docs": False,
+        "cpack": False,
+        "agent_prefix": None,
+        "fPIC": True,
+        "cpack_destination": None,
+        "cpack_name": None,
+        "cpack_generator": None,
+
+        "boost*:shared": False,
+        "boost*:without_python": True,
+        "boost*:without_test": True,
+        "boost*:without_graph": True,
+        "boost*:without_test": True,
+        "boost*:without_nowide": True,
+        "boost*:without_fiber": True,
+        "boost*:without_math": True,
+        "boost*:without_contract": True,
+        "boost*:without_serialization": True,
+        "boost*:without_wave": True,
+        "boost*:without_graph_parallel": True,
+
+        "libxml2*:shared": False,
+        "libxml2*:include_utils": False,
+        "libxml2*:http": False,
+        "libxml2*:ftp": False,
+        "libxml2*:iconv": False,
+        "libxml2*:zlib": False,
+
+        "gtest*:shared": False,
+
+        "openssl*:shared": False,
+        
+        "date*:use_system_tz_db": True
+        }
+
+    exports_sources = "*", "!build", "!test_package/build", "!*~"
+    exports = "conan/mqtt_cpp/*", "conan/mruby/*"
+
+    def validate(self):
+        if is_msvc(self) and self.options.shared and self.settings.compiler.runtime != 'dynamic':
+            raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
+        if "libcxx" in self.settings.compiler.fields and self.settings.compiler.libcxx == "libstdc++":
+            raise ConanInvalidConfiguration("This package is only compatible with libstdc++11, add -s compiler.libcxx=libstdc++11")
+
+    def layout(self):
+        self.folders.build_folder_vars = ["options.shared", "settings.arch"]
+        cmake_layout(self)
+
+    def layout(self):
+        self.folders.build_folder_vars = ["options.shared", "settings.arch"]
+        cmake_layout(self)
+
+    def config_options(self):
+        if is_msvc(self):
+            self.options.rm_safe("fPIC")
+
+    def tool_requires_version(self, package, version):
+        self.output.info(f"Checking version of {package} > {version}")
+        buf = io.StringIO()
+        command = f"{package} --version"
+        res = self.run(command, shell=True, stdout=buf)
+        ver = [0, 0, 0]
+        if res == 0:
+            text = buf.getvalue()
+            self.output.debug(f"{command} returned:\n{text}")
+            ver = [int(d) for d in re.search(r"\d+\.\d+\.\d+", text).group(0).split('.')]
+            self.output.info(f"Version of {package} is {ver}")
+        else:
+            self.output.info(f"Command: '{command}' returned {res}")
+        if ver < version:
+            ver_text = '.'.join([str(x) for x in version])
+            self.output.info(f"Old version of {package}, requesting tool {package}/{ver_text}")
+            self.tool_requires(f"{package}/{ver_text}")
+        else:
+            self.output.info(f"Using system version {package}: {ver}")
+        
+    def build_requirements(self):
+        self.tool_requires_version("cmake", [3, 26, 4])
+        if self.options.with_docs:
+            self.tool_requires_version("doxygen", [1, 9, 4])
+
+    def requirements(self):
         self.requires("boost/1.85.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("libxml2/2.10.3", headers=True, libs=True, visible=True, transitive_headers=True, transitive_libs=True)
         self.requires("date/2.4.1", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
