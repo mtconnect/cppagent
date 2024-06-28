@@ -96,11 +96,13 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     bool m_running;
 
     std::string m_host;
-
     unsigned int m_port;
 
     MqttPipeline m_pipeline;
 
     std::shared_ptr<MqttClient> m_client;
+    
+    bool retain { true };
+    MqttClient::QOS qos { MqttClient::QOS::at_least_once };
   };
 }  // namespace mtconnect::source::adapter::mqtt_adapter
