@@ -68,7 +68,9 @@ namespace mtconnect {
                     {configuration::MqttCert, string()},
                     {configuration::MqttClientId, string()},
                     {configuration::MqttUserName, string()},
-                    {configuration::MqttPassword, string()}});
+                    {configuration::MqttPassword, string()},
+                    {configuration::MqttPort, int()},
+                    {configuration::MqttHost, string()}});
         AddDefaultedOptions(
             config, m_options,
             {{configuration::MqttHost, "127.0.0.1"s},
@@ -80,7 +82,6 @@ namespace mtconnect {
              {configuration::MqttCurrentInterval, 10000ms},
              {configuration::MqttSampleInterval, 500ms},
              {configuration::MqttSampleCount, 1000},
-             {configuration::MqttPort, 1883},
              {configuration::MqttTls, false}});
 
         int maxTopicDepth {GetOption<int>(options, configuration::MqttMaxTopicDepth).value_or(7)};
@@ -95,6 +96,24 @@ namespace mtconnect {
         m_sampleInterval = *GetOption<Milliseconds>(m_options, configuration::MqttSampleInterval);
 
         m_sampleCount = *GetOption<int>(m_options, configuration::MqttSampleCount);
+
+        if (!HasOption(m_options, configuration::MqttPort))
+        {
+          if (HasOption(m_options, configuration::Port))
+          {
+            m_options[configuration::MqttPort] = m_options[configuration::Port];
+          }
+          else
+          {
+            m_options[configuration::MqttPort] = 1883;
+          }
+        }
+
+        if (!HasOption(m_options, configuration::MqttHost) &&
+            HasOption(m_options, configuration::Host))
+        {
+          m_options[configuration::MqttHost] = m_options[configuration::Host];
+        }
       }
 
       void Mqtt2Service::start()

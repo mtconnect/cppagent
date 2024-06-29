@@ -101,8 +101,8 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     MqttPipeline m_pipeline;
 
     std::shared_ptr<MqttClient> m_client;
-    
-    bool retain { true };
-    MqttClient::QOS qos { MqttClient::QOS::at_least_once };
+
+    bool retain {true};
+    MqttClient::QOS qos {MqttClient::QOS::at_least_once};
   };
 }  // namespace mtconnect::source::adapter::mqtt_adapter

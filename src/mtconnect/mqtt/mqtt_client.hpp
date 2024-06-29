@@ -42,12 +42,13 @@ namespace mtconnect {
     class MqttClient : public std::enable_shared_from_this<MqttClient>
     {
     public:
-      enum class QOS {
+      enum class QOS
+      {
         at_most_once,
         at_least_once,
         exactly_once
       };
-      
+
       /// @brief Create an Mqtt Client with an asio context and ClientHandler
       /// @param context a boost asio context
       /// @param ClientHandler configuration options
@@ -87,16 +88,16 @@ namespace mtconnect {
       /// @param topic Publishing to the topic
       /// @param payload Publishing to the payload
       /// @return boolean either topic sucessfully connected and published
-      virtual bool publish(const std::string &topic, const std::string &payload,
-                           bool retain = true, QOS qos = QOS::at_least_once) = 0;
+      virtual bool publish(const std::string &topic, const std::string &payload, bool retain = true,
+                           QOS qos = QOS::at_least_once) = 0;
 
       /// @brief Publish Topic to the Mqtt Client and call the async handler
       /// @param topic Publishing to the topic
       /// @param payload Publishing to the payload
       /// @return boolean either topic sucessfully connected and published
       virtual bool asyncPublish(const std::string &topic, const std::string &payload,
-                                std::function<void(std::error_code)> callback,
-                                bool retain = true, QOS qos = QOS::at_least_once) = 0;
+                                std::function<void(std::error_code)> callback, bool retain = true,
+                                QOS qos = QOS::at_least_once) = 0;
 
       /// @brief Mqtt Client is connected
       /// @return bool Either Client is sucessfully connected or not
@@ -117,8 +118,6 @@ namespace mtconnect {
       std::chrono::milliseconds m_connectInterval;
       std::optional<std::string> m_willTopic;
       std::optional<std::string> m_willPayload;
-      
-      
 
       bool m_running {false};
       bool m_connected {false};
