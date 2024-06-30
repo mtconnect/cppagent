@@ -106,6 +106,11 @@ namespace mtconnect::source {
     /// @return the sequence number
     SequenceNumber_t receive(const std::string &shdr);
 
+    /// @brief receives a device and sends it to the sinks
+    /// @param device the device to be received
+    /// @return 0 since there is no sequence number for this.
+    void receive(DevicePtr device);
+
     /// @brief send an asset through the pipeline
     /// @param asset the asset
     void receive(asset::AssetPtr asset) { m_pipeline.run(asset); }

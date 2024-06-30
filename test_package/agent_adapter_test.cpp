@@ -78,6 +78,7 @@ struct MockPipelineContract : public PipelineContract
   }
   void deliverAsset(AssetPtr) override {}
   void deliverDevices(std::list<DevicePtr> d) override { m_receivedDevice = d.front(); }
+  void deliverDevice(DevicePtr d) override { m_receivedDevice = d; }
   int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
