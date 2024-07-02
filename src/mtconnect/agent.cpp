@@ -447,7 +447,7 @@ namespace mtconnect {
       return;
     }
 
-    m_context.pause([=](config::AsyncContext &context) {
+    auto callback = [=](config::AsyncContext &context) {
       try
       {
         bool changed = false;
@@ -513,7 +513,14 @@ namespace mtconnect {
         LOG(error) << "Error detail: " << f.what();
         cerr << f.what() << endl;
       }
-    });
+    };
+    
+    // Gets around a race condition in the loading of adapaters and setting of
+    // UUID.
+    if (m_context.isRunning() && !m_context.isPauased())
+      m_context.pause(callback);
+    else
+      callback(m_context);
   }
 
   bool Agent::receiveDevice(device_model::DevicePtr device, bool version)
