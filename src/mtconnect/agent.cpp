@@ -40,6 +40,8 @@
 #include <sys/stat.h>
 #include <thread>
 
+#include <libxml/xmlwriter.h>
+
 #include "mtconnect/asset/asset.hpp"
 #include "mtconnect/asset/component_configuration_parameters.hpp"
 #include "mtconnect/asset/cutting_tool.hpp"
@@ -436,28 +438,56 @@ namespace mtconnect {
     }
   }
 
-  void Agent::loadDevices(list<DevicePtr> devices, const optional<string> source)
+  void Agent::loadDevices(list<DevicePtr> devices, const optional<string> source,
+                          bool force)
   {
-    if (!IsOptionSet(m_options, config::EnableSourceDeviceModels))
+    if (!force && !IsOptionSet(m_options, config::EnableSourceDeviceModels))
     {
       LOG(warning) << "Device updates are disabled, skipping update";
       return;
     }
 
-    m_context.pause([=](config::AsyncContext &context) {
+    auto callback = [=](config::AsyncContext &context) {
       try
       {
         bool changed = false;
         for (auto device : devices)
         {
-          changed = receiveDevice(device, true) || changed;
-          if (source)
+          auto oldName = *device->getComponentName();
+          auto oldDev = getDeviceByName(oldName);
+          optional<string> oldUuid;
+          if (oldDev)
           {
-            auto s = findSource(*source);
-            if (s)
+            oldUuid = *oldDev->getUuid();
+          }
+          
+          auto uuid = *device->getUuid();
+          auto name = *device->getComponentName();
+
+          changed = receiveDevice(device, true) || changed;
+          if (changed)
+          {
+            if (source)
             {
-              const auto &name = device->getComponentName();
-              s->setOptions({{config::Device, *name}});
+              auto s = findSource(*source);
+              if (s)
+              {
+                s->setOptions({{config::Device, uuid}});
+              }
+            }
+            
+            for (auto src : m_sources)
+            {
+              auto adapter = std::dynamic_pointer_cast<source::adapter::Adapter>(src);
+              if (adapter)
+              {
+                auto &options = adapter->getOptions();
+                auto dev = GetOption<std::string>(options, config::Device);
+                if (dev == oldName || dev == oldUuid)
+                {
+                  adapter->setOptions({{config::Device, uuid}});
+                }
+              }
             }
           }
         }
@@ -483,7 +513,14 @@ namespace mtconnect {
         LOG(error) << "Error detail: " << f.what();
         cerr << f.what() << endl;
       }
-    });
+    };
+    
+    // Gets around a race condition in the loading of adapaters and setting of
+    // UUID.
+    if (m_context.isRunning() && !m_context.isPauased())
+      m_context.pause(callback);
+    else
+      callback(m_context);
   }
 
   bool Agent::receiveDevice(device_model::DevicePtr device, bool version)
@@ -518,6 +555,10 @@ namespace mtconnect {
       addDevice(device);
       if (version)
         versionDeviceXml();
+
+      for (auto &sink : m_sinks)
+        sink->publish(device);
+
       return true;
     }
     else
@@ -525,7 +566,7 @@ namespace mtconnect {
       auto name = device->getComponentName();
       if (!name)
       {
-        LOG(error) << "Device does not have a name" << *device->getUuid();
+        LOG(error) << "Device does not have a name: " << *device->getUuid();
         return false;
       }
 
@@ -602,6 +643,9 @@ namespace mtconnect {
           auto d = m_agentDevice->getDeviceDataItem("device_changed");
           m_loopback->receive(d, props);
         }
+
+        for (auto &sink : m_sinks)
+          sink->publish(device);
 
         return true;
       }
@@ -974,13 +1018,12 @@ namespace mtconnect {
       printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
   }
 
-  void Agent::deviceChanged(DevicePtr device, const std::string &oldUuid,
-                            const std::string &oldName)
+  void Agent::deviceChanged(DevicePtr device, const std::string &uuid)
   {
     NAMED_SCOPE("Agent::deviceChanged");
 
     bool changed = false;
-    string uuid = *device->getUuid();
+    string oldUuid = *device->getUuid();
     if (uuid != oldUuid)
     {
       changed = true;
@@ -992,46 +1035,15 @@ namespace mtconnect {
       }
     }
 
-    if (*device->getComponentName() != oldName)
-    {
-      changed = true;
-    }
-
     if (changed)
     {
-      createUniqueIds(device);
-      if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
-        device->addHash();
+      // Create a new device
+      auto xmlPrinter = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
+      auto newDevice = m_xmlParser->parseDevice(xmlPrinter->printDevice(device), xmlPrinter);
 
-      versionDeviceXml();
-      loadCachedProbe();
+      newDevice->setUuid(uuid);
 
-      if (m_agentDevice)
-      {
-        for (auto &printer : m_printers)
-          printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
-
-        entity::Properties props {{"VALUE", uuid}};
-        if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
-        {
-          const auto &hash = device->getProperty("hash");
-          if (ValueType(hash.index()) != ValueType::EMPTY)
-            props.insert_or_assign("hash", hash);
-        }
-
-        if (device->getUuid() != oldUuid)
-        {
-          auto d = m_agentDevice->getDeviceDataItem("device_added");
-          if (d)
-            m_loopback->receive(d, props);
-        }
-        else
-        {
-          auto d = m_agentDevice->getDeviceDataItem("device_changed");
-          if (d)
-            m_loopback->receive(d, props);
-        }
-      }
+      m_loopback->receive(newDevice);
     }
   }
 
@@ -1436,13 +1448,7 @@ namespace mtconnect {
     DevicePtr device {nullptr};
     device = findDeviceByUUIDorName(deviceName);
 
-    std::string oldName, oldUuid;
-    if (device)
-    {
-      oldName = *device->getComponentName();
-      oldUuid = *device->getUuid();
-    }
-    else
+    if (!device)
     {
       LOG(warning) << source << ": Cannot find device for name " << deviceName;
     }
@@ -1502,12 +1508,15 @@ namespace mtconnect {
         if (!device->preserveUuid())
         {
           auto &idx = m_deviceIndex.get<ByUuid>();
-          auto it = idx.find(oldUuid);
+          auto it = idx.find(*device->getUuid());
           if (it != idx.end())
           {
-            idx.modify(it, [&value](DevicePtr &ptr) { ptr->setUuid(value); });
+            deviceChanged(device, value);
           }
-          deviceChanged(device, oldUuid, oldName);
+          else
+          {
+            LOG(warning) << "Could not find device by uuid: " << *device->getUuid();
+          }
         }
       }
       else
@@ -1536,7 +1545,7 @@ namespace mtconnect {
         else
         {
           action->second(device, value);
-          deviceChanged(device, oldUuid, oldName);
+          m_loopback->receive(device);
         }
       }
     }

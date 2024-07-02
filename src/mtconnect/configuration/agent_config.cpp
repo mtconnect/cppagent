@@ -996,9 +996,7 @@ namespace mtconnect::configuration {
         else if (auto uuid = GetOption<string>(adapterOptions, configuration::UUID))
         {
           // Set the UUID of the device
-          auto oldUuid = *device->getUuid();
-          device->setUuid(*uuid);
-          m_agent->deviceChanged(device, oldUuid, *device->getComponentName());
+          m_agent->deviceChanged(device, *uuid);
         }
 
         auto preserve = GetOption<bool>(adapterOptions, configuration::PreserveUUID);

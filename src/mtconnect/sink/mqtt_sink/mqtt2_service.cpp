@@ -68,7 +68,11 @@ namespace mtconnect {
                     {configuration::MqttCert, string()},
                     {configuration::MqttClientId, string()},
                     {configuration::MqttUserName, string()},
-                    {configuration::MqttPassword, string()}});
+                    {configuration::MqttPassword, string()},
+                    {configuration::MqttPort, int()},
+                    {configuration::MqttRetain, bool()},
+                    {configuration::MqttQOS, string()},
+                    {configuration::MqttHost, string()}});
         AddDefaultedOptions(
             config, m_options,
             {{configuration::MqttHost, "127.0.0.1"s},
@@ -80,7 +84,6 @@ namespace mtconnect {
              {configuration::MqttCurrentInterval, 10000ms},
              {configuration::MqttSampleInterval, 500ms},
              {configuration::MqttSampleCount, 1000},
-             {configuration::MqttPort, 1883},
              {configuration::MqttTls, false}});
 
         int maxTopicDepth {GetOption<int>(options, configuration::MqttMaxTopicDepth).value_or(7)};
@@ -95,6 +98,44 @@ namespace mtconnect {
         m_sampleInterval = *GetOption<Milliseconds>(m_options, configuration::MqttSampleInterval);
 
         m_sampleCount = *GetOption<int>(m_options, configuration::MqttSampleCount);
+
+        if (!HasOption(m_options, configuration::MqttPort))
+        {
+          if (HasOption(m_options, configuration::Port))
+          {
+            m_options[configuration::MqttPort] = m_options[configuration::Port];
+          }
+          else
+          {
+            m_options[configuration::MqttPort] = 1883;
+          }
+        }
+
+        if (!HasOption(m_options, configuration::MqttHost) &&
+            HasOption(m_options, configuration::Host))
+        {
+          m_options[configuration::MqttHost] = m_options[configuration::Host];
+        }
+        
+        auto retain = GetOption<bool>(m_options, configuration::MqttRetain);
+        if (retain)
+          m_retain = *retain;
+        
+        auto qoso = GetOption<string>(m_options, configuration::MqttQOS);
+
+        if (qoso)
+        {
+          auto qos = *qoso;
+          if (qos == "at_most_once")
+            m_qos = MqttClient::QOS::at_most_once;
+          else if (qos == "at_least_once")
+            m_qos = MqttClient::QOS::at_least_once;
+          else if (qos == "exactly_once")
+            m_qos = MqttClient::QOS::exactly_once;
+          else
+            LOG(warning) << "Invalid QOS for MQTT Client: " << qos 
+                         << ", must be at_most_once, at_least_once, or exactly_once";
+        }
       }
 
       void Mqtt2Service::start()
@@ -237,7 +278,7 @@ namespace mtconnect {
           {
             LOG(warning) << "Async publish failed for " << topic << ": " << ec.message();
           }
-        });
+        }, m_retain, m_qos);
 
         return end;
       }
@@ -280,7 +321,7 @@ namespace mtconnect {
                                             m_sinkContract->getCircularBuffer().getBufferSize(),
                                             seq, firstSeq, seq - 1, observations);
 
-          m_client->publish(topic, doc);
+          m_client->publish(topic, doc, m_retain, m_qos);
         }
 
         using std::placeholders::_1;
@@ -308,7 +349,7 @@ namespace mtconnect {
         buffer << doc;
 
         if (m_client)
-          m_client->publish(topic, buffer.str());
+          m_client->publish(topic, buffer.str(), m_retain, m_qos);
 
         return true;
       }
@@ -333,7 +374,7 @@ namespace mtconnect {
         buffer << doc;
 
         if (m_client)
-          m_client->publish(topic, buffer.str());
+          m_client->publish(topic, buffer.str(), m_retain, m_qos);
 
         return true;
       }

@@ -89,6 +89,7 @@ namespace {
     void deliverObservation(observation::ObservationPtr obs) override { m_observation = obs; }
     void deliverAsset(AssetPtr a) override { m_asset = a; }
     void deliverDevices(std::list<DevicePtr>) override {}
+    void deliverDevice(DevicePtr) override {}
     void deliverAssetCommand(entity::EntityPtr c) override { m_command = c; }
     int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
     void deliverCommand(entity::EntityPtr c) override { m_command = c; }

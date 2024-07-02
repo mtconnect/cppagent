@@ -147,7 +147,7 @@ namespace mtconnect {
         throw EntityError("Unexpected entity type, cannot convert to asset in DeliverAsset");
       }
 
-      m_contract->deliverDevices({d});
+      m_contract->deliverDevice(d);
 
       return entity;
     }

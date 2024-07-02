@@ -56,6 +56,7 @@ public:
   void deliverObservation(observation::ObservationPtr obs) override {}
   void deliverAsset(AssetPtr) override {}
   void deliverDevices(std::list<DevicePtr>) override {}
+  void deliverDevice(DevicePtr) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
   int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
   void deliverCommand(entity::EntityPtr) override {}

@@ -69,7 +69,7 @@ namespace mtconnect::source::adapter::mqtt_adapter {
 
     unsigned int getPort() const override;
     ///@}
-
+    
     /// @name Source interface
     ///@{
     bool start() override;
@@ -96,7 +96,6 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     bool m_running;
 
     std::string m_host;
-
     unsigned int m_port;
 
     MqttPipeline m_pipeline;
