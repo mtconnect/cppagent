@@ -69,7 +69,7 @@ namespace mtconnect::source::adapter::mqtt_adapter {
 
     unsigned int getPort() const override;
     ///@}
-
+    
     /// @name Source interface
     ///@{
     bool start() override;
@@ -101,8 +101,5 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     MqttPipeline m_pipeline;
 
     std::shared_ptr<MqttClient> m_client;
-
-    bool retain {true};
-    MqttClient::QOS qos {MqttClient::QOS::at_least_once};
   };
 }  // namespace mtconnect::source::adapter::mqtt_adapter

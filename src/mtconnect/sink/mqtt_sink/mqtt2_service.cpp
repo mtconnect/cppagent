@@ -70,6 +70,8 @@ namespace mtconnect {
                     {configuration::MqttUserName, string()},
                     {configuration::MqttPassword, string()},
                     {configuration::MqttPort, int()},
+                    {configuration::MqttRetain, bool()},
+                    {configuration::MqttQOS, string()},
                     {configuration::MqttHost, string()}});
         AddDefaultedOptions(
             config, m_options,
@@ -113,6 +115,26 @@ namespace mtconnect {
             HasOption(m_options, configuration::Host))
         {
           m_options[configuration::MqttHost] = m_options[configuration::Host];
+        }
+        
+        auto retain = GetOption<bool>(m_options, configuration::MqttRetain);
+        if (retain)
+          m_retain = *retain;
+        
+        auto qoso = GetOption<string>(m_options, configuration::MqttQOS);
+
+        if (qoso)
+        {
+          auto qos = *qoso;
+          if (qos == "at_most_once")
+            m_qos = MqttClient::QOS::at_most_once;
+          else if (qos == "at_least_once")
+            m_qos = MqttClient::QOS::at_least_once;
+          else if (qos == "exactly_once")
+            m_qos = MqttClient::QOS::exactly_once;
+          else
+            LOG(warning) << "Invalid QOS for MQTT Client: " << qos 
+                         << ", must be at_most_once, at_least_once, or exactly_once";
         }
       }
 
@@ -256,7 +278,7 @@ namespace mtconnect {
           {
             LOG(warning) << "Async publish failed for " << topic << ": " << ec.message();
           }
-        });
+        }, m_retain, m_qos);
 
         return end;
       }
@@ -299,7 +321,7 @@ namespace mtconnect {
                                             m_sinkContract->getCircularBuffer().getBufferSize(),
                                             seq, firstSeq, seq - 1, observations);
 
-          m_client->publish(topic, doc);
+          m_client->publish(topic, doc, m_retain, m_qos);
         }
 
         using std::placeholders::_1;
@@ -327,7 +349,7 @@ namespace mtconnect {
         buffer << doc;
 
         if (m_client)
-          m_client->publish(topic, buffer.str());
+          m_client->publish(topic, buffer.str(), m_retain, m_qos);
 
         return true;
       }
@@ -352,7 +374,7 @@ namespace mtconnect {
         buffer << doc;
 
         if (m_client)
-          m_client->publish(topic, buffer.str());
+          m_client->publish(topic, buffer.str(), m_retain, m_qos);
 
         return true;
       }
