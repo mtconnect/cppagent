@@ -51,12 +51,11 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     TransformPtr next =
         bind(make_shared<MTConnectXmlTransform>(m_context, m_feedback, m_device, m_uuid));
-    std::optional<string> obsMetrics;
-    obsMetrics = m_identity + "_observation_update_rate";
-    next->bind(make_shared<DeliverObservation>(m_context, obsMetrics));
+        
+    buildObservationDelivery(next);
     buildDeviceDelivery(next);
     buildAssetDelivery(next);
-
+    
     applySplices();
   }
 
