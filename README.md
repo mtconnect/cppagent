@@ -1151,7 +1151,7 @@ The `Table` `REPRESENTATION` requires the the dataItemId as the key and the "val
 
     *Default*: 1883
 
-* `topics` - list of topics to subscribe to. Note : Only raw SHDR strings supported at this time
+* `Topics` - list of topics to subscribe to. Note : Only raw SHDR strings supported at this time
 
     *Required*
 
@@ -1175,6 +1175,13 @@ The `Table` `REPRESENTATION` requires the the dataItemId as the key and the "val
 		}
 	```
 
+* `MqttRetain` - For the MQTT Sinks, sets the retain flag for publishing.
+
+    *Default*: True
+    
+* `MqttQOS`: - For the MQTT Sinks, sets the Quality of Service. Must be one of `at_least_once`, `at_most_once`, `exactly_once`.
+
+    *Default*: `at_least_once`
 
 ### Agent Adapter Configuration
 
