@@ -75,8 +75,6 @@ jobs:
 
     - name: Install Conan
       uses: turtlebrowser/get-conan@v1.2
-      with:
-        version: 2.4.1
 
     - name: Initialize VS Dev Env
       uses: seanmiddleditch/gha-setup-vsdevenv@master
@@ -98,7 +96,7 @@ jobs:
     - name: Build and Test C++ Agent
       run: |
         set CTEST_OUTPUT_ON_FAILURE=TRUE
-        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }} -o with_docs=False -o "&:cpack=True" -o "&:cpack_destination=${{ env.ZIP_DIR }}" -o "*:shared=${{ matrix.shared }}"
+        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }} -o "&:with_docs=False" -o "&:cpack=True" -o "&:cpack_destination=${{ env.ZIP_DIR }}" -o "*:shared=${{ matrix.shared }}"
 
     - name: Release
       uses: softprops/action-gh-release@v1
