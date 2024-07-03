@@ -96,7 +96,7 @@ jobs:
     - name: Build and Test C++ Agent
       run: |
         set CTEST_OUTPUT_ON_FAILURE=TRUE
-        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }} -o with_docs=False -o cpack=True -o cpack_destination=${{ env.ZIP_DIR }} -o shared=${{ matrix.shared }}
+        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }} -o "&:with_docs=False" -o "&:cpack=True" -o "&:cpack_destination=${{ env.ZIP_DIR }}" -o "&:shared=${{ matrix.shared }}"
 
     - name: Release
       uses: softprops/action-gh-release@v1
@@ -149,7 +149,7 @@ jobs:
       shell: bash
       run: |
         export CTEST_OUTPUT_ON_FAILURE=TRUE
-        conan create . --build=missing -pr conan/profiles/gcc  -o shared=${{ matrix.shared }} -o with_docs=False -o cpack=True -o cpack_name=dist -o cpack_destination=${{ github.workspace }}
+        conan create . --build=missing -pr conan/profiles/gcc  -o '&:shared=${{ matrix.shared }}' -o '&:with_docs=False' -o '&:cpack=True' -o '&:cpack_name=dist' -o '&:cpack_destination=${{ github.workspace }}'
 
     - name: Cleanse package version
       run: |
@@ -225,5 +225,5 @@ jobs:
       shell: bash
       run: |
         export CTEST_OUTPUT_ON_FAILURE=TRUE
-        conan create . --build=missing -pr conan/profiles/macos  -o shared=${{ matrix.shared }} -o with_docs=False
+        conan create . --build=missing -pr conan/profiles/macos  -o '&:shared=${{ matrix.shared }}' -o '&:with_docs=False'
         
