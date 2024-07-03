@@ -39,11 +39,11 @@ namespace mtconnect::configuration {
     /// @brief removes the copy constructor
     AsyncContext(const AsyncContext &) = delete;
     ~AsyncContext() {}
-    
+
     /// @brief is the context running
     /// @returns running status
     auto isRunning() { return m_running; }
-    
+
     /// @brief return the paused state
     /// @returns the paused state
     auto isPauased() { return m_paused; }

@@ -1663,7 +1663,7 @@ TEST_F(AgentTest, adapter_should_receive_commands)
 
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: MK-1234\n");
   m_agentTestHelper->m_ioContext.run_for(2000ms);
-  
+
   m_agentTestHelper->m_adapter->parseBuffer("* manufacturer: Big Tool\n");
   m_agentTestHelper->m_adapter->parseBuffer("* serialNumber: XXXX-1234\n");
   m_agentTestHelper->m_adapter->parseBuffer("* station: YYYY\n");
@@ -1741,7 +1741,7 @@ TEST_F(AgentTest, adapter_should_receive_device_commands)
   ASSERT_EQ(string(*device2->getUuid()), device);
 
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: new-uuid\n");
-  
+
   device2 = agent->getDeviceByName("Device2");
   ASSERT_TRUE(device2);
 

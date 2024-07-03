@@ -112,7 +112,7 @@ namespace mtconnect {
         /// @brief Mqtt Client is Connected or not
         /// @return `true` when the client was connected
         bool isConnected() { return m_client && m_client->isConnected(); }
-        
+
         /// @name Retain and QOS flags
         ///@{
         auto getRetain() { return m_retain; }
@@ -205,7 +205,7 @@ namespace mtconnect {
 
         std::map<std::string, FilterSet> m_filters;
         std::map<std::string, std::shared_ptr<AsyncSample>> m_samplers;
-        
+
         bool m_retain {true};
         MqttClient::QOS m_qos {MqttClient::QOS::at_least_once};
       };

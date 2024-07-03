@@ -64,6 +64,7 @@ namespace mtconnect {
                   {configuration::Manufacturer, string()},
                   {configuration::Station, string()},
                   {configuration::Url, string()},
+                  {configuration::Topics, StringList()},
                   {configuration::MqttCaCert, string()},
                   {configuration::MqttPrivateKey, string()},
                   {configuration::MqttCert, string()},
@@ -173,7 +174,7 @@ namespace mtconnect {
         }
         options[configuration::Topics] = list;
       }
-      else
+      else if (!HasOption(options, configuration::Topics))
       {
         LOG(error) << "MQTT Adapter requires at least one topic to subscribe to. Provide 'Topics = "
                       "' or Topics block";

@@ -34,7 +34,6 @@
 #include "mtconnect/printer//xml_printer.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/adapter/agent_adapter/agent_adapter.hpp"
-#include "mtconnect/source/adapter/agent_adapter/url_parser.hpp"
 #include "test_utilities.hpp"
 
 // Registers the fixture into the 'registry'

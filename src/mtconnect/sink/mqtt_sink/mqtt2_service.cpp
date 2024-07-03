@@ -116,11 +116,11 @@ namespace mtconnect {
         {
           m_options[configuration::MqttHost] = m_options[configuration::Host];
         }
-        
+
         auto retain = GetOption<bool>(m_options, configuration::MqttRetain);
         if (retain)
           m_retain = *retain;
-        
+
         auto qoso = GetOption<string>(m_options, configuration::MqttQOS);
 
         if (qoso)
@@ -133,7 +133,7 @@ namespace mtconnect {
           else if (qos == "exactly_once")
             m_qos = MqttClient::QOS::exactly_once;
           else
-            LOG(warning) << "Invalid QOS for MQTT Client: " << qos 
+            LOG(warning) << "Invalid QOS for MQTT Client: " << qos
                          << ", must be at_most_once, at_least_once, or exactly_once";
         }
       }
@@ -269,16 +269,19 @@ namespace mtconnect {
                                      m_sinkContract->getCircularBuffer().getBufferSize(), end,
                                      firstSeq, lastSeq, *observations, false);
 
-        m_client->asyncPublish(topic, doc, [sampler, topic](std::error_code ec) {
-          if (!ec)
-          {
-            sampler->handlerCompleted();
-          }
-          else
-          {
-            LOG(warning) << "Async publish failed for " << topic << ": " << ec.message();
-          }
-        }, m_retain, m_qos);
+        m_client->asyncPublish(
+            topic, doc,
+            [sampler, topic](std::error_code ec) {
+              if (!ec)
+              {
+                sampler->handlerCompleted();
+              }
+              else
+              {
+                LOG(warning) << "Async publish failed for " << topic << ": " << ec.message();
+              }
+            },
+            m_retain, m_qos);
 
         return end;
       }
