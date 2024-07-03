@@ -33,7 +33,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     /// @brief Create a session to connect to the remote agent
     /// @param ioc the asio strand to run in
     /// @param url URL to connect to
-    HttpSession(boost::asio::io_context::strand &ioc, const Url &url)
+    HttpSession(boost::asio::io_context::strand &ioc, const url::Url &url)
       : super(ioc, url), m_stream(ioc.context())
     {}
 

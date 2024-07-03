@@ -2276,7 +2276,7 @@ Adapters {
     }
 }
 )DOC");
-    
+
     m_config->setDebug(true);
     m_config->loadConfig(config);
 

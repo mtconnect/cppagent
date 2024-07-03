@@ -906,31 +906,21 @@ namespace mtconnect::configuration {
 
   void parseUrl(ConfigOptions &options)
   {
-    string host, protocol, path;
+    using namespace mtconnect::url;
     auto url = *GetOption<string>(options, configuration::Url);
 
-    boost::regex pat("^([^:]+)://([^:/]+)(:[0-9]+)?/?(.+)?");
-    boost::match_results<string::const_iterator> match;
-    if (boost::regex_match(url, match, pat))
+    auto parsed = Url::parse(url);
+    options[configuration::Protocol] = parsed.m_protocol;
+    options[configuration::Host] = parsed.getHost();
+    if (parsed.m_port)
+      options[configuration::Port] = parsed.getPort();
+    if (parsed.m_path != "/")
     {
-      if (match[1].matched)
-        options[configuration::Protocol] = string(match[1].first, match[1].second);
-      if (match[2].matched)
-        options[configuration::Host] = string(match[2].first, match[2].second);
-      if (match[3].matched)
-      {
-        try
-        {
-          options[configuration::Port] =
-              boost::lexical_cast<int>(string(match[3].first + 1, match[3].second).c_str());
-        }
-        catch (boost::bad_lexical_cast &e)
-        {
-          LOG(error) << "Cannot intrepret the port for " << match[3] << ": " << e.what();
-        }
-      }
-      if (match[4].matched)
-        options[configuration::Topics] = StringList {string(match[4].first, match[4].second)};
+      StringList list;
+      string topics = parsed.m_path.substr(1, string::npos);
+      boost::split(list, topics, boost::is_any_of(":"),
+                   boost::token_compress_on);
+      options[configuration::Topics] = list;
     }
   }
 

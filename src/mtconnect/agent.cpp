@@ -438,8 +438,7 @@ namespace mtconnect {
     }
   }
 
-  void Agent::loadDevices(list<DevicePtr> devices, const optional<string> source,
-                          bool force)
+  void Agent::loadDevices(list<DevicePtr> devices, const optional<string> source, bool force)
   {
     if (!force && !IsOptionSet(m_options, config::EnableSourceDeviceModels))
     {
@@ -460,7 +459,7 @@ namespace mtconnect {
           {
             oldUuid = *oldDev->getUuid();
           }
-          
+
           auto uuid = *device->getUuid();
           auto name = *device->getComponentName();
 
@@ -475,7 +474,7 @@ namespace mtconnect {
                 s->setOptions({{config::Device, uuid}});
               }
             }
-            
+
             for (auto src : m_sources)
             {
               auto adapter = std::dynamic_pointer_cast<source::adapter::Adapter>(src);
@@ -514,7 +513,7 @@ namespace mtconnect {
         cerr << f.what() << endl;
       }
     };
-    
+
     // Gets around a race condition in the loading of adapaters and setting of
     // UUID.
     if (m_context.isRunning() && !m_context.isPauased())

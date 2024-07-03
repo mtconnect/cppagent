@@ -69,7 +69,7 @@ namespace mtconnect::source::adapter::mqtt_adapter {
 
     unsigned int getPort() const override;
     ///@}
-    
+
     /// @name Source interface
     ///@{
     bool start() override;

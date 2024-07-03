@@ -39,6 +39,7 @@
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
+using namespace mtconnect::url;
 
 namespace mtconnect::source::adapter::agent_adapter {
   void AgentAdapterPipeline::build(const ConfigOptions &options)
@@ -51,11 +52,11 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     TransformPtr next =
         bind(make_shared<MTConnectXmlTransform>(m_context, m_feedback, m_device, m_uuid));
-        
+
     buildObservationDelivery(next);
     buildDeviceDelivery(next);
     buildAssetDelivery(next);
-    
+
     applySplices();
   }
 

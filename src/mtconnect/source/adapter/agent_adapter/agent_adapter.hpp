@@ -21,8 +21,8 @@
 #include "mtconnect/pipeline/mtconnect_xml_transform.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
+#include "mtconnect/utilities.hpp"
 #include "session.hpp"
-#include "url_parser.hpp"
 
 namespace boost::asio::ssl {
   class context;
@@ -127,7 +127,7 @@ namespace mtconnect::source::adapter::agent_adapter {
   protected:
     pipeline::XmlTransformFeedback m_feedback;
     AgentAdapterPipeline m_pipeline;
-    Url m_url;
+    url::Url m_url;
     int m_count = 1000;
     std::chrono::milliseconds m_heartbeat;
     bool m_reconnecting = false;
