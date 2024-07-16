@@ -5,7 +5,7 @@
 		"AgentDeviceUUID": {
 			"type": "string",
 			"description": "Set the UUID of the agent device",
-			"default": "UUID derived from the IP address and port of the agent"
+			"default": "UUID derived from the IP address and port of the agent."
 		},
 		"DataPath": {
 			"type": "string",
@@ -67,9 +67,10 @@
 			}
 		},
 		"JsonVersion": {
-			"type": "string",
+			"type": "integer",
 			"description": "JSON Printer format. Old format: 1, new format: 2",
-			"default": "2"
+			"default": 2,
+			"enum" : [1, 2]
 		},
 		"LogStreams": {
 			"type": "array",
@@ -403,7 +404,8 @@
 					"ShdrVersion": {
 						"type": "integer",
 						"description": "Specifies the SHDR protocol version used by the adapter. When greater than one (1), allows multiple complex observations, like Condition and Message on the same line. If it equals one (1), then any observation requiring more than a key/value pair need to be on separate lines. Applies to only this adapter.",
-						"default": 1
+						"default": 1,
+						"enum": [1, 2]
 					},
 					"SuppressIPAddress": {
 						"type": "boolean",
