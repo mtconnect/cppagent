@@ -301,6 +301,17 @@
 							"type": "integer",
 							"description": "The maximum number of observations to publish at one time.",
 							"default": 1000
+						},
+						"MqttRetain": {
+							"type": "boolean",
+							"description": "Retain the last message sent to the broker. This is useful for clients that are not always connected.",
+							"default": false
+						},
+						"MqttQOS": {
+							"type": "string",
+							"description": "The quality of service level for the MQTT connection. Options are: at_least_once, at_most_once, and exactly_once",
+							"default": "at_least_once",
+							"enum":["at_least_once", "at_most_once", "exactly_once"]
 						}
 					}
 				}
