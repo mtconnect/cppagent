@@ -128,11 +128,35 @@ namespace mtconnect {
             auto pos = m_filters.emplace(*(device->getUuid()), FilterSet());
             filter = pos.first;
             auto &set = filter->second;
-            for (const auto &wdi : device->getDeviceDataItems())
+
+            auto xpath = GetOption<string>(m_options, configuration::MqttXPath);
+            if (xpath)
             {
-              const auto di = wdi.lock();
-              if (di)
-                set.insert(di->getId());
+              try
+              {
+                m_sinkContract->getDataItemsForPath(device, xpath, set, nullopt);
+              }
+              catch (exception &e)
+              {
+                LOG(warning) << "MqttService: Invalid xpath '" << *xpath <<
+                                "', defaulting to all data items";
+              }
+
+              if (set.empty())
+              {
+                LOG(warning) << "MqttService: Invalid xpath '" << *xpath << 
+                                "', defaulting to all data items";
+              }
+            }
+            
+            if (set.empty())
+            {
+              for (const auto &wdi : device->getDeviceDataItems())
+              {
+                const auto di = wdi.lock();
+                if (di)
+                  set.insert(di->getId());
+              }
             }
           }
           return filter->second;
@@ -208,6 +232,9 @@ namespace mtconnect {
 
         bool m_retain {true};
         MqttClient::QOS m_qos {MqttClient::QOS::at_least_once};
+        
+        // For XPath
+        
       };
     }  // namespace mqtt_sink
   }    // namespace sink
