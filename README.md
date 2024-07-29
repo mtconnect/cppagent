@@ -589,6 +589,10 @@ Configuration Parameters
   understand the internal workings of the agent.
 
     *Default*: 1000
+      
+* `CreateUniqueIds`: Changes all the ids in each element to a UUID that will be unique across devices. This is used for merging devices from multiple sources.
+
+    *Default*: `false`
 
 * `Devices` - The XML file to load that specifies the devices and is
   supplied as the result of a probe request. If the key is not found
@@ -617,10 +621,14 @@ Configuration Parameters
 * `MonitorConfigFiles` - Monitor agent.cfg and Devices.xml files and restart agent if they change.
 
     *Default*: false
+    
+* `MonitorInterval` - The interval between checks if the agent.cfg or Device.xml files have changed.
+
+    *Default*: 10 seconds
 
 * `MinimumConfigReloadAge` - The minimum age of a config file before an agent reload is triggered (seconds).
 
-    *Default*: 15
+    *Default*: 15 seconds
 
 * `Pretty` - Pretty print the output with indententation
 
@@ -630,6 +638,10 @@ Configuration Parameters
   process id of the daemon. This is not supported in Windows.
 
     *Default*: agent.pid
+    
+* `Sender` - The value for the sender header attribute.
+
+    *Default*: Local machine name
 
 * `ServiceName` - Changes the service name when installing or removing 
   the service. This allows multiple agents to run as services on the same machine.
@@ -865,6 +877,10 @@ Sinks {
 * `MqttQOS`: - For the MQTT Sinks, sets the Quality of Service. Must be one of `at_least_once`, `at_most_once`, `exactly_once`.
 
     *Default*: `at_least_once`
+    
+* `MqttXPath`: - The xpath filter to apply to all current and samples published to MQTT. If the XPath is invalid, it will fall back to publishing all data items.
+
+    *Default*: All data items
 
 ### Adapter Configuration Items ###
 
