@@ -608,15 +608,27 @@ Configuration Parameters
 * `JsonVersion`     - JSON Printer format. Old format: 1, new format: 2
 
     *Default*: 2
+    
+* `LogStreams` - Debugging flag to log the streamed data to a file. Logs to a file named: `Stream_` + timestamp + `.log` in the current working directory. This is only for the Rest Sink.
 
-* `SchemaVersion` - Change the schema version to a different version number.
-
-    *Default*: 2.0
+    *Default*: `false`
 
 * `MaxAssets` - The maximum number of assets the agent can hold in its buffer. The
   number is the actual count, not an exponent.
 
     *Default*: 1024
+    
+* `MaxCachedFileSize` - The maximum size of a raw file to cache in memory.
+
+    *Default*: 20 kb
+    
+* `MinCompressFileSize` - The file size where we begin compressing raw files sent to the client.
+
+    *Default*: 100 kb
+
+* `MinimumConfigReloadAge` - The minimum age of a config file before an agent reload is triggered (seconds).
+
+    *Default*: 15 seconds
 
 * `MonitorConfigFiles` - Monitor agent.cfg and Devices.xml files and restart agent if they change.
 
@@ -625,10 +637,6 @@ Configuration Parameters
 * `MonitorInterval` - The interval between checks if the agent.cfg or Device.xml files have changed.
 
     *Default*: 10 seconds
-
-* `MinimumConfigReloadAge` - The minimum age of a config file before an agent reload is triggered (seconds).
-
-    *Default*: 15 seconds
 
 * `Pretty` - Pretty print the output with indententation
 
@@ -639,6 +647,10 @@ Configuration Parameters
 
     *Default*: agent.pid
     
+* `SchemaVersion` - Change the schema version to a different version number.
+
+    *Default*: 2.0
+
 * `Sender` - The value for the sender header attribute.
 
     *Default*: Local machine name
@@ -650,7 +662,11 @@ Configuration Parameters
 
 * `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names. This applies to all adapters.
 
-    *Default*: false
+    *Default*: `false`
+    
+* `VersionDeviceXml` - Create a new versioned file every time the Device.xml file changes from an external source.
+
+    *Default*: `false`
 
 * `WorkerThreads` - The number of operating system threads dedicated to the Agent
 
