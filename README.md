@@ -713,12 +713,14 @@ These can be overridden on a per-adapter basis
     
 * `HttpHeaders`     - Additional headers to add to the HTTP Response for CORS Security
 
-    > Example: ```
-    > HttpHeaders {
-    >   Access-Control-Allow-Origin = *
-    >   Access-Control-Allow-Methods = GET
-    >   Access-Control-Allow-Headers = Content-Type
-    > }```
+    Example: 
+	```
+    HttpHeaders {
+		Access-Control-Allow-Origin = *
+		Access-Control-Allow-Methods = GET
+		Access-Control-Allow-Headers = Content-Type
+    }
+	```
 
 * `Port`	- The port number the agent binds to for requests.
 
@@ -790,7 +792,7 @@ Enabled in `agent.cfg` by specifying:
 ```
 Sinks {
   MqttService {
-    # Configuration Options...
+    # Configuration Options below...
   }
 }
 ```
@@ -829,7 +831,7 @@ Sinks {
 
 * `ProbeTopic` or `DeviceTopic` - Prefix for the Device Model topic
 
-    > Note: The `[device]` will be replace with the uuid of each device. Other patterns can be created, 
+    > Note: `[device]` will be replaced with the uuid of each device. Other patterns can be created, 
     > for example: `MTConnect/[device]/Probe` will group by device instead of operation.
     > `DeviceTopic` will also work.
 
@@ -1002,9 +1004,6 @@ Sinks {
 
     *Default*: Auto-generated
 
-	> **⚠️Note:** Mqtt Sinks and Mqtt Adapters create separate connections to their respective brokers, but currently use the same client ID by default. Because of this, when using a single broker for source and sink, best practice is to explicitly specify their respective `MqttClientId`
-	>
-
 	Example mqtt adapter block:
 	```json
 	mydevice {
@@ -1016,172 +1015,16 @@ Sinks {
 		}
 	```
 
-### MQTT JSON Ingress Protocol Version 2.0
+* `AdapterIdentity` - Adapter Identity name used to prefix dataitems within the Agent device ids and names.
 
-In general the data format will be {"timestamp": "YYYY-MM-DDThh:mm:ssZ","dataItemId":"value", "dataItemId":{"key1":"value1", ..., "keyn":"valuen}} 
+	*Default*:
+	* If `SuppressIPAddress` == false:\
+	`AdapterIdentity` = ```_ {IP}_{PORT}```\
+	example:`_localhost_7878`
 
-**NOTE**: See the standard for the complete description of the fields for the data item representations below.
-
-A simple set of events and samples will look something like this:
-
-	```json
-	{
-       "timestamp": "2023-11-06T12:12:44Z",			//Time Stamp
-        "tempId": 22.6,								//Temperature
-        "positionId": 1002.345,						//X axis position
-        "executionId": "ACTIVE"						//Execution state
-	}
-	```
-	
-A `CONDITION` requires the key to be the dataItemId and requires the 6 fields as shown in the example below
-
-	```json
-	{
-       "timestamp": "2023-11-06T12:12:44Z",
-		"dataItemId": {
-		  "level": "fault",
-		  "conditionId":"ac324",
-		  "nativeSeverity": "1000",
-		  "qualifier": "HIGH",
-		  "nativeCode": "ABC",
-		  "message": "something went wrong"
-		}
-	}
-	```
-A `MESSAGE` requires the key to be the dataItemId and requires the nativeCode field as shown in the example below
-
-	```json
-	{
-       "timestamp": "2023-11-06T12:12:44Z",
-		"messsageId": {
-		  "nativeCode": "ABC",
-		  "message": "something went wrong"
-		}
-	}
-	```
-	
-The `TimeSeries` `REPRESENTATION` requires the key to be the dataItemId and requires 2 fields "count" and "values" and 1 to n comma delimited values.  
-**NOTE**: The "frequency" field is optional.
-
-	```json
-	{
-		"timestamp": "2023-11-06T12:12:44Z",
-		"timeSeries1": {
-			"count": 10,
-			"frequency": 100,
-			"values": [1,2,3,4,5,6,7,8,9,10]
-		}
-	}
-	```
-The `DataSet` `REPRESENTATION` requires the the dataItemId as the key and the "values" field.   It may also have the optional "resetTriggered" field.
-
-	```json
-	{
-	{
-		"timestamp": "2023-11-09T11:20:00Z",
-		"dataSetId": {
-			"key1": 123,
-			"key2": 456,
-			"key3": 789
-		}
-	}
-	```
-
-	Example with the optional "resetTriggered" filed:	
-	
-	```json
-	{
-		"timestamp": "2023-11-09T11:20:00Z",
-		"cncregisterset1": {
-			"resetTriggered": "NEW",
-			"value": {"r1":"v1", "r2":"v2", "r3":"v3" }
-		}
-	}
-	```
-
-The `Table` `REPRESENTATION` requires the the dataItemId as the key and the "values" field.   It may also have the optional "resetTriggered" field.
-
-	```json
-	
-	{
-		"timestamp":"2023-11-06T12:12:44Z",
-		"tableId":{
-		  "row1":{
-			"cell1":"Some Text",
-			"cell2":3243
-		  },
-		  "row2": {
-			"cell1":"Some Other Text",
-			"cell2":243        
-		  }      
-		}
-	}
-	```
-
-	Example with the optional resetTriggered field:
-
-	```json
-	{
-		"timestamp": "2023-11-09T11:20:00Z",
-		"a1": {
-			"resetTriggered": "NEW",
-			"value": {
-				"r1": {
-					"k1": 123.45,
-					"k3": 6789
-				},
-				"r2": null
-			}
-		}
-	}
-	```
-
-
-
-	* `AdapterIdentity` - Adapter Identity name used to prefix dataitems within the Agent device ids and names.
-
-        *Default*:
-		* If `SuppressIPAddress` == false:\
-		`AdapterIdentity` = ```_ {IP}_{PORT}```\
-		example:`_localhost_7878`
-
-		* If `SuppressIPAddress` == true:\
-		`AdapterIdentity` = ```_ sha1digest({IP}_{PORT})```\
-		example: `__71020ed1ed`
-
-#### MQTT Adapter/Source
-
-* `MqttHost` - IP Address or name of the MQTT Broker
-
-    *Default*: 127.0.0.1
-  
-* `MqttPort` - Port number of MQTT Broker
-
-    *Default*: 1883
-
-* `Topics` - list of topics to subscribe to. Note : Only raw SHDR strings supported at this time
-
-    *Required*
-
-* `MqttClientId` - Client ID used when connecting to the MQTT Broker
-
-    *Default*: Auto-generated
-
-	> **⚠️Note:** Mqtt Sinks and Mqtt Adapters create separate connections to their respective brokers, but currently use the same client ID by default. Because of this, when using a single broker for source and sink, best practice is to explicitly specify a distinct `MqttClientId` for each.
-	>
-
-	> **⚠️Note:** Currently, there is no JSON parser functionality. Agent is expecting a raw SHDR-formatted string
-
-	Example mqtt adapter block:
-	```json
-	mydevice {
-			Protocol = mqtt
-			MqttHost = localhost
-			MqttPort = 1883
-			MqttClientId = myUniqueID
-			Topics = /ingest
-		}
-	```
+	* If `SuppressIPAddress` == true:\
+	`AdapterIdentity` = ```_ sha1digest({IP}_{PORT})```\
+	example: `__71020ed1ed`
 
 ### Agent Adapter Configuration
 
@@ -1239,8 +1082,8 @@ logger_config configuration items
             
         *Default*: NEVER
     
-Adapter Agent Protocol Version 2.0
-=======
+# Agent-Adapter Protocols
+## SHDR Version 2.0
 
 The principle adapter data format is a simple plain text stream separated by the pipe character `|`. Every line except for commands starts with an optional timestamp in UTC. If the timestamp is not supplied the agent will supply a timestamp of its own taken at the arrival time of the data to the agent. The remainder of the line is a key followed by data – depending on the type of data item is being written to.
 
@@ -1345,8 +1188,7 @@ Using the quoting conventions explained in the previous section, the inner conte
 
 All the reset rules of data set apply to tables and the values are treated as a unit.
 
-Assets
------
+## Assets
 
 Assets are associated with a device but do not have a data item they are mapping to. They therefore get the special data item name `@ASSET@`. Assets can be sent either on one line or multiple lines depending on the adapter requirements. The single line form is as follows:
 
@@ -1372,10 +1214,128 @@ Partial updates to assets is also possible by using the @UPDATE_ASSET@ key, but 
 
 	2012-02-21T23:59:33.460470Z|@UPDATE_ASSET@|KSSP300R.1|OverallToolLength|323.64|CuttingDiameterMax|76.211
 
-Commands
------
+## MQTT JSON Ingress Protocol Version 2.0
 
-There are a number of commands that can be sent as part of the adapter stream. These change some dynamic elements of the device information, the interpretation of the data, or the associated default device. Commands are given on a single line starting with an asterisk `* ` as the first character of the line and followed by a <key>: <value>. They are as follows:
+In general the data format is {"timestamp": "YYYY-MM-DDThh:mm:ssZ","dataItemId":"value", "dataItemId":{"key1":"value1", ..., "keyn":"valuen}} 
+
+**NOTE**: See the standard for the complete description of the fields for the data item representations below.
+
+A simple set of events and samples will look something like this:
+
+```json
+{
+	"timestamp": "2023-11-06T12:12:44Z",			//Time Stamp
+	"tempId": 22.6,								//Temperature
+	"positionId": 1002.345,						//X axis position
+	"executionId": "ACTIVE"						//Execution state
+}
+```
+	
+A `CONDITION` requires the key to be the dataItemId and requires the 6 fields as shown in the example below
+
+```json
+{
+	"timestamp": "2023-11-06T12:12:44Z",
+	"dataItemId": {
+		"level": "fault",
+		"conditionId":"ac324",
+		"nativeSeverity": "1000",
+		"qualifier": "HIGH",
+		"nativeCode": "ABC",
+		"message": "something went wrong"
+	}
+}
+```
+A `MESSAGE` requires the key to be the dataItemId and requires the nativeCode field as shown in the example below
+
+```json
+{
+	"timestamp": "2023-11-06T12:12:44Z",
+	"messsageId": {
+		"nativeCode": "ABC",
+		"message": "something went wrong"
+	}
+}
+```
+	
+The `TimeSeries` `REPRESENTATION` requires the key to be the dataItemId and requires 2 fields "count" and "values" and 1 to n comma delimited values.  
+>**NOTE**: The "frequency" field is optional.
+
+```json
+{
+	"timestamp": "2023-11-06T12:12:44Z",
+	"timeSeries1": {
+		"count": 10,
+		"frequency": 100,
+		"values": [1,2,3,4,5,6,7,8,9,10]
+	}
+}
+```
+The `DataSet` `REPRESENTATION` requires the the dataItemId as the key and the "values" field.   It may also have the optional "resetTriggered" field.
+
+```json
+{
+{
+	"timestamp": "2023-11-09T11:20:00Z",
+	"dataSetId": {
+		"key1": 123,
+		"key2": 456,
+		"key3": 789
+	}
+}
+```
+
+Example with the optional "resetTriggered" filed:	
+
+```json
+{
+	"timestamp": "2023-11-09T11:20:00Z",
+	"cncregisterset1": {
+		"resetTriggered": "NEW",
+		"value": {"r1":"v1", "r2":"v2", "r3":"v3" }
+	}
+}
+```
+
+The `Table` `REPRESENTATION` requires the the dataItemId as the key and the "values" field.   It may also have the optional "resetTriggered" field.
+
+```json
+
+{
+	"timestamp":"2023-11-06T12:12:44Z",
+	"tableId":{
+		"row1":{
+		"cell1":"Some Text",
+		"cell2":3243
+		},
+		"row2": {
+		"cell1":"Some Other Text",
+		"cell2":243        
+		}      
+	}
+}
+```
+
+Example with the optional resetTriggered field:
+
+```json
+{
+	"timestamp": "2023-11-09T11:20:00Z",
+	"a1": {
+		"resetTriggered": "NEW",
+		"value": {
+			"r1": {
+				"k1": 123.45,
+				"k3": 6789
+			},
+			"r2": null
+		}
+	}
+}
+```
+
+## Adapter Commands
+There are a number of commands that can be sent as part of the adapter stream over the SHDR port connection. These change some dynamic elements of the device information, the interpretation of the data, or the associated default device. Commands are given on a single line starting with an asterisk `* ` as the first character of the line and followed by a <key>: <value>. They are as follows:
 
 * Specify the Adapter Software Version the adapter supports:
 
@@ -1439,8 +1399,7 @@ There are a number of commands that can be sent as part of the adapter stream. T
 
 Any other command will be logged as a warning.
 
-Protocol
-----
+## Heartbeat Protocol
 
 The agent and the adapter have a heartbeat that makes sure each is responsive to properly handle disconnects in a timely manner. The Heartbeat frequency is set by the adapter and honored by the agent. When the agent connects to the adapter, it first sends a `* PING` and then expects the response `* PONG <timeout>` where `<timeout>` is specified in milliseconds. So if the following communications are given:
 
