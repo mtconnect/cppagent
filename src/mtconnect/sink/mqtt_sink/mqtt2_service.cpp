@@ -70,6 +70,7 @@ namespace mtconnect {
                     {configuration::MqttUserName, string()},
                     {configuration::MqttPassword, string()},
                     {configuration::MqttPort, int()},
+                    {configuration::MqttXPath, string()},
                     {configuration::MqttRetain, bool()},
                     {configuration::MqttQOS, string()},
                     {configuration::MqttHost, string()}});
@@ -229,7 +230,7 @@ namespace mtconnect {
         auto seq = publishCurrent(boost::system::error_code {});
         for (auto &dev : m_sinkContract->getDevices())
         {
-          FilterSet filterSet = filterForDevice(dev);
+          FilterSet filterSet { filterForDevice(dev) };
           auto sampler =
               make_shared<AsyncSample>(m_strand, m_sinkContract->getCircularBuffer(),
                                        std::move(filterSet), m_sampleInterval, 600s, m_client, dev);
