@@ -909,9 +909,6 @@ namespace mtconnect {
   {
     NAMED_SCOPE("Agent::initializeDataItems");
 
-    // Grab data from configuration
-    string time = getCurrentTime(GMT_UV_SEC);
-
     // Initialize the id mapping for the devices and set all data items to UNAVAILABLE
     for (auto item : device->getDeviceDataItems())
     {
