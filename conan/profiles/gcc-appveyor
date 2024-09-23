@@ -3,4 +3,5 @@ include(default)
 [settings]
 compiler.libcxx=libstdc++11
 compiler.version=11
+compiler.cppstd=20
 

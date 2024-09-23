@@ -17,13 +17,9 @@
 
 #pragma once
 
-#include <cmath>
-#include <regex>
-#include <set>
+#include <boost/container/set.hpp>
 #include <string>
-#include <utility>
 #include <variant>
-#include <vector>
 
 #include "mtconnect/config.hpp"
 #include "mtconnect/logging.hpp"
@@ -33,10 +29,10 @@ namespace mtconnect::entity {
   struct DataSetEntry;
 
   /// @brief A set of data set entries
-  class AGENT_LIB_API DataSet : public std::set<DataSetEntry>
+  class DataSet : public boost::container::set<DataSetEntry>
   {
   public:
-    using base = std::set<DataSetEntry>;
+    using base = boost::container::set<DataSetEntry>;
     using base::base;
 
     /// @brief Get a entry for a key
@@ -55,7 +51,7 @@ namespace mtconnect::entity {
 
     /// @brief Split the data set entries by space delimiters and account for the
     /// use of single and double quotes as well as curly braces
-    bool parse(const std::string &s, bool table);
+    bool AGENT_LIB_API parse(const std::string &s, bool table);
   };
 
   /// @brief Data Set Value type enumeration

@@ -2,8 +2,9 @@ include(default)
 
 [settings]
 compiler=msvc
-compiler.cppstd=17
+compiler.cppstd=20
 arch=x86_64
 compiler.runtime=static
 compiler.runtime_type=Release
 build_type=Release
+compiler.version=194

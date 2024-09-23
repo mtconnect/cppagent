@@ -2,11 +2,12 @@ include(default)
 
 [settings]
 compiler=msvc
-compiler.cppstd=17
+compiler.cppstd=20
 arch=x86
 compiler.runtime=dynamic
 compiler.runtime_type=Release
 build_type=Release
+compiler.version=194
 
 [options]
 shared=True
