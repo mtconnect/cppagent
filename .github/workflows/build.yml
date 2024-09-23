@@ -29,7 +29,7 @@ on:
 jobs:
   build_windows:
     runs-on: windows-2022
-    name: "Windows 2019 Arch: ${{ matrix.arch }}, Shared: ${{ matrix.shared }}"
+    name: "Windows 2022 Arch: ${{ matrix.arch }}, Shared: ${{ matrix.shared }}"
     strategy:
       matrix:
         arch: ["x86", "amd64"]
