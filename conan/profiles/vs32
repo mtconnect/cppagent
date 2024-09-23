@@ -7,5 +7,5 @@ arch=x86
 compiler.runtime=static
 compiler.runtime_type=Release
 build_type=Release
-compiler.version=194
+
 

@@ -7,4 +7,3 @@ arch=x86_64
 compiler.runtime=static
 compiler.runtime_type=Release
 build_type=Release
-compiler.version=194
