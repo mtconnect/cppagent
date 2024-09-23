@@ -21,14 +21,15 @@ set(AGENT_PREFIX "" CACHE STRING "Prefix for the name of the agent and the agent
 set(CMAKE_INSTALL_DATADIR "${CMAKE_INSTALL_DATADIR}/mtconnect")
 
 message(INFO " Shared build: ${SHARED_AGENT_LIB}")
+set(CMAKE_OSX_DEPLOYMENT_TARGET 13.2)
 
 project(cppagent LANGUAGES C CXX)
 
 # We will define these properties by default for each CMake target to be created.
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CXX_COMPILE_FEATURES cxx_std_17)
+set(CXX_COMPILE_FEATURES cxx_std_20)
 
 set(WITH_RUBY ON CACHE STRING "With Ruby Support")
 
