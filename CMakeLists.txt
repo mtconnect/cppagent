@@ -21,7 +21,7 @@ set(AGENT_PREFIX "" CACHE STRING "Prefix for the name of the agent and the agent
 set(CMAKE_INSTALL_DATADIR "${CMAKE_INSTALL_DATADIR}/mtconnect")
 
 message(INFO " Shared build: ${SHARED_AGENT_LIB}")
-set(CMAKE_OSX_DEPLOYMENT_TARGET 13.2)
+set(CMAKE_OSX_DEPLOYMENT_TARGET 13.3)
 
 project(cppagent LANGUAGES C CXX)
 

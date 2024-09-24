@@ -2,7 +2,7 @@ include(default)
 
 [settings]
 compiler.cppstd=20
-os.version=14.0
+os.version=13.3
 
 [system_tools]
 cmake/>3.23.0

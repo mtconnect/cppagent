@@ -446,7 +446,7 @@ namespace mtconnect {
       return;
     }
 
-    auto callback = [=](config::AsyncContext &context) {
+    auto callback = [=, this](config::AsyncContext &context) {
       try
       {
         bool changed = false;
@@ -573,7 +573,7 @@ namespace mtconnect {
       createUniqueIds(device);
 
       LOG(info) << "Checking if device " << *uuid << " has changed";
-      if (*device != *oldDev)
+      if (!device->equal(*oldDev))
       {
         LOG(info) << "Device " << *uuid << " changed, updating model";
 

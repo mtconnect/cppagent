@@ -352,16 +352,21 @@ namespace mtconnect {
       /// @brief get the attributes for XML generation
       /// @return attribute set
       const auto &getAttributes() const { return m_attributes; }
-
+      
       /// @brief compare two entities for equality
       /// @param other the other entity
       /// @return `true` if they have equal name and properties
-      bool operator==(const Entity &other) const;
+      bool equal(const Entity &other) const;
+
+      /// @brief cover method for equal
+      /// @param other the other entity
+      /// @return `true` if they have equal name and properties
+      bool operator==(const Entity &other) const { return equal(other); }
 
       /// @brief compare two entities for inequality
       /// @param other the other entity
       /// @return `true` if they have unequal name and properties
-      bool operator!=(const Entity &other) const { return !(*this == other); }
+      bool operator!=(const Entity &other) const { return !equal(other); }
 
       /// @brief update this entity to be the same as other
       /// @param other the other entity
@@ -446,7 +451,7 @@ namespace mtconnect {
 
       bool operator()(const EntityPtr &other)
       {
-        return *std::get<EntityPtr>(m_this) == *(other.get());
+        return std::get<EntityPtr>(m_this)->equal(*(other.get()));
       }
 
       bool operator()(const EntityList &other)
@@ -463,7 +468,7 @@ namespace mtconnect {
             auto id = (*it)->getIdentity();
             auto oit =
                 boost::find_if(other, [&id](const auto &e) { return id == e->getIdentity(); });
-            if (oit == other.end() || *(it->get()) != *(oit->get()))
+            if (oit == other.end() || !(it->get())->equal(*(oit->get())))
               return false;
           }
         }
@@ -471,7 +476,7 @@ namespace mtconnect {
         {
           for (auto oit = other.cbegin(); it != list.cend(); it++, oit++)
           {
-            if (*(it->get()) != *(oit->get()))
+            if (!(it->get())->equal(*(oit->get())))
               return false;
           }
         }
@@ -499,7 +504,7 @@ namespace mtconnect {
 
     inline bool operator!=(const Value &v1, const Value &v2) { return !(v1 == v2); }
 
-    inline bool Entity::operator==(const Entity &other) const
+    inline bool Entity::equal(const Entity &other) const
     {
       if (m_name != other.m_name)
         return false;
