@@ -887,11 +887,10 @@ namespace mtconnect::pipeline {
               }
               else
               {
-                // Otherwise we have a problem, we cannot consume content
-                // if we don't know the data item since we cannot handle tables
-                // and data sets.
-                LOG(warning) << "Cannot map properties without data item";
-                return false;
+                LOG(warning) << "Cannot map properties without data item, consuming erronous data";
+                ErrorHandler handler;
+                if (!handler(reader, buff))
+                  return false;
               }
               m_props.clear();
               m_dataItem.reset();
