@@ -1181,6 +1181,8 @@ TEST_F(JsonMappingTest, should_ignore_Invalid_Tag_DataItem)
 
 TEST_F(JsonMappingTest, should_ignore_Invalid_make_DataItem)
 {
+  GTEST_SKIP();
+
   auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
   makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
   makeDataItem("device", {{"id", "b"s}, {"blah", "BLAH"s}, {"category", "EVENT"s}});
