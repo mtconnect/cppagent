@@ -911,7 +911,15 @@ namespace mtconnect::configuration {
 
     auto parsed = Url::parse(url);
     options[configuration::Protocol] = parsed.m_protocol;
-    options[configuration::Host] = parsed.getHost();
+    
+    auto host = parsed.getHost();
+    if (host.empty())
+    {
+      LOG(fatal) << "Malformed URL in configuration file: '" << url << "', exiting";
+      exit(1);
+    }
+    options[configuration::Host] = host;
+    
     if (parsed.m_port)
       options[configuration::Port] = parsed.getPort();
     if (parsed.m_path != "/")
