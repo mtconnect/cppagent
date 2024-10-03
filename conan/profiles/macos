@@ -2,7 +2,8 @@ include(default)
 
 [settings]
 compiler=apple-clang
-compiler.cppstd=gnu17
+compiler.cppstd=20
+os.version=13.3
 
 [system_tools]
 cmake/>3.26.0
