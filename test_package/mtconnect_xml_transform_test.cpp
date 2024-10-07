@@ -55,6 +55,7 @@ public:
   void deliverObservation(observation::ObservationPtr obs) override {}
   void deliverAsset(AssetPtr) override {}
   void deliverDevices(std::list<DevicePtr>) override {}
+  void deliverDevice(DevicePtr) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}

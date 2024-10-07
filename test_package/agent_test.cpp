@@ -1662,6 +1662,8 @@ TEST_F(AgentTest, adapter_should_receive_commands)
   ASSERT_FALSE(device->preserveUuid());
 
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: MK-1234\n");
+  m_agentTestHelper->m_ioContext.run_for(2000ms);
+
   m_agentTestHelper->m_adapter->parseBuffer("* manufacturer: Big Tool\n");
   m_agentTestHelper->m_adapter->parseBuffer("* serialNumber: XXXX-1234\n");
   m_agentTestHelper->m_adapter->parseBuffer("* station: YYYY\n");
@@ -1674,8 +1676,12 @@ TEST_F(AgentTest, adapter_should_receive_commands)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "YYYY");
   }
 
+  device = agent->getDeviceByName("LinuxCNC");
+  ASSERT_TRUE(device);
+
   device->setPreserveUuid(true);
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: XXXXXXX\n");
+  m_agentTestHelper->m_ioContext.run_for(1000ms);
 
   {
     PARSE_XML_RESPONSE("/probe");
@@ -1735,6 +1741,10 @@ TEST_F(AgentTest, adapter_should_receive_device_commands)
   ASSERT_EQ(string(*device2->getUuid()), device);
 
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: new-uuid\n");
+
+  device2 = agent->getDeviceByName("Device2");
+  ASSERT_TRUE(device2);
+
   ASSERT_EQ("new-uuid", string(*device2->getUuid()));
 
   m_agentTestHelper->m_adapter->parseBuffer("* device: device-1\n");
@@ -1742,6 +1752,9 @@ TEST_F(AgentTest, adapter_should_receive_device_commands)
   ASSERT_EQ(string(*device1->getUuid()), device);
 
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: another-uuid\n");
+  device1 = agent->getDeviceByName("Device1");
+  ASSERT_TRUE(device1);
+
   ASSERT_EQ("another-uuid", string(*device1->getUuid()));
 }
 
@@ -3076,6 +3089,27 @@ TEST_F(AgentTest, should_set_sender_from_config_in_XML_header)
   }
 }
 
+TEST_F(AgentTest, should_not_set_validation_flag_in_header_when_validation_is_false)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.5", 4, false,
+                                              true, {{configuration::Validation, false}});
+  ASSERT_TRUE(agent);
+  {
+    PARSE_XML_RESPONSE("/probe");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
+  }
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
+  }
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
+  }
+}
+
 TEST_F(AgentTest, should_set_validation_flag_in_header_when_version_2_5_validation_on)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.5", 4, false,
@@ -3101,27 +3135,6 @@ TEST_F(AgentTest, should_not_set_validation_flag_in_header_when_version_below_2_
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.4", 4, false,
                                               true, {{configuration::Validation, true}});
-  ASSERT_TRUE(agent);
-  {
-    PARSE_XML_RESPONSE("/probe");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
-  }
-
-  {
-    PARSE_XML_RESPONSE("/current");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
-  }
-
-  {
-    PARSE_XML_RESPONSE("/sample");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
-  }
-}
-
-TEST_F(AgentTest, should_not_set_validation_flag_in_header_when_validation_is_false)
-{
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.5", 4, false,
-                                              true, {{configuration::Validation, false}});
   ASSERT_TRUE(agent);
   {
     PARSE_XML_RESPONSE("/probe");

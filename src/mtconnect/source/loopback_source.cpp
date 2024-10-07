@@ -44,6 +44,8 @@ namespace mtconnect::source {
 
     next->bind(make_shared<DeliverAsset>(m_context));
     next->bind(make_shared<DeliverAssetCommand>(m_context));
+    next->bind(make_shared<DeliverDevice>(m_context));
+    next->bind(make_shared<DeliverDevices>(m_context));
 
     if (IsOptionSet(m_options, configuration::UpcaseDataItemValue))
       next = next->bind(make_shared<UpcaseValue>());
@@ -111,6 +113,8 @@ namespace mtconnect::source {
       return 0;
     }
   }
+
+  void LoopbackSource::receive(DevicePtr device) { m_pipeline.run(device); }
 
   AssetPtr LoopbackSource::receiveAsset(DevicePtr device, const std::string &document,
                                         const std::optional<std::string> &id,

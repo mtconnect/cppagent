@@ -417,6 +417,30 @@ namespace mtconnect::printer {
     return ret;
   }
 
+  std::string XmlPrinter::printDevice(DevicePtr device, bool pretty)
+  {
+    string ret;
+
+    try
+    {
+      XmlWriter writer(m_pretty || pretty);
+      entity::XmlPrinter printer(false);
+      printer.print(writer, device, m_deviceNsSet);
+
+      ret = writer.getContent();
+    }
+    catch (string error)
+    {
+      LOG(error) << "printProbe: " << error;
+    }
+    catch (...)
+    {
+      LOG(error) << "printProbe: unknown error";
+    }
+
+    return ret;
+  }
+
   string XmlPrinter::printSample(const uint64_t instanceId, const unsigned int bufferSize,
                                  const uint64_t nextSeq, const uint64_t firstSeq,
                                  const uint64_t lastSeq, ObservationList &observations, bool pretty,
