@@ -544,13 +544,12 @@ namespace mtconnect {
 
       auto idHandler = [&](SessionPtr session, RequestPtr request) -> bool {
         auto asset = request->parameter<string>("assetIds");
-        auto pretty = request->parameter<bool>("pretty").value_or(false);
 
         if (asset)
         {
           auto format = request->parameter<string>("format");
           auto pretty = request->parameter<bool>("pretty").value_or(false);
-          auto printer = m_sinkContract->getPrinter(acceptFormat(request->m_accepts, format));
+          auto printer = getPrinter(request->m_accepts, format);
           
           list<string> ids;
           stringstream str(*asset);

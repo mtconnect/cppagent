@@ -193,6 +193,7 @@ namespace mtconnect::observation {
   {
   public:
     AsyncResponse(std::chrono::milliseconds interval) : m_interval(interval) {}
+    virtual ~AsyncResponse() = default;
 
     virtual bool cancel() = 0;
 
