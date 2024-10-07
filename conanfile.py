@@ -9,7 +9,7 @@ import re
 
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
-    version = "2.3"
+    version = "2.5"
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type"
@@ -140,6 +140,9 @@ class MTConnectAgentConan(ConanFile):
             self.options["boost/*"].shared = True
             self.package_type = "shared-library"
 
+        if is_msvc(self):
+            self.options["boost/*"].extra_b2_flags = ("define=BOOST_USE_WINAPI_VERSION=" + str(self.options.winver))
+            
         if is_msvc(self):
             self.options["boost/*"].extra_b2_flags = ("define=BOOST_USE_WINAPI_VERSION=" + str(self.options.winver))
             

@@ -7,4 +7,3 @@ arch=x86_64
 compiler.runtime=static
 compiler.runtime_type=Debug
 build_type=Debug
-

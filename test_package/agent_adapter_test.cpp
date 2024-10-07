@@ -34,7 +34,6 @@
 #include "mtconnect/printer//xml_printer.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/adapter/agent_adapter/agent_adapter.hpp"
-#include "mtconnect/source/adapter/agent_adapter/url_parser.hpp"
 #include "test_utilities.hpp"
 
 // Registers the fixture into the 'registry'
@@ -78,6 +77,7 @@ struct MockPipelineContract : public PipelineContract
   }
   void deliverAsset(AssetPtr) override {}
   void deliverDevices(std::list<DevicePtr> d) override { m_receivedDevice = d.front(); }
+  void deliverDevice(DevicePtr d) override { m_receivedDevice = d; }
   int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}

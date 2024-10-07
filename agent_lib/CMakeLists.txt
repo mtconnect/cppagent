@@ -215,7 +215,6 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/source/adapter/agent_adapter/https_session.hpp"
         "${SOURCE_DIR}/source/adapter/agent_adapter/session.hpp"
         "${SOURCE_DIR}/source/adapter/agent_adapter/session_impl.hpp"
-        "${SOURCE_DIR}/source/adapter/agent_adapter/url_parser.hpp"
         "${SOURCE_DIR}/source/adapter/mqtt/mqtt_adapter.hpp"
         "${SOURCE_DIR}/source/adapter/shdr/connector.hpp"
         "${SOURCE_DIR}/source/adapter/shdr/shdr_adapter.hpp"
@@ -234,7 +233,6 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/source/loopback_source.cpp"
         "${SOURCE_DIR}/source/source.cpp"
         "${SOURCE_DIR}/source/adapter/agent_adapter/agent_adapter.cpp"
-        "${SOURCE_DIR}/source/adapter/agent_adapter/url_parser.cpp"
 		
 # src/sink HEADER_FILE_ONLY
 

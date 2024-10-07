@@ -64,13 +64,15 @@ namespace mtconnect {
                   {configuration::Manufacturer, string()},
                   {configuration::Station, string()},
                   {configuration::Url, string()},
+                  {configuration::Topics, StringList()},
                   {configuration::MqttCaCert, string()},
                   {configuration::MqttPrivateKey, string()},
                   {configuration::MqttCert, string()},
                   {configuration::MqttUserName, string()},
                   {configuration::MqttPassword, string()},
                   {configuration::MqttClientId, string()},
-                  {configuration::MqttHost, string()}});
+                  {configuration::MqttHost, string()},
+                  {configuration::MqttPort, int()}});
 
       AddDefaultedOptions(block, m_options,
                           {{configuration::MqttTls, false},
@@ -86,14 +88,16 @@ namespace mtconnect {
         m_options[configuration::MqttHost] = m_options[configuration::Host];
       }
 
-      if (!HasOption(m_options, configuration::MqttPort) &&
-          HasOption(m_options, configuration::Port))
+      if (!HasOption(m_options, configuration::MqttPort))
       {
-        m_options[configuration::MqttPort] = m_options[configuration::Port];
-      }
-      else if (!HasOption(m_options, configuration::MqttPort))
-      {
-        m_options[configuration::MqttPort] = 1883;
+        if (HasOption(m_options, configuration::Port))
+        {
+          m_options[configuration::MqttPort] = m_options[configuration::Port];
+        }
+        else
+        {
+          m_options[configuration::MqttPort] = 1883;
+        }
       }
 
       m_handler = m_pipeline.makeHandler();
@@ -170,7 +174,7 @@ namespace mtconnect {
         }
         options[configuration::Topics] = list;
       }
-      else
+      else if (!HasOption(options, configuration::Topics))
       {
         LOG(error) << "MQTT Adapter requires at least one topic to subscribe to. Provide 'Topics = "
                       "' or Topics block";

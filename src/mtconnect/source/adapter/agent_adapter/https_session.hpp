@@ -36,7 +36,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     /// @param ex the strand to run in
     /// @param url the url to connect to
     /// @param ctx the TLS context
-    explicit HttpsSession(boost::asio::io_context::strand &ex, const Url &url, ssl::context &ctx)
+    explicit HttpsSession(boost::asio::io_context::strand &ex, const url::Url &url,
+                          ssl::context &ctx)
       : super(ex, url), m_stream(ex.context(), ctx)
     {}
     ~HttpsSession()

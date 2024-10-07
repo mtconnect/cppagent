@@ -56,7 +56,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     // Objects are constructed with a strand to
     // ensure that handlers do not execute concurrently.
-    SessionImpl(boost::asio::io_context::strand &strand, const Url &url)
+    SessionImpl(boost::asio::io_context::strand &strand, const url::Url &url)
       : m_resolver(strand.context()), m_strand(strand), m_url(url), m_chunk(1 * 1024 * 1024)
     {}
 
@@ -595,7 +595,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     std::optional<http::response_parser<http::dynamic_body>> m_chunkParser;
     std::optional<http::response_parser<http::string_body>> m_textParser;
     asio::io_context::strand m_strand;
-    Url m_url;
+    url::Url m_url;
 
     std::function<std::uint64_t(std::uint64_t, boost::string_view, boost::system::error_code &)>
         m_chunkHandler;

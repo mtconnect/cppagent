@@ -1,0 +1,613 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"properties": {
+		"AgentDeviceUUID": {
+			"type": "string",
+			"description": "Set the UUID of the agent device",
+			"default": "UUID derived from the IP address and port of the agent."
+		},
+		"DataPath": {
+			"type": "string",
+			"description": "The path to the data files",
+			"default": "/mtconnect/data"
+		},
+		"DisableAgentDevice": {
+			"type": "boolean",
+			"description": "When the schema version is >= 1.7, disable the creation of the Agent device",
+			"default": false
+		},
+		"AllowPut": {
+			"type": "boolean",
+			"description": "Allow HTTP PUT or POST of data item values or assets",
+			"default": false
+		},
+		"AllowPutFrom": {
+			"type": "string",
+			"description": "Allow HTTP PUT or POST from a specific host or list of hosts. Lists are comma (,) separated and the host names will be validated by translating them into IP addresses",
+			"default": "none"
+		},
+		"BufferSize": {
+			"type": "integer",
+			"description": "The 2^X number of slots available in the circular buffer for samples, events, and conditions",
+			"default": 17,
+			"minimum": 8,
+			"maximum": 17
+		},
+		"CheckpointFrequency":{
+			"type": "integer",
+			"description": "The frequency checkpoints are created in the stream. This is used for current with the at argument. This is an advanced configuration item and should not be changed unless you understand the internal workings of the agent",
+			"default": 1000
+		},
+		"Devices": {
+			"type": "string",
+			"description": "The XML file to load that specifies the devices and is supplied as the result of a probe request. If the key is not found the defaults are tried",
+			"default": "devices.xml"
+		},
+		"HttpHeaders": {
+			"type": "object",
+			"properties": {
+				"Access-Control-Allow-Origin": {
+					"type": "string"
+				},
+				"Access-Control-Allow-Methods": {
+					"type": "string",
+					"enum": ["GET", "POST"]
+				},
+				"Access-Control-Allow-Headers": {
+					"type": "string",
+					"enum": ["Accept", "Content-Type"]
+				}
+			},
+			"description": "Additional headers to add to the HTTP Response for CORS Security. ",
+			"default": {
+				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Methods": "GET",
+				"Access-Control-Allow-Headers": "Accept"
+			}
+		},
+		"JsonVersion": {
+			"type": "integer",
+			"description": "JSON Printer format. Old format: 1, new format: 2",
+			"default": 2,
+			"enum" : [1, 2]
+		},
+		"LogStreams": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"MaxAssets": {
+			"type": "integer",
+			"description": "The maximum number of assets the agent can hold in its buffer. The number is the actual count, not an exponent",
+			"default": 1024
+		},
+		"MaxCachedFileSize": {
+			"type": "integer"
+		},
+		"MinCompressFileSize": {
+			"type": "integer"
+		},
+		"MinimumConfigReloadAge": {
+			"type": "integer",
+			"description": "The minimum age of a config file before an agent reload is triggered (seconds)",
+			"default": 15
+		},
+		"MonitorConfigFiles": {
+			"type": "boolean",
+			"description": "Monitor agent.cfg and Devices.xml files and restart agent if they change",
+			"default": false
+		},
+		"MonitorInterval": {
+			"type": "integer"
+		},
+		"PidFile": {
+			"type": "string",
+			"description": "UNIX only. The full path of the file that contains the process id of the daemon. This is not supported in Windows",
+			"default": "agent.pid"
+		},
+		"Port": {
+			"type": "integer",
+			"description": "The port number the agent binds to for requests",
+			"default": 5000
+		},
+		"Pretty": {
+			"type": "boolean",
+			"description": "Pretty print the output with indentation",
+			"default": false
+		},
+		"SchemaVersion": {
+			"type": "string",
+			"description": "Change the schema version to a different version number",
+			"default": "2.0"
+		},
+		"ServerIp": {
+			"type": "string",
+			"description": "The server IP Address to bind to. Can be used to select the interface in IPV4 or IPV6",
+			"default": "0.0.0.0"
+		},
+		"ServiceName": {
+			"type": "string",
+			"description": "Changes the service name when installing or removing the service. This allows multiple agents to run as services on the same machine",
+			"default": "MTConnect Agent"
+		},
+		"Sender": {
+			"type": "string"
+		},
+		"TlsCertificateChain": {
+			"type": "string",
+			"description": "The name of the file containing the certificate chain created from signing authority",
+			"default": "NULL"
+		},
+		"TlsCertificatePassword": {
+			"type": "string",
+			"description": "The password used when creating the certificate. If none was supplied, do not use.",
+			"default": "NULL"
+		},
+		"TlsClientCAs": {
+			"type": "string",
+			"description": "For TlsVerifyClientCertificate, specifies a file that contains additional certificate authorities for verification",
+			"default": "NULL"
+		},
+		"TlsDHKey": {
+			"type": "string",
+			"description": "The name of the file containing the Diffie–Hellman key",
+			"default": "NULL"
+		},
+		"TlsOnly": {
+			"type": "boolean",
+			"description": "Only allow secure connections, http requests will be rejected",
+			"default": false
+		},
+		"TlsPrivateKey": {
+			"type": "string",
+			"description": "The name of the file containing the private key for the certificate",
+			"default": "NULL"
+		},
+		"TlsVerifyClientCertificate": {
+			"type": "boolean",
+			"description": "Request and verify the client certificate against root authorities",
+			"default": false
+		},
+		"CreateUniqueIds": {
+			"type": "boolean"
+		},
+		"VersionDeviceXml": {
+			"type": "string"
+		},
+		"EnableSourceDeviceModels": {
+			"type": "boolean",
+			"description": "Allow adapters and data sources to supply Device configuration"
+		},
+		"WorkerThreads": {
+			"type": "integer",
+			"description": "The number of operating system threads dedicated to the Agent",
+			"default": 1
+		},
+		"Protocol": {
+			"type": "string",
+			"description": "The protocol used by the agent to communicate with the adapter. This can be overridden on a per adapter basis.",
+			"enum": ["shdr", "mqtt"],
+			"default": "shdr"
+		},
+		"ConversionRequired": {
+			"type": "boolean",
+			"description": "Global default for data item units conversion in the agent. Assumes the adapter has already done unit conversion.",
+			"default": true
+		},
+		"Heartbeat": {
+			"type": "string",
+			"description": "Overrides the heartbeat interval sent back from the adapter in the * PONG <hb>. The heartbeat will always be this value in milliseconds.",
+			"default": "None"
+		},
+		"IgnoreTimestamps": {
+			"type": "boolean",
+			"description": "Overwrite timestamps with the agent time. This will correct clock drift but will not give as accurate relative time since it will not take into consideration network latencies. This can be overridden on a per adapter basis.",
+			"default": false
+		},
+		"LegacyTimeout": {
+			"type": "integer",
+			"description": "The default length of time an adapter can be silent before it is disconnected. This is only for legacy adapters that do not support heartbeats.",
+			"default": 600
+		},
+		"PreserveUUID": {
+			"type": "boolean",
+			"description": "Do not overwrite the UUID with the UUID from the adapter, preserve the UUID in the Devices.xml file. This can be overridden on a per adapter basis.",
+			"default": true
+		},
+		"ReconnectInterval": {
+			"type": "integer",
+			"description": "The amount of time between adapter reconnection attempts. This is useful for implementation of high performance adapters where availability needs to be tracked in near-real-time. Time is specified in milliseconds (ms).",
+			"default": 10000
+		},
+		"ShdrVersion": {
+			"type": "integer",
+			"description": "Specifies the SHDR protocol version used by the adapter. When greater than one (1), allows multiple complex observations, like Condition and Message on the same line. If it equials one (1), then any observation requiring more than a key/value pair need to be on separate lines. This is the default for all adapters.",
+			"default": 1
+		},
+		"UpcaseDataItemValue": {
+			"type": "boolean",
+			"description": "Always converts the value of the data items to upper case.",
+			"default": true
+		},
+		"Sinks": {
+			"type":"object",
+			"properties": {
+				"Mqtt2Service":{
+					"type":"object",
+					"properties": {
+						"MqttCaCert": {
+							"type": "string",
+							"description": "CA Certificate for MQTT TLS connection to the MQTT Broker",
+							"default": "NULL"
+						},
+						"MqttHost": {
+							"type": "string",
+							"description": "IP Address or name of the MQTT Broker",
+							"default": "127.0.0.1"
+						},
+						"MqttPort": {
+							"type": "integer",
+							"description": "Port number of MQTT Broker",
+							"default": 1883
+						},
+						"MqttTls": {
+							"type": "boolean",
+							"description": "TLS Certificate for secure connection to the MQTT Broker",
+							"default": false
+						},
+						"MqttWs": {
+							"type": "boolean",
+							"description": "Instructs MQTT to connect using web sockets",
+							"default": false
+						},
+						"AssetTopic": {
+							"type": "string",
+							"description": "Prefix for the Assets",
+							"default": "MTConnect/Asset/[device]"
+						},
+						"CurrentTopic": {
+							"type": "string",
+							"description": "Prefix for the Current",
+							"default": "MTConnect/Current/[device]"
+						},
+						"ProbeTopic": {
+							"type": "string",
+							"description": "Prefix for the Device Model topic",
+							"default": "MTConnect/Probe/[device]"
+						},
+						"SampleTopic": {
+							"type": "string",
+							"description": "Prefix for the Sample",
+							"default": "MTConnect/Sample/[device]"
+						},
+						"MqttLastWillTopic": {
+							"type": "string",
+							"description": "The topic used for the last will and testament for an agent",
+							"default": "MTConnect/Probe/[device]/Availability"
+						},
+						"MqttCurrentInterval": {
+							"type": "string",
+							"description": "The frequency to publish currents. Acts like a keyframe in a video stream.",
+							"default": "10000ms"
+						},
+						"MqttSampleInterval": {
+							"type": "string",
+							"description": "The frequency to publish samples. Works the same way as the interval in the rest call. Groups observations up and publishes with the minimum interval given. If nothing is available, will wait until an observation arrives to publish.",
+							"default": "500ms"
+						},
+						"MqttSampleCount": {
+							"type": "integer",
+							"description": "The maximum number of observations to publish at one time.",
+							"default": 1000
+						},
+						"MqttRetain": {
+							"type": "boolean",
+							"description": "Retain the last message sent to the broker. This is useful for clients that are not always connected.",
+							"default": false
+						},
+						"MqttQOS": {
+							"type": "string",
+							"description": "The quality of service level for the MQTT connection. Options are: at_least_once, at_most_once, and exactly_once",
+							"default": "at_least_once",
+							"enum":["at_least_once", "at_most_once", "exactly_once"]
+						}
+					}
+				}
+			}
+		},
+		"Adapters": {
+			"type": "object",
+			"additionalProperties": {
+				"type": "object",
+				"properties": {
+					"Device": {
+						"type": "string",
+						"description": "The name of the device that corresponds to the name of the device in the Devices file. Each adapter can map to one device. Specifying a \"*\" will map to the default device.",
+						"default": ""
+					},
+					"Host": {
+						"type": "string",
+						"description": "The host the adapter is located on.",
+						"default": "localhost"
+					},
+					"Port": {
+						"type": "integer",
+						"description": "The port to connect to the adapter.",
+						"default": 7878
+					},
+					"Manufacturer": {
+						"type": "string",
+						"description": "Replaces the manufacturer attribute in the device XML.",
+						"default": ""
+					},
+					"Station": {
+						"type": "string",
+						"description": "Replaces the Station attribute in the device XML.",
+						"default": ""
+					},
+					"SerialNumber": {
+						"type": "string",
+						"description": "Replaces the SerialNumber attribute in the device XML.",
+						"default": ""
+					},
+					"UUID": {
+						"type": "string",
+						"description": "Replaces the UUID attribute in the device XML.",
+						"default": ""
+					},
+					"AutoAvailable": {
+						"type": "boolean",
+						"description": "For devices that do not have the ability to provide available events, if yes, this sets the Availability to AVAILABLE upon connection.",
+						"default": false
+					},
+					"AdditionalDevices": {
+						"type": "string",
+						"description": "Comma separated list of additional devices connected to this adapter. This provides availability support when one adapter feeds multiple devices.",
+						"default": ""
+					},
+					"FilterDuplicates": {
+						"type": "boolean",
+						"description": "If value is yes, filters all duplicate values for data items. This is to support adapters that are not doing proper duplicate filtering.",
+						"default": "no"
+					},
+					"LegacyTimeout": {
+						"type": "integer",
+						"description": "Length of time an adapter can be silent before it is disconnected. This is only for legacy adapters that do not support heartbeats. If heartbeats are present, this will be ignored.",
+						"default": 600
+					},
+					"ReconnectInterval": {
+						"type": "integer",
+						"description": "The amount of time between adapter reconnection attempts. This is useful for implementation of high performance adapters where availability needs to be tracked in near-real-time. Time is specified in milliseconds (ms). Defaults to the top level ReconnectInterval.",
+						"default": 10000
+					},
+					"IgnoreTimestamps": {
+						"type": "string",
+						"description": "Overwrite timestamps with the agent time. This will correct clock drift but will not give as accurate relative time since it will not take into consideration network latencies. This can be overridden on a per adapter basis.",
+						"default": "Top Level Setting"
+					},
+					"PreserveUUID": {
+						"type": "boolean",
+						"description": "Do not overwrite the UUID with the UUID from the adapter, preserve the UUID in the Devices.xml file. This can be overridden on a per adapter basis.",
+						"default": false
+					},
+					"RealTime": {
+						"type": "boolean",
+						"description": "Boost the thread priority of this adapter so that events are handled faster.",
+						"default": false
+					},
+					"RelativeTime": {
+						"type": "boolean",
+						"description": "The timestamps will be given as relative offsets represented as a floating point number of milliseconds. The offset will be added to the arrival time of the first recorded event.",
+						"default": false
+					},
+					"ConversionRequired": {
+						"type": "string",
+						"description": "Adapter setting for data item units conversion in the agent. Assumes the adapter has already done unit conversion. Defaults to global.",
+						"default": "Top Level Setting"
+					},
+					"UpcaseDataItemValue": {
+						"type": "string",
+						"description": "Always converts the value of the data items to upper case.",
+						"default": "Top Level Setting"
+					},
+					"ShdrVersion": {
+						"type": "integer",
+						"description": "Specifies the SHDR protocol version used by the adapter. When greater than one (1), allows multiple complex observations, like Condition and Message on the same line. If it equals one (1), then any observation requiring more than a key/value pair need to be on separate lines. Applies to only this adapter.",
+						"default": 1,
+						"enum": [1, 2]
+					},
+					"SuppressIPAddress": {
+						"type": "boolean",
+						"description": "Suppress the Adapter IP Address and port when creating the Agent Device ids and names.",
+						"default": false
+					},
+					"AdapterIdentity": {
+						"type": "string",
+						"description": "Adapter Identity name used to prefix dataitems within the Agent device ids and names.",
+						"default": ""
+					},
+					"Url": {
+						"type": "string",
+						"description": "The URL of the source agent. http: or https: are accepted for the protocol. Only applicable for Agent adapters."
+					},
+					"SourceDevice": {
+						"type": "string",
+						"description": "The Device name or UUID from external agent for the source of the data. Only applicable for Agent adapters."
+					},
+					"Count": {
+						"type": "integer",
+						"description": "The number of items requested during a single sample. Only applicable for Agent adapters.",
+						"default": 1000
+					},
+					"PollingInterval": {
+						"type": "integer",
+						"description": "The interval used for streaming or polling. (ms) Only applicable for Agent adapters.",
+						"default": 500
+					},
+					"UsePolling": {
+						"type": "boolean",
+						"description": "Force the adapter to use polling instead of streaming. Only set to true if x-multipart-replace blocked. Only applicable for Agent adapters.",
+						"default": false
+					},
+					"Heartbeat": {
+						"type": "integer",
+						"description": "The heartbeat interval from the server agent. (ms) Only applicable for Agent adapters.",
+						"default": 10000
+					}
+				}
+			} 
+		},
+		"Files": {
+			"type": "object",
+			"properties": {
+				"schemas": {
+					"type": "object",
+					"properties": {
+						"Path": {
+							"type": "string",
+							"description": "The path to the schema file",
+							"default": "schemas"
+						},
+						"Location": {
+							"type": "string",
+							"description": "The location of the schema file",
+							"default": "/schemas/"
+						}
+					}
+				},
+				"styles": {
+					"type": "object",
+					"properties": {
+						"Path": {
+							"type": "string",
+							"description": "The path to the schema file",
+							"default": "styles"
+						},
+						"Location": {
+							"type": "string",
+							"description": "The location of the schema file",
+							"default": "/styles/"
+						}
+					}
+				},
+				"stream": {
+					"type": "object",
+					"properties": {
+						"Path": {
+							"type": "string",
+							"description": "The path to the schema file",
+							"default": "./MTConnectStreams_2.0.xsd"
+						},
+						"Location": {
+							"type": "string",
+							"description": "The location of the schema file",
+							"default": "/schemas/MTConnectStreams_2.0.xsd"
+						}
+					}
+				},
+				"device": {
+					"type": "object",
+					"properties": {
+						"Path": {
+							"type": "string",
+							"description": "The path to the schema file",
+							"default": "./MTConnectDevices_2.0.xsd"
+						},
+						"Location": {
+							"type": "string",
+							"description": "The location of the schema file",
+							"default": "/schemas/MTConnectDevices_2.0.xsd"
+						}
+					}
+				},
+				"Favicon": {
+					"type": "object",
+					"properties": {
+						"Path": {
+							"type": "string",
+							"description": "The path to the schema file",
+							"default": "styles/favicon.ico"
+						},
+						"Location": {
+							"type": "string",
+							"description": "The location of the schema file",
+							"default": "/favicon.ico"
+						}
+					}
+				}
+			}
+		},
+		"StreamsStyle": {
+			"type": "object",
+			"properties": {
+				"Location": {
+					"type": "string",
+					"description": "The location of the Streams response stylesheet",
+					"default": "/styles/streams.xsl"
+				}
+			}
+		},
+		"DevicesStyle": {
+			"type": "object",
+			"properties": {
+				"Location": {
+					"type": "string",
+					"description": "The location of the Devices response stylesheet",
+					"default": "/styles/streams.xsl"
+				}
+			}
+		},
+		"AssetsStyle": {
+			"type": "object",
+			"properties": {
+				"Location": {
+					"type": "string",
+					"description": "The location of the Assets response stylesheet"
+				}
+			}
+		},
+		"ErrorStyle": {
+			"type": "object",
+			"properties": {
+				"Location": {
+					"type": "string",
+					"description": "The location of the Errors response stylesheet"
+				}
+			}
+		},
+		"logger_config": {
+			"type": "object",
+			"properties": {
+				"logging_level": {
+					"type": "string",
+					"description": "The logging level for the agent",
+					"default": "info",
+					"enum": ["trace", "debug", "info", "warn", "error", "fatal"]
+				},
+				"output": {
+					"type": "string",
+					"description": "The output file or stream. If using a file, specify as: \"file <filename>\". cout and cerr can be used to specify the standard output and standard error streams. Defaults to the same directory as the executable.",
+					"enum":["cout", "cerr", "file"]
+				},
+				"max_size": {
+					"type": "string",
+					"description": "The maximum log file size. Suffix can be K for kilobytes, M for megabytes, or G for gigabytes. No suffix will default to bytes (B). Case is ignored.",
+					"default": "10M"
+				},
+				"max_index": {
+					"type": "integer",
+					"description": "The maximum number of log files to keep",
+					"default": 9
+				},
+				"schedule": {
+					"type": "string",
+					"description": "The scheduled time to start a new file. Can be DAILY, WEEKLY, or NEVER",
+					"default": "NEVER",
+					"enum": ["DAILY", "WEEKLY", "NEVER"]
+				}
+			}
+		}
+	}
+}

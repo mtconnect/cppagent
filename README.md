@@ -593,6 +593,10 @@ Configuration Parameters
   understand the internal workings of the agent.
 
     *Default*: 1000
+      
+* `CreateUniqueIds`: Changes all the ids in each element to a UUID that will be unique across devices. This is used for merging devices from multiple sources.
+
+    *Default*: `false`
 
 * `Devices` - The XML file to load that specifies the devices and is
   supplied as the result of a probe request. If the key is not found
@@ -608,23 +612,35 @@ Configuration Parameters
 * `JsonVersion`     - JSON Printer format. Old format: 1, new format: 2
 
     *Default*: 2
+    
+* `LogStreams` - Debugging flag to log the streamed data to a file. Logs to a file named: `Stream_` + timestamp + `.log` in the current working directory. This is only for the Rest Sink.
 
-* `SchemaVersion` - Change the schema version to a different version number.
-
-    *Default*: 2.0
+    *Default*: `false`
 
 * `MaxAssets` - The maximum number of assets the agent can hold in its buffer. The
   number is the actual count, not an exponent.
 
     *Default*: 1024
+    
+* `MaxCachedFileSize` - The maximum size of a raw file to cache in memory.
+
+    *Default*: 20 kb
+    
+* `MinCompressFileSize` - The file size where we begin compressing raw files sent to the client.
+
+    *Default*: 100 kb
+
+* `MinimumConfigReloadAge` - The minimum age of a config file before an agent reload is triggered (seconds).
+
+    *Default*: 15 seconds
 
 * `MonitorConfigFiles` - Monitor agent.cfg and Devices.xml files and restart agent if they change.
 
     *Default*: false
+    
+* `MonitorInterval` - The interval between checks if the agent.cfg or Device.xml files have changed.
 
-* `MinimumConfigReloadAge` - The minimum age of a config file before an agent reload is triggered (seconds).
-
-    *Default*: 15
+    *Default*: 10 seconds
 
 * `Pretty` - Pretty print the output with indententation
 
@@ -634,6 +650,14 @@ Configuration Parameters
   process id of the daemon. This is not supported in Windows.
 
     *Default*: agent.pid
+    
+* `SchemaVersion` - Change the schema version to a different version number.
+
+    *Default*: 2.0
+
+* `Sender` - The value for the sender header attribute.
+
+    *Default*: Local machine name
 
 * `ServiceName` - Changes the service name when installing or removing 
   the service. This allows multiple agents to run as services on the same machine.
@@ -642,11 +666,15 @@ Configuration Parameters
 
 * `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names. This applies to all adapters.
 
-    *Default*: false
+    *Default*: `false`
+    
+* `VersionDeviceXml` - Create a new versioned file every time the Device.xml file changes from an external source.
+
+    *Default*: `false`
     
 * `Validation` - Turns on validation of model components and observations
 
-    *Default*: false
+    *Default*: `false`
 
 * `WorkerThreads` - The number of operating system threads dedicated to the Agent
 
@@ -800,7 +828,7 @@ Enabled in `agent.cfg` by specifying:
 ```
 Sinks {
   MqttService {
-    # Configuration Options...
+    # Configuration Options below...
   }
 }
 ```
@@ -839,7 +867,7 @@ Sinks {
 
 * `ProbeTopic` or `DeviceTopic` - Prefix for the Device Model topic
 
-    > Note: The `[device]` will be replace with the uuid of each device. Other patterns can be created, 
+    > Note: `[device]` will be replaced with the uuid of each device. Other patterns can be created, 
     > for example: `MTConnect/[device]/Probe` will group by device instead of operation.
     > `DeviceTopic` will also work.
 
@@ -868,6 +896,18 @@ Sinks {
 
     *Default*: 1000
     
+* `MqttRetain` - For the MQTT Sinks, sets the retain flag for publishing.
+
+    *Default*: True
+    
+* `MqttQOS`: - For the MQTT Sinks, sets the Quality of Service. Must be one of `at_least_once`, `at_most_once`, `exactly_once`.
+
+    *Default*: `at_least_once`
+    
+* `MqttXPath`: - The xpath filter to apply to all current and samples published to MQTT. If the XPath is invalid, it will fall back to publishing all data items.
+
+    *Default*: All data items
+
 ### Adapter Configuration Items ###
 
 * `Adapters` - Contains a list of device blocks. If there are no Adapters
@@ -1140,16 +1180,16 @@ The `Table` `REPRESENTATION` requires the the dataItemId as the key and the "val
 
 
 
-	* `AdapterIdentity` - Adapter Identity name used to prefix dataitems within the Agent device ids and names.
+* `AdapterIdentity` - Adapter Identity name used to prefix dataitems within the Agent device ids and names.
 
-        *Default*:
-		* If `SuppressIPAddress` == false:\
-		`AdapterIdentity` = ```_ {IP}_{PORT}```\
-		example:`_localhost_7878`
+	*Default*:
+	* If `SuppressIPAddress` == false:\
+	`AdapterIdentity` = ```_ {IP}_{PORT}```\
+	example:`_localhost_7878`
 
-		* If `SuppressIPAddress` == true:\
-		`AdapterIdentity` = ```_ sha1digest({IP}_{PORT})```\
-		example: `__71020ed1ed`
+	* If `SuppressIPAddress` == true:\
+	`AdapterIdentity` = ```_ sha1digest({IP}_{PORT})```\
+	example: `__71020ed1ed`
 
 #### MQTT Adapter/Source
 

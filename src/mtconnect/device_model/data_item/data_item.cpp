@@ -207,6 +207,11 @@ namespace mtconnect {
         m_initialValue = *init;
       }
 
+      if (const auto &init = maybeGet<string>("InitialValue"); init)
+      {
+        m_initialValue = *init;
+      }
+
       if (const auto &filters = getList("Filters"))
       {
         for (auto &filter : *filters)

@@ -97,12 +97,15 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(MqttTls);
     DECLARE_CONFIGURATION(MqttPort);
     DECLARE_CONFIGURATION(MqttHost);
+    DECLARE_CONFIGURATION(MqttRetain);
+    DECLARE_CONFIGURATION(MqttQOS);
     DECLARE_CONFIGURATION(MqttWs);
     DECLARE_CONFIGURATION(MqttConnectInterval);
     DECLARE_CONFIGURATION(MqttUserName);
     DECLARE_CONFIGURATION(MqttPassword);
     DECLARE_CONFIGURATION(MqttMaxTopicDepth);
     DECLARE_CONFIGURATION(MqttLastWillTopic);
+    DECLARE_CONFIGURATION(MqttXPath);
     ///@}
 
     /// @name Adapter Configuration

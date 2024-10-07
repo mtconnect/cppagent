@@ -19,14 +19,12 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "mtconnect/source/adapter/agent_adapter/url_parser.hpp"
+#include "mtconnect/utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::source::adapter;
+using namespace mtconnect::url;
 using namespace std::literals;
-
-using namespace mtconnect::source::adapter::agent_adapter;
 
 // main
 int main(int argc, char *argv[])
@@ -175,4 +173,49 @@ TEST(UrlParserTest, should_get_target_with_query)
   Url url = Url::parse("http://dev.example.com:5000/Device?one=1&two=2");
 
   EXPECT_EQ("/Device?one=1&two=2", url.getTarget());
+}
+
+/// Adapter URL tests
+
+TEST(UrlParserTest, should_parse_simple_url)
+{
+  Url url = Url::parse("mqtt://10.100.1.55");
+
+  EXPECT_EQ("mqtt", url.m_protocol);
+  EXPECT_EQ("10.100.1.55", url.getHost());
+  EXPECT_FALSE(url.m_port);
+  EXPECT_EQ("/", url.m_path);
+}
+
+TEST(UrlParserTest, should_parse_simple_url_with_port)
+{
+  Url url = Url::parse("mqtt://10.100.1.55:1885");
+
+  EXPECT_EQ("mqtt", url.m_protocol);
+  EXPECT_EQ("10.100.1.55", url.getHost());
+  EXPECT_TRUE(url.m_port);
+  EXPECT_EQ(1885, url.getPort());
+  EXPECT_EQ("/", url.m_path);
+}
+
+TEST(UrlParserTest, should_parse_simple_url_with_port_with_trailing_slash)
+{
+  Url url = Url::parse("mqtt://10.100.1.55:1885/");
+
+  EXPECT_EQ("mqtt", url.m_protocol);
+  EXPECT_EQ("10.100.1.55", url.getHost());
+  EXPECT_TRUE(url.m_port);
+  EXPECT_EQ(1885, url.getPort());
+  EXPECT_EQ("/", url.m_path);
+}
+
+TEST(UrlParserTest, should_parse_simple_url_with_port_with_topic_list)
+{
+  Url url = Url::parse("mqtt://10.100.1.55:1885/injest/#,machine1/data");
+
+  EXPECT_EQ("mqtt", url.m_protocol);
+  EXPECT_EQ("10.100.1.55", url.getHost());
+  EXPECT_TRUE(url.m_port);
+  EXPECT_EQ(1885, url.getPort());
+  EXPECT_EQ("/injest/#,machine1/data", url.m_path);
 }

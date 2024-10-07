@@ -60,6 +60,7 @@ public:
   void deliverObservation(observation::ObservationPtr obs) override {}
   void deliverAsset(AssetPtr) override {}
   void deliverDevices(std::list<DevicePtr>) override {}
+  void deliverDevice(DevicePtr) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
@@ -100,6 +101,15 @@ protected:
     Properties ps(props);
     ErrorList errors;
     auto di = DataItem::make(ps, errors);
+    if (errors.size() > 0)
+    {
+      cerr << "Errors occurred during make data item" << endl;
+      for (auto &e : errors)
+      {
+        cerr << "    " << e->getEntity() << ": "  << e->what() << endl;
+      }
+      return nullptr;
+    }
     m_dataItems.emplace(di->getId(), di);
 
     dev->second->addDataItem(di, errors);
@@ -1016,6 +1026,7 @@ TEST_F(JsonMappingTest, should_skip_erroneous_values)
   Properties props {{"VALUE", R"(
 {
   "timestamp": "2023-11-09T11:20:00Z",
+  "c": "BAD_ITEM",
   "a": {
       "r1": {
         "k1": 123.45
@@ -1044,6 +1055,169 @@ TEST_F(JsonMappingTest, should_skip_erroneous_values)
   ASSERT_EQ("ControllerMode", obs->getName());
   ASSERT_EQ("b", obs->getDataItem()->getId());
   ASSERT_EQ("MANUAL", obs->getValue<string>());
+}
+
+/// @test if  observation is incorrect, skip levels
+TEST_F(JsonMappingTest, should_skip_erroneous_array)
+{
+  auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  makeDataItem("device", {{"id", "b"s}, {"type", "CONTROLLER_MODE"s}, {"category", "EVENT"s}});
+  
+  Properties props {{"VALUE", R"(
+{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "c": [1.0, 2.0, 3.0, 4.0, 5.0],
+  "a": {
+      "r1": {
+        "k1": 123.45
+      },
+      "r2": {
+        "k2": "ABCDEF",
+        "k3": 6789
+      }
+    },
+   "b": "MANUAL"
+})"s}};
+  
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+  jmsg->m_device = dev;
+  
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+  
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(1, list.size());
+  
+  auto obs = dynamic_pointer_cast<Observation>(list.front());
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("ControllerMode", obs->getName());
+  ASSERT_EQ("b", obs->getDataItem()->getId());
+  ASSERT_EQ("MANUAL", obs->getValue<string>());
+}
+
+/// @test if  observation is incorrect, skip levels
+TEST_F(JsonMappingTest, should_skip_erroneous_table)
+{
+  auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  makeDataItem("device", {{"id", "b"s}, {"type", "CONTROLLER_MODE"s}, {"category", "EVENT"s}});
+  
+  Properties props {{"VALUE", R"(
+{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "c": {
+      "r1": {
+        "k1": 123.45
+      },
+      "r2": {
+        "k2": "ABCDEF",
+        "k3": 6789
+      }
+    },
+  "a": {
+      "r1": {
+        "k1": 123.45
+      },
+      "r2": {
+        "k2": "ABCDEF",
+        "k3": 6789
+      }
+    },
+   "b": "MANUAL"
+})"s}};
+  
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+  jmsg->m_device = dev;
+  
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+  
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(1, list.size());
+  
+  auto obs = dynamic_pointer_cast<Observation>(list.front());
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("ControllerMode", obs->getName());
+  ASSERT_EQ("b", obs->getDataItem()->getId());
+  ASSERT_EQ("MANUAL", obs->getValue<string>());
+}
+
+// if the tag "blah" is not found in the device file, none of the other tags get processed
+TEST_F(JsonMappingTest, should_ignore_Invalid_Tag_DataItem)
+{
+  auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  makeDataItem("device", {{"id", "c"s}, {"type", "CONTROLLER_MODE"s}, {"category", "EVENT"s}});
+
+  Properties props {{"VALUE", R"(
+{
+  "timestamp": "2023-11-09T11:20:00Z",
+"c": "BLAH",
+  "a": {
+      "r1": {
+        "k1": 123.45
+      },
+      "r2": {
+        "k2": "ABCDEF",
+        "k3": 6789
+      }
+    },
+   "b": "MANUAL"
+})"s}};
+
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+  jmsg->m_device = dev;
+
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(1, list.size());
+
+  auto obs = dynamic_pointer_cast<Observation>(list.front());
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("ControllerMode", obs->getName());
+  ASSERT_EQ("c", obs->getDataItem()->getId());
+  ASSERT_EQ("BLAH", obs->getValue<string>());
+}
+
+TEST_F(JsonMappingTest, should_ignore_Invalid_make_DataItem)
+{
+  auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  makeDataItem("device", {{"id", "b"s}, {"blah", "BLAH"s}, {"category", "EVENT"s}});
+
+  Properties props {{"VALUE", R"(
+{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "c": "Blah",
+  "a": "ACTIVE",
+  "b": "MANUAL"
+})"s}};
+
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+  jmsg->m_device = dev;
+
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(1, list.size());
+
+  auto obs = dynamic_pointer_cast<Observation>(list.front());
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Execution", obs->getName());
+  ASSERT_EQ("a", obs->getDataItem()->getId());
+  ASSERT_EQ("ACTIVE", obs->getValue<string>());
 }
 
 /// @test verify the json mapper can an asset in json

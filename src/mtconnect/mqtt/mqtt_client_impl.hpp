@@ -162,6 +162,8 @@ namespace mtconnect {
           LOG(info) << "MQTT " << m_url << ": connection closed";
           // Queue on a strand
           m_connected = false;
+          if (m_handler && m_handler->m_disconnected)
+            m_handler->m_disconnected(shared_from_this());
 
           if (m_running)
           {
@@ -277,7 +279,8 @@ namespace mtconnect {
       /// @param topic Publishing to the topic
       /// @param payload Publishing to the payload
       /// @return boolean either topic sucessfully connected and published
-      bool publish(const std::string &topic, const std::string &payload) override
+      bool publish(const std::string &topic, const std::string &payload, bool retain = true,
+                   QOS qos = QOS::at_least_once) override
       {
         NAMED_SCOPE("MqttClientImpl::publish");
         if (!m_connected)
@@ -286,10 +289,31 @@ namespace mtconnect {
           return false;
         }
 
+        mqtt::qos mqos;
+        switch (qos)
+        {
+          case QOS::at_most_once:
+            mqos = mqtt::qos::at_most_once;
+            break;
+
+          case QOS::at_least_once:
+            mqos = mqtt::qos::at_least_once;
+            break;
+
+          case QOS::exactly_once:
+            mqos = mqtt::qos::exactly_once;
+            break;
+        }
+
+        mqtt::retain mretain;
+        if (retain)
+          mretain = mqtt::retain::yes;
+        else
+          mretain = mqtt::retain::no;
+
         m_packetId = derived().getClient()->acquire_unique_packet_id();
         derived().getClient()->async_publish(
-            m_packetId, topic, payload, mqtt::qos::at_least_once | mqtt::retain::yes,
-            [topic](mqtt::error_code ec) {
+            m_packetId, topic, payload, mqos | mretain, [topic](mqtt::error_code ec) {
               if (ec)
               {
                 LOG(error) << "MqttClientImpl::publish: Publish failed to topic " << topic << ": "
@@ -305,7 +329,8 @@ namespace mtconnect {
       /// @param payload Publishing to the payload
       /// @return boolean either topic sucessfully connected and published
       bool asyncPublish(const std::string &topic, const std::string &payload,
-                        std::function<void(std::error_code)> callback) override
+                        std::function<void(std::error_code)> callback, bool retain = true,
+                        QOS qos = QOS::at_least_once) override
       {
         NAMED_SCOPE("MqttClientImpl::publish");
         if (!m_connected)
@@ -314,10 +339,31 @@ namespace mtconnect {
           return false;
         }
 
+        mqtt::qos mqos;
+        switch (qos)
+        {
+          case QOS::at_most_once:
+            mqos = mqtt::qos::at_most_once;
+            break;
+
+          case QOS::at_least_once:
+            mqos = mqtt::qos::at_least_once;
+            break;
+
+          case QOS::exactly_once:
+            mqos = mqtt::qos::exactly_once;
+            break;
+        }
+
+        mqtt::retain mretain;
+        if (retain)
+          mretain = mqtt::retain::yes;
+        else
+          mretain = mqtt::retain::no;
+
         m_packetId = derived().getClient()->acquire_unique_packet_id();
         derived().getClient()->async_publish(
-            m_packetId, topic, payload, mqtt::qos::at_least_once | mqtt::retain::yes,
-            [topic, callback](mqtt::error_code ec) {
+            m_packetId, topic, payload, mqos | mretain, [topic, callback](mqtt::error_code ec) {
               if (ec)
               {
                 LOG(error) << "MqttClientImpl::publish: Publish failed to topic " << topic << ": "
@@ -430,7 +476,7 @@ namespace mtconnect {
       {
         return static_pointer_cast<MqttTcpClient>(shared_from_this());
       }
-
+      
       /// @brief Get the Mqtt TCP Client
       /// @return pointer to the Mqtt TCP Client
       auto &getClient()
@@ -512,7 +558,7 @@ namespace mtconnect {
       {
         return static_pointer_cast<MqttTlsWSClient>(shared_from_this());
       }
-
+      
       /// @brief Get the Mqtt TLS WebSocket Client
       /// @return pointer to the Mqtt TLS WebSocket Client
       auto &getClient()
@@ -551,7 +597,7 @@ namespace mtconnect {
       {
         return static_pointer_cast<MqttWSClient>(shared_from_this());
       }
-
+      
       /// @brief Get the Mqtt TLS WebSocket Client
       /// @return pointer to the Mqtt TLS WebSocket Client
       auto &getClient()

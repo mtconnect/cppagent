@@ -1468,7 +1468,7 @@ Adapters {
         ASSERT_TRUE(exec) << "Cannot find DataItem with id exec";
 
         auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
-        ASSERT_EQ("LinuxCNC", pipeline->getDevice());
+        ASSERT_EQ("000", pipeline->getDevice());
       }
       m_config->stop();
     };
@@ -1600,7 +1600,7 @@ Port = 0
         ASSERT_TRUE(exec) << "Cannot find DataItem with id exc";
 
         auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
-        ASSERT_EQ("LinuxCNC", pipeline->getDevice());
+        ASSERT_EQ("000", pipeline->getDevice());
       }
       m_config->stop();
     };
@@ -1770,7 +1770,7 @@ Port = 0
         ASSERT_TRUE(device2) << "Cannot find LinuxCNC device";
 
         auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
-        ASSERT_EQ("AnotherCNC", pipeline->getDevice());
+        ASSERT_EQ("001", pipeline->getDevice());
       }
       m_config->stop();
     };
@@ -2000,7 +2000,7 @@ Port = 0
         ASSERT_TRUE(device2) << "Cannot find LinuxCNC device";
 
         auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
-        ASSERT_EQ("AnotherCNC", pipeline->getDevice());
+        ASSERT_EQ("001", pipeline->getDevice());
       }
 
       shutdownTimer.expires_from_now(3s);
@@ -2268,6 +2268,7 @@ AgentDeviceUUID = SOME_UUID
   {
     string config(R"DOC(
 SchemaVersion=2.3
+Port = 0
 Adapters {
       Simplest {
        UUID = NEW-UUID

@@ -66,6 +66,11 @@ namespace mtconnect {
           const std::optional<std::string> requestId = std::nullopt) const override;
       std::string mimeType() const override { return "text/xml"; }
 
+      /// @brief Print a single device in XML
+      /// @param device A device poiinter
+      /// @return The devices XML
+      std::string printDevice(DevicePtr device, bool pretty = false);
+
       /// @brief Add a Devices XML device namespace
       /// @param urn the namespace URN
       /// @param location the location of the schema file
