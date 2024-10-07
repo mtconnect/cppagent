@@ -70,10 +70,18 @@ namespace mtconnect::pipeline {
             auto lit = lits.find(value);
             if (lit != lits.end())
             {
-              evt->setProperty("quality", std::string("VALID"));
+              // Check if it has not been introduced yet
+              if (lit->second.first > 0 && m_contract->getSchemaVersion() < lit->second.first)
+              {
+                evt->setProperty("quality", std::string("INVALID"));
+              }
+              else
+              {
+                evt->setProperty("quality", std::string("VALID"));
+              }
 
               // Check if deprecated
-              if (lit->second > 0 && m_contract->getSchemaVersion() > lit->second)
+              if (lit->second.second > 0 && m_contract->getSchemaVersion() >= lit->second.second)
               {
                 evt->setProperty("deprecated", true);
               }

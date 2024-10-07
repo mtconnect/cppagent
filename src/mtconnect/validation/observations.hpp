@@ -31,7 +31,7 @@ namespace mtconnect {
     namespace observations {
 
       /// @brief Validation type for observations
-      using Validation = std::unordered_map<std::string, std::unordered_map<std::string, int32_t>>;
+      using Validation = std::unordered_map<std::string, std::unordered_map<std::string, std::pair<int32_t, int32_t>>>;
 
       /// @brief Global Validations for Event Observation's Controlled Vocabularies
       ///
