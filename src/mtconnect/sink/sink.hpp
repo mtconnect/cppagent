@@ -58,6 +58,7 @@ namespace mtconnect {
       enum HookType {
         BEFORE_STOP,
         BEFORE_START,
+        AFTER_START,
         BEFORE_DEVICE_XML_UPDATE,
         AFTER_DEVICE_XML_UPDATE,
         BEFORE_INITIALIZE,

@@ -242,6 +242,8 @@ namespace mtconnect {
       // Start all the sources
       for (auto source : m_sources)
         source->start();
+      
+      m_afterStartHooks.exec(*this);
     }
     catch (std::runtime_error &e)
     {
