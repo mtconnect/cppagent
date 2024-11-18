@@ -112,6 +112,10 @@ namespace mtconnect {
     /// @brief Hooks to run when before the agent starts all the soures and sinks
     /// @return configuration::HookManager<Agent>&
     auto &beforeStartHooks() { return m_beforeStartHooks; }
+    
+    /// @brief Hooks to run when after the agent starts all the soures and sinks
+    /// @return configuration::HookManager<Agent>&
+    auto &afterStartHooks() { return m_afterStartHooks; }
 
     /// @brief Hooks before the agent stops all the sources and sinks
     /// @return configuration::HookManager<Agent>&
@@ -546,6 +550,7 @@ namespace mtconnect {
     configuration::HookManager<Agent> m_beforeInitializeHooks;
     configuration::HookManager<Agent> m_afterInitializeHooks;
     configuration::HookManager<Agent> m_beforeStartHooks;
+    configuration::HookManager<Agent> m_afterStartHooks;
     configuration::HookManager<Agent> m_beforeStopHooks;
     configuration::HookManager<Agent> m_beforeDeviceXmlUpdateHooks;
     configuration::HookManager<Agent> m_afterDeviceXmlUpdateHooks;
@@ -665,6 +670,10 @@ namespace mtconnect {
           return m_agent->beforeStartHooks();
           break;
           
+        case AFTER_START:
+          return m_agent->afterStartHooks();
+          break;
+
         case BEFORE_STOP:
           return m_agent->beforeStopHooks();
           break;
