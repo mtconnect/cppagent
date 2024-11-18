@@ -31,6 +31,7 @@
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/printer//printer.hpp"
+#include "mtconnect/configuration/hook_manager.hpp"
 
 namespace mtconnect {
   namespace printer {
@@ -46,6 +47,7 @@ namespace mtconnect {
   namespace buffer {
     class CircularBuffer;
   }
+  class Agent;
 
   /// @brief The Sink namespace for outgoing data from the agent
   namespace sink {
@@ -53,6 +55,15 @@ namespace mtconnect {
     class AGENT_LIB_API SinkContract
     {
     public:
+      enum HookType {
+        BEFORE_STOP,
+        BEFORE_START,
+        BEFORE_DEVICE_XML_UPDATE,
+        AFTER_DEVICE_XML_UPDATE,
+        BEFORE_INITIALIZE,
+        AFTER_INITIALIZE
+      };
+      
       virtual ~SinkContract() = default;
       /// @brief get the printer for a mime type. Current options: `xml` or `json`.
       /// @param[in] aType a string for the type
@@ -102,6 +113,11 @@ namespace mtconnect {
       /// @brief Get a pointer to the asset storage
       /// @return a pointer to the asset storage.
       virtual const asset::AssetStorage *getAssetStorage() = 0;
+      
+      /// @brief Get a reference to the hook manager for the agent.
+      /// @param[in] type the type manager to retrieve
+      /// @return a reference to the hook manager
+      virtual configuration::HookManager<Agent> &getHooks(HookType type) = 0;
 
       /// @brief Shared pointer to the pipeline context
       std::shared_ptr<pipeline::PipelineContext> m_pipelineContext;

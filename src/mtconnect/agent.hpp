@@ -655,6 +655,45 @@ namespace mtconnect {
     }
 
     buffer::CircularBuffer &getCircularBuffer() override { return m_agent->getCircularBuffer(); }
+    
+    configuration::HookManager<Agent> &getHooks(HookType type) override
+    {
+      using namespace sink;
+      switch (type)
+      {
+        case BEFORE_START:
+          return m_agent->beforeStartHooks();
+          break;
+          
+        case BEFORE_STOP:
+          return m_agent->beforeStopHooks();
+          break;
+          
+        case BEFORE_DEVICE_XML_UPDATE:
+          return m_agent->beforeDeviceXmlUpdateHooks();
+          break;
+          
+        case AFTER_DEVICE_XML_UPDATE:
+          return m_agent->afterDeviceXmlUpdateHooks();
+          break;
+          
+        case BEFORE_INITIALIZE:
+          return m_agent->beforeInitializeHooks();
+          break;
+          
+        case AFTER_INITIALIZE:
+          return m_agent->afterInitializeHooks();
+          break;
+      }
+      
+      LOG(error) << "getHooks: Bad hook manager type given to sink contract";
+      throw std::runtime_error("getHooks: Bad hook manager type");
+      
+      // Never gets here.
+      static configuration::HookManager<Agent> NullHooks;
+      return NullHooks;
+    }
+
 
   protected:
     Agent *m_agent;
