@@ -33,11 +33,11 @@ typedef boost::log::sources::severity_channel_logger_mt
     std::string         // the type of the channel name
 > channel_logger_mt;
 
-BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(agent_logger, channel_logger_mt)
-{
-  // Specify the channel name on construction, similarly as with the channel_logger
-  return channel_logger_mt(boost::log::keywords::channel = "agent");
-}
+#define CHANNEL_LOGGER_INIT(logger, channelName) \
+BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(logger, channel_logger_mt) \
+{ return channel_logger_mt(boost::log::keywords::channel = channelName); }
+
+CHANNEL_LOGGER_INIT(agent_logger, "agent")
 
 #define LOG(lvl) BOOST_LOG_SEV(agent_logger::get(), ::boost::log::trivial::lvl)
 
