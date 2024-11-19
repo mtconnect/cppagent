@@ -430,11 +430,8 @@ namespace mtconnect::configuration {
 
   void AgentConfiguration::setLoggingLevel(const logr::trivial::severity_level level)
   {
-    using namespace logr::trivial;
     for ( auto &[channelName, logChannel] : m_logChannels)
-    {
       logChannel.m_logLevel = level;
-    }
   }
 
   static logr::trivial::severity_level StringToLogLevel(const std::string &level)
@@ -478,18 +475,18 @@ namespace mtconnect::configuration {
     using namespace logr::trivial;
     namespace expr = logr::expressions;
 
-    logr::core::get()->remove_all_sinks();
+    auto core = logr::core::get();
+
+    core->remove_all_sinks();
 
     //// Add the commonly used attributes; includes TimeStamp, ProcessID and ThreadID and others
     logr::add_common_attributes();
-    logr::core::get()->add_global_attribute("Scope", logr::attributes::named_scope());
-    logr::core::get()->add_global_attribute(logr::aux::default_attribute_names::thread_id(),
+    core->add_global_attribute("Scope", logr::attributes::named_scope());
+    core->add_global_attribute(logr::aux::default_attribute_names::thread_id(),
                                             logr::attributes::current_thread_id());
-    logr::core::get()->add_global_attribute("Timestamp", logr::attributes::utc_clock());
+    core->add_global_attribute("Timestamp", logr::attributes::utc_clock());
 
     m_logger = &::boost::log::trivial::logger::get();
-
-    setLoggingLevel(severity_level::info);
 
     auto formatter =
         expr::stream << expr::format_date_time<boost::posix_time::ptime>("Timestamp",
@@ -554,7 +551,7 @@ namespace mtconnect::configuration {
       auto sink = boost::make_shared<console_sink>();
       logChannel.m_logSink = sink;
       logChannel.m_logLevel = level;
-      logChannel.m_logFileName = output.value();
+      logChannel.m_logFileName = output.value_or("debug");
 
       sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(out, boost::null_deleter()));
       sink->locked_backend()->auto_flush(true);
