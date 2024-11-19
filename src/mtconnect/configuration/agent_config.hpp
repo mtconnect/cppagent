@@ -110,8 +110,15 @@ namespace mtconnect {
       void initialize(const boost::program_options::variables_map &options) override;
 
       /// @brief  Configure the logger with the config node from the config file
+      /// @param channelName the log channel name
+      /// @param config the configuration node
+      /// @param formatter optional custom message format
+      void configureLoggerChannel(const std::string &channelName, const ptree &config, std::optional<boost::log::basic_formatter<char>> formatter = std::nullopt);
+
+      /// @brief  Configure the agent logger with the config node from the config file
       /// @param config the configuration node
       void configureLogger(const ptree &config);
+
       /// @brief load a configuration text
       /// @param[in] text the configuration text loaded from a file
       /// @param[in] fmt the file format, can be MTCONNECT, JSON, or XML
@@ -148,22 +155,22 @@ namespace mtconnect {
       ///@{
       /// @brief gets the boost log sink
       /// @return boost log sink
-      const auto &getLoggerSink() const { return m_sink; }
+      const auto &getLoggerSink(const std::string &channelName = "agent") { return m_logChannels[channelName].m_logSink; }
       /// @brief gets the log directory
       /// @return log directory
-      const auto &getLogDirectory() const { return m_logDirectory; }
+      const auto &getLogDirectory(const std::string &channelName = "agent") { return m_logChannels[channelName].m_logDirectory; }
       /// @brief get the logging file name
       /// @return log file name
-      const auto &getLogFileName() const { return m_logFileName; }
+      const auto &getLogFileName(const std::string &channelName = "agent") { return m_logChannels[channelName].m_logFileName; }
       /// @brief for log rolling, get the log archive pattern
       /// @return log archive pattern
-      const auto &getLogArchivePattern() const { return m_logArchivePattern; }
+      const auto &getLogArchivePattern(const std::string &channelName = "agent") { return m_logChannels[channelName].m_logArchivePattern; }
       /// @brief Get the maximum size of all the log files
       /// @return the maximum size of all log files
-      auto getMaxLogFileSize() const { return m_maxLogFileSize; }
+      auto getMaxLogFileSize(const std::string &channelName = "agent") { return m_logChannels[channelName].m_maxLogFileSize; }
       /// @brief the maximum size of a log file when it triggers rolling over
       /// @return the maxumum site of a log file
-      auto getLogRotationSize() const { return m_logRotationSize; }
+      auto getLogRotationSize(const std::string &channelName = "agent") { return m_logChannels[channelName].m_logRotationSize; }
       /// @brief How often to roll over the log file
       ///
       /// One of:
@@ -172,10 +179,10 @@ namespace mtconnect {
       /// - `NEVER`
       ///
       /// @return the log file interval
-      auto getRotationLogInterval() const { return m_rotationLogInterval; }
+      auto getRotationLogInterval(const std::string &channelName = "agent") { return m_logChannels[channelName].m_rotationLogInterval; }
       /// @brief Get the current log level
       /// @return log level
-      auto getLogLevel() const { return m_logLevel; }
+      auto getLogLevel(const std::string &channelName = "agent") { return m_logChannels[channelName].m_logLevel; }
 
       /// @brief set the logging level
       /// @param[in] level the new logging level
@@ -308,6 +315,25 @@ namespace mtconnect {
 
     protected:
       using text_sink = boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>;
+      using console_sink = boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend>;
+
+      struct LogChannel
+      {
+        std::string m_channelName;
+        std::filesystem::path m_logDirectory;
+        std::filesystem::path m_logArchivePattern;
+        std::filesystem::path m_logFileName;
+
+        int64_t m_maxLogFileSize {0};
+        int64_t m_logRotationSize {0};
+        int64_t m_rotationLogInterval {0};
+
+        boost::log::trivial::severity_level m_logLevel {boost::log::trivial::severity_level::info};
+
+        boost::shared_ptr<boost::log::sinks::sink> m_logSink;
+      };
+
+      std::map<std::string, LogChannel> m_logChannels;
 
       std::map<std::string, InitializationFunction> m_initializers;
 
@@ -316,7 +342,7 @@ namespace mtconnect {
 
       pipeline::PipelineContextPtr m_pipelineContext;
       std::unique_ptr<source::adapter::Handler> m_adapterHandler;
-      boost::shared_ptr<text_sink> m_sink;
+
       std::string m_version;
       std::string m_devicesFile;
       std::filesystem::path m_exePath;
@@ -334,17 +360,6 @@ namespace mtconnect {
       bool m_restart = false;
       std::optional<std::filesystem::file_time_type> m_configTime;
       std::optional<std::filesystem::file_time_type> m_deviceTime;
-
-      // Logging info for testing
-      std::filesystem::path m_logDirectory;
-      std::filesystem::path m_logFileName;
-      std::filesystem::path m_logArchivePattern;
-
-      boost::log::trivial::severity_level m_logLevel {boost::log::trivial::severity_level::info};
-
-      int64_t m_maxLogFileSize {0};
-      int64_t m_logRotationSize {0};
-      int64_t m_rotationLogInterval {0};
 
       // Factories
       sink::SinkFactory m_sinkFactory;
