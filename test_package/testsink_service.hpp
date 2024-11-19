@@ -51,8 +51,6 @@ namespace mtconnect {
     static void register_factory(const boost::property_tree::ptree &block,
                                  configuration::AgentConfiguration &config)
     {
-      mtconnect::configuration::gAgentLogger = config.getLogger();
-      PLUGIN_LOG(debug) << "Registering sink factory for sink_plugin_test";
       config.getSinkFactory().registerFactory("sink_plugin_test", &sink_plugin_test::create);
     }
   };
