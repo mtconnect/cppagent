@@ -9,7 +9,7 @@ import re
 
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
-    version = "2.3"
+    version = "2.4"
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type"

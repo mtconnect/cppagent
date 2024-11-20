@@ -22,28 +22,27 @@
 
 #include <boost/log/attributes.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/log/sources/severity_channel_logger.hpp>
+#include <boost/log/sources/global_logger_storage.hpp>
 
 #include "mtconnect/config.hpp"
 
-/// @brief synonym for `BOOST_LOG_TRIVIAL`
-#define LOG BOOST_LOG_TRIVIAL
+typedef boost::log::sources::severity_channel_logger_mt
+<
+    boost::log::trivial::severity_level,     // the type of the severity level
+    std::string         // the type of the channel name
+> channel_logger_mt;
+
+#define CHANNEL_LOGGER_INIT(logger, channelName) \
+BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(logger, channel_logger_mt) \
+{ return channel_logger_mt(boost::log::keywords::channel = channelName); }
+
+CHANNEL_LOGGER_INIT(agent_logger, "agent")
+
+#define LOG(lvl) BOOST_LOG_SEV(agent_logger::get(), ::boost::log::trivial::lvl)
 
 /// @brief synonym for `BOOST_LOG_NAMED_SCOPE`
 #define NAMED_SCOPE BOOST_LOG_NAMED_SCOPE
 
-// Must be initialized in the plugin before callign log as follows:
-//    mtconnect::gAgentLogger = config->getLogger();
-//    After that, use PLUGIN_LOG(lvl) << ...;
-namespace mtconnect {
-  namespace configuration {
-    AGENT_LIB_API
-    extern boost::log::trivial::logger_type *gAgentLogger;
-  }  // namespace configuration
-}  // namespace mtconnect
-
 #define LOG_LEVEL(lvl) ::boost::log::trivial::lvl
 
-/// @brief Used when static using static agent_lib in a plugin shared object
-#define PLUGIN_LOG(lvl)                                                 \
-  BOOST_LOG_STREAM_WITH_PARAMS(*mtconnect::configuration::gAgentLogger, \
-                               (::boost::log::keywords::severity = ::boost::log::trivial::lvl))
