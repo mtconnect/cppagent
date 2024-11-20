@@ -192,10 +192,6 @@ namespace mtconnect {
       /// @return the logging level
       boost::log::trivial::severity_level setLoggingLevel(const std::string &level);
 
-      /// @brief get a pointer to the logger
-      boost::log::trivial::logger_type *getLogger() { return m_logger; }
-      ///@}
-
       std::optional<std::filesystem::path> findConfigFile(const std::string &file)
       {
         return findFile(m_configPaths, file);
