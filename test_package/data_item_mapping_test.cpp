@@ -107,7 +107,7 @@ protected:
 
 inline DataSetEntry operator"" _E(const char *c, std::size_t) { return DataSetEntry(c); }
 
-TEST_F(DataItemMappingTest, SimpleEvent)
+TEST_F(DataItemMappingTest, should_map_simple_sample)
 {
   Properties props {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
   auto di = makeDataItem(props);
@@ -128,7 +128,7 @@ TEST_F(DataItemMappingTest, SimpleEvent)
   ASSERT_EQ("READY", event->getValue<string>());
 }
 
-TEST_F(DataItemMappingTest, SimpleUnavailableEvent)
+TEST_F(DataItemMappingTest, should_map_simple_unavailable_event)
 {
   Properties props {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
   auto di = makeDataItem(props);
@@ -148,7 +148,7 @@ TEST_F(DataItemMappingTest, SimpleUnavailableEvent)
   ASSERT_TRUE(event->isUnavailable());
 }
 
-TEST_F(DataItemMappingTest, TwoSimpleEvents)
+TEST_F(DataItemMappingTest, should_map_two_simple_events)
 {
   Properties props {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
   auto di = makeDataItem(props);
@@ -178,7 +178,7 @@ TEST_F(DataItemMappingTest, TwoSimpleEvents)
   }
 }
 
-TEST_F(DataItemMappingTest, Message)
+TEST_F(DataItemMappingTest, should_map_a_message)
 {
   Properties props {{"id", "a"s}, {"type", "MESSAGE"s}, {"category", "EVENT"s}};
   auto di = makeDataItem(props);
@@ -201,7 +201,7 @@ TEST_F(DataItemMappingTest, Message)
   }
 }
 
-TEST_F(DataItemMappingTest, SampleTest)
+TEST_F(DataItemMappingTest, should_map_a_sample_and_validate_type)
 {
   auto di = makeDataItem(
       {{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}, {"units", "MILLIMETER"}});
@@ -220,7 +220,7 @@ TEST_F(DataItemMappingTest, SampleTest)
   ASSERT_EQ(1.23456, sample->getValue<double>());
 }
 
-TEST_F(DataItemMappingTest, SampleTestFormatIssue)
+TEST_F(DataItemMappingTest, should_map_a_sample_with_invalid_data_to_unavailable)
 {
   makeDataItem(
       {{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}, {"units", "MILLIMETER"s}});
@@ -234,7 +234,7 @@ TEST_F(DataItemMappingTest, SampleTestFormatIssue)
   ASSERT_TRUE(sample->isUnavailable());
 }
 
-TEST_F(DataItemMappingTest, SampleTimeseries)
+TEST_F(DataItemMappingTest, should_map_a_timeseries_sample)
 {
   auto di = makeDataItem({{"id", "a"s},
                           {"type", "POSITION"s},
@@ -255,7 +255,7 @@ TEST_F(DataItemMappingTest, SampleTimeseries)
   ASSERT_EQ(100.0, sample->get<double>("sampleRate"));
 }
 
-TEST_F(DataItemMappingTest, SampleResetTrigger)
+TEST_F(DataItemMappingTest, should_map_a_reset_trigger_for_a_sample)
 {
   auto di = makeDataItem({{"id", "a"s},
                           {"type", "POSITION"s},
@@ -276,7 +276,7 @@ TEST_F(DataItemMappingTest, SampleResetTrigger)
   ASSERT_EQ("MANUAL", sample->get<string>("resetTriggered"));
 }
 
-TEST_F(DataItemMappingTest, Condition)
+TEST_F(DataItemMappingTest, should_map_a_simple_condition)
 {
   auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
   //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
@@ -297,7 +297,7 @@ TEST_F(DataItemMappingTest, Condition)
   ASSERT_EQ("Fault", cond->getName());
 }
 
-TEST_F(DataItemMappingTest, ConditionNormal)
+TEST_F(DataItemMappingTest, should_map_a_simple_condition_normal)
 {
   auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
   //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
@@ -319,7 +319,7 @@ TEST_F(DataItemMappingTest, ConditionNormal)
   ASSERT_EQ("Normal", cond->getName());
 }
 
-TEST_F(DataItemMappingTest, ConditionNormalPartial)
+TEST_F(DataItemMappingTest, should_map_a_partial_condition_normal)
 {
   auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
   //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
@@ -340,7 +340,7 @@ TEST_F(DataItemMappingTest, ConditionNormalPartial)
   ASSERT_EQ("Normal", cond->getName());
 }
 
-TEST_F(DataItemMappingTest, DataSet)
+TEST_F(DataItemMappingTest, should_map_an_event_data_set)
 {
   auto di = makeDataItem({{"id", "a"s},
                           {"type", "SOMETHING"s},
@@ -365,7 +365,33 @@ TEST_F(DataItemMappingTest, DataSet)
   ASSERT_EQ("abc", get<string>(ds.find("c"_E)->m_value));
 }
 
-TEST_F(DataItemMappingTest, Table)
+TEST_F(DataItemMappingTest, should_map_a_sample_data_set)
+{
+  auto di = makeDataItem({{"id", "a"s},
+    {"type", "SOMETHING"s},
+    {"category", "SAMPLE"s},
+    {"representation", "DATA_SET"s}});
+  
+  auto ts = makeTimestamped({"a", "a=1 b=2 c={3}"});
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+  
+  auto set = dynamic_pointer_cast<DataSetEvent>(oblist.front());
+  ASSERT_TRUE(set);
+  ASSERT_EQ("SomethingDataSet", set->getName());
+  
+  ASSERT_EQ(di, set->getDataItem());
+  
+  auto &ds = set->getValue<DataSet>();
+  ASSERT_EQ(3, ds.size());
+  ASSERT_EQ(1, get<int64_t>(ds.find("a"_E)->m_value));
+  ASSERT_EQ(2, get<int64_t>(ds.find("b"_E)->m_value));
+  ASSERT_EQ("3", get<string>(ds.find("c"_E)->m_value));
+}
+
+
+TEST_F(DataItemMappingTest, should_map_an_event_table)
 {
   auto di = makeDataItem(
       {{"id", "a"s}, {"type", "SOMETHING"s}, {"category", "EVENT"s}, {"representation", "TABLE"s}});
@@ -399,7 +425,42 @@ TEST_F(DataItemMappingTest, Table)
   ASSERT_EQ("def", get<string>(c.find("y"_E)->m_value));
 }
 
-TEST_F(DataItemMappingTest, DataSetResetTriggered)
+TEST_F(DataItemMappingTest, should_map_an_sample_table)
+{
+  auto di = makeDataItem(
+                         {{"id", "a"s}, {"type", "SOMETHING"s}, {"category", "SAMPLE"s}, {"representation", "TABLE"s}});
+  
+  auto ts = makeTimestamped({"a", "a={c=1 n=3.0} b={d=2 e=3} c={x=abc y=def}"});
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+  
+  auto set = dynamic_pointer_cast<DataSetEvent>(oblist.front());
+  ASSERT_TRUE(set);
+  
+  ASSERT_EQ(di, set->getDataItem());
+  ASSERT_EQ("SomethingTable", set->getName());
+  
+  auto &ds = set->getValue<DataSet>();
+  ASSERT_EQ(3, ds.size());
+  auto a = get<DataSet>(ds.find("a"_E)->m_value);
+  ASSERT_EQ(2, a.size());
+  ASSERT_EQ(1, get<int64_t>(a.find("c"_E)->m_value));
+  ASSERT_EQ(3.0, get<double>(a.find("n"_E)->m_value));
+  
+  auto b = get<DataSet>(ds.find("b"_E)->m_value);
+  ASSERT_EQ(2, a.size());
+  ASSERT_EQ(2, get<int64_t>(b.find("d"_E)->m_value));
+  ASSERT_EQ(3, get<int64_t>(b.find("e"_E)->m_value));
+  
+  auto c = get<DataSet>(ds.find("c"_E)->m_value);
+  ASSERT_EQ(2, c.size());
+  ASSERT_EQ("abc", get<string>(c.find("x"_E)->m_value));
+  ASSERT_EQ("def", get<string>(c.find("y"_E)->m_value));
+}
+
+
+TEST_F(DataItemMappingTest, should_handle_data_set_reset_trigger)
 {
   makeDataItem({{"id", "a"s},
                 {"type", "SOMETHING"s},
@@ -420,7 +481,7 @@ TEST_F(DataItemMappingTest, DataSetResetTriggered)
   ASSERT_EQ(3, ds.size());
 }
 
-TEST_F(DataItemMappingTest, TableResetTriggered)
+TEST_F(DataItemMappingTest, should_handle_table_reset_trigger)
 {
   makeDataItem(
       {{"id", "a"s}, {"type", "SOMETHING"s}, {"category", "EVENT"s}, {"representation", "TABLE"s}});
