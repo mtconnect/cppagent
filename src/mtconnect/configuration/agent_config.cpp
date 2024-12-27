@@ -1034,6 +1034,7 @@ namespace mtconnect::configuration {
         {
           // Set the UUID of the device
           m_agent->deviceChanged(device, *uuid);
+          adapterOptions[configuration::Device] = *uuid;
         }
 
         auto preserve = GetOption<bool>(adapterOptions, configuration::PreserveUUID);
