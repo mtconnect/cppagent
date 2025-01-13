@@ -243,7 +243,12 @@ namespace mtconnect {
       entity::Requirements *reqs {nullptr};
 
       // Extract the remaining tokens
-      if (dataItem->isSample())
+      if ((dataItem->isDataSet() || dataItem->isTable()) &&
+          (dataItem->isSample() || dataItem->isEvent()))
+      {
+        reqs = &s_dataSet;
+      }
+      else if (dataItem->isSample())
       {
         if (dataItem->isTimeSeries())
           reqs = &s_timeseries;
@@ -258,8 +263,6 @@ namespace mtconnect {
           reqs = &s_message;
         else if (dataItem->isAlarm())
           reqs = &s_alarm;
-        else if (dataItem->isDataSet() || dataItem->isTable())
-          reqs = &s_dataSet;
         else if (dataItem->isAssetChanged() || dataItem->isAssetRemoved())
           reqs = &s_assetEvent;
         else
