@@ -53,18 +53,7 @@ namespace mtconnect {
                                                Requirement("nominal", ValueType::DOUBLE, false),
                                                Requirement("VALUE", ValueType::DOUBLE, false)}));
 
-        static auto measurement = make_shared<Factory>(Requirements(
-            {Requirement("significantDigits", ValueType::INTEGER, false),
-             Requirement("units", false), Requirement("nativeUnits", false),
-             Requirement("code", false), Requirement("maximum", ValueType::DOUBLE, false),
-             Requirement("minimum", ValueType::DOUBLE, false),
-             Requirement("nominal", ValueType::DOUBLE, false),
-             Requirement("VALUE", ValueType::DOUBLE, false)}));
-
-        static auto measurements = make_shared<Factory>(Requirements({Requirement(
-            "Measurement", ValueType::ENTITY, measurement, 1, Requirement::Infinite)}));
-        measurements->registerMatchers();
-        measurements->registerFactory(regex(".+"), measurement);
+        static auto measurements = PhysicalAsset::getMeasurementsFactory()->deepCopy();
 
         static auto ext = make_shared<Factory>();
         ext->registerFactory(regex(".+"), ext);
@@ -83,7 +72,6 @@ namespace mtconnect {
         item->registerFactory(regex(".+"), ext);
         item->setAny(true);
 
-        measurements->registerMatchers();
         item->setOrder({"Description", "CutterStatus", "Locus", "ItemLife", "ProgramToolGroup",
                         "Measurements"});
 
