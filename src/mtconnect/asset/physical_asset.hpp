@@ -23,25 +23,18 @@
 
 #include "asset.hpp"
 #include "mtconnect/config.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/entity/factory.hpp"
 #include "mtconnect/utilities.hpp"
-#include "mtconnect/asset/physical_asset.hpp"
 
-namespace mtconnect {
-  namespace asset {
-    /// @brief Cutting Tool Architype Asset
-    class AGENT_LIB_API CuttingToolArchetype : public Asset
-    {
-    public:
-      static entity::FactoryPtr getFactory();
-      static void registerAsset();
-    };
-
-    /// @brief Cutting Tool Asset
-    class AGENT_LIB_API CuttingTool : public Asset
-    {
-    public:
-      static entity::FactoryPtr getFactory();
-      static void registerAsset();
-    };
-  }  // namespace asset
-}  // namespace mtconnect
+namespace mtconnect::asset {
+  /// @brief abstract Physical Asset 
+  class AGENT_LIB_API PhysicalAsset : public Asset
+  {
+  public:
+    static entity::FactoryPtr getFactory();
+    static void registerAsset();
+    static entity::FactoryPtr getMeasurementsFactory();
+    
+  };
+}  // namespace mtconnect::asset

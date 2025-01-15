@@ -258,7 +258,7 @@ namespace mtconnect::entity {
       if (root != nullptr)
         entity = parseXmlNode(factory, root, errors, parseNamespaces);
       else
-        errors.emplace_back(new EntityError("Cannot parse asset"));
+        errors.emplace_back(new EntityError("Cannot parse document"));
     }
 
     catch (EntityError e)
