@@ -27,11 +27,10 @@
 #include <sstream>
 #include <string>
 
-#include "agent_test_helper.hpp"
 #include "json_helper.hpp"
 #include "mtconnect/agent.hpp"
 #include "mtconnect/asset/asset.hpp"
-#include "mtconnect/asset/physical_asset.hpp"
+#include "mtconnect/asset/pallet.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/entity/json_printer.hpp"
 #include "mtconnect/entity/xml_parser.hpp"
@@ -55,12 +54,12 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
-class PhysicalAssetTest : public testing::Test
+class PalletTest : public testing::Test
 {
 protected:
   void SetUp() override
   {
-    PhysicalAsset::registerAsset();
+    Pallet::registerAsset();
     m_writer = make_unique<printer::XmlWriter>(true);
   }
 
@@ -69,11 +68,11 @@ protected:
   std::unique_ptr<printer::XmlWriter> m_writer;
 };
 
-TEST_F(PhysicalAssetTest, minimal_physical_asset_definition)
+TEST_F(PalletTest, minimal_pallet_definition)
 {
   using namespace date;
   const auto doc = R"DOC(
-<PhysicalAsset assetId="7ae770f0-c11e-013a-c34c-4e7f553bbb76">
+<Pallet assetId="7ae770f0-c11e-013a-c34c-4e7f553bbb76">
   <ManufactureDate>2022-05-20</ManufactureDate>
   <CalibrationDate>2022-05-21</CalibrationDate>
   <InspectionDate>2022-05-22</InspectionDate>
@@ -82,7 +81,12 @@ TEST_F(PhysicalAssetTest, minimal_physical_asset_definition)
     <Length maximum="5.2" minimum="4.95" nominal="5" units="MILLIMETER">5.1</Length>
     <Diameter maximum="1.4" minimum="0.95" nominal="1.25" units="MILLIMETER">1.27</Diameter>
   </Measurements>
-</PhysicalAsset>
+  <Type>MACHINE</Type>
+  <PalletId>XXXYYY</PalletId>
+  <PalletNumber>12345</PalletNumber>
+  <ClampingMethod>CLAMP</ClampingMethod>
+  <MountingMethod>MOUNT</MountingMethod>
+</Pallet>
 )DOC";
 
   ErrorList errors;
@@ -123,6 +127,12 @@ TEST_F(PhysicalAssetTest, minimal_physical_asset_definition)
   ASSERT_EQ(5, unsigned(ymd.month()));
   ASSERT_EQ(23, unsigned(ymd.day()));
 
+  ASSERT_EQ("MACHINE", asset->get<string>("Type"));
+  ASSERT_EQ("XXXYYY", asset->get<string>("PalletId"));
+  ASSERT_EQ(12345, asset->get<int64_t>("PalletNumber"));
+  ASSERT_EQ("CLAMP", asset->get<string>("ClampingMethod"));
+  ASSERT_EQ("MOUNT", asset->get<string>("MountingMethod"));
+
   auto meas = asset->getList("Measurements");
   ASSERT_TRUE(meas);
   ASSERT_EQ(2, meas->size());
@@ -144,11 +154,11 @@ TEST_F(PhysicalAssetTest, minimal_physical_asset_definition)
   ASSERT_EQ(1.27, get<double>((*it)->getProperty("VALUE")));
 }
 
-TEST_F(PhysicalAssetTest, should_round_trip_xml)
+TEST_F(PalletTest, should_round_trip_xml)
 {
   using namespace date;
   const auto doc =
-      R"DOC(<PhysicalAsset assetId="7ae770f0-c11e-013a-c34c-4e7f553bbb76">
+      R"DOC(<Pallet assetId="7ae770f0-c11e-013a-c34c-4e7f553bbb76">
   <ManufactureDate>2022-05-20T00:00:00Z</ManufactureDate>
   <CalibrationDate>2022-05-21T00:00:00Z</CalibrationDate>
   <InspectionDate>2022-05-22T00:00:00Z</InspectionDate>
@@ -157,7 +167,12 @@ TEST_F(PhysicalAssetTest, should_round_trip_xml)
     <Length maximum="5.2" minimum="4.95" nominal="5" units="MILLIMETER">5.1</Length>
     <Diameter maximum="1.4" minimum="0.95" nominal="1.25" units="MILLIMETER">1.27</Diameter>
   </Measurements>
-</PhysicalAsset>
+  <Type>MACHINE</Type>
+  <PalletId>XXXYYY</PalletId>
+  <PalletNumber>12345</PalletNumber>
+  <ClampingMethod>CLAMP</ClampingMethod>
+  <MountingMethod>MOUNT</MountingMethod>
+</Pallet>
 )DOC";
 
   ErrorList errors;
@@ -173,11 +188,11 @@ TEST_F(PhysicalAssetTest, should_round_trip_xml)
   ASSERT_EQ(doc, content);
 }
 
-TEST_F(PhysicalAssetTest, should_generate_json)
+TEST_F(PalletTest, should_generate_json)
 {
   using namespace date;
   const auto doc =
-      R"DOC(<PhysicalAsset assetId="7ae770f0-c11e-013a-c34c-4e7f553bbb76">
+      R"DOC(<Pallet assetId="7ae770f0-c11e-013a-c34c-4e7f553bbb76">
   <ManufactureDate>2022-05-20T00:00:00Z</ManufactureDate>
   <CalibrationDate>2022-05-21T00:00:00Z</CalibrationDate>
   <InspectionDate>2022-05-22T00:00:00Z</InspectionDate>
@@ -186,7 +201,12 @@ TEST_F(PhysicalAssetTest, should_generate_json)
     <Length maximum="5.2" minimum="4.95" nominal="5" units="MILLIMETER">5.1</Length>
     <Diameter maximum="1.4" minimum="0.95" nominal="1.25" units="MILLIMETER">1.27</Diameter>
   </Measurements>
-</PhysicalAsset>
+  <Type>MACHINE</Type>
+  <PalletId>XXXYYY</PalletId>
+  <PalletNumber>12345</PalletNumber>
+  <ClampingMethod>CLAMP</ClampingMethod>
+  <MountingMethod>MOUNT</MountingMethod>
+</Pallet>
 )DOC";
 
   ErrorList errors;
@@ -199,8 +219,9 @@ TEST_F(PhysicalAssetTest, should_generate_json)
   auto json = jsonPrinter.print(entity);
 
   ASSERT_EQ(R"({
-  "PhysicalAsset": {
+  "Pallet": {
     "CalibrationDate": "2022-05-21T00:00:00Z",
+    "ClampingMethod": "CLAMP",
     "InspectionDate": "2022-05-22T00:00:00Z",
     "ManufactureDate": "2022-05-20T00:00:00Z",
     "Measurements": {
@@ -223,7 +244,11 @@ TEST_F(PhysicalAssetTest, should_generate_json)
         }
       ]
     },
+    "MountingMethod": "MOUNT",
     "NextInspectionDate": "2022-05-23T00:00:00Z",
+    "PalletId": "XXXYYY",
+    "PalletNumber": 12345,
+    "Type": "MACHINE",
     "assetId": "7ae770f0-c11e-013a-c34c-4e7f553bbb76"
   }
 })",

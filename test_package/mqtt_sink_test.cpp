@@ -249,21 +249,21 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Sample)
   auto handler = make_unique<ClientHandler>();
   bool gotSample = false;
   bool first = true;
-  handler->m_receive = [&gotSample, &first](std::shared_ptr<MqttClient> client, const std::string &topic,
-                                    const std::string &payload) {
+  handler->m_receive = [&gotSample, &first](std::shared_ptr<MqttClient> client,
+                                            const std::string &topic, const std::string &payload) {
     if (first)
     {
       first = false;
     }
     else
     {
-    EXPECT_EQ("MTConnect/Sample/000", topic);
+      EXPECT_EQ("MTConnect/Sample/000", topic);
 
-    auto jdoc = json::parse(payload);
-    auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream"_json_pointer);
-    EXPECT_EQ(string("LinuxCNC"), streams.at("/name"_json_pointer).get<string>());
+      auto jdoc = json::parse(payload);
+      auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream"_json_pointer);
+      EXPECT_EQ(string("LinuxCNC"), streams.at("/name"_json_pointer).get<string>());
 
-    gotSample = true;
+      gotSample = true;
     }
   };
 

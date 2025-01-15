@@ -224,16 +224,15 @@ TEST_F(ObservationValidationTest, should_be_invalid_if_entry_has_not_been_introd
 {
   ErrorList errors;
   m_dataItem =
-  DataItem::make({{"id", "exec"s}, {"category", "EVENT"s}, {"type", "EXECUTION"s}}, errors);
-  
+      DataItem::make({{"id", "exec"s}, {"category", "EVENT"s}, {"type", "EXECUTION"s}}, errors);
+
   auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
   contract->m_schemaVersion = SCHEMA_VERSION(1, 4);
-  
+
   auto event = Observation::make(m_dataItem, {{"VALUE", "WAIT"s}}, m_time, errors);
-  
+
   auto evt = (*m_validator)(std::move(event));
   auto quality = evt->get<string>("quality");
   ASSERT_EQ("INVALID", quality);
   ASSERT_FALSE(evt->hasProperty("deprecated"));
 }
-

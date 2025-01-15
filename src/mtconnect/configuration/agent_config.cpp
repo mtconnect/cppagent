@@ -430,7 +430,7 @@ namespace mtconnect::configuration {
 
   void AgentConfiguration::setLoggingLevel(const logr::trivial::severity_level level)
   {
-    for ( auto &[channelName, logChannel] : m_logChannels)
+    for (auto &[channelName, logChannel] : m_logChannels)
       logChannel.m_logLevel = level;
   }
 
@@ -483,7 +483,7 @@ namespace mtconnect::configuration {
     logr::add_common_attributes();
     core->add_global_attribute("Scope", logr::attributes::named_scope());
     core->add_global_attribute(logr::aux::default_attribute_names::thread_id(),
-                                            logr::attributes::current_thread_id());
+                               logr::attributes::current_thread_id());
     core->add_global_attribute("Timestamp", logr::attributes::utc_clock());
 
     m_logger = &::boost::log::trivial::logger::get();
@@ -498,7 +498,9 @@ namespace mtconnect::configuration {
     configureLoggerChannel("agent", config, formatter);
   }
 
-  void AgentConfiguration::configureLoggerChannel(const std::string &channelName, const ptree &config, std::optional<boost::log::basic_formatter<char>> formatter)
+  void AgentConfiguration::configureLoggerChannel(
+      const std::string &channelName, const ptree &config,
+      std::optional<boost::log::basic_formatter<char>> formatter)
   {
     using namespace logr::trivial;
     namespace expr = logr::expressions;
@@ -510,10 +512,10 @@ namespace mtconnect::configuration {
 
     if (!formatter)
     {
-      formatter =
-          expr::stream << expr::format_date_time<boost::posix_time::ptime>("Timestamp",
-                                                                           "%Y-%m-%dT%H:%M:%S.%fZ ")
-                       << std::setw(7) << std::left << boost::log::trivial::severity << " " << expr::message;
+      formatter = expr::stream << expr::format_date_time<boost::posix_time::ptime>(
+                                      "Timestamp", "%Y-%m-%dT%H:%M:%S.%fZ ")
+                               << std::setw(7) << std::left << boost::log::trivial::severity << " "
+                               << expr::message;
     }
 
     ptree empty;
@@ -553,11 +555,13 @@ namespace mtconnect::configuration {
       logChannel.m_logLevel = level;
       logChannel.m_logFileName = output.value_or("debug");
 
-      sink->locked_backend()->add_stream(boost::shared_ptr<std::ostream>(out, boost::null_deleter()));
+      sink->locked_backend()->add_stream(
+          boost::shared_ptr<std::ostream>(out, boost::null_deleter()));
       sink->locked_backend()->auto_flush(true);
 
       sink->set_formatter(formatter.value());
-      sink->set_filter(expr::attr<std::string>("Channel") == logChannel.m_channelName && severity >= logChannel.m_logLevel);
+      sink->set_filter(expr::attr<std::string>("Channel") == logChannel.m_channelName &&
+                       severity >= logChannel.m_logLevel);
 
       logr::core::get()->add_sink(sink);
       return;
@@ -615,8 +619,7 @@ namespace mtconnect::configuration {
     logArchivePattern = fs::path(archive_pattern);
     if (!logArchivePattern.has_filename())
     {
-      logArchivePattern =
-          logArchivePattern / archiveFileName(get<string>(options["file_name"]));
+      logArchivePattern = logArchivePattern / archiveFileName(get<string>(options["file_name"]));
     }
 
     if (logArchivePattern.is_relative())
@@ -648,16 +651,16 @@ namespace mtconnect::configuration {
 
     if (rotationLogInterval > 0)
     {
-      sink->locked_backend()->set_time_based_rotation(
-          logr::sinks::file::rotation_at_time_interval(
-              boost::posix_time::hours(rotationLogInterval)));
+      sink->locked_backend()->set_time_based_rotation(logr::sinks::file::rotation_at_time_interval(
+          boost::posix_time::hours(rotationLogInterval)));
     }
 
     // Upon restart, scan the target directory for files matching the file_name pattern
     sink->locked_backend()->scan_for_files();
 
     sink->set_formatter(formatter.value());
-    sink->set_filter(expr::attr<std::string>("Channel") == logChannel.m_channelName && severity >= logChannel.m_logLevel);
+    sink->set_filter(expr::attr<std::string>("Channel") == logChannel.m_channelName &&
+                     severity >= logChannel.m_logLevel);
 
     // Formatter for the logger
     logr::core::get()->add_sink(sink);
@@ -949,7 +952,7 @@ namespace mtconnect::configuration {
 
     auto parsed = Url::parse(url);
     options[configuration::Protocol] = parsed.m_protocol;
-    
+
     auto host = parsed.getHost();
     if (host.empty())
     {
@@ -957,15 +960,14 @@ namespace mtconnect::configuration {
       exit(1);
     }
     options[configuration::Host] = host;
-    
+
     if (parsed.m_port)
       options[configuration::Port] = parsed.getPort();
     if (parsed.m_path != "/")
     {
       StringList list;
       string topics = parsed.m_path.substr(1, string::npos);
-      boost::split(list, topics, boost::is_any_of(":"),
-                   boost::token_compress_on);
+      boost::split(list, topics, boost::is_any_of(":"), boost::token_compress_on);
       options[configuration::Topics] = list;
     }
   }

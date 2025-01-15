@@ -21,19 +21,17 @@
 #include <utility>
 #include <vector>
 
-#include "asset.hpp"
-#include "mtconnect/config.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/entity/factory.hpp"
 #include "mtconnect/utilities.hpp"
+#include "physical_asset.hpp"
 
 namespace mtconnect::asset {
   /// @brief abstract Physical Asset
-  class AGENT_LIB_API PhysicalAsset : public Asset
+  class AGENT_LIB_API Fixture : public PhysicalAsset
   {
   public:
     static entity::FactoryPtr getFactory();
     static void registerAsset();
-    static entity::FactoryPtr getMeasurementsFactory();
   };
 }  // namespace mtconnect::asset

@@ -25,43 +25,45 @@ namespace mtconnect::asset {
   FactoryPtr PhysicalAsset::getMeasurementsFactory()
   {
     static FactoryPtr measurements;
-    
+
     if (!measurements)
     {
       static auto measurement = make_shared<Factory>(Requirements(
-            {Requirement("significantDigits", ValueType::INTEGER, false),
-             Requirement("units", false), Requirement("nativeUnits", false),
-             Requirement("code", false), Requirement("maximum", ValueType::DOUBLE, false),
-             Requirement("minimum", ValueType::DOUBLE, false),
-             Requirement("nominal", ValueType::DOUBLE, false),
-             Requirement("VALUE", ValueType::DOUBLE, false)}));
+          {Requirement("significantDigits", ValueType::INTEGER, false), Requirement("units", false),
+           Requirement("nativeUnits", false), Requirement("code", false),
+           Requirement("maximum", ValueType::DOUBLE, false),
+           Requirement("minimum", ValueType::DOUBLE, false),
+           Requirement("nominal", ValueType::DOUBLE, false),
+           Requirement("VALUE", ValueType::DOUBLE, false)}));
 
-        measurements = make_shared<Factory>(Requirements({Requirement(
-            "Measurement", ValueType::ENTITY, measurement, 1, Requirement::Infinite)}));
-        measurements->registerMatchers();
-        measurements->registerFactory(regex(".+"), measurement);
+      measurements = make_shared<Factory>(Requirements(
+          {Requirement("Measurement", ValueType::ENTITY, measurement, 1, Requirement::Infinite)}));
+      measurements->registerMatchers();
+      measurements->registerFactory(regex(".+"), measurement);
     }
     return measurements;
   }
-  
+
   FactoryPtr PhysicalAsset::getFactory()
   {
     static FactoryPtr factory;
     if (!factory)
     {
       static auto measurements = getMeasurementsFactory()->deepCopy();
-      
+
       factory = make_shared<Factory>(*Asset::getFactory());
-      factory->addRequirements(Requirements {{"ManufactureDate", ValueType::TIMESTAMP, false},
-                                             {"CalibrationDate", ValueType::TIMESTAMP, false},
-                                             {"InspectionDate", ValueType::TIMESTAMP, false},
-                                             {"NextInspectionDate", ValueType::TIMESTAMP, false},
-                                             {"Measurements", ValueType::ENTITY_LIST, measurements, false}});
+      factory->addRequirements(
+          Requirements {{"ManufactureDate", ValueType::TIMESTAMP, false},
+                        {"CalibrationDate", ValueType::TIMESTAMP, false},
+                        {"InspectionDate", ValueType::TIMESTAMP, false},
+                        {"NextInspectionDate", ValueType::TIMESTAMP, false},
+                        {"Measurements", ValueType::ENTITY_LIST, measurements, false}});
 
       auto meas = measurements->factoryFor("Measurement");
       meas->getRequirement("VALUE")->makeRequired();
 
-      factory->setOrder({"ManufactureDate", "CalibrationDate", "InspectionDate", "NextInspectionDate", "Measurements"});
+      factory->setOrder({"ManufactureDate", "CalibrationDate", "InspectionDate",
+                         "NextInspectionDate", "Measurements"});
     }
 
     return factory;

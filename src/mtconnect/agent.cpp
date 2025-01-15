@@ -46,6 +46,8 @@
 #include "mtconnect/asset/component_configuration_parameters.hpp"
 #include "mtconnect/asset/cutting_tool.hpp"
 #include "mtconnect/asset/file_asset.hpp"
+#include "mtconnect/asset/fixture.hpp"
+#include "mtconnect/asset/pallet.hpp"
 #include "mtconnect/asset/qif_document.hpp"
 #include "mtconnect/asset/raw_material.hpp"
 #include "mtconnect/configuration/config_options.hpp"
@@ -98,6 +100,8 @@ namespace mtconnect {
     RawMaterial::registerAsset();
     QIFDocumentWrapper::registerAsset();
     ComponentConfigurationParameters::registerAsset();
+    Pallet::registerAsset();
+    Fixture::registerAsset();
 
     m_assetStorage = make_unique<AssetBuffer>(
         GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024));
@@ -242,7 +246,7 @@ namespace mtconnect {
       // Start all the sources
       for (auto source : m_sources)
         source->start();
-      
+
       m_afterStartHooks.exec(*this);
     }
     catch (std::runtime_error &e)
@@ -478,11 +482,11 @@ namespace mtconnect {
           changed = receiveDevice(device, true) || changed;
           if (changed)
           {
-          if (source)
-          {
-            auto s = findSource(*source);
-            if (s)
+            if (source)
             {
+              auto s = findSource(*source);
+              if (s)
+              {
                 s->setOptions({{config::Device, uuid}});
               }
             }
@@ -1018,7 +1022,7 @@ namespace mtconnect {
       if (m_agentDevice)
       {
         auto d = m_agentDevice->getDeviceDataItem("device_removed");
-          if (d)
+        if (d)
           m_loopback->receive(d, oldUuid);
       }
     }
@@ -1465,12 +1469,12 @@ namespace mtconnect {
                  {
                    try
                    {
-                   double fact_value = stod(factor);
-                   double off_value = stod(offset);
+                     double fact_value = stod(factor);
+                     double off_value = stod(offset);
 
-                   device_model::data_item::UnitConversion conv(fact_value, off_value);
-                   di->setConverter(conv);
-                 }
+                     device_model::data_item::UnitConversion conv(fact_value, off_value);
+                     di->setConverter(conv);
+                   }
                    catch (std::exception e)
                    {
                      LOG(error) << "Cannot convert factor " << factor << " or " << offset

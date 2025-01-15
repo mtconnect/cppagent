@@ -26,6 +26,8 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/asset/qif_document.hpp"
         "${SOURCE_DIR}/asset/component_configuration_parameters.hpp"
         "${SOURCE_DIR}/asset/physical_asset.hpp"
+        "${SOURCE_DIR}/asset/fixture.hpp"
+        "${SOURCE_DIR}/asset/pallet.hpp"
 
 # src/asset SOURCE_FILES_ONLY
   
@@ -36,6 +38,8 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/asset/qif_document.cpp"
         "${SOURCE_DIR}/asset/component_configuration_parameters.cpp"
         "${SOURCE_DIR}/asset/physical_asset.cpp"
+        "${SOURCE_DIR}/asset/fixture.cpp"
+        "${SOURCE_DIR}/asset/pallet.cpp"
         
 # src/buffer HEADER_FILES_ONLY
 

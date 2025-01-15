@@ -22,9 +22,9 @@
 #include <vector>
 
 #include "asset.hpp"
+#include "mtconnect/asset/physical_asset.hpp"
 #include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
-#include "mtconnect/asset/physical_asset.hpp"
 
 namespace mtconnect {
   namespace asset {
