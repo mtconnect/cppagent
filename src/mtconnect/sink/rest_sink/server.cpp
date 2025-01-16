@@ -314,15 +314,8 @@ namespace mtconnect::sink::rest_sink {
           obj.AddPairs("description", "OK");
           {
             AutoJsonObject<T> obj(writer, "content");
-            {
-              AutoJsonObject<T> obj(writer, "application/xml");
-              {
-                AutoJsonObject<T> obj(writer, "schema");
-                obj.AddPairs("type", "string");
-              }
-            }
-            {
-              AutoJsonObject<T> obj(writer, "application/json");
+			{
+              AutoJsonObject<T> obj(writer, "text/plain");
               {
                 AutoJsonObject<T> obj(writer, "schema");
                 obj.AddPairs("type", "object");
