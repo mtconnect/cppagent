@@ -289,8 +289,8 @@ namespace mtconnect {
         m_currentTimer.expires_after(m_currentInterval);
         m_currentTimer.async_wait(boost::asio::bind_executor(
             m_strand, boost::bind(&MqttService::publishCurrent, this, _1)));
-          
-          return seq;
+
+        return seq;
       }
 
       bool MqttService::publish(observation::ObservationPtr &observation)

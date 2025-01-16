@@ -476,7 +476,7 @@ namespace mtconnect {
       {
         return static_pointer_cast<MqttTcpClient>(shared_from_this());
       }
-      
+
       /// @brief Get the Mqtt TCP Client
       /// @return pointer to the Mqtt TCP Client
       auto &getClient()
@@ -558,7 +558,7 @@ namespace mtconnect {
       {
         return static_pointer_cast<MqttTlsWSClient>(shared_from_this());
       }
-      
+
       /// @brief Get the Mqtt TLS WebSocket Client
       /// @return pointer to the Mqtt TLS WebSocket Client
       auto &getClient()
@@ -597,7 +597,7 @@ namespace mtconnect {
       {
         return static_pointer_cast<MqttWSClient>(shared_from_this());
       }
-      
+
       /// @brief Get the Mqtt TLS WebSocket Client
       /// @return pointer to the Mqtt TLS WebSocket Client
       auto &getClient()

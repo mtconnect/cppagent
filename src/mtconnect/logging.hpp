@@ -21,21 +21,23 @@
 #pragma once
 
 #include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/sources/severity_channel_logger.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
+#include <boost/log/sources/severity_channel_logger.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "mtconnect/config.hpp"
 
-typedef boost::log::sources::severity_channel_logger_mt
-<
-    boost::log::trivial::severity_level,     // the type of the severity level
-    std::string         // the type of the channel name
-> channel_logger_mt;
+typedef boost::log::sources::severity_channel_logger_mt<
+    boost::log::trivial::severity_level,  // the type of the severity level
+    std::string                           // the type of the channel name
+    >
+    channel_logger_mt;
 
-#define CHANNEL_LOGGER_INIT(logger, channelName) \
-BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(logger, channel_logger_mt) \
-{ return channel_logger_mt(boost::log::keywords::channel = channelName); }
+#define CHANNEL_LOGGER_INIT(logger, channelName)                           \
+  BOOST_LOG_INLINE_GLOBAL_LOGGER_INIT(logger, channel_logger_mt)           \
+  {                                                                        \
+    return channel_logger_mt(boost::log::keywords::channel = channelName); \
+  }
 
 CHANNEL_LOGGER_INIT(agent_logger, "agent")
 
@@ -45,4 +47,3 @@ CHANNEL_LOGGER_INIT(agent_logger, "agent")
 #define NAMED_SCOPE BOOST_LOG_NAMED_SCOPE
 
 #define LOG_LEVEL(lvl) ::boost::log::trivial::lvl
-
