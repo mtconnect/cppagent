@@ -13,7 +13,7 @@ the devices and the location of the adapter.
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
 
-Version 2.5.0 Added validation of observations in the stream
+Version 2.5.0 Support for version 2.5. Added validation of observations in the stream and WebSockets support.
 
 Version 2.4.0 Added support for version 2.4
 
