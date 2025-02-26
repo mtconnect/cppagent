@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -368,28 +368,27 @@ TEST_F(DataItemMappingTest, should_map_an_event_data_set)
 TEST_F(DataItemMappingTest, should_map_a_sample_data_set)
 {
   auto di = makeDataItem({{"id", "a"s},
-    {"type", "SOMETHING"s},
-    {"category", "SAMPLE"s},
-    {"representation", "DATA_SET"s}});
-  
+                          {"type", "SOMETHING"s},
+                          {"category", "SAMPLE"s},
+                          {"representation", "DATA_SET"s}});
+
   auto ts = makeTimestamped({"a", "a=1 b=2 c={3}"});
   auto observations = (*m_mapper)(ts);
   auto oblist = observations->getValue<EntityList>();
   ASSERT_EQ(1, oblist.size());
-  
+
   auto set = dynamic_pointer_cast<DataSetEvent>(oblist.front());
   ASSERT_TRUE(set);
   ASSERT_EQ("SomethingDataSet", set->getName());
-  
+
   ASSERT_EQ(di, set->getDataItem());
-  
+
   auto &ds = set->getValue<DataSet>();
   ASSERT_EQ(3, ds.size());
   ASSERT_EQ(1, get<int64_t>(ds.find("a"_E)->m_value));
   ASSERT_EQ(2, get<int64_t>(ds.find("b"_E)->m_value));
   ASSERT_EQ("3", get<string>(ds.find("c"_E)->m_value));
 }
-
 
 TEST_F(DataItemMappingTest, should_map_an_event_table)
 {
@@ -427,38 +426,39 @@ TEST_F(DataItemMappingTest, should_map_an_event_table)
 
 TEST_F(DataItemMappingTest, should_map_an_sample_table)
 {
-  auto di = makeDataItem(
-                         {{"id", "a"s}, {"type", "SOMETHING"s}, {"category", "SAMPLE"s}, {"representation", "TABLE"s}});
-  
+  auto di = makeDataItem({{"id", "a"s},
+                          {"type", "SOMETHING"s},
+                          {"category", "SAMPLE"s},
+                          {"representation", "TABLE"s}});
+
   auto ts = makeTimestamped({"a", "a={c=1 n=3.0} b={d=2 e=3} c={x=abc y=def}"});
   auto observations = (*m_mapper)(ts);
   auto oblist = observations->getValue<EntityList>();
   ASSERT_EQ(1, oblist.size());
-  
+
   auto set = dynamic_pointer_cast<DataSetEvent>(oblist.front());
   ASSERT_TRUE(set);
-  
+
   ASSERT_EQ(di, set->getDataItem());
   ASSERT_EQ("SomethingTable", set->getName());
-  
+
   auto &ds = set->getValue<DataSet>();
   ASSERT_EQ(3, ds.size());
   auto a = get<DataSet>(ds.find("a"_E)->m_value);
   ASSERT_EQ(2, a.size());
   ASSERT_EQ(1, get<int64_t>(a.find("c"_E)->m_value));
   ASSERT_EQ(3.0, get<double>(a.find("n"_E)->m_value));
-  
+
   auto b = get<DataSet>(ds.find("b"_E)->m_value);
   ASSERT_EQ(2, a.size());
   ASSERT_EQ(2, get<int64_t>(b.find("d"_E)->m_value));
   ASSERT_EQ(3, get<int64_t>(b.find("e"_E)->m_value));
-  
+
   auto c = get<DataSet>(ds.find("c"_E)->m_value);
   ASSERT_EQ(2, c.size());
   ASSERT_EQ("abc", get<string>(c.find("x"_E)->m_value));
   ASSERT_EQ("def", get<string>(c.find("y"_E)->m_value));
 }
-
 
 TEST_F(DataItemMappingTest, should_handle_data_set_reset_trigger)
 {

@@ -8,3 +8,5 @@ compiler.runtime=static
 compiler.runtime_type=Debug
 build_type=Debug
 
+[options]
+winver=0x0600

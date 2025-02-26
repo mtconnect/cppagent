@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -112,7 +112,7 @@ namespace mtconnect {
     /// @brief Hooks to run when before the agent starts all the soures and sinks
     /// @return configuration::HookManager<Agent>&
     auto &beforeStartHooks() { return m_beforeStartHooks; }
-    
+
     /// @brief Hooks to run when after the agent starts all the soures and sinks
     /// @return configuration::HookManager<Agent>&
     auto &afterStartHooks() { return m_afterStartHooks; }
@@ -546,6 +546,9 @@ namespace mtconnect {
     // For debugging
     bool m_pretty;
 
+    // validation
+    bool m_validation {false};
+
     // Agent hooks
     configuration::HookManager<Agent> m_beforeInitializeHooks;
     configuration::HookManager<Agent> m_afterInitializeHooks;
@@ -660,7 +663,7 @@ namespace mtconnect {
     }
 
     buffer::CircularBuffer &getCircularBuffer() override { return m_agent->getCircularBuffer(); }
-    
+
     configuration::HookManager<Agent> &getHooks(HookType type) override
     {
       using namespace sink;
@@ -669,7 +672,7 @@ namespace mtconnect {
         case BEFORE_START:
           return m_agent->beforeStartHooks();
           break;
-          
+
         case AFTER_START:
           return m_agent->afterStartHooks();
           break;
@@ -677,32 +680,31 @@ namespace mtconnect {
         case BEFORE_STOP:
           return m_agent->beforeStopHooks();
           break;
-          
+
         case BEFORE_DEVICE_XML_UPDATE:
           return m_agent->beforeDeviceXmlUpdateHooks();
           break;
-          
+
         case AFTER_DEVICE_XML_UPDATE:
           return m_agent->afterDeviceXmlUpdateHooks();
           break;
-          
+
         case BEFORE_INITIALIZE:
           return m_agent->beforeInitializeHooks();
           break;
-          
+
         case AFTER_INITIALIZE:
           return m_agent->afterInitializeHooks();
           break;
       }
-      
+
       LOG(error) << "getHooks: Bad hook manager type given to sink contract";
       throw std::runtime_error("getHooks: Bad hook manager type");
-      
+
       // Never gets here.
       static configuration::HookManager<Agent> NullHooks;
       return NullHooks;
     }
-
 
   protected:
     Agent *m_agent;

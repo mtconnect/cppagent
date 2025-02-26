@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -258,7 +258,7 @@ namespace mtconnect::entity {
       if (root != nullptr)
         entity = parseXmlNode(factory, root, errors, parseNamespaces);
       else
-        errors.emplace_back(new EntityError("Cannot parse asset"));
+        errors.emplace_back(new EntityError("Cannot parse document"));
     }
 
     catch (EntityError e)

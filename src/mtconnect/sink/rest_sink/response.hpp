@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,6 +64,7 @@ namespace mtconnect {
       std::chrono::seconds
           m_expires;         ///< how long should this session should stay open before it is closed
       bool m_close {false};  ///< `true` if this session should closed after it responds
+      std::optional<std::string> m_requestId;  ///< Request id from websocket sub
 
       CachedFilePtr m_file;  ///< Cached file if a file is being returned
     };

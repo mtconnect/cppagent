@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -159,16 +159,35 @@ namespace mtconnect::sink::rest_sink {
     {
       try
       {
-        for (auto &r : m_routings)
+        if (request->m_command)
         {
-          if (r.matches(session, request))
-            return true;
+          auto route = m_commands.find(*request->m_command);
+          if (route != m_commands.end())
+          {
+            if (route->second->matches(session, request))
+              return true;
+          }
+          else
+          {
+            std::stringstream txt;
+            txt << session->getRemote().address()
+                << ": Cannot find handler for command: " << *request->m_command;
+            session->fail(boost::beast::http::status::not_found, txt.str());
+          }
         }
+        else
+        {
+          for (auto &r : m_routings)
+          {
+            if (r.matches(session, request))
+              return true;
+          }
 
-        std::stringstream txt;
-        txt << session->getRemote().address() << ": Cannot find handler for: " << request->m_verb
-            << " " << request->m_path;
-        session->fail(boost::beast::http::status::not_found, txt.str());
+          std::stringstream txt;
+          txt << session->getRemote().address() << ": Cannot find handler for: " << request->m_verb
+              << " " << request->m_path;
+          session->fail(boost::beast::http::status::not_found, txt.str());
+        }
       }
       catch (RequestError &re)
       {
@@ -217,7 +236,19 @@ namespace mtconnect::sink::rest_sink {
       auto &route = m_routings.emplace_back(routing);
       if (m_parameterDocumentation)
         route.documentParameters(*m_parameterDocumentation);
+      if (route.getCommand())
+        m_commands.emplace(*route.getCommand(), &route);
       return route;
+    }
+
+    /// @brief Setup commands from routings
+    void addCommands()
+    {
+      for (auto &route : m_routings)
+      {
+        if (route.getCommand())
+          m_commands.emplace(*route.getCommand(), &route);
+      }
     }
 
     /// @brief Add common set of documentation for all rest routings
@@ -272,6 +303,7 @@ namespace mtconnect::sink::rest_sink {
     std::set<boost::asio::ip::address> m_allowPutsFrom;
 
     std::list<Routing> m_routings;
+    std::map<std::string, Routing *> m_commands;
     std::unique_ptr<FileCache> m_fileCache;
     ErrorFunction m_errorFunction;
     FieldList m_fields;

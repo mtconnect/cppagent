@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,14 +29,25 @@ using namespace std;
 namespace mtconnect::observation {
   ChangeObserver::~ChangeObserver()
   {
+    std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
+    clear();
+  }
+
+  void ChangeObserver::clear()
+  {
+    std::unique_lock<std::recursive_mutex> lock(m_mutex);
+    m_timer.cancel();
+    m_handler.clear();
     for (const auto signaler : m_signalers)
       signaler->removeObserver(this);
+    m_signalers.clear();
   }
 
   void ChangeObserver::addSignaler(ChangeSignaler *sig) { m_signalers.emplace_back(sig); }
 
   bool ChangeObserver::removeSignaler(ChangeSignaler *sig)
   {
+    std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
     auto newEndPos = std::remove(m_signalers.begin(), m_signalers.end(), sig);
     if (newEndPos == m_signalers.end())
       return false;
@@ -47,7 +58,8 @@ namespace mtconnect::observation {
 
   void ChangeObserver::handler(boost::system::error_code ec)
   {
-    boost::asio::post(m_strand, boost::bind(m_handler, ec));
+    if (m_handler)
+      boost::asio::post(m_strand, boost::bind(m_handler, ec));
   }
 
   // Signaler Management
@@ -99,7 +111,7 @@ namespace mtconnect::observation {
                                buffer::CircularBuffer &buffer, FilterSet &&filter,
                                std::chrono::milliseconds interval,
                                std::chrono::milliseconds heartbeat)
-    : m_interval(interval),
+    : AsyncResponse(interval),
       m_heartbeat(heartbeat),
       m_last(std::chrono::system_clock::now()),
       m_filter(std::move(filter)),
@@ -145,9 +157,12 @@ namespace mtconnect::observation {
 
   void AsyncObserver::handlerCompleted()
   {
+    NAMED_SCOPE("AsyncObserver::handlerCompleted");
+
     m_last = std::chrono::system_clock::now();
     if (m_endOfBuffer)
     {
+      LOG(trace) << "End of buffer";
       using std::placeholders::_1;
       m_observer.waitForSignal(m_heartbeat);
     }
@@ -159,6 +174,7 @@ namespace mtconnect::observation {
 
   void AsyncObserver::handleSignal(boost::system::error_code ec)
   {
+    NAMED_SCOPE("AsyncObserver::handleSignal");
     using namespace buffer;
 
     using std::placeholders::_1;

@@ -25,6 +25,9 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/asset/raw_material.hpp"
         "${SOURCE_DIR}/asset/qif_document.hpp"
         "${SOURCE_DIR}/asset/component_configuration_parameters.hpp"
+        "${SOURCE_DIR}/asset/physical_asset.hpp"
+        "${SOURCE_DIR}/asset/fixture.hpp"
+        "${SOURCE_DIR}/asset/pallet.hpp"
 
 # src/asset SOURCE_FILES_ONLY
   
@@ -34,6 +37,9 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/asset/raw_material.cpp"
         "${SOURCE_DIR}/asset/qif_document.cpp"
         "${SOURCE_DIR}/asset/component_configuration_parameters.cpp"
+        "${SOURCE_DIR}/asset/physical_asset.cpp"
+        "${SOURCE_DIR}/asset/fixture.cpp"
+        "${SOURCE_DIR}/asset/pallet.cpp"
         
 # src/buffer HEADER_FILES_ONLY
 
@@ -183,6 +189,7 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/pipeline/topic_mapper.hpp"
         "${SOURCE_DIR}/pipeline/transform.hpp"
         "${SOURCE_DIR}/pipeline/upcase_value.hpp"
+        "${SOURCE_DIR}/pipeline/validator.hpp"       
    
 # src/pipeline SOURCE_FILES_ONLY
    
@@ -243,13 +250,11 @@ set(AGENT_SOURCES
 
 # src/sink/mqtt_sink HEADER_FILE_ONLY
 
-        "${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.hpp"
-		"${SOURCE_DIR}/sink/mqtt_sink/mqtt2_service.hpp"
+	"${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.hpp"
 
 #src/sink/mqtt_sink SOURCE_FILES_ONLY
 
-        "${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.cpp"
-		"${SOURCE_DIR}/sink/mqtt_sink/mqtt2_service.cpp"
+	"${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.cpp"
         
 # src/sink/rest_sink HEADER_FILE_ONLY
         
@@ -264,6 +269,7 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/sink/rest_sink/session.hpp"
         "${SOURCE_DIR}/sink/rest_sink/session_impl.hpp"
         "${SOURCE_DIR}/sink/rest_sink/tls_dector.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/websocket_session.hpp"
   
 # src/sink/rest_sink SOURCE_FILES_ONLY
 
@@ -271,6 +277,13 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/sink/rest_sink/rest_service.cpp"
         "${SOURCE_DIR}/sink/rest_sink/server.cpp"
         "${SOURCE_DIR}/sink/rest_sink/session_impl.cpp"
+
+ # validation HEADER_FILES_ONLY
+        "${SOURCE_DIR}/validation/observations.hpp"
+        "${SOURCE_DIR}/validation/observation_validations.hpp"
+       
+ # validation SOURCE_FILES_ONLY
+        "${SOURCE_DIR}/validation/observations.cpp"
   )
 
 if(WITH_RUBY)
@@ -325,7 +338,6 @@ if(MSVC)
   # The modules including Beast required the /bigobj option in Windows
   set_property(SOURCE    
     "${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.cpp"
-    "${SOURCE_DIR}/sink/mqtt_sink/mqtt2_service.cpp"
     "${SOURCE_DIR}/sink/rest_sink/session_impl.cpp"
     "${SOURCE_DIR}/source/adapter/mqtt/mqtt_adapter.cpp"
     "${SOURCE_DIR}/source/adapter/agent_adapter/agent_adapter.cpp"

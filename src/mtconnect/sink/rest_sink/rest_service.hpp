@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -101,7 +101,8 @@ namespace mtconnect {
       ResponsePtr probeRequest(const printer::Printer *p,
                                const std::optional<std::string> &device = std::nullopt,
                                bool pretty = false,
-                               const std::optional<std::string> &deviceType = std::nullopt);
+                               const std::optional<std::string> &deviceType = std::nullopt,
+                               const std::optional<std::string> &requestId = std::nullopt);
 
       /// @brief Handler for a current request
       /// @param[in] p printer for doc generation
@@ -115,7 +116,8 @@ namespace mtconnect {
                                  const std::optional<SequenceNumber_t> &at = std::nullopt,
                                  const std::optional<std::string> &path = std::nullopt,
                                  bool pretty = false,
-                                 const std::optional<std::string> &deviceType = std::nullopt);
+                                 const std::optional<std::string> &deviceType = std::nullopt,
+                                 const std::optional<std::string> &requestId = std::nullopt);
 
       /// @brief Handler for a sample request
       /// @param[in] p printer for doc generation
@@ -132,7 +134,8 @@ namespace mtconnect {
                                 const std::optional<SequenceNumber_t> &to = std::nullopt,
                                 const std::optional<std::string> &path = std::nullopt,
                                 bool pretty = false,
-                                const std::optional<std::string> &deviceType = std::nullopt);
+                                const std::optional<std::string> &deviceType = std::nullopt,
+                                const std::optional<std::string> &requestId = std::nullopt);
       /// @brief Handler for a streaming sample
       /// @param[in] session session to stream data to
       /// @param[in] p printer for doc generation
@@ -149,7 +152,8 @@ namespace mtconnect {
                                const std::optional<SequenceNumber_t> &from = std::nullopt,
                                const std::optional<std::string> &path = std::nullopt,
                                bool pretty = false,
-                               const std::optional<std::string> &deviceType = std::nullopt);
+                               const std::optional<std::string> &deviceType = std::nullopt,
+                               const std::optional<std::string> &requestId = std::nullopt);
 
       /// @brief Handler for a streaming current
       /// @param[in] session session to stream data to
@@ -162,7 +166,8 @@ namespace mtconnect {
                                 const std::optional<std::string> &device = std::nullopt,
                                 const std::optional<std::string> &path = std::nullopt,
                                 bool pretty = false,
-                                const std::optional<std::string> &deviceType = std::nullopt);
+                                const std::optional<std::string> &deviceType = std::nullopt,
+                                const std::optional<std::string> &requestId = std::nullopt);
       /// @brief Handler for put/post observation
       /// @param[in] p printer for response generation
       /// @param[in] device device
@@ -205,7 +210,8 @@ namespace mtconnect {
       ResponsePtr assetRequest(const printer::Printer *p, const int32_t count, const bool removed,
                                const std::optional<std::string> &type = std::nullopt,
                                const std::optional<std::string> &device = std::nullopt,
-                               bool pretty = false);
+                               bool pretty = false,
+                               const std::optional<std::string> &requestId = std::nullopt);
 
       /// @brief Asset request handler using a list of asset ids
       /// @param[in] p printer for the response document
@@ -213,7 +219,8 @@ namespace mtconnect {
       /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Assets response document
       ResponsePtr assetIdsRequest(const printer::Printer *p, const std::list<std::string> &ids,
-                                  bool pretty = false);
+                                  bool pretty = false,
+                                  const std::optional<std::string> &requestId = std::nullopt);
 
       /// @brief Asset request handler to update an asset
       /// @param p printer for the response document
@@ -252,7 +259,26 @@ namespace mtconnect {
       /// @brief get a printer given a list of formats from the Accepts header
       /// @param accepts the accepts header
       /// @return pointer to a printer
-      const printer::Printer *printerForAccepts(const std::string &accepts) const;
+      const printer::Printer *printerForAccepts(const std::string &accepts) const
+      {
+        return m_sinkContract->getPrinter(acceptFormat(accepts));
+      }
+
+      /// @brief get a printer for a format or using the accepts header. Falls back to header accept
+      /// if format incorrect.
+      /// @param accepts the accept header of the request
+      /// @param format optional format query param
+      /// @return pointer to a printer
+      const printer::Printer *getPrinter(const std::string &accepts,
+                                         std::optional<std::string> format) const
+      {
+        const printer::Printer *printer = nullptr;
+        if (format)
+          printer = m_sinkContract->getPrinter(*format);
+        if (printer == nullptr)
+          printer = printerForAccepts(accepts);
+        return printer;
+      }
 
       /// @brief Generate an MTConnect Error document
       /// @param printer printer to generate error
@@ -260,7 +286,8 @@ namespace mtconnect {
       /// @param text descriptive error text
       /// @return MTConnect Error document
       std::string printError(const printer::Printer *printer, const std::string &errorCode,
-                             const std::string &text, bool pretty = false) const;
+                             const std::string &text, bool pretty = false,
+                             const std::optional<std::string> &requestId = std::nullopt) const;
 
       /// @name For testing only
       ///@{
@@ -299,13 +326,15 @@ namespace mtconnect {
 
       // Current Data Collection
       std::string fetchCurrentData(const printer::Printer *printer, const FilterSetOpt &filterSet,
-                                   const std::optional<SequenceNumber_t> &at, bool pretty = false);
+                                   const std::optional<SequenceNumber_t> &at, bool pretty = false,
+                                   const std::optional<std::string> &requestId = std::nullopt);
 
       // Sample data collection
       std::string fetchSampleData(const printer::Printer *printer, const FilterSetOpt &filterSet,
                                   int count, const std::optional<SequenceNumber_t> &from,
                                   const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
-                                  bool &endOfBuffer, bool pretty = false);
+                                  bool &endOfBuffer, bool pretty = false,
+                                  const std::optional<std::string> &requestId = std::nullopt);
 
       // Verification methods
       template <typename T>
@@ -321,22 +350,15 @@ namespace mtconnect {
     protected:
       // Loopback
       boost::asio::io_context &m_context;
-
       boost::asio::io_context::strand m_strand;
-
       std::string m_schemaVersion;
-
       ConfigOptions m_options;
-
       std::shared_ptr<source::LoopbackSource> m_loopback;
-
       uint64_t m_instanceId;
-
       std::unique_ptr<Server> m_server;
 
       // Buffers
       FileCache m_fileCache;
-
       bool m_logStreamData {false};
     };
   }  // namespace sink::rest_sink

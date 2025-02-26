@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -113,7 +113,9 @@ namespace mtconnect {
       /// @param channelName the log channel name
       /// @param config the configuration node
       /// @param formatter optional custom message format
-      void configureLoggerChannel(const std::string &channelName, const ptree &config, std::optional<boost::log::basic_formatter<char>> formatter = std::nullopt);
+      void configureLoggerChannel(
+          const std::string &channelName, const ptree &config,
+          std::optional<boost::log::basic_formatter<char>> formatter = std::nullopt);
 
       /// @brief  Configure the agent logger with the config node from the config file
       /// @param config the configuration node
@@ -155,22 +157,40 @@ namespace mtconnect {
       ///@{
       /// @brief gets the boost log sink
       /// @return boost log sink
-      const auto &getLoggerSink(const std::string &channelName = "agent") { return m_logChannels[channelName].m_logSink; }
+      const auto &getLoggerSink(const std::string &channelName = "agent")
+      {
+        return m_logChannels[channelName].m_logSink;
+      }
       /// @brief gets the log directory
       /// @return log directory
-      const auto &getLogDirectory(const std::string &channelName = "agent") { return m_logChannels[channelName].m_logDirectory; }
+      const auto &getLogDirectory(const std::string &channelName = "agent")
+      {
+        return m_logChannels[channelName].m_logDirectory;
+      }
       /// @brief get the logging file name
       /// @return log file name
-      const auto &getLogFileName(const std::string &channelName = "agent") { return m_logChannels[channelName].m_logFileName; }
+      const auto &getLogFileName(const std::string &channelName = "agent")
+      {
+        return m_logChannels[channelName].m_logFileName;
+      }
       /// @brief for log rolling, get the log archive pattern
       /// @return log archive pattern
-      const auto &getLogArchivePattern(const std::string &channelName = "agent") { return m_logChannels[channelName].m_logArchivePattern; }
+      const auto &getLogArchivePattern(const std::string &channelName = "agent")
+      {
+        return m_logChannels[channelName].m_logArchivePattern;
+      }
       /// @brief Get the maximum size of all the log files
       /// @return the maximum size of all log files
-      auto getMaxLogFileSize(const std::string &channelName = "agent") { return m_logChannels[channelName].m_maxLogFileSize; }
+      auto getMaxLogFileSize(const std::string &channelName = "agent")
+      {
+        return m_logChannels[channelName].m_maxLogFileSize;
+      }
       /// @brief the maximum size of a log file when it triggers rolling over
       /// @return the maxumum site of a log file
-      auto getLogRotationSize(const std::string &channelName = "agent") { return m_logChannels[channelName].m_logRotationSize; }
+      auto getLogRotationSize(const std::string &channelName = "agent")
+      {
+        return m_logChannels[channelName].m_logRotationSize;
+      }
       /// @brief How often to roll over the log file
       ///
       /// One of:
@@ -179,10 +199,16 @@ namespace mtconnect {
       /// - `NEVER`
       ///
       /// @return the log file interval
-      auto getRotationLogInterval(const std::string &channelName = "agent") { return m_logChannels[channelName].m_rotationLogInterval; }
+      auto getRotationLogInterval(const std::string &channelName = "agent")
+      {
+        return m_logChannels[channelName].m_rotationLogInterval;
+      }
       /// @brief Get the current log level
       /// @return log level
-      auto getLogLevel(const std::string &channelName = "agent") { return m_logChannels[channelName].m_logLevel; }
+      auto getLogLevel(const std::string &channelName = "agent")
+      {
+        return m_logChannels[channelName].m_logLevel;
+      }
 
       /// @brief set the logging level
       /// @param[in] level the new logging level
@@ -311,7 +337,8 @@ namespace mtconnect {
 
     protected:
       using text_sink = boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>;
-      using console_sink = boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend>;
+      using console_sink =
+          boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend>;
 
       struct LogChannel
       {

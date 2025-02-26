@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,10 +28,10 @@
 #include "mtconnect/asset/asset_storage.hpp"
 #include "mtconnect/buffer/circular_buffer.hpp"
 #include "mtconnect/config.hpp"
+#include "mtconnect/configuration/hook_manager.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/printer//printer.hpp"
-#include "mtconnect/configuration/hook_manager.hpp"
 
 namespace mtconnect {
   namespace printer {
@@ -55,7 +55,8 @@ namespace mtconnect {
     class AGENT_LIB_API SinkContract
     {
     public:
-      enum HookType {
+      enum HookType
+      {
         BEFORE_STOP,
         BEFORE_START,
         AFTER_START,
@@ -64,7 +65,7 @@ namespace mtconnect {
         BEFORE_INITIALIZE,
         AFTER_INITIALIZE
       };
-      
+
       virtual ~SinkContract() = default;
       /// @brief get the printer for a mime type. Current options: `xml` or `json`.
       /// @param[in] aType a string for the type
@@ -114,7 +115,7 @@ namespace mtconnect {
       /// @brief Get a pointer to the asset storage
       /// @return a pointer to the asset storage.
       virtual const asset::AssetStorage *getAssetStorage() = 0;
-      
+
       /// @brief Get a reference to the hook manager for the agent.
       /// @param[in] type the type manager to retrieve
       /// @return a reference to the hook manager

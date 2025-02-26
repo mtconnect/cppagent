@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -548,7 +548,7 @@ TEST_F(AgentTest, SampleAtNextSeq)
   }
 }
 
-TEST_F(AgentTest, SampleCount)
+TEST_F(AgentTest, should_give_correct_number_of_samples_with_count)
 {
   QueryMap query;
   addAdapter();
@@ -584,7 +584,7 @@ TEST_F(AgentTest, SampleCount)
   }
 }
 
-TEST_F(AgentTest, SampleLastCount)
+TEST_F(AgentTest, should_give_correct_number_of_samples_with_negative_count)
 {
   QueryMap query;
   addAdapter();
@@ -620,7 +620,7 @@ TEST_F(AgentTest, SampleLastCount)
   }
 }
 
-TEST_F(AgentTest, SampleToParameter)
+TEST_F(AgentTest, should_give_correct_number_of_samples_with_to_parameter)
 {
   QueryMap query;
   addAdapter();
@@ -683,7 +683,7 @@ TEST_F(AgentTest, SampleToParameter)
   // to > from
 }
 
-TEST_F(AgentTest, EmptyStream)
+TEST_F(AgentTest, should_give_empty_stream_with_no_new_samples)
 {
   {
     PARSE_XML_RESPONSE("/current");
@@ -741,7 +741,7 @@ TEST_F(AgentTest, AddToBuffer)
   }
 }
 
-TEST_F(AgentTest, SequenceNumberRollover)
+TEST_F(AgentTest, should_int_64_sequences_should_not_truncate_at_32_bits)
 {
 #ifndef WIN32
   QueryMap query;
@@ -3086,6 +3086,69 @@ TEST_F(AgentTest, should_set_sender_from_config_in_XML_header)
   {
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@sender", "MachineXXX");
+  }
+}
+
+TEST_F(AgentTest, should_not_set_validation_flag_in_header_when_validation_is_false)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.5", 4, false,
+                                              true, {{configuration::Validation, false}});
+  ASSERT_TRUE(agent);
+  {
+    PARSE_XML_RESPONSE("/probe");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
+  }
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
+  }
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
+  }
+}
+
+TEST_F(AgentTest, should_set_validation_flag_in_header_when_version_2_5_validation_on)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.5", 4, false,
+                                              true, {{configuration::Validation, true}});
+  ASSERT_TRUE(agent);
+  {
+    PARSE_XML_RESPONSE("/probe");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", "true");
+  }
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", "true");
+  }
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", "true");
+  }
+}
+
+TEST_F(AgentTest, should_not_set_validation_flag_in_header_when_version_below_2_5)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.4", 4, false,
+                                              true, {{configuration::Validation, true}});
+  ASSERT_TRUE(agent);
+  {
+    PARSE_XML_RESPONSE("/probe");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
+  }
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
+  }
+
+  {
+    PARSE_XML_RESPONSE("/sample");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
   }
 }
 

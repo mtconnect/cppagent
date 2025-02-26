@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,6 +35,11 @@ namespace mtconnect {
   }
 
   namespace sink::rest_sink {
+    template <class Derived>
+    class WebsocketSession;
+    template <class Derived>
+    using WebsocketSessionPtr = std::shared_ptr<WebsocketSession<Derived>>;
+
     /// @brief A session implementation `Derived` subclass pattern
     /// @tparam subclass of this class to use the same methods with http or https protocol streams
     template <class Derived>
@@ -61,7 +66,7 @@ namespace mtconnect {
         return std::dynamic_pointer_cast<SessionImpl>(shared_from_this());
       }
       /// @brief get this as the `Derived` type
-      /// @return
+      /// @return the subclass
       Derived &derived() { return static_cast<Derived &>(*this); }
 
       /// @name Session Interface
@@ -69,11 +74,15 @@ namespace mtconnect {
       void run() override;
       void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override;
       void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override;
-      void beginStreaming(const std::string &mimeType, Complete complete) override;
-      void writeChunk(const std::string &chunk, Complete complete) override;
+      void beginStreaming(const std::string &mimeType, Complete complete,
+                          std::optional<std::string> requestId = std::nullopt) override;
+      void writeChunk(const std::string &chunk, Complete complete,
+                      std::optional<std::string> requestId = std::nullopt) override;
       void closeStream() override;
       ///@}
     protected:
+      using RequestMessage = boost::beast::http::request<boost::beast::http::string_body>;
+
       template <typename T>
       void addHeaders(const Response &response, T &res);
 
@@ -81,6 +90,7 @@ namespace mtconnect {
       void sent(boost::system::error_code ec, size_t len);
       void read();
       void reset();
+      void upgrade(RequestMessage &&msg);
 
     protected:
       using RequestParser = boost::beast::http::request_parser<boost::beast::http::string_body>;
@@ -144,6 +154,9 @@ namespace mtconnect {
         boost::beast::error_code ec;
         m_stream.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
       }
+
+      /// @brief Upgrade the current connection to a websocket connection.
+      SessionPtr upgradeToWebsocket(RequestMessage &&msg);
 
     protected:
       boost::beast::tcp_stream m_stream;

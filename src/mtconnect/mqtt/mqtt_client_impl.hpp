@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -162,6 +162,9 @@ namespace mtconnect {
           LOG(info) << "MQTT " << m_url << ": connection closed";
           // Queue on a strand
           m_connected = false;
+          if (m_handler && m_handler->m_disconnected)
+            m_handler->m_disconnected(shared_from_this());
+
           if (m_running)
           {
             disconnected();

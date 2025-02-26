@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 2.3
+MTConnect C++ Agent Version 2.5
 --------
 [![Build MTConnect C++ Agent](https://github.com/mtconnect/cppagent/actions/workflows/build.yml/badge.svg)](https://github.com/mtconnect/cppagent/actions/workflows/build.yml)
 
@@ -12,6 +12,10 @@ the devices and the location of the adapter.
 **NOTE: This version cannot currently be built on Windows XP since there is currently no support for the XP toolchain and C++ 17.**
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
+
+Version 2.5.0 Support for version 2.5. Added validation of observations in the stream and WebSockets support.
+
+Version 2.4.0 Added support for version 2.4
 
 Version 2.3.0 Support for all Version 2.3 standard changes and JSON ingress to MQTT adapter.
 
@@ -667,6 +671,10 @@ Configuration Parameters
 * `VersionDeviceXml` - Create a new versioned file every time the Device.xml file changes from an external source.
 
     *Default*: `false`
+    
+* `Validation` - Turns on validation of model components and observations
+
+    *Default*: `false`
 
 * `WorkerThreads` - The number of operating system threads dedicated to the Agent
 
@@ -741,14 +749,12 @@ These can be overridden on a per-adapter basis
     
 * `HttpHeaders`     - Additional headers to add to the HTTP Response for CORS Security
 
-    Example: 
-	```
-    HttpHeaders {
-		Access-Control-Allow-Origin = *
-		Access-Control-Allow-Methods = GET
-		Access-Control-Allow-Headers = Content-Type
-    }
-	```
+    > Example: ```
+    > HttpHeaders {
+    >   Access-Control-Allow-Origin = *
+    >   Access-Control-Allow-Methods = GET
+    >   Access-Control-Allow-Headers = Content-Type
+    > }```
 
 * `Port`	- The port number the agent binds to for requests.
 
@@ -1035,6 +1041,9 @@ Sinks {
 * `MqttClientId` - Port number of MQTT Broker
 
     *Default*: Auto-generated
+
+	> **⚠️Note:** Mqtt Sinks and Mqtt Adapters create separate connections to their respective brokers, but currently use the same client ID by default. Because of this, when using a single broker for source and sink, best practice is to explicitly specify their respective `MqttClientId`
+	>
 
 	Example mqtt adapter block:
 	```json
