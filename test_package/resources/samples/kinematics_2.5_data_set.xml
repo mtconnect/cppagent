@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.7">
+  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.7"/>
+  <Devices>
+    <Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d">
+      <Description manufacturer="NIST" serialNumber=""/>
+			<Configuration>
+				<CoordinateSystems>
+					<CoordinateSystem id="world" type="WORLD" name="worldy">
+						<OriginDataSet>
+              <Entry key="X">101</Entry>
+              <Entry key="Y">102</Entry>
+              <Entry key="Z">103</Entry>
+            </OriginDataSet>
+					</CoordinateSystem>
+					<CoordinateSystem id="machine" type="MACHINE" name="machiney" nativeName="xxx" parentIdRef="world">
+						<Transformation>
+							<TranslationDataSet>
+                <Entry key="X">10</Entry>
+                <Entry key="Y">10</Entry>
+                <Entry key="Z">10</Entry>
+              </TranslationDataSet>
+							<RotationDataSet>
+                <Entry key="A">90</Entry>
+                <Entry key="B">0</Entry>
+                <Entry key="C">90</Entry>
+              </RotationDataSet>
+						</Transformation>
+					</CoordinateSystem>
+				</CoordinateSystems>
+			</Configuration>
+      <DataItems>
+				<DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>
+      </DataItems>
+      <Components>
+        <Axes name="Axes" id="axes">
+          <Components>
+						<Linear name="Z" id="z">
+							<Configuration>
+								<Motion id="zax" coordinateSystemIdRef="machine" type="PRISMATIC" actuation="DIRECT">
+									<Description>The linears Z kinematics</Description>
+									<OriginDataSet>
+                    <Entry key="X">100.0</Entry>
+                    <Entry key="Y">101.0</Entry>
+                    <Entry key="Z">102.0</Entry>
+                  </OriginDataSet>
+									<AxisDataSet>
+                    <Entry key="X">0.0</Entry>
+                    <Entry key="Y">0.1</Entry>
+                    <Entry key="Z">1.0</Entry>
+                  </AxisDataSet>
+								</Motion>													
+							</Configuration>
+						</Linear>
+            <Rotary name="C" id="c">
+							<Configuration>
+								<Motion id="spin" parentIdRef="zax" coordinateSystemIdRef="machine" type="CONTINUOUS" actuation="DIRECT">
+									<Description>The spindle kinematics</Description>
+									<Transformation>
+										<TranslationDataSet>
+                      <Entry key="X">10.0</Entry>
+                      <Entry key="Y">20.0</Entry>
+                      <Entry key="Z">30.0</Entry>
+                    </TranslationDataSet>
+										<RotationDataSet>
+                      <Entry key="A">90.0</Entry>
+                      <Entry key="B">0.0</Entry>
+                      <Entry key="C">180</Entry>
+                    </RotationDataSet>
+									</Transformation>
+									<AxisDataSet>
+                    <Entry key="X">0.0</Entry>
+                    <Entry key="Y">0.5</Entry>
+                    <Entry key="Z">1.0</Entry>
+                  </AxisDataSet>
+								</Motion>													
+							</Configuration>
+            </Rotary>
+          </Components>
+        </Axes>
+			</Components>
+		</Device>
+	</Devices>
+</MTConnectDevices>
