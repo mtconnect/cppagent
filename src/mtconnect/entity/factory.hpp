@@ -137,6 +137,22 @@ namespace mtconnect {
       {
         return m_simpleProperties.count(name) > 0;
       }
+      
+      /// @brief is this requirement resolved with a data set
+      /// @param name the name of the property
+      /// @return `true` if this is a data set
+      bool isDataSet(const std::string &name) const
+      {
+        return m_dataSets.count(name) > 0;
+      }
+
+      /// @brief is this requirement resolved with a table
+      /// @param name the name of the property
+      /// @return `true` if this is a table
+      bool isTable(const std::string &name) const
+      {
+        return m_tables.count(name) > 0;
+      }
 
       /// @brief get the requirement pointer for a key
       /// @param name the property key
@@ -378,6 +394,12 @@ namespace mtconnect {
           {
             m_hasRaw = true;
           }
+          else if (BaseValueType(r.getType()) == ValueType::DATA_SET)
+          {
+            m_dataSets.insert(r.getName());
+            if (r.getType() == ValueType::TABLE)
+              m_tables.insert(r.getName());
+          }
           else
           {
             m_simpleProperties.insert(r.getName());
@@ -429,6 +451,8 @@ namespace mtconnect {
       bool m_any {false};
 
       std::set<std::string> m_propertySets;
+      std::set<std::string> m_dataSets;
+      std::set<std::string> m_tables;
       std::set<std::string> m_simpleProperties;
       std::set<std::string> m_properties;
     };
