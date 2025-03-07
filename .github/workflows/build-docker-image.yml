@@ -16,7 +16,7 @@
 name: Build Docker image
 
 env:
-  PLATFORMS: linux/amd64,linux/arm64
+  PLATFORMS: linux/amd64 # ,linux/arm64
 
 # when to run workflow
 on:
