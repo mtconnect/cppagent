@@ -136,3 +136,10 @@ TEST(UnitConversionTest, test_volume_and_volume_per_time)
   conv = UnitConversion::make("GALLON/MINUTE", "LITER/SECOND");
   EXPECT_NEAR(1.0725, conv->convert(17.0), 0.001);
 }
+
+TEST(UnitConversionTest, check_conversion_from_kw_h_to_watt_second)
+{
+  auto conv = UnitConversion::make("KILOWATT/HOUR", "WATT/SECOND");
+  EXPECT_NEAR(0.16666, conv->convert(0.6), 0.001);
+  EXPECT_NEAR(0.25556, conv->convert(0.92), 0.001);
+}
