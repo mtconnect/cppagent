@@ -30,9 +30,9 @@ namespace mtconnect {
         {
           auto transformation = make_shared<Factory>(
               Requirements {Requirement("Translation", ValueType::VECTOR, 3, false),
-                Requirement("Rotation", ValueType::VECTOR, 3, false),
-                Requirement("TranslationDataSet", ValueType::DATA_SET, false),
-                Requirement("RotationDataSet", ValueType::DATA_SET, false)});
+                            Requirement("Rotation", ValueType::VECTOR, 3, false),
+                            Requirement("TranslationDataSet", ValueType::DATA_SET, false),
+                            Requirement("RotationDataSet", ValueType::DATA_SET, false)});
 
           auto coordinateSystem = make_shared<Factory>(Requirements {
               Requirement("id", true), Requirement("name", false), Requirement("nativeName", false),
@@ -42,12 +42,10 @@ namespace mtconnect {
                   ControlledVocab {"WORLD", "BASE", "OBJECT", "TASK", "MECHANICAL_INTERFACE",
                                    "TOOL", "MOBILE_PLATFORM", "MACHINE", "CAMERA"},
                   true),
-              Requirement("Description", false),
-              Requirement("Origin", ValueType::VECTOR, 3, false),
+              Requirement("Description", false), Requirement("Origin", ValueType::VECTOR, 3, false),
               Requirement("OriginDataSet", ValueType::DATA_SET, false),
               Requirement("Transformation", ValueType::ENTITY, transformation, false)});
-          coordinateSystem->setOrder({"Description", "Origin", "OriginDataSet",
-            "Transformation"});
+          coordinateSystem->setOrder({"Description", "Origin", "OriginDataSet", "Transformation"});
 
           coordinateSystems = make_shared<Factory>(Requirements {Requirement(
               "CoordinateSystem", ValueType::ENTITY, coordinateSystem, 1, Requirement::Infinite)});

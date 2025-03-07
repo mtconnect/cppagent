@@ -320,16 +320,12 @@ TEST_F(EntityParserTest, check_proper_line_truncation)
 
 TEST_F(EntityParserTest, should_parse_data_sets)
 {
-  auto ds = make_shared<Factory>(
-             Requirements {
-               Requirement("DataSet", ValueType::DATA_SET,
-                           true)});
-  auto root = make_shared<Factory>(Requirements {{{"Root",
-    ValueType::ENTITY, ds, true}}});
-  
+  auto ds = make_shared<Factory>(Requirements {Requirement("DataSet", ValueType::DATA_SET, true)});
+  auto root = make_shared<Factory>(Requirements {{{"Root", ValueType::ENTITY, ds, true}}});
+
   ErrorList errors;
   entity::XmlParser parser;
-  
+
   auto doc = R"DOC(
 <Root>
   <DataSet>
@@ -350,16 +346,12 @@ TEST_F(EntityParserTest, should_parse_data_sets)
 
 TEST_F(EntityParserTest, should_parse_tables)
 {
-  auto table = make_shared<Factory>(
-                                 Requirements {
-                                   Requirement("Table", ValueType::TABLE,
-                                               true)});
-  auto root = make_shared<Factory>(Requirements {{{"Root",
-    ValueType::ENTITY, table, true}}});
-  
+  auto table = make_shared<Factory>(Requirements {Requirement("Table", ValueType::TABLE, true)});
+  auto root = make_shared<Factory>(Requirements {{{"Root", ValueType::ENTITY, table, true}}});
+
   ErrorList errors;
   entity::XmlParser parser;
-  
+
   auto doc = R"DOC(
 <Root>
   <Table>
@@ -376,18 +368,18 @@ TEST_F(EntityParserTest, should_parse_tables)
   </Table>
 </Root>
 )DOC";
-  
+
   auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ("Root", entity->getName());
   auto set = entity->get<DataSet>("Table");
   auto e1 = set.get<DataSet>("A");
-  
+
   ASSERT_EQ("abc", e1.get<string>("text"));
   ASSERT_EQ(101, e1.get<int64_t>("int"));
   ASSERT_EQ(50.5, e1.get<double>("double"));
-  
+
   auto e2 = set.get<DataSet>("B");
-  
+
   ASSERT_EQ("def", e2.get<string>("text2"));
   ASSERT_EQ(102, e2.get<int64_t>("int2"));
   ASSERT_EQ(100.5, e2.get<double>("double2"));

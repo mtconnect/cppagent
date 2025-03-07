@@ -137,22 +137,16 @@ namespace mtconnect {
       {
         return m_simpleProperties.count(name) > 0;
       }
-      
+
       /// @brief is this requirement resolved with a data set
       /// @param name the name of the property
       /// @return `true` if this is a data set
-      bool isDataSet(const std::string &name) const
-      {
-        return m_dataSets.count(name) > 0;
-      }
+      bool isDataSet(const std::string &name) const { return m_dataSets.count(name) > 0; }
 
       /// @brief is this requirement resolved with a table
       /// @param name the name of the property
       /// @return `true` if this is a table
-      bool isTable(const std::string &name) const
-      {
-        return m_tables.count(name) > 0;
-      }
+      bool isTable(const std::string &name) const { return m_tables.count(name) > 0; }
 
       /// @brief get the requirement pointer for a key
       /// @param name the property key

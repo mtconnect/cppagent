@@ -17,12 +17,12 @@
 
 #include "mtconnect/entity/xml_parser.hpp"
 
+#include <boost/spirit/include/qi_numeric.hpp>
+#include <boost/spirit/include/qi_parse.hpp>
+
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
-
-#include <boost/spirit/include/qi_parse.hpp>
-#include <boost/spirit/include/qi_numeric.hpp>
 
 #include "mtconnect/logging.hpp"
 #include "mtconnect/printer/xml_helper.hpp"
@@ -90,22 +90,21 @@ namespace mtconnect::entity {
       content = str.str();
     return content;
   }
-  
-  template<typename P, typename A>
-  static inline bool isType(const string &str, const P& parser, A &value)
+
+  template <typename P, typename A>
+  static inline bool isType(const string &str, const P &parser, A &value)
   {
     std::string::const_iterator first(str.cbegin()), last(str.cend());
-    return boost::spirit::qi::parse(first, last, parser, value)
-      && first == last;
+    return boost::spirit::qi::parse(first, last, parser, value) && first == last;
   }
-  
+
   static void parseDataSet(xmlNodePtr node, DataSet &dataSet, bool table, bool cell = false)
   {
     for (xmlNodePtr child = node->children; child; child = child->next)
     {
       if (child->type == XML_ELEMENT_NODE &&
           ((!cell && xmlStrcmp(child->name, BAD_CAST "Entry") == 0) ||
-          (cell && xmlStrcmp(child->name, BAD_CAST "Cell") == 0)))
+           (cell && xmlStrcmp(child->name, BAD_CAST "Cell") == 0)))
       {
         // Get the key for the entry
         string key;
@@ -116,13 +115,14 @@ namespace mtconnect::entity {
             string name((const char *)attr->name);
             if (name != "key")
             {
-              throw EntityError("parseDataSet: Expecting ksy for data set Entry: " + string((const char*) node->name));
+              throw EntityError("parseDataSet: Expecting ksy for data set Entry: " +
+                                string((const char *)node->name));
             }
             key = string((const char *)attr->children->content);
             break;
           }
         }
-        
+
         /// TODO: Add support for tables
         DataSetValue value;
         auto valueNode = child->children;
@@ -137,7 +137,7 @@ namespace mtconnect::entity {
           {
             string text = ((const char *)valueNode->content);
             trim(text);
-            
+
             if (int64_t v; isType(text, boost::spirit::long_long, v))
             {
               value = v;
@@ -160,7 +160,8 @@ namespace mtconnect::entity {
       }
       else
       {
-        throw EntityError("parseDataSet: Expecting Entry for data set: " + string((const char*) node->name));
+        throw EntityError("parseDataSet: Expecting Entry for data set: " +
+                          string((const char *)node->name));
       }
     }
   }
