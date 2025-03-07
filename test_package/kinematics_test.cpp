@@ -36,6 +36,8 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
 
+inline DataSetEntry operator"" _E(const char *c, std::size_t) { return DataSetEntry(c); }
+
 // main
 int main(int argc, char *argv[])
 {
@@ -249,5 +251,125 @@ TEST_F(KinematicsTest, RotaryJsonPrinting)
     ASSERT_EQ(1.0, axis[2].get<double>());
 
     ASSERT_EQ("The spindle kinematics", motion["Description"].get<string>());
+  }
+}
+
+TEST_F(KinematicsTest, should_parse_kinematic_data_sets)
+{
+  m_agentTestHelper->createAgent("/samples/kinematics_2.5_data_set.xml", 8, 4, "2.5", 25);
+  m_agentId = to_string(getCurrentTimeInSec());
+  m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
+
+  ASSERT_NE(nullptr, m_device);
+
+  auto rot = m_device->getComponentById("c");
+  auto &ent = rot->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(ent);
+  auto motion = ent->get<EntityPtr>("Motion");
+
+  ASSERT_EQ("spin", motion->get<string>("id"));
+  ASSERT_EQ("CONTINUOUS", motion->get<string>("type"));
+  ASSERT_EQ("DIRECT", motion->get<string>("actuation"));
+  ASSERT_EQ("machine", motion->get<string>("coordinateSystemIdRef"));
+  ASSERT_EQ("zax", motion->get<string>("parentIdRef"));
+  ASSERT_EQ("The spindle kinematics", motion->get<string>("Description"));
+
+  auto ds3 = motion->get<DataSet>("AxisDataSet");
+
+  ASSERT_EQ(0.0, get<double>(ds3.find("X"_E)->m_value));
+  ASSERT_EQ(0.5, get<double>(ds3.find("Y"_E)->m_value));
+  ASSERT_EQ(1.0, get<double>(ds3.find("Z"_E)->m_value));
+
+  auto tf = motion->maybeGet<EntityPtr>("Transformation");
+  ASSERT_TRUE(tf);
+
+  auto ds1 = (*tf)->get<DataSet>("TranslationDataSet");
+
+  ASSERT_EQ(10.0, get<double>(ds1.find("X"_E)->m_value));
+  ASSERT_EQ(20.0, get<double>(ds1.find("Y"_E)->m_value));
+  ASSERT_EQ(30.0, get<double>(ds1.find("Z"_E)->m_value));
+
+  auto ds2 = (*tf)->get<DataSet>("RotationDataSet");
+
+  ASSERT_EQ(90.0, get<double>(ds2.find("A"_E)->m_value));
+  ASSERT_EQ(0.0, get<double>(ds2.find("B"_E)->m_value));
+  ASSERT_EQ(180, get<int64_t>(ds2.find("C"_E)->m_value));
+}
+
+TEST_F(KinematicsTest, should_generate_data_xml_data_sets)
+{
+  m_agentTestHelper->createAgent("/samples/kinematics_2.5_data_set.xml", 8, 4, "2.5", 25);
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
+
+    ASSERT_XML_PATH_COUNT(doc, ROTARY_MOTION_PATH, 1);
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "@id", "spin");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "@type", "CONTINUOUS");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "@parentIdRef", "zax");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "@actuation", "DIRECT");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "@coordinateSystemIdRef", "machine");
+
+    ASSERT_XML_PATH_EQUAL(
+        doc, ROTARY_MOTION_PATH "/m:Transformation/m:TranslationDataSet/m:Entry[@key='X']", "10");
+    ASSERT_XML_PATH_EQUAL(
+        doc, ROTARY_MOTION_PATH "/m:Transformation/m:TranslationDataSet/m:Entry[@key='Y']", "20");
+    ASSERT_XML_PATH_EQUAL(
+        doc, ROTARY_MOTION_PATH "/m:Transformation/m:TranslationDataSet/m:Entry[@key='Z']", "30");
+
+    ASSERT_XML_PATH_EQUAL(
+        doc, ROTARY_MOTION_PATH "/m:Transformation/m:RotationDataSet/m:Entry[@key='A']", "90");
+    ASSERT_XML_PATH_EQUAL(
+        doc, ROTARY_MOTION_PATH "/m:Transformation/m:RotationDataSet/m:Entry[@key='B']", "0");
+    ASSERT_XML_PATH_EQUAL(
+        doc, ROTARY_MOTION_PATH "/m:Transformation/m:RotationDataSet/m:Entry[@key='C']", "180");
+
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "/m:AxisDataSet/m:Entry[@key='X']", "0");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "/m:AxisDataSet/m:Entry[@key='Y']", "0.5");
+    ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "/m:AxisDataSet/m:Entry[@key='Z']", "1");
+  }
+}
+
+TEST_F(KinematicsTest, should_generate_data_json_data_sets)
+{
+  m_agentTestHelper->createAgent("/samples/kinematics_2.5_data_set.xml", 8, 4, "2.5", 25);
+
+  {
+    PARSE_JSON_RESPONSE("/LinuxCNC/probe");
+
+    auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
+    auto device = devices.at(0).at("/Device"_json_pointer);
+    auto rotary = device.at("/Components/0/Axes/Components/1/Rotary"_json_pointer);
+
+    auto motion = rotary.at("/Configuration/Motion"_json_pointer);
+    ASSERT_TRUE(motion.is_object());
+
+    ASSERT_EQ(8, motion.size());
+    EXPECT_EQ("spin", motion["id"]);
+    EXPECT_EQ("CONTINUOUS", motion["type"]);
+    EXPECT_EQ("DIRECT", motion["actuation"]);
+    EXPECT_EQ("zax", motion["parentIdRef"]);
+    EXPECT_EQ("machine", motion["coordinateSystemIdRef"]);
+
+    auto trans = motion.at("/Transformation/TranslationDataSet"_json_pointer);
+    ASSERT_TRUE(trans.is_object());
+    ASSERT_EQ(3, trans.size());
+    ASSERT_EQ(10.0, trans["X"].get<double>());
+    ASSERT_EQ(20.0, trans["Y"].get<double>());
+    ASSERT_EQ(30.0, trans["Z"].get<double>());
+
+    auto rot = motion.at("/Transformation/RotationDataSet"_json_pointer);
+    ASSERT_TRUE(rot.is_object());
+    ASSERT_EQ(3, rot.size());
+    ASSERT_EQ(90.0, rot["A"].get<double>());
+    ASSERT_EQ(0.0, rot["B"].get<double>());
+    ASSERT_EQ(180.0, rot["C"].get<double>());
+
+    auto axis = motion.at("/AxisDataSet"_json_pointer);
+    ASSERT_TRUE(axis.is_object());
+    ASSERT_EQ(3, axis.size());
+    ASSERT_EQ(0.0, axis["X"].get<double>());
+    ASSERT_EQ(0.5, axis["Y"].get<double>());
+    ASSERT_EQ(1.0, axis["Z"].get<double>());
   }
 }

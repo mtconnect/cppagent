@@ -76,7 +76,11 @@ namespace mtconnect::entity {
   };
 
   /// @brief Mask for value types
-  const int16_t VALUE_TYPE_BASE = 0x0F;
+  const std::uint16_t VALUE_TYPE_BASE = 0x0F;
+  constexpr const ValueType BaseValueType(const ValueType value)
+  {
+    return ValueType(std::uint16_t(value) & VALUE_TYPE_BASE);
+  }
 
   class Factory;
   using FactoryPtr = std::shared_ptr<Factory>;
