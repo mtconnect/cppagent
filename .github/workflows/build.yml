@@ -179,7 +179,7 @@ jobs:
         desc: "MTConnect Agent for Ununtu"
         maintainer: Datanomix <support@datanomix.io>
     - name: Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.shared == 'False' }}
       with:
         name: Version ${{ github.ref_name }}
