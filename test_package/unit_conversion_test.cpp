@@ -142,4 +142,8 @@ TEST(UnitConversionTest, check_conversion_from_kw_h_to_watt_second)
   auto conv = UnitConversion::make("KILOWATT/HOUR", "WATT/SECOND");
   EXPECT_NEAR(0.16666, conv->convert(0.6), 0.001);
   EXPECT_NEAR(0.25556, conv->convert(0.92), 0.001);
+
+  conv = UnitConversion::make("KILOWATT_HOUR", "WATT_SECOND");
+  EXPECT_NEAR(2160000.0, conv->convert(0.6), 0.001);
+  EXPECT_NEAR(3312000.0, conv->convert(0.92), 0.001);
 }

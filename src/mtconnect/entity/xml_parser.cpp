@@ -123,7 +123,6 @@ namespace mtconnect::entity {
           }
         }
 
-        /// TODO: Add support for tables
         DataSetValue value;
         auto valueNode = child->children;
         if (valueNode)
