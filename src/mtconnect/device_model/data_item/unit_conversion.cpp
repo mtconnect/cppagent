@@ -170,24 +170,23 @@ namespace mtconnect::device_model::data_item {
         return nullptr;
 
       factor = sscale / tscale;
-      
+
       vector<string> sunits;
       boost::split(sunits, source, boost::is_any_of("_"));
 
       vector<string> tunits;
       boost::split(tunits, target, boost::is_any_of("_"));
-      
+
       if (sunits.size() == tunits.size())
       {
         for (auto si = sunits.begin(), ti = tunits.begin();
-             si != sunits.end() && ti != tunits.end();
-             si++, ti++)
+             si != sunits.end() && ti != tunits.end(); si++, ti++)
         {
           key = *si;
           key = key.append("-").append(*ti);
-          
+
           const auto &conversion = m_conversions.find(string(key));
-          
+
           // Check for no support units and not power or factor scaling.
           if (conversion == m_conversions.end() && factor == 1.0)
             return nullptr;
