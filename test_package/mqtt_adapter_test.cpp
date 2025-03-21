@@ -164,7 +164,7 @@ TEST_F(MqttAdapterTest, should_change_if_host_changes)
   ASSERT_EQ("mqtt://mybroker.com:1883/", adapter->getName());
   ASSERT_EQ("_89c11f795e", adapter->getIdentity());
   
-  options[configuration::Host] = "localhost";
+  options[configuration::Host] = "localhost"s;
   adapter = make_unique<MqttAdapter>(ioc, context, options, tree);
   
   ASSERT_EQ("mqtt://localhost:1883/", adapter->getName());
