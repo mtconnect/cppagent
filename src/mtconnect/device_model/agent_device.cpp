@@ -77,16 +77,11 @@ namespace mtconnect {
           GetOption<bool>(adapter->getOptions(), config::SuppressIPAddress).value_or(false);
       auto id = adapter->getIdentity();
 
-      stringstream name;
-      name << adapter->getHost() << ':' << adapter->getPort();
-
       ErrorList errors;
       Properties attrs {{"id", id}};
       if (!suppress)
       {
-        stringstream name;
-        name << adapter->getHost() << ':' << adapter->getPort();
-        attrs["name"] = name.str();
+        attrs["name"] = adapter->getName();
       }
       else
       {
