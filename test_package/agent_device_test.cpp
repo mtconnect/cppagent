@@ -200,7 +200,7 @@ TEST_F(AgentDeviceTest, should_add_component_and_data_items_for_adapter)
 
     ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", ID_PREFIX);
-    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "127.0.0.1:21788");
+    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "shdr://127.0.0.1:21788");
 
     ASSERT_XML_PATH_EQUAL(
         doc, ADAPTER_DATA_ITEMS_PATH "/m:DataItem[@id='" ID_PREFIX "_adapter_uri']@type",
