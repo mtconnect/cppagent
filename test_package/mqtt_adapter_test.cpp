@@ -170,3 +170,22 @@ TEST_F(MqttAdapterTest, should_change_if_host_changes)
   ASSERT_EQ("mqtt://localhost:1883/", adapter->getName());
   ASSERT_EQ("_4cd2e64d4e", adapter->getIdentity());
 }
+
+TEST_F(MqttAdapterTest, should_be_able_to_set_adapter_identity)
+{
+  asio::io_context ioc;
+  asio::io_context::strand strand(ioc);
+  ConfigOptions options {{configuration::Url, "mqtt://mybroker.com:1883"s},
+    {configuration::Host, "mybroker.com"s},
+    {configuration::Port, 1883},
+    {configuration::Protocol, "mqtt"s},
+    {configuration::AdapterIdentity, "MyIdentity"s},
+    {configuration::Topics, StringList {"pipeline/#"s}}};
+  boost::property_tree::ptree tree;
+  pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
+  context->m_contract = make_unique<MockPipelineContract>(SCHEMA_VERSION(2, 5));
+  auto adapter = make_unique<MqttAdapter>(ioc, context, options, tree);
+  
+  ASSERT_EQ("mqtt://mybroker.com:1883/", adapter->getName());
+  ASSERT_EQ("MyIdentity", adapter->getIdentity());
+}

@@ -62,6 +62,7 @@ namespace mtconnect {
       AddOptions(block, m_options,
                  {{configuration::UUID, string()},
                   {configuration::Manufacturer, string()},
+                  {configuration::AdapterIdentity, string()},
                   {configuration::Station, string()},
                   {configuration::Url, string()},
                   {configuration::Topics, StringList()},
