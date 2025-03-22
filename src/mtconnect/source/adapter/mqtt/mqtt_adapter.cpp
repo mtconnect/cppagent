@@ -62,6 +62,7 @@ namespace mtconnect {
       AddOptions(block, m_options,
                  {{configuration::UUID, string()},
                   {configuration::Manufacturer, string()},
+                  {configuration::AdapterIdentity, string()},
                   {configuration::Station, string()},
                   {configuration::Url, string()},
                   {configuration::Topics, StringList()},
@@ -81,13 +82,13 @@ namespace mtconnect {
                            {configuration::RealTime, false},
                            {configuration::RelativeTime, false}});
       loadTopics(block, m_options);
-
+      
       if (!HasOption(m_options, configuration::MqttHost) &&
           HasOption(m_options, configuration::Host))
       {
         m_options[configuration::MqttHost] = m_options[configuration::Host];
       }
-
+      
       if (!HasOption(m_options, configuration::MqttPort))
       {
         if (HasOption(m_options, configuration::Port))
@@ -99,29 +100,29 @@ namespace mtconnect {
           m_options[configuration::MqttPort] = 1883;
         }
       }
-
+      
       m_handler = m_pipeline.makeHandler();
       auto clientHandler = make_unique<ClientHandler>();
 
       m_pipeline.m_handler = m_handler.get();
 
       clientHandler->m_connecting = [this](shared_ptr<MqttClient> client) {
-        m_handler->m_connecting(client->getIdentity());
+        m_handler->m_connecting(m_identity);
       };
 
       clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
         client->connectComplete();
-        m_handler->m_connected(client->getIdentity());
+        m_handler->m_connected(m_identity);
         subscribeToTopics();
       };
 
       clientHandler->m_disconnected = [this](shared_ptr<MqttClient> client) {
-        m_handler->m_disconnected(client->getIdentity());
+        m_handler->m_disconnected(m_identity);
       };
 
       clientHandler->m_receive = [this](shared_ptr<MqttClient> client, const std::string &topic,
                                         const std::string &payload) {
-        m_handler->m_processMessage(topic, payload, client->getIdentity());
+        m_handler->m_processMessage(topic, payload, m_identity);
       };
 
       if (IsOptionSet(m_options, configuration::MqttTls) &&
@@ -146,11 +147,37 @@ namespace mtconnect {
         m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_ioContext, m_options,
                                                                       std::move(clientHandler));
       }
-
-      m_identity = m_client->getIdentity();
+      
       m_name = m_client->getUrl();
+            
+      if (auto ident = GetOption<string>(m_options, configuration::AdapterIdentity))
+      {
+        m_identity = *ident;
+      }
+      else
+      {
+        stringstream identity;
+        
+        identity << m_name;
+        auto topics = GetOption<StringList>(m_options, configuration::Topics);
+        if (topics)
+        {
+          for (const auto &s : *topics)
+            identity << s;
+        }
 
-      m_options[configuration::AdapterIdentity] = m_name;
+        boost::uuids::detail::sha1 sha1;
+        sha1.process_bytes(identity.str().c_str(), identity.str().length());
+        boost::uuids::detail::sha1::digest_type digest;
+        sha1.get_digest(digest);
+        
+        identity.str("");
+        identity << std::hex << digest[0] << digest[1] << digest[2];
+        m_identity = string("_") + (identity.str()).substr(0, 10);
+
+        m_options[configuration::AdapterIdentity] = m_identity;
+      }
+
       m_pipeline.build(m_options);
     }
 
