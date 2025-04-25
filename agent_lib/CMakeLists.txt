@@ -189,6 +189,7 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/pipeline/topic_mapper.hpp"
         "${SOURCE_DIR}/pipeline/transform.hpp"
         "${SOURCE_DIR}/pipeline/upcase_value.hpp"
+        "${SOURCE_DIR}/pipeline/validate_timestamp.hpp"       
         "${SOURCE_DIR}/pipeline/validator.hpp"       
    
 # src/pipeline SOURCE_FILES_ONLY

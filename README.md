@@ -672,6 +672,10 @@ Configuration Parameters
 
     *Default*: `false`
     
+* `ValidateTimestamps` - Verify time is always progressing forward for each data item and correct if not.
+
+    *Default*: `false`
+
 * `Validation` - Turns on validation of model components and observations
 
     *Default*: `false`

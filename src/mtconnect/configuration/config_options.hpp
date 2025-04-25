@@ -77,6 +77,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(EnableSourceDeviceModels);
     DECLARE_CONFIGURATION(WorkerThreads);
     DECLARE_CONFIGURATION(Validation);
+    DECLARE_CONFIGURATION(ValidateTimestamps);
     ///@}
 
     /// @name MQTT Configuration
