@@ -28,7 +28,7 @@
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
 #include "mtconnect/pipeline/topic_mapper.hpp"
 #include "mtconnect/pipeline/upcase_value.hpp"
-#include "mtconnect/pipeline/validate_timestamp.hpp"
+#include "mtconnect/pipeline/correct_timestamp.hpp"
 #include "mtconnect/pipeline/validator.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 
@@ -141,8 +141,8 @@ namespace mtconnect {
       if (IsOptionSet(m_options, configuration::ConversionRequired))
         next = next->bind(make_shared<ConvertSample>());
 
-      if (IsOptionSet(m_options, configuration::ValidateTimestamps))
-        next = next->bind(make_shared<ValidateTimestamp>(m_context));
+      if (IsOptionSet(m_options, configuration::CorrectTimestamps))
+        next = next->bind(make_shared<CorrectTimestamp>(m_context));
 
       // Validate Values
       if (IsOptionSet(m_options, configuration::Validation))

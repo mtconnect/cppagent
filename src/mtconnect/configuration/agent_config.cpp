@@ -831,7 +831,7 @@ namespace mtconnect::configuration {
                 {configuration::SuppressIPAddress, false},
                 {configuration::AllowPutFrom, ""s},
                 {configuration::Validation, false},
-                {configuration::ValidateTimestamps, false}});
+                {configuration::CorrectTimestamps, false}});
 
     m_workerThreadCount = *GetOption<int>(options, configuration::WorkerThreads);
     m_monitorFiles = *GetOption<bool>(options, configuration::MonitorConfigFiles);
