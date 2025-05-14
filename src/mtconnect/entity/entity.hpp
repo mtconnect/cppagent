@@ -95,7 +95,12 @@ namespace mtconnect {
       /// @param props entity properties
       Entity(const std::string &name, const Properties &props) : m_name(name), m_properties(props)
       {}
-      Entity(const Entity &entity) = default;
+      Entity(const Entity &entity)
+      : m_name(entity.m_name), m_properties(entity.m_properties), m_order(entity.m_order)
+      {
+        if (entity.m_attributes)
+          setAttributes(*entity.m_attributes);
+      }
       virtual ~Entity() {}
 
       /// @brief Get a shared pointer
@@ -348,10 +353,21 @@ namespace mtconnect {
       auto erase(Properties::iterator &it) { return m_properties.erase(it); }
       /// @brief tells the entity which properties are attributes for XML generation
       /// @param[in] a the attributes
-      void setAttributes(AttributeSet a) { m_attributes = a; }
+      void setAttributes(AttributeSet a)
+      {
+        std::unique_ptr<AttributeSet> set(new AttributeSet(a));
+        m_attributes.swap(set);
+      }
       /// @brief get the attributes for XML generation
       /// @return attribute set
-      const auto &getAttributes() const { return m_attributes; }
+      const auto &getAttributes() const
+      {
+        static AttributeSet empty;
+        if (m_attributes)
+          return *m_attributes;
+        else
+          return empty;
+      }
 
       /// @brief compare two entities for equality
       /// @param other the other entity
@@ -436,7 +452,7 @@ namespace mtconnect {
       QName m_name;
       Properties m_properties;
       OrderMapPtr m_order;
-      AttributeSet m_attributes;
+      std::unique_ptr<AttributeSet> m_attributes;
     };
 
     /// @brief variant visitor to compare two entity parameter values for equality
