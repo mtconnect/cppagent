@@ -453,6 +453,7 @@ namespace mtconnect {
       Properties m_properties;
       OrderMapPtr m_order;
       std::unique_ptr<AttributeSet> m_attributes;
+      std::unique_ptr<ErrorList> m_errors;
     };
 
     /// @brief variant visitor to compare two entity parameter values for equality

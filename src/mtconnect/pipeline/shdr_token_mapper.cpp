@@ -137,7 +137,7 @@ namespace mtconnect {
                                         const entity::Requirements &reqs,
                                         TokenList::const_iterator &token,
                                         const TokenList::const_iterator &end, ErrorList &errors,
-                                        int32_t schemaVersion)
+                                        int32_t schemaVersion, bool validation)
     {
       NAMED_SCOPE("zipProperties");
       Properties props;
@@ -168,6 +168,10 @@ namespace mtconnect {
         {
           LOG(warning) << "Cannot convert value for data item id '" << dataItem->getId()
                        << "': " << *token << " - " << e.what();
+          if (schemaVersion >= SCHEMA_VERSION(2, 5) && validation)
+          {
+            props.insert_or_assign("quality", "INVALID"s);
+          }
         }
       }
 
@@ -276,7 +280,8 @@ namespace mtconnect {
       if (reqs != nullptr)
       {
         auto obs = zipProperties(dataItem, timestamp, *reqs, token, end, errors,
-                                 m_contract->getSchemaVersion());
+                                 m_contract->getSchemaVersion(),
+                                 m_contract->hasValidation());
         if (dataItem->getConstantValue())
           return nullptr;
         if (obs && source)

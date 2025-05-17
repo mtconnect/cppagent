@@ -134,14 +134,19 @@ namespace mtconnect::pipeline {
           {
             LOG(warning) << "Error while parsing json: " << e->what();
           }
+          
+          props.clear();
+          props["VALUE"] = "UNAVAILABLE"s;
+          if (m_pipelineContext->m_contract->hasValidation())
+            props["quality"] = "INVALID"s;
+          
+          obs = observation::Observation::make(dataItem, props, *m_timestamp, errors);
         }
-        else
-        {
-          if (m_source)
-            dataItem->setDataSource(*m_source);
-          m_entities.push_back(obs);
-          m_forward(std::move(obs));
-        }
+
+        if (m_source)
+          dataItem->setDataSource(*m_source);
+        m_entities.push_back(obs);
+        m_forward(std::move(obs));
       }
     }
 
