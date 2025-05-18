@@ -64,6 +64,7 @@ public:
   void deliverDevice(DevicePtr) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
   int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
+  bool isValidating() const override { return false; }
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
   void sourceFailed(const std::string &id) override {}

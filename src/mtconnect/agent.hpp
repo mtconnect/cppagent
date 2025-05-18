@@ -216,7 +216,7 @@ namespace mtconnect {
     
     /// @brief Get the validation state of the agent
     /// @returns the validation state of the agent
-    bool hasValidation() const { return m_validation; }
+    bool isValidating() const { return m_validation; }
 
     /// @brief Get the integer schema version based on configuration.
     /// @returns the schema version as an integer [major * 100 + minor] as a 32bit integer.
@@ -593,7 +593,7 @@ namespace mtconnect {
       }
     }
     int32_t getSchemaVersion() const override { return m_agent->getIntSchemaVersion(); }
-    bool hasValidation() const override { return m_agent->hasValidation(); }
+    bool isValidating() const override { return m_agent->isValidating(); }
     void deliverObservation(observation::ObservationPtr obs) override
     {
       m_agent->receiveObservation(obs);

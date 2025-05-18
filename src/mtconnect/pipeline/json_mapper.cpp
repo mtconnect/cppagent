@@ -137,7 +137,7 @@ namespace mtconnect::pipeline {
           
           props.clear();
           props["VALUE"] = "UNAVAILABLE"s;
-          if (m_pipelineContext->m_contract->hasValidation())
+          if (m_pipelineContext->m_contract->isValidating())
             props["quality"] = "INVALID"s;
           
           obs = observation::Observation::make(dataItem, props, *m_timestamp, errors);

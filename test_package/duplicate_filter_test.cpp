@@ -74,6 +74,7 @@ public:
   {
     return m_checkpoint.checkDuplicate(obs);
   }
+  bool isValidating() const override { return false; }
 
   std::map<string, DataItemPtr> &m_dataItems;
   buffer::Checkpoint m_checkpoint;

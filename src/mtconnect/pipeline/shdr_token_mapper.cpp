@@ -281,7 +281,7 @@ namespace mtconnect {
       {
         auto obs = zipProperties(dataItem, timestamp, *reqs, token, end, errors,
                                  m_contract->getSchemaVersion(),
-                                 m_contract->hasValidation());
+                                 m_contract->isValidating());
         if (dataItem->getConstantValue())
           return nullptr;
         if (obs && source)

@@ -78,7 +78,7 @@ namespace mtconnect {
       virtual int32_t getSchemaVersion() const = 0;
       /// @brief `true` if validation is turned on for the agent.
       /// @returns the validation state for the pipeline
-      virtual bool hasValidation() const = 0;
+      virtual bool isValidating() const = 0;
       /// @brief iterate through all the data items calling `fun` for each
       /// @param[in] fun The function or lambda to call
       virtual void eachDataItem(EachDataItem fun) = 0;
