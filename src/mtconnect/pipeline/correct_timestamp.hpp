@@ -22,17 +22,26 @@
 
 namespace mtconnect::pipeline {
   /// @brief Filter duplicates
-  class AGENT_LIB_API DuplicateFilter : public Transform
+  class AGENT_LIB_API CorrectTimestamp : public Transform
   {
+  protected:
+    struct State : TransformState
+    {
+      std::unordered_map<std::string, Timestamp> m_timestamps;
+    };
+
   public:
-    DuplicateFilter(const DuplicateFilter &) = default;
+    CorrectTimestamp(const CorrectTimestamp &) = default;
     /// @brief Create a duplicate filter with shared state from the context
     /// @param context the context
-    DuplicateFilter(PipelineContextPtr context) : Transform("DuplicateFilter"), m_context(context)
+    CorrectTimestamp(PipelineContextPtr context)
+      : Transform("ValidateTimestamp"),
+        m_context(context),
+        m_state(context->getSharedState<State>(m_name))
     {
       m_guard = TypeGuard<observation::Observation>(RUN);
     }
-    ~DuplicateFilter() override = default;
+    ~CorrectTimestamp() override = default;
 
     /// @brief check if the entity is a duplicate
     /// @param[in] entity the entity to check
@@ -41,18 +50,37 @@ namespace mtconnect::pipeline {
     {
       using namespace observation;
 
-      auto o = std::dynamic_pointer_cast<Observation>(entity);
-      if (o->isOrphan())
+      auto obs = std::dynamic_pointer_cast<Observation>(entity);
+      if (obs->isOrphan())
         return entity::EntityPtr();
 
-      auto o2 = m_context->m_contract->checkDuplicate(o);
-      if (!o2)
-        return entity::EntityPtr();
-      else
-        return next(std::move(o2));
+      auto di = obs->getDataItem();
+      auto &id = di->getId();
+      auto ts = obs->getTimestamp();
+
+      std::lock_guard<TransformState> guard(*m_state);
+
+      auto last = m_state->m_timestamps.find(id);
+      if (last != m_state->m_timestamps.end())
+      {
+        if (ts < last->second)
+        {
+          LOG(debug) << "Observation for data item " << id << " has timestamp " << format(ts)
+                     << " thats is before " << format(last->second);
+
+          // Set the timestamp to now.
+          ts = std::chrono::system_clock::now();
+          obs->setTimestamp(ts);
+        }
+      }
+
+      m_state->m_timestamps.emplace(id, ts);
+
+      return obs;
     }
 
   protected:
     PipelineContextPtr m_context;
+    std::shared_ptr<State> m_state;
   };
 }  // namespace mtconnect::pipeline

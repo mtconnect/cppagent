@@ -67,6 +67,7 @@ public:
   void sourceFailed(const std::string &id) override {}
   const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
   int32_t getSchemaVersion() const override { return SCHEMA_VERSION(2, 3); };
+  bool isValidating() const override { return false; }
 
   std::map<string, DataItemPtr> &m_dataItems;
   std::map<string, DevicePtr> &m_devices;

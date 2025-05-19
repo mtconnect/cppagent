@@ -51,9 +51,7 @@ int main(int argc, char *argv[])
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(int32_t schemaVersion)
-  : m_schemaVersion(schemaVersion)
-  {}
+  MockPipelineContract(int32_t schemaVersion) : m_schemaVersion(schemaVersion) {}
   DevicePtr findDevice(const std::string &) override { return nullptr; }
   DataItemPtr findDataItem(const std::string &device, const std::string &name) override
   {
@@ -70,7 +68,8 @@ public:
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
   void sourceFailed(const std::string &id) override {}
   const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
-  
+  bool isValidating() const override { return false; }
+
   int32_t m_schemaVersion;
 };
 
@@ -87,10 +86,10 @@ TEST_F(MqttAdapterTest, should_create_a_unique_id_based_on_topic)
   asio::io_context ioc;
   asio::io_context::strand strand(ioc);
   ConfigOptions options {{configuration::Url, "mqtt://mybroker.com:1883"s},
-    {configuration::Host, "mybroker.com"s},
-    {configuration::Port, 1883},
-    {configuration::Protocol, "mqtt"s},
-    {configuration::Topics, StringList {"pipeline/#"s}}};
+                         {configuration::Host, "mybroker.com"s},
+                         {configuration::Port, 1883},
+                         {configuration::Protocol, "mqtt"s},
+                         {configuration::Topics, StringList {"pipeline/#"s}}};
   boost::property_tree::ptree tree;
   pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
   context->m_contract = make_unique<MockPipelineContract>(SCHEMA_VERSION(2, 5));
@@ -105,18 +104,18 @@ TEST_F(MqttAdapterTest, should_change_if_topics_change)
   asio::io_context ioc;
   asio::io_context::strand strand(ioc);
   ConfigOptions options {{configuration::Url, "mqtt://mybroker.com:1883"s},
-    {configuration::Host, "mybroker.com"s},
-    {configuration::Port, 1883},
-    {configuration::Protocol, "mqtt"s},
-    {configuration::Topics, StringList {"pipeline/#"s}}};
+                         {configuration::Host, "mybroker.com"s},
+                         {configuration::Port, 1883},
+                         {configuration::Protocol, "mqtt"s},
+                         {configuration::Topics, StringList {"pipeline/#"s}}};
   boost::property_tree::ptree tree;
   pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
   context->m_contract = make_unique<MockPipelineContract>(SCHEMA_VERSION(2, 5));
   auto adapter = make_unique<MqttAdapter>(ioc, context, options, tree);
-  
+
   ASSERT_EQ("mqtt://mybroker.com:1883/", adapter->getName());
   ASSERT_EQ("_89c11f795e", adapter->getIdentity());
-  
+
   options[configuration::Topics] = StringList {"pipline/#"s, "topic/"s};
   adapter = make_unique<MqttAdapter>(ioc, context, options, tree);
 
@@ -128,21 +127,21 @@ TEST_F(MqttAdapterTest, should_change_if_port_changes)
   asio::io_context ioc;
   asio::io_context::strand strand(ioc);
   ConfigOptions options {{configuration::Url, "mqtt://mybroker.com:1883"s},
-    {configuration::Host, "mybroker.com"s},
-    {configuration::Port, 1883},
-    {configuration::Protocol, "mqtt"s},
-    {configuration::Topics, StringList {"pipeline/#"s}}};
+                         {configuration::Host, "mybroker.com"s},
+                         {configuration::Port, 1883},
+                         {configuration::Protocol, "mqtt"s},
+                         {configuration::Topics, StringList {"pipeline/#"s}}};
   boost::property_tree::ptree tree;
   pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
   context->m_contract = make_unique<MockPipelineContract>(SCHEMA_VERSION(2, 5));
   auto adapter = make_unique<MqttAdapter>(ioc, context, options, tree);
-  
+
   ASSERT_EQ("mqtt://mybroker.com:1883/", adapter->getName());
   ASSERT_EQ("_89c11f795e", adapter->getIdentity());
-  
+
   options[configuration::Port] = 1882;
   adapter = make_unique<MqttAdapter>(ioc, context, options, tree);
-  
+
   ASSERT_EQ("mqtt://mybroker.com:1882/", adapter->getName());
   ASSERT_EQ("_7042e8f45e", adapter->getIdentity());
 }
@@ -152,21 +151,21 @@ TEST_F(MqttAdapterTest, should_change_if_host_changes)
   asio::io_context ioc;
   asio::io_context::strand strand(ioc);
   ConfigOptions options {{configuration::Url, "mqtt://mybroker.com:1883"s},
-    {configuration::Host, "mybroker.com"s},
-    {configuration::Port, 1883},
-    {configuration::Protocol, "mqtt"s},
-    {configuration::Topics, StringList {"pipeline/#"s}}};
+                         {configuration::Host, "mybroker.com"s},
+                         {configuration::Port, 1883},
+                         {configuration::Protocol, "mqtt"s},
+                         {configuration::Topics, StringList {"pipeline/#"s}}};
   boost::property_tree::ptree tree;
   pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
   context->m_contract = make_unique<MockPipelineContract>(SCHEMA_VERSION(2, 5));
   auto adapter = make_unique<MqttAdapter>(ioc, context, options, tree);
-  
+
   ASSERT_EQ("mqtt://mybroker.com:1883/", adapter->getName());
   ASSERT_EQ("_89c11f795e", adapter->getIdentity());
-  
+
   options[configuration::Host] = "localhost"s;
   adapter = make_unique<MqttAdapter>(ioc, context, options, tree);
-  
+
   ASSERT_EQ("mqtt://localhost:1883/", adapter->getName());
   ASSERT_EQ("_4cd2e64d4e", adapter->getIdentity());
 }
@@ -176,16 +175,16 @@ TEST_F(MqttAdapterTest, should_be_able_to_set_adapter_identity)
   asio::io_context ioc;
   asio::io_context::strand strand(ioc);
   ConfigOptions options {{configuration::Url, "mqtt://mybroker.com:1883"s},
-    {configuration::Host, "mybroker.com"s},
-    {configuration::Port, 1883},
-    {configuration::Protocol, "mqtt"s},
-    {configuration::AdapterIdentity, "MyIdentity"s},
-    {configuration::Topics, StringList {"pipeline/#"s}}};
+                         {configuration::Host, "mybroker.com"s},
+                         {configuration::Port, 1883},
+                         {configuration::Protocol, "mqtt"s},
+                         {configuration::AdapterIdentity, "MyIdentity"s},
+                         {configuration::Topics, StringList {"pipeline/#"s}}};
   boost::property_tree::ptree tree;
   pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
   context->m_contract = make_unique<MockPipelineContract>(SCHEMA_VERSION(2, 5));
   auto adapter = make_unique<MqttAdapter>(ioc, context, options, tree);
-  
+
   ASSERT_EQ("mqtt://mybroker.com:1883/", adapter->getName());
   ASSERT_EQ("MyIdentity", adapter->getIdentity());
 }

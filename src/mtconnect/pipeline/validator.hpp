@@ -39,7 +39,7 @@ namespace mtconnect::pipeline {
     Validator(PipelineContextPtr context)
       : Transform("Validator"), m_contract(context->m_contract.get())
     {
-      m_guard = TypeGuard<observation::Event>(RUN) || TypeGuard<observation::Observation>(SKIP);
+      m_guard = TypeGuard<observation::Observation>(RUN) || TypeGuard<entity::Entity>(SKIP);
     }
 
     /// @brief validate the Event
@@ -49,14 +49,14 @@ namespace mtconnect::pipeline {
     {
       using namespace observation;
       using namespace mtconnect::validation::observations;
-      auto evt = std::dynamic_pointer_cast<Event>(entity);
+      auto obs = std::dynamic_pointer_cast<Observation>(entity);
 
-      auto di = evt->getDataItem();
-      if (evt->isUnavailable() || di->isDataSet())
+      auto di = obs->getDataItem();
+      if (obs->isUnavailable() || di->isDataSet())
       {
-        evt->setProperty("quality", std::string("VALID"));
+        obs->setProperty("quality", std::string("VALID"));
       }
-      else
+      else if (auto evt = std::dynamic_pointer_cast<observation::Event>(obs))
       {
         auto &value = evt->getValue<std::string>();
 
@@ -114,8 +114,15 @@ namespace mtconnect::pipeline {
           evt->setProperty("quality", std::string("UNVERIFIABLE"));
         }
       }
+      else if (auto spl = std::dynamic_pointer_cast<observation::Sample>(obs))
+      {
+      }
+      else
+      {
+        obs->setProperty("quality", std::string("VALID"));
+      }
 
-      return next(std::move(evt));
+      return next(std::move(obs));
     }
 
   protected:
