@@ -260,6 +260,7 @@ set(AGENT_SOURCES
 # src/sink/rest_sink HEADER_FILE_ONLY
         
         "${SOURCE_DIR}/sink/rest_sink/cached_file.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/error.hpp"
         "${SOURCE_DIR}/sink/rest_sink/file_cache.hpp"
         "${SOURCE_DIR}/sink/rest_sink/parameter.hpp"
         "${SOURCE_DIR}/sink/rest_sink/request.hpp"
@@ -274,6 +275,7 @@ set(AGENT_SOURCES
   
 # src/sink/rest_sink SOURCE_FILES_ONLY
 
+        "${SOURCE_DIR}/sink/rest_sink/error.cpp"
         "${SOURCE_DIR}/sink/rest_sink/file_cache.cpp"
         "${SOURCE_DIR}/sink/rest_sink/rest_service.cpp"
         "${SOURCE_DIR}/sink/rest_sink/server.cpp"
