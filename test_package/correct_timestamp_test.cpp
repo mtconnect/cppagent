@@ -165,3 +165,51 @@ TEST_F(ValidateTimestampTest, should_change_timestamp_if_time_is_moving_backward
   ASSERT_NE(now - 1s, obs2->getTimestamp());
   ASSERT_LE(now, obs2->getTimestamp());
 }
+
+TEST_F(ValidateTimestampTest, should_handle_timestamp_in_the_future)
+{
+  makeDataItem({{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  
+  auto filter = make_shared<CorrectTimestamp>(m_context);
+  m_mapper->bind(filter);
+  filter->bind(make_shared<DeliverObservation>(m_context));
+  
+  auto now = chrono::system_clock::now();
+  
+  {
+    auto os = observe({"a", "READY"}, now - 1s);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    
+    auto obs = dynamic_pointer_cast<Observation>(list.front());
+    ASSERT_EQ(now - 1s, obs->getTimestamp());
+  }
+  
+  {
+    auto os = observe({"a", "ACTIVE"}, now + 1s);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    
+    auto obs = dynamic_pointer_cast<Observation>(list.front());
+    ASSERT_EQ(now + 1s, obs->getTimestamp());
+  }
+  
+  {
+    auto os = observe({"a", "READY"}, now);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    
+    auto obs = dynamic_pointer_cast<Observation>(list.front());
+    ASSERT_LT(now, obs->getTimestamp());
+    ASSERT_GT(now + 10ms, obs->getTimestamp());
+  }
+  
+  {
+    auto os = observe({"a", "ACTIVE"}, now + 2s);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    
+    auto obs = dynamic_pointer_cast<Observation>(list.front());
+    ASSERT_EQ(now + 2s, obs->getTimestamp());
+  }
+}
