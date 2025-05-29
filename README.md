@@ -993,7 +993,8 @@ Sinks {
     
     * `RelativeTime` - The timestamps will be given as relative offsets represented as a floating 
       point number of milliseconds. The offset will be added to the arrival time of the first 
-      recorded event.
+      recorded event. If the timestamp is given as a time, the difference between the agent time
+      and the fitst incoming timestamp will be used as a constant clock adjustment. 
 
         *Default*: false
 
