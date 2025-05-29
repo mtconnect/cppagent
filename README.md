@@ -81,7 +81,7 @@ Directories
 
 * `test/`         - Various unit tests.
 
-* `tools/`        - Ruby scripts to dump the agent and the adapter in SHDR format. Includes a sequence 
+* `tools/`        - Ruby scripts to dump the agent and the adapter in SHDR format. Includes a sequence
                     test script.
 
 * `unix/`         - Unix init.d script
@@ -123,7 +123,7 @@ complex multi-adapter configurations.
 ### Serving Static Content ###
 
 Using a Files Configuration section, individual files or directories can be inserted
-into the request file space from the agent. To do this, we use the Files top level 
+into the request file space from the agent. To do this, we use the Files top level
 configuration declaration as follows:
 
     Files {
@@ -157,15 +157,15 @@ To specify the new schema for the documents, use the following declaration:
     }
 
 This will use the ExampleStreams_2.0.xsd schema in the document. The `e` is the alias that will be
-used to reference the extended schema. The `Location` is the location of the xsd file relative in 
+used to reference the extended schema. The `Location` is the location of the xsd file relative in
 the agent namespace. The `Location` must be mapped in the `Files` section.
 
-An optional `Path` can be added to the `...Namespaces` declaration instead of declaring the 
+An optional `Path` can be added to the `...Namespaces` declaration instead of declaring the
 `Files` section. The `Files` makes it easier to include multiple files from a directory and will
-automatically include all the default MTConnect schema files for the correct version. 
+automatically include all the default MTConnect schema files for the correct version.
 (See `SchemaVersion` option below)
 
-You can do this for any one of the other documents: 
+You can do this for any one of the other documents:
 
     StreamsNamespaces
     DevicesNamespaces
@@ -179,11 +179,11 @@ The same can be done with style sheets, but only the Location is required.
     StreamsStyle {
       Location = /styles/Streams.xsl
     }
-    
-An optional `Path` can also be used to reference the xsl file directly. This will not 
+
+An optional `Path` can also be used to reference the xsl file directly. This will not
 include other files in the path like css or included xsl transforms. It is advised to
 use the `Files` declaration.
-    
+
 The following can also be declared:
 
     DevicesStyle
@@ -263,7 +263,7 @@ each.
             Host = 192.168.10.22
             Port = 7878 # *Default* value...
         }
-    
+
         # Energy sensor
         Adapter_2
         {
@@ -287,7 +287,7 @@ as well be named `EnergySensor` if desired as illustrated below.
             Host = 192.168.10.22
             Port = 7878 # *Default* value...
         }
-    
+
         EnergySensor
         {
             Device = VMC-3Axis
@@ -298,8 +298,8 @@ as well be named `EnergySensor` if desired as illustrated below.
 
 ### Example 4: ###
 
-In this example we change the port to 80 which is the default http port. 
-This also allows HTTP PUT from the local machine and 10.211.55.2. 
+In this example we change the port to 80 which is the default http port.
+This also allows HTTP PUT from the local machine and 10.211.55.2.
 
     Devices = MyDevices.xml
     Port = 80
@@ -324,7 +324,7 @@ adapter feeding each device.
         {
             Host = 192.168.10.22
         }
-    
+
         HMC-5Axis
         {
             Host = 192.168.10.24
@@ -337,9 +337,9 @@ and HMC devices in `MyDevices.xml` file. The ports are defaulted to
 
 ### Example 6: ###
 
-In this example we  demonstrate how to change the service name of the agent. This 
-allows a single machine to run multiple agents and/or customize the name of the service. 
-Multiple configuration files can be created for each service, each with a different 
+In this example we  demonstrate how to change the service name of the agent. This
+allows a single machine to run multiple agents and/or customize the name of the service.
+Multiple configuration files can be created for each service, each with a different
 ServiceName. The configuration file must be referenced as follows:
 
     C:> agent install myagent.cfg
@@ -355,7 +355,7 @@ If myagent.cfg contains the following statements:
 
 
 The service will now be displayed as "MTC Agent 1" as opposed to "MTConnect Agent"
-and it will automatically load the contents of myagent.cfg with it starts. You can now 
+and it will automatically load the contents of myagent.cfg with it starts. You can now
 use the following command to start this from a command prompt:
 
     C:> net start "MTC Agent 1"
@@ -406,9 +406,9 @@ level node is required to be MTConnect. The "x" in this case is the namespace. Y
 MUST NOT use the namespace "m" since it is reserved for MTConnect. See example 9
 for an example of changing the MTConnect schema file location.
 
-There are four namespaces in MTConnect: Devices, Streams, Assets, and Error. In 
+There are four namespaces in MTConnect: Devices, Streams, Assets, and Error. In
 this example we will replace the Streams and Devices namespace with our own namespace
-so we can have validatable XML documents. 
+so we can have validatable XML documents.
 
 	StreamsNamespaces {
 	  x {
@@ -425,18 +425,18 @@ so we can have validatable XML documents.
 	    Path = ./ExampleDevices_1.2.xsd
 	  }
 	}
-	
+
 For each schema file we have three options we need to specify. The Urn
 is the urn in the schema file that will be used in the header. The Location
-is the path specified in the URL when requesting the schema file from the 
+is the path specified in the URL when requesting the schema file from the
 HTTP client and the Path is the path on the local file system.
 
 ### Example: 9 ###
 
-If you only want to change the schema location of the MTConnect schema files and 
+If you only want to change the schema location of the MTConnect schema files and
 serve them from your local agent and not from the default internet location, you
-can use the namespace "m" and give the new schema file location. This MUST be the 
-MTConnect schema files and the urn will always be the MTConnect urn for the "m" 
+can use the namespace "m" and give the new schema file location. This MUST be the
+MTConnect schema files and the urn will always be the MTConnect urn for the "m"
 namespace -- you cannot change it.
 
 	StreamsNamespaces {
@@ -452,7 +452,7 @@ namespace -- you cannot change it.
 	    Path = ./MTConnectDevices_2.0.xsd
 	  }
 	}
-    
+
 The MTConnect agent will now serve the standard MTConnect schema files
 from the local directory using the schema path /schemas/MTConnectDevices_2.0.xsd.
 
@@ -460,9 +460,9 @@ from the local directory using the schema path /schemas/MTConnectDevices_2.0.xsd
 ### Example: 10 ###
 
 We can also serve files from the MTConnect Agent as well. In this example
-we can assume we don't have access to the public internet and we would still 
+we can assume we don't have access to the public internet and we would still
 like to provide the MTConnect streams and devices files but have the MTConnect
-Agent serve them up locally. 
+Agent serve them up locally.
 
 	DevicesNamespaces {
 	  x {
@@ -472,28 +472,28 @@ Agent serve them up locally.
 	  }
 
 	Files {
-	  stream { 
+	  stream {
 	    Location = /schemas/MTConnectStreams_2.0.xsd
 	    Path = ./MTConnectStreams_2.0.xsd
 	  }
-	  device { 
+	  device {
 	    Location = /schemas/MTConnectDevices_2.0.xsd
 	    Path = ./MTConnectDevices_2.0.xsd
 	  }
 	}
-	
+
 Or use the short form for all files:
 
         Files {
-          schemas { 
+          schemas {
             Location = /schemas/MTConnectStreams_2.0.xsd
             Path = ./MTConnectStreams_2.0.xsd
           }
         }
-    
-If you have specified in your xs:include schemaLocation inside the 
+
+If you have specified in your xs:include schemaLocation inside the
 ExampleDevices_2.0.xsd file the location "/schemas/MTConnectStreams_2.0.xsd",
-this will allow it to be served properly. This can also be done using the 
+this will allow it to be served properly. This can also be done using the
 Devices namespace:
 
 	DevicesNamespaces {
@@ -503,16 +503,16 @@ Devices namespace:
 	  }
 	}
 
-The MTConnect agent will allow you to serve any other files you wish as well. You 
+The MTConnect agent will allow you to serve any other files you wish as well. You
 can specify a new static file you would like to deliver:
 
 	Files {
-	  myfile { 
+	  myfile {
 	    Location = /files/xxx.txt
 	    Path = ./files/xxx.txt
 	  }
 
-The agent will not serve all files from a directory and will not provide an index 
+The agent will not serve all files from a directory and will not provide an index
 function as this is insecure and not the intended function of the agent.
 
 Ruby
@@ -524,7 +524,7 @@ If the "-o with_ruby=True" build is selected, then use to following configuratio
       module = path/to/module.rb
     }
 
-The module specified at the path given will be loaded. There are examples in the test/Resources/ruby directory in 
+The module specified at the path given will be loaded. There are examples in the test/Resources/ruby directory in
 github: [Ruby Tests](https://github.com/mtconnect/cppagent/tree/master/test/resources/ruby).
 
 The current functionality is limited to the pipeline transformations from the adapters. Future changes will include adding sources and sinks.
@@ -546,12 +546,12 @@ class AlertTransform < MTConnect::RubyTransform
       puts ">  #{ObjectSpace.count_objects}"
       puts "---------------------------"
     end
-    
+
     dataItemId = obs.properties[:dataItemId]
     if dataItemId == 'servotemp1' or dataItemId == 'Xfrt' or dataItemId == 'Xload'
       @cache[dataItemId] = obs.value
       device = MTConnect.agent.default_device
-      
+
       di = device.data_item('xaxisstate')
       if @cache['servotemp1'].to_f > 10.0 or @cache['Xfrt'].to_f > 10.0 or @cache['Xload'].to_f > 10
         newobs = MTConnect::Observation.new(di, "ERROR")
@@ -563,7 +563,7 @@ class AlertTransform < MTConnect::RubyTransform
     forward(obs)
   end
 end
-    
+
 MTConnect.agent.sources.each do |s|
   pipe = s.pipeline
   puts "Splicing the pipeline"
@@ -593,7 +593,7 @@ Configuration Parameters
   understand the internal workings of the agent.
 
     *Default*: 1000
-      
+
 * `CreateUniqueIds`: Changes all the ids in each element to a UUID that will be unique across devices. This is used for merging devices from multiple sources.
 
     *Default*: `false`
@@ -602,17 +602,17 @@ Configuration Parameters
   supplied as the result of a probe request. If the key is not found
   the defaults are tried.
 
-    *Defaults*: probe.xml or Devices.xml 
-    
-* `DisableAgentDevice` - When the schema version is >= 1.7, disable the 
+    *Defaults*: probe.xml or Devices.xml
+
+* `DisableAgentDevice` - When the schema version is >= 1.7, disable the
   creation of the Agent device.
-  
+
     *Default*: false
 
 * `JsonVersion`     - JSON Printer format. Old format: 1, new format: 2
 
     *Default*: 2
-    
+
 * `LogStreams` - Debugging flag to log the streamed data to a file. Logs to a file named: `Stream_` + timestamp + `.log` in the current working directory. This is only for the Rest Sink.
 
     *Default*: `false`
@@ -621,11 +621,11 @@ Configuration Parameters
   number is the actual count, not an exponent.
 
     *Default*: 1024
-    
+
 * `MaxCachedFileSize` - The maximum size of a raw file to cache in memory.
 
     *Default*: 20 kb
-    
+
 * `MinCompressFileSize` - The file size where we begin compressing raw files sent to the client.
 
     *Default*: 100 kb
@@ -637,7 +637,7 @@ Configuration Parameters
 * `MonitorConfigFiles` - Monitor agent.cfg and Devices.xml files and restart agent if they change.
 
     *Default*: false
-    
+
 * `MonitorInterval` - The interval between checks if the agent.cfg or Device.xml files have changed.
 
     *Default*: 10 seconds
@@ -650,7 +650,7 @@ Configuration Parameters
   process id of the daemon. This is not supported in Windows.
 
     *Default*: agent.pid
-    
+
 * `SchemaVersion` - Change the schema version to a different version number.
 
     *Default*: 2.0
@@ -659,7 +659,7 @@ Configuration Parameters
 
     *Default*: Local machine name
 
-* `ServiceName` - Changes the service name when installing or removing 
+* `ServiceName` - Changes the service name when installing or removing
   the service. This allows multiple agents to run as services on the same machine.
 
     *Default*: MTConnect Agent
@@ -667,11 +667,11 @@ Configuration Parameters
 * `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names. This applies to all adapters.
 
     *Default*: `false`
-    
+
 * `VersionDeviceXml` - Create a new versioned file every time the Device.xml file changes from an external source.
 
     *Default*: `false`
-    
+
 * `CorrectTimestamps` - Verify time is always progressing forward for each data item and correct if not.
 
     *Default*: `false`
@@ -683,7 +683,7 @@ Configuration Parameters
 * `WorkerThreads` - The number of operating system threads dedicated to the Agent
 
     *Default*: 1
-    
+
 #### Adapter General Configuration
 
 These can be overridden on a per-adapter basis
@@ -692,25 +692,25 @@ These can be overridden on a per-adapter basis
 
     *Default*: shdr
 
-* `ConversionRequired` - Global default for data item units conversion in the agent. 
+* `ConversionRequired` - Global default for data item units conversion in the agent.
   Assumes the adapter has already done unit conversion.
 
     *Default*: true
-    
-* `EnableSourceDeviceModels` - Allow adapters and data sources to supply Device 
+
+* `EnableSourceDeviceModels` - Allow adapters and data sources to supply Device
   configuration
 
     *Default*: false
-    
-* `Heartbeat` – Overrides the heartbeat interval sent back from the adapter in the 
+
+* `Heartbeat` – Overrides the heartbeat interval sent back from the adapter in the
    `* PONG <hb>`. The heartbeat will always be this value in milliseconds.
 
     *Default*: _None_
-    
+
 * `IgnoreTimestamps` - Overwrite timestamps with the agent time. This will correct
   clock drift but will not give as accurate relative time since it will not take into
   consideration network latencies. This can be overridden on a per adapter basis.
-  
+
     *Default*: false
 
 * `LegacyTimeout`	- The default length of time an adapter can be silent before it
@@ -722,19 +722,19 @@ These can be overridden on a per-adapter basis
   the UUID in the Devices.xml file. This can be overridden on a per adapter basis.
 
     *Default*: true
-    
-* `ReconnectInterval` - The amount of time between adapter reconnection attempts. 
+
+* `ReconnectInterval` - The amount of time between adapter reconnection attempts.
   This is useful for implementation of high performance adapters where availability
   needs to be tracked in near-real-time. Time is specified in milliseconds (ms).
-      
+
     *Default*: 10000
-      
-* `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one (1), 
-  allows multiple complex observations, like `Condition` and `Message` on the same line. If it equials one (1), 
+
+* `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one (1),
+  allows multiple complex observations, like `Condition` and `Message` on the same line. If it equials one (1),
   then any observation requiring more than a key/value pair need to be on separate lines. This is the default for all adapters.
 
-    *Default*: 1	
-	
+    *Default*: 1
+
 * `UpcaseDataItemValue` - Always converts the value of the data items to upper case.
 
     *Default*: true
@@ -745,12 +745,12 @@ These can be overridden on a per-adapter basis
 
     *Default*: false
 
-* `AllowPutFrom`	- Allow HTTP PUT or POST from a specific host or 
+* `AllowPutFrom`	- Allow HTTP PUT or POST from a specific host or
   list of hosts. Lists are comma (,) separated and the host names will
   be validated by translating them into IP addresses.
 
     *Default*: none
-    
+
 * `HttpHeaders`     - Additional headers to add to the HTTP Response for CORS Security
 
     > Example: ```
@@ -763,7 +763,7 @@ These can be overridden on a per-adapter basis
 * `Port`	- The port number the agent binds to for requests.
 
     *Default*: 5000
-    
+
 * `ServerIp` - The server IP Address to bind to. Can be used to select the interface in IPV4 or IPV6.
 
     *Default*: 0.0.0.0
@@ -772,7 +772,7 @@ These can be overridden on a per-adapter basis
 #### Configuration Pameters for TLS (https) Support ####
 
 The following parameters must be present to enable https requests. If there is no password on the certificate, `TlsCertificatePassword` may be omitted.
-	
+
 * `TlsCertificateChain` - The name of the file containing the certificate chain created from signing authority
 
     *Default*: *NULL*
@@ -784,7 +784,7 @@ The following parameters must be present to enable https requests. If there is n
 * `TlsClientCAs` - For `TlsVerifyClientCertificate`, specifies a file that contains additional certificate authorities for verification
 
     *Default*: *NULL*
-    
+
 * `TlsDHKey` -  The name of the file containing the Diffie–Hellman key
 
     *Default*: *NULL*
@@ -810,11 +810,11 @@ The following parameters must be present to enable https requests. If there is n
 * `MqttHost` - IP Address or name of the MQTT Broker
 
     *Default*: 127.0.0.1
-  
+
 * `MqttPort` - Port number of MQTT Broker
 
     *Default*: 1883
-  
+
 * `MqttTls` - TLS Certificate for secure connection to the MQTT Broker
 
     *Default*: `false`
@@ -824,6 +824,10 @@ The following parameters must be present to enable https requests. If there is n
     *Default*: `false`
 
 #### MQTT Sink
+
+> **⚠️ Deprecation Notice:** The origional `MqttService` has been deprecated. `MqttService` is now an alias for `Mqtt2Service`. Please use `MqttService` for new configurations. `Mqtt2Service` will continue to work for backward compatibility but may be removed in a future version.
+
+**Deprecated Configuration (still supported):**
 
 Enabled in `agent.cfg` by specifying:
 
@@ -835,19 +839,9 @@ Sinks {
 }
 ```
 
-* `DeviceTopic` - Prefix for the Device Model topic
+> **Note:** Both `MqttService` and `Mqtt2Service` use the same underlying implementation and support the same configuration options listed below.
 
-    *Default*: `MTConnect/Device/`
-
-* `ObservationTopic` - Prefix for the Streams events, samples, and conditions
-
-    *Default*: `MTConnect/Observation/`
-
-* `AssetTopic` - Prefix for the Assets
-
-    *Default*: `MTConnect/Asset/`
-
-#### MQTT Sink 2
+#### MQTT Sink Configuration
 
 Enabled in `agent.cfg` by specifying:
 
@@ -862,20 +856,20 @@ Sinks {
 * `AssetTopic` - Prefix for the Assets
 
     *Default*: `MTConnect/Asset/[device]`
-    
-* `CurrentTopic` - Prefix for the Current 
+
+* `CurrentTopic` - Prefix for the Current
 
     *Default*: `MTConnect/Current/[device]`
 
 * `ProbeTopic` or `DeviceTopic` - Prefix for the Device Model topic
 
-    > Note: `[device]` will be replaced with the uuid of each device. Other patterns can be created, 
+    > Note: `[device]` will be replaced with the uuid of each device. Other patterns can be created,
     > for example: `MTConnect/[device]/Probe` will group by device instead of operation.
     > `DeviceTopic` will also work.
 
     *Default*: `MTConnect/Probe/[device]`
 
-* `SampleTopic` - Prefix for the Sample 
+* `SampleTopic` - Prefix for the Sample
 
     *Default*: `MTConnect/Sample/[device]`
 
@@ -889,7 +883,7 @@ Sinks {
 * `MqttCurrentInterval` - The frequency to publish currents. Acts like a keyframe in a video stream.
 
     *Default*: 10000ms
-    
+
 * `MqttSampleInterval` - The frequency to publish samples. Works the same way as the `interval` in the rest call. Groups observations up and publishes with the minimum interval given. If nothing is availble, will wait until an observation arrives to publish.
 
     *Default*: 500ms
@@ -897,15 +891,15 @@ Sinks {
 * `MqttSampleCount` - The maxmimum number of observations to publish at one time.
 
     *Default*: 1000
-    
+
 * `MqttRetain` - For the MQTT Sinks, sets the retain flag for publishing.
 
     *Default*: True
-    
+
 * `MqttQOS`: - For the MQTT Sinks, sets the Quality of Service. Must be one of `at_least_once`, `at_most_once`, `exactly_once`.
 
     *Default*: `at_least_once`
-    
+
 * `MqttXPath`: - The xpath filter to apply to all current and samples published to MQTT. If the XPath is invalid, it will fall back to publishing all data items.
 
     *Default*: All data items
@@ -946,7 +940,7 @@ Sinks {
     * `SerialNumber` - Replaces the SerialNumber attribute in the device XML.
 
         *Default*: Current value in device XML.
-        
+
     * `UUID` - Replaces the UUID attribute in the device XML.
 
         *Default*: Current value in device XML.
@@ -964,60 +958,60 @@ Sinks {
         *Default*: no
 
     * `LegacyTimeout` - length of time an adapter can be silent before it
-        is disconnected. This is only for legacy adapters that do not support 
+        is disconnected. This is only for legacy adapters that do not support
         heartbeats. If heartbeats are present, this will be ignored.
 
         *Default*: 600
 
-    * `ReconnectInterval` - The amount of time between adapter reconnection attempts. 
+    * `ReconnectInterval` - The amount of time between adapter reconnection attempts.
        This is useful for implementation of high performance adapters where availability
        needs to be tracked in near-real-time. Time is specified in milliseconds (ms).
        Defaults to the top level ReconnectInterval.
-      
+
         *Default*: 10000
-        
+
     * `IgnoreTimestamps` - Overwrite timestamps with the agent time. This will correct
       clock drift but will not give as accurate relative time since it will not take into
       consideration network latencies. This can be overridden on a per adapter basis.
 
         *Default*: Top Level Setting
-        
+
     * `PreserveUUID` - Do not overwrite the UUID with the UUID from the adapter, preserve
 		  the UUID in the Devices.xml file. This can be overridden on a per adapter basis.
 
 		    *Default*: false
-		
+
     * `RealTime` - Boost the thread priority of this adapter so that events are handled faster.
 
         *Default*: false
-    
-    * `RelativeTime` - The timestamps will be given as relative offsets represented as a floating 
-      point number of milliseconds. The offset will be added to the arrival time of the first 
+
+    * `RelativeTime` - The timestamps will be given as relative offsets represented as a floating
+      point number of milliseconds. The offset will be added to the arrival time of the first
       recorded event. If the timestamp is given as a time, the difference between the agent time
-      and the fitst incoming timestamp will be used as a constant clock adjustment. 
+      and the fitst incoming timestamp will be used as a constant clock adjustment.
 
         *Default*: false
 
-    * `ConversionRequired` - Adapter setting for data item units conversion in the agent. 
+    * `ConversionRequired` - Adapter setting for data item units conversion in the agent.
       Assumes the adapter has already done unit conversion. Defaults to global.
 
         *Default*: Top Level Setting
-        
+
     * `UpcaseDataItemValue` - Always converts the value of the data items to upper case.
 
         *Default*: Top Level Setting
 
-    * `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one 
-      (1), allows  multiple complex observations, like `Condition` and `Message` on the same line. 
-      If it equials one (1), then any observation requiring more than a key/value pair need to be on 
+    * `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one
+      (1), allows  multiple complex observations, like `Condition` and `Message` on the same line.
+      If it equials one (1), then any observation requiring more than a key/value pair need to be on
       separate lines. Applies to only this adapter.
 
 	    *Default*: 1
 
     * `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names.
-      
+
         *Default*: false
-		
+
 	* `AdapterIdentity` - Adapter Identity name used to prefix dataitems within the Agent device ids and names.
 
         *Default*:
@@ -1034,7 +1028,7 @@ Sinks {
 * `MqttHost` - IP Address or name of the MQTT Broker
 
     *Default*: 127.0.0.1
-  
+
 * `MqttPort` - Port number of MQTT Broker
 
     *Default*: 1883
@@ -1078,20 +1072,20 @@ Sinks {
 * `SourceDevice` – The Device name or UUID for the source of the data
 * `Count` – the number of items request during a single sample
 
-    *Default*: 1000  
-    
+    *Default*: 1000
+
 * `Polling Interval` – The interval used for streaming or polling in milliseconds
 
     *Default*: 500ms
-    
+
 * `Reconnect Interval` – The interval between reconnection attampts in milliseconds
 
     *Default*: 10000ms
-    
+
 * `Use Polling` – Force the adapter to use polling instead of streaming. Only set to `true` if x-multipart-replace blocked.
 
     *Default*: false
-    
+
 * `Heartbeat` – The heartbeat interval from the server
 
     *Default*: 10000ms
@@ -1114,20 +1108,20 @@ logger_config configuration items
       directory as the executable.
 
         *Default*: file `adapter.log`
-        
+
     * `max_size` - The maximum log file size. Suffix can be K for kilobytes, M for megabytes, or
       G for gigabytes. No suffix will default to bytes (B). Case is ignored.
-    
+
         *Default*: 10M
-        
+
     * `max_index` - The maximum number of log files to keep.
 
         *Default*: 9
-        
+
     * `schedule` - The scheduled time to start a new file. Can be DAILY, WEEKLY, or NEVER.
-            
+
         *Default*: NEVER
-    
+
 # Agent-Adapter Protocols
 ## SHDR Version 2.0
 
@@ -1146,26 +1140,26 @@ If the value itself contains a pipe character `|` the pipe must be escaped using
 Conditions require six (6) fields as follows:
 
 	<timestamp>|<data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
-	
+
 	Condition id and native code are set to the same value given as <native_code>
 
 	<timestamp>|<data_item_name>|<level>|<native_code>:<condition_id>|<native_severity>|<qualifier>|<message>
-	
+
 	Condition id is set to condition_id and native code is set to native_code
-	
+
 	<timestamp>|<data_item_name>|<level>|<condition_id>|<native_severity>|<qualifier>|<message>
-	
+
 	Condition id is set to condition_id and native code is not set
-	
-	
+
+
 For a complete description of these fields, see the standard. An example line will look like this:
 
 	2014-09-29T23:59:33.460470Z|htemp|WARNING|HTEMP-1-HIGH|HTEMP|1|HIGH|Oil Temperature High
-	
+
 The next special format is the Message. There is one additional field, native_code, which needs to be included:
 
 	2014-09-29T23:59:33.460470Z|message|CHG_INSRT|Change Inserts
-	
+
 Time series data also gets special treatment, the count and optional frequency are specified. In the following example we have 10 items at a frequency of 100hz:
 
 	2014-09-29T23:59:33.460470Z|current|10|100|1 2 3 4 5 6 7 8 9 10
@@ -1179,11 +1173,11 @@ All data items follow the formatting requirements in the MTConnect standard for 
 A new feature introduced in version 1.4 is the ability to announce a reset has been triggered. If we have a part count named `pcount` that gets reset daily, the new protocol is as follows:
 
 	2014-09-29T23:59:33.460470Z|pcount|0:DAY
-	
+
 To specify the duration of the static, indicate it with an `@` sign after the timestamp as follows:
 
 	2014-09-29T23:59:33.460470Z@100.0|pcount|0:DAY
-	
+
 ### `DATA_SET` Representation ###
 
 A new feature in version 1.5 is the `DATA_SET` representation which allows for key value pairs to be given. The protocol is similar to time series where each pair is space delimited. The agent automatically removes duplicate values from the stream and allows for addition, deletion and resetting of the values. The format is as follows:
@@ -1247,7 +1241,7 @@ This form updates the asset id KSSP300R.1 for a cutting tool with the text at th
 		...
 		</CuttingTool>
 		--multiline--0FED07ACED
-		
+
 The terminal text must appear on the first position after the last line of text. The adapter can also remove assets (1.3) by sending a @REMOVE_ASSET@ with an asset id:
 
 	2012-02-21T23:59:33.460470Z|@REMOVE_ASSET@|KSSP300R.1
@@ -1262,7 +1256,7 @@ Partial updates to assets is also possible by using the @UPDATE_ASSET@ key, but 
 
 ## MQTT JSON Ingress Protocol Version 2.0
 
-In general the data format is {"timestamp": "YYYY-MM-DDThh:mm:ssZ","dataItemId":"value", "dataItemId":{"key1":"value1", ..., "keyn":"valuen}} 
+In general the data format is {"timestamp": "YYYY-MM-DDThh:mm:ssZ","dataItemId":"value", "dataItemId":{"key1":"value1", ..., "keyn":"valuen}}
 
 **NOTE**: See the standard for the complete description of the fields for the data item representations below.
 
@@ -1276,7 +1270,7 @@ A simple set of events and samples will look something like this:
 	"executionId": "ACTIVE"						//Execution state
 }
 ```
-	
+
 A `CONDITION` requires the key to be the dataItemId and requires the 6 fields as shown in the example below
 
 ```json
@@ -1303,8 +1297,8 @@ A `MESSAGE` requires the key to be the dataItemId and requires the nativeCode fi
 	}
 }
 ```
-	
-The `TimeSeries` `REPRESENTATION` requires the key to be the dataItemId and requires 2 fields "count" and "values" and 1 to n comma delimited values.  
+
+The `TimeSeries` `REPRESENTATION` requires the key to be the dataItemId and requires 2 fields "count" and "values" and 1 to n comma delimited values.
 >**NOTE**: The "frequency" field is optional.
 
 ```json
@@ -1331,7 +1325,7 @@ The `DataSet` `REPRESENTATION` requires the the dataItemId as the key and the "v
 }
 ```
 
-Example with the optional "resetTriggered" filed:	
+Example with the optional "resetTriggered" filed:
 
 ```json
 {
@@ -1356,8 +1350,8 @@ The `Table` `REPRESENTATION` requires the the dataItemId as the key and the "val
 		},
 		"row2": {
 		"cell1":"Some Other Text",
-		"cell2":243        
-		}      
+		"cell2":243
+		}
 	}
 }
 ```
@@ -1388,15 +1382,15 @@ There are a number of commands that can be sent as part of the adapter stream ov
 	`* adapterVersion: <version>`
 
 * Set the calibration in the device component of the associated device:
- 
+
 	`* calibration: XXX`
 
 * Tell the agent that the data coming from this adapter requires conversion:
- 
+
 	`* conversionRequired: <yes|no>`
 
 * Set the description in the device header of the associated device:
- 
+
 	`* description: XXX`
 
 * Specify the default device for this adapter. The device can be specified as either the device name or UUID:
@@ -1408,7 +1402,7 @@ There are a number of commands that can be sent as part of the adapter stream ov
 	`* devicemodel: <deviceXML>`
 
 * Set the manufacturer in the device header of the associated device:
- 
+
 	`* manufacturer: XXX`
 
 * Specify the MTConnect Version the adapter supports:
@@ -1416,19 +1410,19 @@ There are a number of commands that can be sent as part of the adapter stream ov
 	`* mtconnectVersion: <version>`
 
 * Set the nativeName in the device component of the associated device:
- 
+
 	`* nativeName: XXX`
 
 * Tell the agent that the data coming from this adapter would like real-time priority:
- 
+
 	`* realTime: <yes|no>`
 
 * Tell the agent that the data coming from this adapter is specified in relative time:
- 
+
 	`* relativeTime: <yes|no>`
 
 * Set the serialNumber in the device header of the associated device:
- 
+
 	`* serialNumber: XXX`
 
 * Specify the version of the SHDR protocol delivered by the adapter. See `ShdrVersion` above:
@@ -1436,11 +1430,11 @@ There are a number of commands that can be sent as part of the adapter stream ov
 	`* shdrVersion: <version>`
 
 * Set the station in the device header of the associated device:
- 
+
 	`* station: XXX`
 
 * Set the uuid in the device header of the associated device if preserveUuid = false:
- 
+
 	`* uuid: XXX`
 
 Any other command will be logged as a warning.
@@ -1458,32 +1452,32 @@ Adapter:
 	* PONG 10000
 
 This indicates that the adapter is expecting a `PING` every 10 seconds and if there is no `PING`, in 2x the frequency, then the adapter should close the connection. At the same time, if the agent does not receive a `PONG` within 2x frequency, then it will close the connection. If no `PONG` response is received, the agent assumes the adapter is incapable of participating in heartbeat protocol and uses the legacy time specified above.
-	
+
 Just as with the SHDR protocol, these messages must end with an LF (ASCII 10) or CR-LF (ASCII 15 followed by ASCII 10).
 
 HTTP PUT/POST Method of Uploading Data
 -----
 
 There are two configuration settings mentioned above: `AllowPut` and `AllowPutFrom`. `AllowPut` alone will allow any process to use `HTTP` `POST` or `PUT` to send data to the agent and modify values. To restrict this to a limited number of
-machines, you can list the IP Addresses that are allowed to `POST` data to the agent. 
+machines, you can list the IP Addresses that are allowed to `POST` data to the agent.
 
 An example would be:
 
     AllowPut = yes
     AllowPutFrom = 192.168.1.72, 192.168.1.73
-  
+
 This will allow the two machines to post data to the MTConnect agent. The data can be either data item values or assets. The primary use of this capability is uploading assets from a process or even the command line using utilities like curl. I'll be using curl for these examples.
 
 For example, with curl you can use the -d option to send data to the server. The data will be in standard form data format, so all you need to do is to pass the `<data_item_name>=<data_item_value>` to set the values, as follows:
 
     curl -d 'avail=AVAILABLE&program_1=XXX' 'http://localhost:5000/ExampleDevice'
-    
+
 By specifying the device at the end of the URL, you tell the agent which device to use for the POST. This will set the availability tag to AVAILABLE and the program to XXX:
 
     <Availability dataItemId="dtop_3" timestamp="2015-05-18T18:20:12.278236Z" name="avail" sequence="65">AVAILABLE</Availability>
     ...
     <Program dataItemId="path_51" timestamp="2015-05-18T18:20:12.278236Z" name="program_1" sequence="66">XXX</Program>
-    
+
 The full raw data being passed over looks like this:
 
     => Send header, 161 bytes (0xa1)
@@ -1493,7 +1487,7 @@ The full raw data being passed over looks like this:
     004d: Accept: */*
     005a: Content-Length: 29
     006e: Content-Type: application/x-www-form-urlencoded
-    009f: 
+    009f:
     => Send data, 29 bytes (0x1d)
     0000: avail=AVAILABLE&program_1=XXX
     == Info: upload completely sent off: 29 out of 29 bytes
@@ -1505,18 +1499,18 @@ The full raw data being passed over looks like this:
     <= Recv header, 24 bytes (0x18)
     0000: Content-Type: text/xml
     <= Recv header, 2 bytes (0x2)
-    0000: 
+    0000:
     <= Recv data, 10 bytes (0xa)
     0000: <success/>
     >== Info: Closing connection 0
-    
+
 This is using the --trace - to dump the internal data. The response will be a simple `<success/>` or `<fail/>`.
-    
+
 Any data item can be set in this fashion. Similarly conditions are set using the following syntax:
 
     curl -d 'system=fault|XXX|1|LOW|Feeling%20low' 'http://localhost:5000/ExampleDevice'
-    
-One thing to note, the data and values are URL encoded, so the space needs to be encoded as a %20 to appear correctly. 
+
+One thing to note, the data and values are URL encoded, so the space needs to be encoded as a %20 to appear correctly.
 
     <Fault dataItemId="controller_46" timestamp="2015-05-18T18:24:48.407898Z" name="system" sequence="67" nativeCode="XXX" nativeSeverity="1" qualifier="LOW" type="SYSTEM">Feeling Low</Fault>
 
@@ -1526,7 +1520,7 @@ Assets are posted in a similar fashion. The data will be taken from a file conta
 
 The @... uses the named file to pass the data and the URL must contain the asset id and the device name as well as the asset type. If the type is CuttingTool or CuttingToolArchetype, the data will be parsed and corrected if properties are out of order as with the adapter. If the device is not specified and there are more than one device in this adapter, it will cause an error to be returned.
 
-Programmatically, send the data as the body of the POST or PUT request as follows. If we look at the raw data, you will see the data is sent over verbatim as follows: 
+Programmatically, send the data as the body of the POST or PUT request as follows. If we look at the raw data, you will see the data is sent over verbatim as follows:
 
     => Send header, 230 bytes (0xe6)
     0000: POST /asset/B732A08500HP.1?device=ExampleDevice&type=CuttingTool
@@ -1537,7 +1531,7 @@ Programmatically, send the data as the body of the POST or PUT request as follow
     0087: Content-Length: 2057
     009d: Content-Type: application/x-www-form-urlencoded
     00ce: Expect: 100-continue
-    00e4: 
+    00e4:
     == Info: Done waiting for 100-continue
     => Send data, 2057 bytes (0x809)
     0000: (file data sent here, see below...)
@@ -1549,7 +1543,7 @@ Programmatically, send the data as the body of the POST or PUT request as follow
     <= Recv header, 24 bytes (0x18)
     0000: Content-Type: text/xml
     <= Recv header, 2 bytes (0x2)
-    0000: 
+    0000:
     <= Recv data, 10 bytes (0xa)
     0000: <success/>
     <success/>== Info: Closing connection 0
@@ -1604,7 +1598,7 @@ An example in ruby is as follows:
     => #<Net::HTTPOK 200 OK readbody=true>
     > r.body
     => "<success/>"
-	
+
 # Building the agent
 
 ## Overview
@@ -1635,7 +1629,7 @@ The agent build is dependent on the following utilities:
 
     *default*: True
 
-* `shared`: Specifies if the build will create shared libraries (.dll/.so/.dylib) or static libraries. Also makes dependent libraries dynamic as well. Packaging picks up all dependent libraries when creating the ZIP. This is useful when creating plugins since there is less duplication of dependent code. Values: `True` or `False`. 
+* `shared`: Specifies if the build will create shared libraries (.dll/.so/.dylib) or static libraries. Also makes dependent libraries dynamic as well. Packaging picks up all dependent libraries when creating the ZIP. This is useful when creating plugins since there is less duplication of dependent code. Values: `True` or `False`.
 
     *default*: False
 
@@ -1643,15 +1637,15 @@ The agent build is dependent on the following utilities:
 
     *default*: 0x600
 
-* `with_docs`: Enable generation of MTConnect Agent library documentation using doxygen. If true, will build the use conan to build doxygen if it is not installed. Values: `True` or `False`. 
+* `with_docs`: Enable generation of MTConnect Agent library documentation using doxygen. If true, will build the use conan to build doxygen if it is not installed. Values: `True` or `False`.
 
     *default*: False
 
-* `with_ruby`: Enable mruby extensions for dynamic scripting. Values: `True` or `False`. 
+* `with_ruby`: Enable mruby extensions for dynamic scripting. Values: `True` or `False`.
 
     *default*: True
 
-* `without_ipv6`: Disable IPV6 support when building on operating systems that disable IPV6 services. Some docker images disable IPV6. Values: `True` or `False`. 
+* `without_ipv6`: Disable IPV6 support when building on operating systems that disable IPV6 services. Some docker images disable IPV6. Values: `True` or `False`.
 
     *default*: False
 
@@ -1673,7 +1667,7 @@ The agent build is dependent on the following utilities:
 * `build_type`: Changes the debug or release build type. Values: `Release`, `Debug`, `RelWithDebInfo`, and `MinSizeRel`. See CMake documentation for explanations.
 
     *default*: `Release`
-    
+
 ### Conan useful configurations (set using `-c <config>=<value>`)
 
 * `tools.build:skip_test`: Stops conan from running the tests. Test package will still build. To disable tests from building, use `-tf ""` or `--testfolder=` to skip the building of tests.
@@ -1706,11 +1700,11 @@ Install dependencies from the downloads above. Make sure python, ruby, and cmake
 Clone the agent to another directory:
 
 	git clone https://github.com/mtconnect/cppagent.git
-	
+
 ####  To build for 64 bit Windows
 
 The following 64 and 32 bit builds will create the zip package in the directory where the repository was cloned. The build will occur in the .conan2 directory of the user's home directory.
-	
+
 Make sure to setup the environment:
 
     "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars64.bat"
@@ -1736,29 +1730,29 @@ The minimum memory (main + swap) when building with on CPU is 3GB. Less than tha
 If the build runs out of resources, there are two options, you can add swap or set the following command line option:
 
     -c tools.build:jobs=1
-	
+
 to instruct conan to not parallelize the builds. Some of the modules that include boost beast require significant resources to build.
 
 ## Building on Ubuntu on 20.04 LTS
 
 ### Setup the build
 
-    sudo apt install -y build-essential cmake gcc-11 g++-11 python3 python3-pip autoconf automake ruby ruby rake 
+    sudo apt install -y build-essential cmake gcc-11 g++-11 python3 python3-pip autoconf automake ruby ruby rake
     python3 -m pip install conan
     echo 'export PATH=$HOME/.local/bin:$PATH' >> .bashrc
 
 ### Download the source
 
 	git clone https://github.com/mtconnect/cppagent.git
-	
+
 ### Build the agent
-	
+
 	conan create cppagent -pr cppagent/conan/profiles/gcc --build=missing
-	
+
 ## Building on Mac OS
 
 Install brew and xcode command line tools
-	
+
 	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 	xcode-select —install
 
@@ -1771,13 +1765,13 @@ Install brew and xcode command line tools
 ### Download the source
 
 	git clone https://github.com/mtconnect/cppagent.git
-	
+
 ### Build the agent
-	
+
 	conan create cppagent -pr cppagent/conan/profiles/macos --build=missing
-    
+
 ### Generate an xcode project for debugging
-	
+
 	conan build . -pr conan/profiles/xcode -s build_type=Debug --build=missing -o development=True
 
 ## Building on Fedora Alpine
@@ -1786,14 +1780,14 @@ Install brew and xcode command line tools
 
 	apk add g++ python3 cmake git linux-headers make perl ruby
 	gem install rake
-	
+
 	python3 -m ensurepip
 	python3 -m pip install --upgrade pip
 
 ### As the user
-	
+
 	export PATH=~/.local/bin:$PATH
-	pip3 install conan	
+	pip3 install conan
 	git clone https://github.com/mtconnect/cppagent.git
 
 ### Build the agent
@@ -1806,7 +1800,7 @@ Install brew and xcode command line tools
 
 This section assumes you have installed openssl and can use the command line. The subject of the certificate is only for testing and should not be used in production. This section is provided to support testing and verification of the functionality. A certificate provided by a real certificate authority should be used in a production process.
 
-NOTE: The certificates must be generated with OpenSSL version 1.1.1 or later. LibreSSL 2.8.3 is not compatible with 
+NOTE: The certificates must be generated with OpenSSL version 1.1.1 or later. LibreSSL 2.8.3 is not compatible with
       more recent version of SSL on raspian (Debian).
 
 ## Server Creating self-signed certificate chain
@@ -1874,4 +1868,3 @@ For client.cnf
 # Docker
 
 See [demo ](demo) or [docker](docker)
-
