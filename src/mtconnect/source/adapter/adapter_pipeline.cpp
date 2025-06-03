@@ -21,6 +21,7 @@
 #include "mtconnect/configuration/agent_config.hpp"
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/pipeline/convert_sample.hpp"
+#include "mtconnect/pipeline/correct_timestamp.hpp"
 #include "mtconnect/pipeline/deliver.hpp"
 #include "mtconnect/pipeline/delta_filter.hpp"
 #include "mtconnect/pipeline/duplicate_filter.hpp"
@@ -28,7 +29,6 @@
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
 #include "mtconnect/pipeline/topic_mapper.hpp"
 #include "mtconnect/pipeline/upcase_value.hpp"
-#include "mtconnect/pipeline/correct_timestamp.hpp"
 #include "mtconnect/pipeline/validator.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 

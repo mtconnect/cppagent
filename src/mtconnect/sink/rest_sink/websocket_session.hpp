@@ -187,7 +187,6 @@ namespace mtconnect::sink::rest_sink {
         LOG(trace) << "Waiting for mutex";
         std::lock_guard<std::mutex> lock(m_mutex);
 
-
         if (m_busy || m_messageQueue.size() > 0)
         {
           LOG(debug) << "Queuing Chunk for " << *requestId;
@@ -438,7 +437,7 @@ namespace mtconnect::sink::rest_sink {
         else
         {
           LOG(debug) << "Received request id: " << id;
-	  
+
           res.first->second.m_request = std::move(request);
           if (!m_dispatch(derived().shared_ptr(), res.first->second.m_request))
           {
@@ -461,7 +460,7 @@ namespace mtconnect::sink::rest_sink {
     beast::flat_buffer m_buffer;
     std::map<std::string, WebsocketRequest> m_requests;
     std::mutex m_mutex;
-    std::atomic_bool m_busy { false };
+    std::atomic_bool m_busy {false};
     std::deque<Message> m_messageQueue;
     bool m_isOpen {false};
   };
