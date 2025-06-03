@@ -213,7 +213,7 @@ namespace mtconnect {
     /// @brief Get the MTConnect schema version the agent is supporting
     /// @return The MTConnect schema version as a string
     const auto &getSchemaVersion() const { return m_schemaVersion; }
-    
+
     /// @brief Get the validation state of the agent
     /// @returns the validation state of the agent
     bool isValidating() const { return m_validation; }
