@@ -187,12 +187,15 @@ namespace mtconnect::sink::rest_sink {
         LOG(trace) << "Waiting for mutex";
         std::lock_guard<std::mutex> lock(m_mutex);
 
+
         if (m_busy || m_messageQueue.size() > 0)
         {
+          LOG(debug) << "Queuing Chunk for " << *requestId;
           m_messageQueue.emplace_back(chunk, complete, *requestId);
         }
         else
         {
+          LOG(debug) << "Writing Chunk for " << *requestId;
           send(chunk, complete, *requestId);
         }
       }
@@ -235,7 +238,7 @@ namespace mtconnect::sink::rest_sink {
 
         auto ref = derived().shared_ptr();
 
-        LOG(trace) << "writing chunk for ws: " << requestId;
+        LOG(debug) << "writing chunk for ws: " << requestId;
 
         m_busy = true;
 
@@ -320,7 +323,7 @@ namespace mtconnect::sink::rest_sink {
 
       if (len == 0)
       {
-        LOG(trace) << "Empty message received";
+        LOG(debug) << "Empty message received";
         return;
       }
 
@@ -329,6 +332,8 @@ namespace mtconnect::sink::rest_sink {
       derived().stream().text(derived().stream().got_text());
       auto buffer = beast::buffers_to_string(m_buffer.data());
       m_buffer.consume(m_buffer.size());
+
+      LOG(debug) << "Received :" << buffer.c_str();
 
       Document doc;
       doc.Parse(buffer.c_str(), len);
@@ -432,6 +437,8 @@ namespace mtconnect::sink::rest_sink {
         }
         else
         {
+          LOG(debug) << "Received request id: " << id;
+	  
           res.first->second.m_request = std::move(request);
           if (!m_dispatch(derived().shared_ptr(), res.first->second.m_request))
           {
@@ -454,7 +461,7 @@ namespace mtconnect::sink::rest_sink {
     beast::flat_buffer m_buffer;
     std::map<std::string, WebsocketRequest> m_requests;
     std::mutex m_mutex;
-    std::atomic_bool m_busy;
+    std::atomic_bool m_busy { false };
     std::deque<Message> m_messageQueue;
     bool m_isOpen {false};
   };
