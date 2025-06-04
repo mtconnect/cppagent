@@ -65,6 +65,8 @@ namespace mtconnect::entity {
     TableCell(const TableCell &other) = default;
     TableCell() {}
     
+    /// @brief copy another table cell
+    /// @param other the other cell
     TableCell &operator=(const TableCell &other)
     {
       m_key = other.m_key;
@@ -76,8 +78,10 @@ namespace mtconnect::entity {
     bool operator==(const TableCell &other) const { return m_key == other.m_key; }
     bool operator<(const TableCell &other) const { return m_key < other.m_key; }
     
+    /// @brief helper visitor to compare variant values
     struct SameValue
     {
+      /// @brief Construct the with a cell value to compare
       SameValue(const TableCellValue &o) : m_other(o) {}
       
       /// @brief Compare the types are the same and the values are the same
@@ -90,9 +94,12 @@ namespace mtconnect::entity {
         return std::holds_alternative<T>(m_other) &&  std::get<T>(m_other) == v;
       }
       
+      /// @brief the other value to compare
       const TableCellValue &m_other;
     };
     
+    /// @brief Compares to cells
+    /// @param other the other cell
     bool same(const TableCell &other) const
     {
       const auto &ov = other.m_value;
@@ -100,6 +107,8 @@ namespace mtconnect::entity {
         std::visit(SameValue(ov), m_value);
     }
     
+    /// @brief compares two cell values
+    /// @param other the other cell value to compare
     bool sameValue(const TableCell &other) const
     {
       auto &ov = other.m_value;
@@ -190,6 +199,7 @@ namespace mtconnect::entity {
     DataSetEntry(const DataSetEntry &other) = default;
     DataSetEntry() : m_removed(false) {}
 
+    /// @brief copy a data set entry from another
     DataSetEntry &operator=(const DataSetEntry &other)
     {
       m_key = other.m_key;
@@ -198,9 +208,12 @@ namespace mtconnect::entity {
       return *this;
     }
 
+    /// @brief only compares keys for equality
     bool operator==(const DataSetEntry &other) const { return m_key == other.m_key; }
+    /// @brief only compares keys for less than
     bool operator<(const DataSetEntry &other) const { return m_key < other.m_key; }
 
+    /// @brief compare a data entry ewith another
     bool same(const DataSetEntry &other) const;
 
     std::string m_key;
