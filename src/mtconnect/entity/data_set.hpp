@@ -75,7 +75,9 @@ namespace mtconnect::entity {
       return *this;
     }
 
+    /// @brief only compares keys for equality
     bool operator==(const TableCell &other) const { return m_key == other.m_key; }
+    /// @brief only compares keys for less than
     bool operator<(const TableCell &other) const { return m_key < other.m_key; }
 
     /// @brief helper visitor to compare variant values
@@ -295,8 +297,7 @@ namespace mtconnect::entity {
       return std::holds_alternative<T>(m_other) && std::get<T>(m_other) == v;
     }
 
-  private:
-    const DataSetValue &m_other;
+    const DataSetValue &m_other; //! the other data set value
   };
 
   inline bool DataSetEntry::same(const DataSetEntry &other) const
