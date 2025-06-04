@@ -76,7 +76,9 @@ namespace mtconnect::entity {
   }
 
   inline static void hash(boost::uuids::detail::sha1 &sha1, const DataSet &set);
+  inline static void hash(boost::uuids::detail::sha1 &sha1, const TableRow &set);
 
+  template<typename ST>
   struct HashVisitor
   {
     HashVisitor(boost::uuids::detail::sha1 &sha1) : m_sha1(sha1) {}
@@ -102,7 +104,7 @@ namespace mtconnect::entity {
       auto c = arg.time_since_epoch().count();
       m_sha1.process_bytes(&c, sizeof(c));
     }
-    void operator()(const DataSet &arg) { hash(m_sha1, arg); }
+    void operator()(const ST &arg) { hash(m_sha1, arg); }
     void operator()(const std::nullptr_t &arg) { m_sha1.process_bytes("NULL", 4); }
 
     boost::uuids::detail::sha1 &m_sha1;
@@ -119,11 +121,22 @@ namespace mtconnect::entity {
       }
       else
       {
-        HashVisitor visitor(sha1);
+        HashVisitor<TableRow> visitor(sha1);
         visit(visitor, e.m_value);
       }
     }
   }
+  
+  inline static void hash(boost::uuids::detail::sha1 &sha1, const TableRow &set)
+  {
+    for (auto &e : set)
+    {
+      sha1.process_bytes(e.m_key.c_str(), e.m_key.size());
+      HashVisitor<TableCell> visitor(sha1);
+      visit(visitor, e.m_value);
+    }
+  }
+
 
   void Entity::hash(boost::uuids::detail::sha1 &sha1,
                     const boost::unordered_set<string> &skip) const
@@ -137,7 +150,7 @@ namespace mtconnect::entity {
       {
         const auto &value = e.second;
         sha1.process_bytes(e.first.c_str(), e.first.size());
-        HashVisitor visitor(sha1);
+        HashVisitor<DataSet> visitor(sha1);
         visit(visitor, value);
       }
     }

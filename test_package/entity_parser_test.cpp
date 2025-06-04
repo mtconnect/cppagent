@@ -372,13 +372,13 @@ TEST_F(EntityParserTest, should_parse_tables)
   auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ("Root", entity->getName());
   const DataSet &set = entity->get<DataSet>("Table");
-  const DataSet &e1 = set.get<DataSetWrapper>("A");
+  const auto &e1 = set.get<TableRow>("A");
 
   ASSERT_EQ("abc", e1.get<string>("text"));
   ASSERT_EQ(101, e1.get<int64_t>("int"));
   ASSERT_EQ(50.5, e1.get<double>("double"));
 
-  const DataSet &e2 = set.get<DataSetWrapper>("B");
+  const auto &e2 = set.get<TableRow>("B");
 
   ASSERT_EQ("def", e2.get<string>("text2"));
   ASSERT_EQ(102, e2.get<int64_t>("int2"));

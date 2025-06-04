@@ -39,8 +39,50 @@ namespace mtconnect::ruby {
   using namespace data_item;
   using namespace entity;
   using namespace std;
+  
+  /// @brief Convert a table cell value to a ruby hash element. Recursive in the case of tables.
+  /// @param[in] mrb the mruby state
+  /// @param[in] value the data set value
+  /// @returns an mruby value
+  inline mrb_value toRuby(mrb_state *mrb, const TableCellValue &value)
+  {
+    mrb_value rv;
+    
+    rv = visit(overloaded {[](const std::monostate &v) -> mrb_value { return mrb_nil_value(); },
+      [mrb](const std::string &v) -> mrb_value {
+        return mrb_str_new_cstr(mrb, v.c_str());
+      },
+      [mrb](const int64_t v) -> mrb_value { return mrb_int_value(mrb, v); },
+      [mrb](const double v) -> mrb_value { return mrb_float_value(mrb, v); }},
+               value);
+    
+    return rv;
+  }
+  
+  /// @brief Convert data set to ruby hash
+  ///
+  /// Recurses for tables.
+  ///
+  /// @param[in] mrb the mruby state
+  /// @param[in] value the data set
+  /// @returns an mruby value
+  inline mrb_value toRuby(mrb_state *mrb, const TableRow &set)
+  {
+    mrb_value hash = mrb_hash_new(mrb);
+    for (const auto &entry : set)
+    {
+      const auto &value = (entry.m_value);
+      
+      mrb_sym k = mrb_intern_cstr(mrb, entry.m_key.c_str());
+      mrb_value v = toRuby(mrb, value);
+      
+      mrb_hash_set(mrb, hash, mrb_symbol_value(k), v);
+    }
+    
+    return hash;
+  }
 
-  inline mrb_value toRuby(mrb_state *mrb, const DataSet &value);
+  
   /// @brief Convert a data set value to a ruby hash element. Recursive in the case of tables.
   /// @param[in] mrb the mruby state
   /// @param[in] value the data set value
@@ -53,7 +95,7 @@ namespace mtconnect::ruby {
                            [mrb](const std::string &v) -> mrb_value {
                              return mrb_str_new_cstr(mrb, v.c_str());
                            },
-                           [mrb](const entity::DataSet &v) -> mrb_value { return toRuby(mrb, v); },
+                           [mrb](const entity::TableRow &v) -> mrb_value { return toRuby(mrb, v); },
                            [mrb](const int64_t v) -> mrb_value { return mrb_int_value(mrb, v); },
                            [mrb](const double v) -> mrb_value { return mrb_float_value(mrb, v); }},
                value);
@@ -73,7 +115,7 @@ namespace mtconnect::ruby {
     mrb_value hash = mrb_hash_new(mrb);
     for (const auto &entry : set)
     {
-      auto value = (entry.m_value);
+      const auto &value = (entry.m_value);
 
       mrb_sym k = mrb_intern_cstr(mrb, entry.m_key.c_str());
       mrb_value v = toRuby(mrb, value);
@@ -83,8 +125,59 @@ namespace mtconnect::ruby {
 
     return hash;
   }
-
-  inline void dataSetFromRuby(mrb_state *mrb, mrb_value value, DataSet &dataSet);
+  
+  /// @brief Convert a Ruby hash value to an MTConect DataSet
+  /// @param[in] mrb mruby state
+  /// @param[in] value the hash value to convert
+  /// @returns true if succesful
+  inline bool tableRowCellValueFromRuby(mrb_state *mrb, mrb_value value, TableCellValue &tcv)
+  {
+    bool res = true;
+    switch (mrb_type(value))
+    {
+      case MRB_TT_SYMBOL:
+      case MRB_TT_STRING:
+        tcv.emplace<string>(stringFromRuby(mrb, value));
+        break;
+        
+      case MRB_TT_FIXNUM:
+        tcv.emplace<int64_t>(mrb_as_int(mrb, value));
+        break;
+        
+      case MRB_TT_FLOAT:
+        tcv.emplace<double>(mrb_as_float(mrb, value));
+        break;
+        
+      default:
+      {
+        LOG(warning) << "DataSet cannot conver type: "
+        << stringFromRuby(mrb, mrb_inspect(mrb, value));
+        res = false;
+        break;
+      }
+    }
+    return res;
+  }
+  
+  /// @brief convert a ruby hash table to a table row
+  inline void tableRowFromRuby(mrb_state *mrb, mrb_value value, TableRow &row)
+  {
+    auto hash = mrb_hash_ptr(value);
+    mrb_hash_foreach(
+                     mrb, hash,
+                     [](mrb_state *mrb, mrb_value key, mrb_value val, void *data) {
+                       TableRow *row = static_cast<TableRow *>(data);
+                       string k = stringFromRuby(mrb, key);
+                       TableCellValue tcv;
+                       if (tableRowCellValueFromRuby(mrb, val, tcv))
+                         row->emplace(k, tcv);
+                       
+                       return 0;
+                     },
+                     &row);
+  }
+  
+  
   /// @brief Convert a Ruby hash value to an MTConect DataSet
   /// @param[in] mrb mruby state
   /// @param[in] value the hash value to convert
@@ -109,9 +202,9 @@ namespace mtconnect::ruby {
 
       case MRB_TT_HASH:
       {
-        DataSet inner;
-        dataSetFromRuby(mrb, value, inner);
-        dsv.emplace<entity::DataSetWrapper>(inner);
+        TableRow inner;
+        tableRowFromRuby(mrb, value, inner);
+        dsv.emplace<entity::TableRow>(inner);
         break;
       }
 
@@ -126,7 +219,7 @@ namespace mtconnect::ruby {
     return res;
   }
 
-  /// @brief Convert a Ruby hash  to an MTConect DataSet
+  /// @brief Convert a Ruby hash  to an MTConnect DataSet
   /// @param[in] mrb mruby state
   /// @param[in] value the hash value to convert
   /// @param[out] dataSet the data set to populate

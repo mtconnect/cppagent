@@ -221,7 +221,8 @@ namespace mtconnect::pipeline {
     return true;
   }
 
-  inline DataSetValue type(const string &s)
+  template<typename VT>
+  inline VT type(const string &s)
   {
     using namespace boost;
     if (s.empty())
@@ -259,11 +260,10 @@ namespace mtconnect::pipeline {
 
       if (table)
       {
-        entry.m_value.emplace<DataSetWrapper>();
-        DataSet &row = get<DataSetWrapper>(entry.m_value);
+        TableRow &row = entry.m_value.emplace<TableRow>();
 
         eachElement(n, "Cell", [&row](xmlNodePtr c) {
-          row.emplace(attributeValue(c, "key"), type(text(c)));
+          row.emplace(attributeValue(c, "key"), type<TableCellValue>(text(c)));
           return true;
         });
 
@@ -272,7 +272,7 @@ namespace mtconnect::pipeline {
       }
       else
       {
-        entry.m_value = type(text(n));
+        entry.m_value = type<DataSetValue>(text(n));
       }
 
       ds.insert(entry);
