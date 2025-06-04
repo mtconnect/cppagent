@@ -409,17 +409,17 @@ TEST_F(DataItemMappingTest, should_map_an_event_table)
 
   auto &ds = set->getValue<DataSet>();
   ASSERT_EQ(3, ds.size());
-  auto a = get<DataSet>(ds.find("a"_E)->m_value);
+  DataSet &a = (DataSet&)get<DataSetWrapper>(ds.find("a"_E)->m_value);
   ASSERT_EQ(2, a.size());
   ASSERT_EQ(1, get<int64_t>(a.find("c"_E)->m_value));
   ASSERT_EQ(3.0, get<double>(a.find("n"_E)->m_value));
 
-  auto b = get<DataSet>(ds.find("b"_E)->m_value);
+  DataSet &b = (DataSet &) get<DataSetWrapper>(ds.find("b"_E)->m_value);
   ASSERT_EQ(2, a.size());
   ASSERT_EQ(2, get<int64_t>(b.find("d"_E)->m_value));
   ASSERT_EQ(3, get<int64_t>(b.find("e"_E)->m_value));
 
-  auto c = get<DataSet>(ds.find("c"_E)->m_value);
+  DataSet &c = (DataSet &) get<DataSetWrapper>(ds.find("c"_E)->m_value);
   ASSERT_EQ(2, c.size());
   ASSERT_EQ("abc", get<string>(c.find("x"_E)->m_value));
   ASSERT_EQ("def", get<string>(c.find("y"_E)->m_value));
@@ -445,17 +445,17 @@ TEST_F(DataItemMappingTest, should_map_an_sample_table)
 
   auto &ds = set->getValue<DataSet>();
   ASSERT_EQ(3, ds.size());
-  auto a = get<DataSet>(ds.find("a"_E)->m_value);
+  DataSet &a = (DataSet &) get<DataSetWrapper>(ds.find("a"_E)->m_value);
   ASSERT_EQ(2, a.size());
   ASSERT_EQ(1, get<int64_t>(a.find("c"_E)->m_value));
   ASSERT_EQ(3.0, get<double>(a.find("n"_E)->m_value));
 
-  auto b = get<DataSet>(ds.find("b"_E)->m_value);
+  DataSet &b = (DataSet &) get<DataSetWrapper>(ds.find("b"_E)->m_value);
   ASSERT_EQ(2, a.size());
   ASSERT_EQ(2, get<int64_t>(b.find("d"_E)->m_value));
   ASSERT_EQ(3, get<int64_t>(b.find("e"_E)->m_value));
 
-  auto c = get<DataSet>(ds.find("c"_E)->m_value);
+  DataSet &c = (DataSet &) get<DataSetWrapper>(ds.find("c"_E)->m_value);
   ASSERT_EQ(2, c.size());
   ASSERT_EQ("abc", get<string>(c.find("x"_E)->m_value));
   ASSERT_EQ("def", get<string>(c.find("y"_E)->m_value));

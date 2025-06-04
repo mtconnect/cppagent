@@ -748,9 +748,9 @@ TEST_F(JsonMappingTest, should_parse_tables)
   auto dsi = set1.begin();
 
   ASSERT_EQ("r1", dsi->m_key);
-  ASSERT_TRUE(holds_alternative<DataSet>(dsi->m_value));
+  ASSERT_TRUE(holds_alternative<DataSetWrapper>(dsi->m_value));
 
-  auto &row1 = get<DataSet>(dsi->m_value);
+  auto &row1 = (DataSet &) get<DataSetWrapper>(dsi->m_value);
   ASSERT_EQ(1, row1.size());
 
   auto ri = row1.begin();
@@ -758,7 +758,7 @@ TEST_F(JsonMappingTest, should_parse_tables)
   ASSERT_EQ(123.45, get<double>(ri->m_value));
 
   dsi++;
-  auto &row2 = get<DataSet>(dsi->m_value);
+  auto &row2 = (DataSet &) get<DataSetWrapper>(dsi->m_value);
   ASSERT_EQ(2, row2.size());
 
   ri = row2.begin();
@@ -783,9 +783,9 @@ TEST_F(JsonMappingTest, should_parse_tables)
   dsi = set2.begin();
 
   ASSERT_EQ("r1", dsi->m_key);
-  ASSERT_TRUE(holds_alternative<DataSet>(dsi->m_value));
+  ASSERT_TRUE(holds_alternative<DataSetWrapper>(dsi->m_value));
 
-  auto &row3 = get<DataSet>(dsi->m_value);
+  auto &row3 = (DataSet &) get<DataSetWrapper>(dsi->m_value);
   ASSERT_EQ(2, row3.size());
 
   ri = row3.begin();

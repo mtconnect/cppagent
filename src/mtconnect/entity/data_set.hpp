@@ -30,7 +30,84 @@
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect::entity {
-  struct DataSetEntry;
+  /// @brief Forward declaration of DataSetEntry
+  class DataSet;
+
+  class DataSetWrapper
+  {
+  public:
+    DataSetWrapper(const DataSet &entry);
+    DataSetWrapper(const DataSetWrapper &entry);
+    DataSetWrapper();
+    ~DataSetWrapper() = default;
+
+    DataSetWrapper &operator=(const DataSetWrapper &other);
+
+    operator DataSet &() noexcept
+    {
+      return *m_storage;
+    }
+
+    operator DataSet const &() const noexcept
+    {
+      return *m_storage;
+    }
+
+    void swap(DataSetWrapper &other) noexcept { m_storage.swap(other.m_storage); }
+
+    bool operator==(const DataSetWrapper &other) const noexcept;
+
+  private:
+    std::unique_ptr<DataSet> m_storage;
+  };
+
+  /// @brief Data set value variant
+  using DataSetValue = std::variant<std::monostate, DataSetWrapper, std::string, int64_t, double>;
+
+  /// @brief One entry in a data set. Has necessary interface to be work with maps.
+  struct DataSetEntry
+  {
+    /// @brief Create an entry with a key and value
+    /// @param key the key
+    /// @param value the value as a string
+    /// @param removed `true` if the key has been removed
+    DataSetEntry(std::string key, std::string &value, bool removed = false)
+      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
+    {}
+
+    /// @brief Create an entry for a table with a data set value
+    /// @param key the key
+    /// @param value the value as a DataSet
+    /// @param removed `true` if the key has been removed
+    DataSetEntry(std::string key, DataSet &value, bool removed = false)
+      : m_key(std::move(key)), m_value(DataSetWrapper(value)),
+        m_removed(removed)
+    {}
+
+    /// @brief Create an entry for a data set
+    /// @param key the key
+    /// @param value the a data set variant
+    /// @param removed `true` if the key has been removed
+    DataSetEntry(std::string key, DataSetValue value, bool removed = false)
+      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
+    {}
+    /// @brief Create a data set entry with just a key (used for search)
+    /// @param key
+    DataSetEntry(std::string key) : m_key(std::move(key)), m_value(std::string("")), m_removed(false) {}
+    DataSetEntry(const DataSetEntry &other) = default;
+    DataSetEntry() : m_removed(false) {}
+
+    DataSetEntry &operator=(const DataSetEntry &other);
+
+    bool operator==(const DataSetEntry &other) const { return m_key == other.m_key; }
+    bool operator<(const DataSetEntry &other) const { return m_key < other.m_key; }
+
+    bool same(const DataSetEntry &other) const;
+
+    std::string m_key;
+    DataSetValue m_value;
+    bool m_removed;
+  };
 
   /// @brief A set of data set entries
   class AGENT_LIB_API DataSet : public std::set<DataSetEntry>
@@ -58,6 +135,37 @@ namespace mtconnect::entity {
     bool parse(const std::string &s, bool table);
   };
 
+  inline DataSetWrapper::DataSetWrapper(const DataSet &entry) : m_storage(new DataSet(entry)) { ; }
+  inline DataSetWrapper::DataSetWrapper(const DataSetWrapper &entry)
+    : m_storage(new DataSet(*entry.m_storage))
+  {
+    ;
+  }
+  inline DataSetWrapper::DataSetWrapper() : m_storage(new DataSet()) { ; }
+
+  inline DataSetEntry &DataSetEntry::operator=(const DataSetEntry &other)
+  {
+    m_key = other.m_key;
+    m_value = other.m_value;
+    m_removed = other.m_removed;
+    return *this;
+  }
+
+  inline bool DataSetWrapper::operator==(const DataSetWrapper &other) const noexcept
+  {
+    return *m_storage == *other.m_storage;
+  }
+
+  inline DataSetWrapper &DataSetWrapper::operator=(const DataSetWrapper &other)
+  {
+    if (this != &other)
+    {
+      m_storage.reset(new DataSet(*other.m_storage));
+    }
+    return *this;
+  }
+
+
   /// @brief Data Set Value type enumeration
   enum class DataSetValueType : std::uint16_t
   {
@@ -67,9 +175,6 @@ namespace mtconnect::entity {
     INTEGER = 0x3,    ///< 64 bit integer
     DOUBLE = 0x4      ///< double
   };
-
-  /// @brief Data set value variant
-  using DataSetValue = std::variant<std::monostate, DataSet, std::string, int64_t, double>;
 
   /// @brief Equality visitor for a DataSetValue
   struct DataSetValueSame
@@ -90,51 +195,6 @@ namespace mtconnect::entity {
 
   private:
     const DataSetValue &m_other;
-  };
-
-  /// @brief One entry in a data set. Has necessary interface to be work with maps.
-  struct DataSetEntry
-  {
-    /// @brief Create an entry with a key and value
-    /// @param key the key
-    /// @param value the value as a string
-    /// @param removed `true` if the key has been removed
-    DataSetEntry(std::string key, std::string &value, bool removed = false)
-      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
-    {}
-
-    /// @brief Create an entry for a table with a data set value
-    /// @param key the key
-    /// @param value the value as a DataSet
-    /// @param removed `true` if the key has been removed
-    DataSetEntry(std::string key, DataSet &value, bool removed = false)
-      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
-    {}
-    /// @brief Create an entry for a data set
-    /// @param key the key
-    /// @param value the a data set variant
-    /// @param removed `true` if the key has been removed
-    DataSetEntry(std::string key, DataSetValue value, bool removed = false)
-      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
-    {}
-    /// @brief Create a data set entry with just a key (used for search)
-    /// @param key
-    DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false) {}
-    DataSetEntry(const DataSetEntry &other) = default;
-    DataSetEntry() : m_removed(false) {}
-
-    std::string m_key;
-    DataSetValue m_value;
-    bool m_removed;
-
-    bool operator==(const DataSetEntry &other) const { return m_key == other.m_key; }
-    bool operator<(const DataSetEntry &other) const { return m_key < other.m_key; }
-
-    bool same(const DataSetEntry &other) const
-    {
-      return m_key == other.m_key && m_removed == other.m_removed &&
-             std::visit(DataSetValueSame(other.m_value), m_value);
-    }
   };
 
   /// @brief Get a typed value from a data set
@@ -164,10 +224,10 @@ namespace mtconnect::entity {
 
   inline bool DataSetValueSame::operator()(const DataSet &v)
   {
-    if (!std::holds_alternative<DataSet>(m_other))
+    if (!std::holds_alternative<DataSetWrapper>(m_other))
       return false;
 
-    const auto &oset = std::get<DataSet>(m_other);
+    const DataSet &oset = std::get<DataSetWrapper>(m_other);
 
     if (v.size() != oset.size())
       return false;
@@ -175,10 +235,16 @@ namespace mtconnect::entity {
     for (const auto &e1 : v)
     {
       const auto &e2 = oset.find(e1);
-      if (e2 == oset.end() || !visit(DataSetValueSame(e2->m_value), e1.m_value))
+      if (e2 == oset.end() || !std::visit(DataSetValueSame(e2->m_value), e1.m_value))
         return false;
     }
 
     return true;
+  }
+
+  inline bool DataSetEntry::same(const DataSetEntry &other) const
+  {
+    return m_key == other.m_key && m_removed == other.m_removed &&
+           std::visit(DataSetValueSame(other.m_value), m_value);
   }
 }  // namespace mtconnect::entity

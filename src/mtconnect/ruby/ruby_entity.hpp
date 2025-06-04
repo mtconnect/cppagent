@@ -111,7 +111,7 @@ namespace mtconnect::ruby {
       {
         DataSet inner;
         dataSetFromRuby(mrb, value, inner);
-        dsv.emplace<entity::DataSet>(inner);
+        dsv.emplace<entity::DataSetWrapper>(inner);
         break;
       }
 

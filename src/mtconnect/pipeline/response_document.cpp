@@ -259,8 +259,8 @@ namespace mtconnect::pipeline {
 
       if (table)
       {
-        entry.m_value.emplace<DataSet>();
-        DataSet &row = get<DataSet>(entry.m_value);
+        entry.m_value.emplace<DataSetWrapper>();
+        DataSet &row = get<DataSetWrapper>(entry.m_value);
 
         eachElement(n, "Cell", [&row](xmlNodePtr c) {
           row.emplace(attributeValue(c, "key"), type(text(c)));

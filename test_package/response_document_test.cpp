@@ -290,7 +290,7 @@ TEST_F(ResponseDocumentTest, should_parse_tables)
   ASSERT_EQ("W1", dse->m_key);
   ASSERT_FALSE(dse->m_removed);
 
-  const auto &v1 = get<DataSet>(dse->m_value);
+  const DataSet &v1 = get<DataSetWrapper>(dse->m_value);
   ASSERT_EQ(3, v1.size());
 
   auto v1i = v1.begin();
@@ -307,7 +307,7 @@ TEST_F(ResponseDocumentTest, should_parse_tables)
   ASSERT_EQ("W2", dse->m_key);
   ASSERT_FALSE(dse->m_removed);
 
-  const auto &v2 = get<DataSet>(dse->m_value);
+  const DataSet &v2 = get<DataSetWrapper>(dse->m_value);
   ASSERT_EQ(3, v2.size());
 
   auto v2i = v2.begin();
@@ -324,7 +324,7 @@ TEST_F(ResponseDocumentTest, should_parse_tables)
   ASSERT_EQ("W3", dse->m_key);
   ASSERT_FALSE(dse->m_removed);
 
-  const auto &v3 = get<DataSet>(dse->m_value);
+  const DataSet &v3 = get<DataSetWrapper>(dse->m_value);
   ASSERT_EQ(3, v3.size());
 
   auto v3i = v3.begin();

@@ -97,7 +97,7 @@ TEST_F(TableTest, test_simple_table_formats)
   ASSERT_TRUE(s1.parse("abc={a=1 b=2.0 c='abc'}", true));
 
   ASSERT_EQ(1, s1.size());
-  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  const DataSet &abc1 = get<DataSetWrapper>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(3, abc1.size());
   ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
   ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
@@ -110,7 +110,7 @@ TEST_F(TableTest, test_simple_table_formats_with_whitespace)
   ASSERT_TRUE(s1.parse("abc={ a=1 b=2.0 c='abc' }", true));
 
   ASSERT_EQ(1, s1.size());
-  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  const DataSet &abc1 = get<DataSetWrapper>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(3, abc1.size());
   ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
   ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
@@ -123,7 +123,7 @@ TEST_F(TableTest, test_simple_table_formats_with_quotes)
   ASSERT_TRUE(s1.parse("abc=' a=1 b=2.0 c='abc''", true));
 
   ASSERT_EQ(1, s1.size());
-  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  const DataSet &abc1 = get<DataSetWrapper>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(3, abc1.size());
   ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
   ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
@@ -136,7 +136,7 @@ TEST_F(TableTest, test_simple_table_formats_with_double_quotes)
   ASSERT_TRUE(s1.parse("abc=\" a=1 b=2.0 c='abc'\"", true));
 
   ASSERT_EQ(1, s1.size());
-  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  const DataSet &abc1 = get<DataSetWrapper>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(3, abc1.size());
   ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
   ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
@@ -149,7 +149,7 @@ TEST_F(TableTest, test_simple_table_formats_with_nested_braces)
   ASSERT_TRUE(s1.parse("abc={ a=1 b=2.0 c={abc}}", true));
 
   ASSERT_EQ(1, s1.size());
-  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  const DataSet &abc1 = get<DataSetWrapper>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(3, abc1.size());
   ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
   ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
@@ -162,7 +162,7 @@ TEST_F(TableTest, test_simple_table_formats_with_removed_key)
   s1.parse("abc={ a=1 b=2.0 c={abc} d= e}", true);
 
   ASSERT_EQ(1, s1.size());
-  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  const DataSet &abc1 = get<DataSetWrapper>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(5, abc1.size());
   ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
   ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
@@ -177,7 +177,7 @@ TEST_F(TableTest, test_mulitple_entries)
   ASSERT_TRUE(s1.parse("abc={ a=1 b=2.0 c={abc} d= e} def={x=1.0 y=2.0}", true));
   ASSERT_EQ(2, s1.size());
 
-  const DataSet &abc = get<DataSet>(s1.find("abc"_E)->m_value);
+  const DataSet &abc = get<DataSetWrapper>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(5, abc.size());
   ASSERT_EQ(1, get<int64_t>(abc.find("a"_E)->m_value));
   ASSERT_EQ(2.0, get<double>(abc.find("b"_E)->m_value));
@@ -185,7 +185,7 @@ TEST_F(TableTest, test_mulitple_entries)
   ASSERT_TRUE(abc.find("d"_E)->m_removed);
   ASSERT_TRUE(abc.find("e"_E)->m_removed);
 
-  const DataSet &def = get<DataSet>(s1.find("def"_E)->m_value);
+  const DataSet &def = get<DataSetWrapper>(s1.find("def"_E)->m_value);
   ASSERT_EQ(2, def.size());
   ASSERT_EQ(1.0, get<double>(def.find("x"_E)->m_value));
   ASSERT_EQ(2.0, get<double>(def.find("y"_E)->m_value));
@@ -230,19 +230,19 @@ TEST_F(TableTest, InitialSet)
   ASSERT_EQ(3, set1.size());
   ASSERT_EQ(3, ce->get<int64_t>("count"));
 
-  auto g531 = get<DataSet>(set1.find("G53.1"_E)->m_value);
+  const DataSet &g531 = get<DataSetWrapper>(set1.find("G53.1"_E)->m_value);
   ASSERT_EQ((size_t)3, g531.size());
   ASSERT_EQ(1.0, get<double>(g531.find("X"_E)->m_value));
   ASSERT_EQ(2.0, get<double>(g531.find("Y"_E)->m_value));
   ASSERT_EQ(3.0, get<double>(g531.find("Z"_E)->m_value));
 
-  auto g532 = get<DataSet>(set1.find("G53.2"_E)->m_value);
+  const DataSet &g532 = get<DataSetWrapper>(set1.find("G53.2"_E)->m_value);
   ASSERT_EQ((size_t)3, g532.size());
   ASSERT_EQ(4.0, get<double>(g532.find("X"_E)->m_value));
   ASSERT_EQ(5.0, get<double>(g532.find("Y"_E)->m_value));
   ASSERT_EQ(6.0, get<double>(g532.find("Z"_E)->m_value));
 
-  auto g533 = get<DataSet>(set1.find("G53.3"_E)->m_value);
+  const DataSet &g533 = get<DataSetWrapper>(set1.find("G53.3"_E)->m_value);
   ASSERT_EQ((size_t)4, g533.size());
   ASSERT_EQ(7.0, get<double>(g533.find("X"_E)->m_value));
   ASSERT_EQ(8.0, get<double>(g533.find("Y"_E)->m_value));

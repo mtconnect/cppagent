@@ -358,7 +358,7 @@ namespace mtconnect::pipeline {
           if (m_expectation == Expectation::ROW)
           {
             // For tables, recurse down to read the entry data set
-            auto &row = m_entry.m_value.emplace<DataSet>();
+            auto &row = m_entry.m_value.emplace<DataSetWrapper>();
             DataSetHandler handler(row, nullopt, false);
             auto success = handler(reader, buff);
             if (!success)

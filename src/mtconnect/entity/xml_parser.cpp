@@ -129,7 +129,7 @@ namespace mtconnect::entity {
         {
           if (table && !cell)
           {
-            DataSet &ds = value.emplace<DataSet>();
+            DataSet &ds = value.emplace<DataSetWrapper>();
             parseDataSet(child, ds, true, true);
           }
           else if (valueNode->type == XML_TEXT_NODE)
