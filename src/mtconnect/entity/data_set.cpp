@@ -65,7 +65,7 @@ namespace std {
     s << t.m_key << "=" << t.m_value << (t.m_removed ? ":removed" : "");
     return s;
   }
-  
+
   static inline ostream &operator<<(ostream &s, const mtconnect::observation::TableCell &t)
   {
     s << t.m_key << "=" << t.m_value;
@@ -81,24 +81,22 @@ namespace mtconnect::entity {
   /// @brief Functions called when parsing data sets
   namespace DataSetParserActions {
     inline static void add_entry_f(DataSet &ds, const DataSetEntry &entry) { ds.emplace(entry); }
-    
-    struct TableCellConverter {
-      TableCellConverter(TableCellValue &value) : m_value(value) { }
-      
-      void operator()(const TableRow &row)
-      {
-        LOG(error) << "Table row cannot recurse";
-      }
-      
-      template<typename T>
+
+    struct TableCellConverter
+    {
+      TableCellConverter(TableCellValue &value) : m_value(value) {}
+
+      void operator()(const TableRow &row) { LOG(error) << "Table row cannot recurse"; }
+
+      template <typename T>
       void operator()(const T &v)
       {
         m_value.emplace<T>(v);
       }
-      
+
       TableCellValue &m_value;
     };
-    
+
     inline static void add_cell_f(TableRow &row, const DataSetEntry &entry)
     {
       TableCell cell(entry.m_key);

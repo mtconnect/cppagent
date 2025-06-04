@@ -78,7 +78,7 @@ namespace mtconnect::entity {
   inline static void hash(boost::uuids::detail::sha1 &sha1, const DataSet &set);
   inline static void hash(boost::uuids::detail::sha1 &sha1, const TableRow &set);
 
-  template<typename ST>
+  template <typename ST>
   struct HashVisitor
   {
     HashVisitor(boost::uuids::detail::sha1 &sha1) : m_sha1(sha1) {}
@@ -126,7 +126,7 @@ namespace mtconnect::entity {
       }
     }
   }
-  
+
   inline static void hash(boost::uuids::detail::sha1 &sha1, const TableRow &set)
   {
     for (auto &e : set)
@@ -136,7 +136,6 @@ namespace mtconnect::entity {
       visit(visitor, e.m_value);
     }
   }
-
 
   void Entity::hash(boost::uuids::detail::sha1 &sha1,
                     const boost::unordered_set<string> &skip) const

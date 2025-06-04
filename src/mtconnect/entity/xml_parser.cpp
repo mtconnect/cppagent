@@ -98,7 +98,7 @@ namespace mtconnect::entity {
     return boost::spirit::qi::parse(first, last, parser, value) && first == last;
   }
 
-  template<typename ST, typename VT>
+  template <typename ST, typename VT>
   static void parseDataSet(xmlNodePtr node, ST &dataSet, bool table, bool cell = false)
   {
     for (xmlNodePtr child = node->children; child; child = child->next)

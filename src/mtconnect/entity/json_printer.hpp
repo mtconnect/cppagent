@@ -33,9 +33,9 @@ namespace mtconnect::entity {
     {
       PropertyVisitor(T &writer, JsonPrinter<T> &printer, std::optional<AutoJsonObject<T>> &obj,
                       const EntityPtr &entity)
-      : m_obj(obj), m_printer(printer), m_entity(entity), m_writer(writer)
+        : m_obj(obj), m_printer(printer), m_entity(entity), m_writer(writer)
       {}
-      
+
       void operator()(const EntityPtr &arg)
       {
         m_obj->Key(m_key->c_str());
@@ -223,10 +223,10 @@ namespace mtconnect::entity {
     struct DataSetVisitor
     {
       DataSetVisitor(T &writer, JsonPrinter &printer, AutoJsonObject<T> &obj)
-      : m_writer(writer), m_printer(printer), m_obj(obj)
+        : m_writer(writer), m_printer(printer), m_obj(obj)
       {}
-      
-    void operator()(const std::monostate &) {}
+
+      void operator()(const std::monostate &) {}
       void operator()(const std::string &st) { m_obj.AddPairs(*m_key, st); }
       void operator()(const int64_t &i) { m_obj.AddPairs(*m_key, i); }
       void operator()(const double &d) { m_obj.AddPairs(*m_key, d); }

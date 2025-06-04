@@ -234,13 +234,12 @@ namespace mtconnect::pipeline {
   };
 
   /// @brief SAX Parser handler for JSON DataSet Parsing
-  template<typename ST, typename ET, typename Encoding = rj::UTF8<>>
+  template <typename ST, typename ET, typename Encoding = rj::UTF8<>>
   struct DataSetHandler : rj::BaseReaderHandler<Encoding, DataSetHandler<ST, ET>>
   {
     using Ch = typename Encoding::Ch;
-    
-    DataSetHandler(ST &set, optional<string> key, bool table = false)
-      : m_set(set), m_table(table)
+
+    DataSetHandler(ST &set, optional<string> key, bool table = false) : m_set(set), m_table(table)
     {
       if (key)
       {
@@ -293,7 +292,7 @@ namespace mtconnect::pipeline {
       if (m_expectation != Expectation::VALUE)
         return false;
 
-      m_entry.m_value.template emplace<std::string>((const char *) str, length);
+      m_entry.m_value.template emplace<std::string>((const char *)str, length);
       return true;
     }
     bool StartObject()
@@ -317,7 +316,7 @@ namespace mtconnect::pipeline {
     {
       // Check for resetTriggered
       m_expectation = Expectation::VALUE;
-      m_entry.m_key = std::string((const char *) str, length);
+      m_entry.m_key = std::string((const char *)str, length);
       return true;
     }
     bool EndObject(rj::SizeType memberCount)

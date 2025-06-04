@@ -221,7 +221,7 @@ namespace mtconnect::pipeline {
     return true;
   }
 
-  template<typename VT>
+  template <typename VT>
   inline VT type(const string &s)
   {
     using namespace boost;
