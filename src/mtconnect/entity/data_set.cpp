@@ -48,7 +48,7 @@ namespace std {
                                  [&s](const std::string &st) { s << "string(" << st << ")"; },
                                  [&s](const int64_t &i) { s << "int(" << i << ")"; },
                                  [&s](const double &d) { s << "double(" << d << ")"; },
-                                 [&s](const DataSet &arg) {
+                                 [&s](const TableRow &arg) {
                                    s << "{";
                                    for (const auto &v : arg)
                                    {
@@ -66,6 +66,12 @@ namespace std {
     return s;
   }
 
+  static inline ostream &operator<<(ostream &s, const mtconnect::observation::TableCell &t)
+  {
+    s << t.m_key << "=" << t.m_value;
+    return s;
+  }
+
 }  // namespace std
 #endif
 
@@ -75,6 +81,30 @@ namespace mtconnect::entity {
   /// @brief Functions called when parsing data sets
   namespace DataSetParserActions {
     inline static void add_entry_f(DataSet &ds, const DataSetEntry &entry) { ds.emplace(entry); }
+
+    struct TableCellConverter
+    {
+      TableCellConverter(TableCellValue &value) : m_value(value) {}
+
+      void operator()(const TableRow &row) { LOG(error) << "Table row cannot recurse"; }
+
+      template <typename T>
+      void operator()(const T &v)
+      {
+        m_value.emplace<T>(v);
+      }
+
+      TableCellValue &m_value;
+    };
+
+    inline static void add_cell_f(TableRow &row, const DataSetEntry &entry)
+    {
+      TableCell cell(entry.m_key);
+      cell.m_removed = entry.m_removed;
+      std::visit(TableCellConverter(cell.m_value), entry.m_value);
+      row.emplace(cell);
+    }
+
     inline static void make_entry_f(DataSetEntry &entry, const string &key,
                                     const boost::optional<DataSetValue> &v)
     {
@@ -85,7 +115,7 @@ namespace mtconnect::entity {
         entry.m_removed = true;
     }
     inline static void make_entry_f(DataSetEntry &entry, const string &key,
-                                    const boost::optional<DataSet> &v)
+                                    const boost::optional<TableRow> &v)
     {
       entry.m_key = key;
       if (v)
@@ -95,6 +125,7 @@ namespace mtconnect::entity {
     }
   };  // namespace DataSetParserActions
   BOOST_PHOENIX_ADAPT_FUNCTION(void, add_entry, DataSetParserActions::add_entry_f, 2);
+  BOOST_PHOENIX_ADAPT_FUNCTION(void, add_cell, DataSetParserActions::add_cell_f, 2);
   BOOST_PHOENIX_ADAPT_FUNCTION(void, make_entry, DataSetParserActions::make_entry_f, 3);
 
   /// @brief Parser to turn adapter text in `key=value ...` or `key={col1=value ...}` syntax into a
@@ -153,15 +184,15 @@ namespace mtconnect::entity {
       m_entry = (m_key >> -("=" >> -m_value))[make_entry(_val, _1, _2)];
 
       // Table support with quoted and braced content
-      m_quotedDataSet =
-          (char_("\"'")[_a = _1] >> *space >> *(m_entry[add_entry(_val, _1)] >> *space)) > lit(_a);
+      m_quotedTableRow =
+          (char_("\"'")[_a = _1] >> *space >> *(m_entry[add_cell(_val, _1)] >> *space)) > lit(_a);
 
-      m_bracedDataSet =
-          (lit('{') >> *space >> *(m_entry[add_entry(_val, _1)] >> *space)) > lit('}');
+      m_bracedTableRow =
+          (lit('{') >> *space >> *(m_entry[add_cell(_val, _1)] >> *space)) > lit('}');
 
-      m_tableValue %= (m_quotedDataSet | m_bracedDataSet);
+      m_tableRow %= (m_quotedTableRow | m_bracedTableRow);
       m_tableEntry = (m_key >> -("=" > &(space | lit('{') | '\'' | '"') >>
-                                 -m_tableValue))[make_entry(_val, _1, _2)];
+                                 -m_tableRow))[make_entry(_val, _1, _2)];
 
       if (table)
       {
@@ -173,7 +204,7 @@ namespace mtconnect::entity {
       }
 
       BOOST_SPIRIT_DEBUG_NODES((
-          m_start)(m_quoted)(m_braced)(m_key)(m_value)(m_entry)(m_simple)(m_quoted)(m_tableValue)(m_quotedDataSet)(m_bracedDataSet)(m_tableEntry));
+          m_start)(m_quoted)(m_braced)(m_key)(m_value)(m_entry)(m_simple)(m_quoted)(m_quotedTableRow)(m_bracedTableRow)(m_tableEntry));
 
       m_start.name("top");
       m_simple.name("simple");
@@ -183,9 +214,9 @@ namespace mtconnect::entity {
       m_simple.name("simple");
       m_quoted.name("quoted");
 
-      m_tableValue.name("table value");
-      m_quotedDataSet.name("quoted data set");
-      m_bracedDataSet.name("braced data set");
+      m_tableEntry.name("table value");
+      m_quotedTableRow.name("quoted table row");
+      m_bracedTableRow.name("braced table row");
       m_tableEntry.name("table entry");
 
       using namespace boost::fusion;
@@ -210,9 +241,9 @@ namespace mtconnect::entity {
     qi::rule<It, DataSetValue()> m_value;
     qi::rule<It, DataSetEntry()> m_entry;
 
-    qi::rule<It, DataSet(), qi::locals<char>> m_quotedDataSet;
-    qi::rule<It, DataSet()> m_bracedDataSet;
-    qi::rule<It, DataSet()> m_tableValue;
+    qi::rule<It, TableRow(), qi::locals<char>> m_quotedTableRow;
+    qi::rule<It, TableRow()> m_bracedTableRow;
+    qi::rule<It, TableRow()> m_tableRow;
     qi::rule<It, DataSetEntry()> m_tableEntry;
   };
 

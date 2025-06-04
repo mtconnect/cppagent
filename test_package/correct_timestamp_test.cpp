@@ -73,7 +73,7 @@ public:
   std::map<string, DataItemPtr> &m_dataItems;
 };
 
-class ValidateTimestampTest : public testing::Test
+class CorrectTimestampTest : public testing::Test
 {
 protected:
   void SetUp() override
@@ -115,7 +115,7 @@ protected:
   ComponentPtr m_component;
 };
 
-TEST_F(ValidateTimestampTest, should_not_change_timestamp_if_time_is_moving_forward)
+TEST_F(CorrectTimestampTest, should_not_change_timestamp_if_time_is_moving_forward)
 {
   makeDataItem({{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
 
@@ -140,7 +140,7 @@ TEST_F(ValidateTimestampTest, should_not_change_timestamp_if_time_is_moving_forw
   ASSERT_EQ(now + 1s, obs2->getTimestamp());
 }
 
-TEST_F(ValidateTimestampTest, should_change_timestamp_if_time_is_moving_backward)
+TEST_F(CorrectTimestampTest, should_change_timestamp_if_time_is_moving_backward)
 {
   makeDataItem({{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
 
@@ -166,7 +166,7 @@ TEST_F(ValidateTimestampTest, should_change_timestamp_if_time_is_moving_backward
   ASSERT_LE(now, obs2->getTimestamp());
 }
 
-TEST_F(ValidateTimestampTest, should_handle_timestamp_in_the_future)
+TEST_F(CorrectTimestampTest, should_handle_timestamp_in_the_future)
 {
   makeDataItem({{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
 

@@ -415,6 +415,7 @@ namespace mtconnect {
       }
 
     protected:
+      template <typename ST>
       friend struct HashVisitor;
 
       /// @brief Computes the sha1 hash of the entity skipping properties in `skip`

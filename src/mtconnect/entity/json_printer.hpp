@@ -31,6 +31,11 @@ namespace mtconnect::entity {
   protected:
     struct PropertyVisitor
     {
+      PropertyVisitor(T &writer, JsonPrinter<T> &printer, std::optional<AutoJsonObject<T>> &obj,
+                      const EntityPtr &entity)
+        : m_obj(obj), m_printer(printer), m_entity(entity), m_writer(writer)
+      {}
+
       void operator()(const EntityPtr &arg)
       {
         m_obj->Key(m_key->c_str());
@@ -87,11 +92,6 @@ namespace mtconnect::entity {
         m_printer.printKey(*m_obj, *m_key);
         m_obj->Add(arg);
       }
-
-      PropertyVisitor(T &writer, JsonPrinter<T> &printer, std::optional<AutoJsonObject<T>> &obj,
-                      const EntityPtr &entity)
-        : m_obj(obj), m_printer(printer), m_entity(entity), m_writer(writer)
-      {}
 
       std::optional<AutoJsonObject<T>> &m_obj;
       JsonPrinter<T> &m_printer;
@@ -222,25 +222,34 @@ namespace mtconnect::entity {
 
     struct DataSetVisitor
     {
+      DataSetVisitor(T &writer, JsonPrinter &printer, AutoJsonObject<T> &obj)
+        : m_writer(writer), m_printer(printer), m_obj(obj)
+      {}
+
       void operator()(const std::monostate &) {}
       void operator()(const std::string &st) { m_obj.AddPairs(*m_key, st); }
       void operator()(const int64_t &i) { m_obj.AddPairs(*m_key, i); }
       void operator()(const double &d) { m_obj.AddPairs(*m_key, d); }
-      void operator()(const DataSet &arg)
+      void operator()(const TableRow &arg)
       {
         AutoJsonObject<T> row(m_writer, *m_key);
         DataSetVisitor visitor(m_writer, m_printer, row);
 
         for (auto &c : arg)
         {
-          visitor.m_key = &c.m_key;
-          visit(visitor, c.m_value);
+          if (c.m_removed)
+          {
+            row.Key(c.m_key);
+            AutoJsonObject rem(m_writer);
+            rem.AddPairs("removed", true);
+          }
+          else
+          {
+            visitor.m_key = &c.m_key;
+            visit(visitor, c.m_value);
+          }
         }
       }
-
-      DataSetVisitor(T &writer, JsonPrinter &printer, AutoJsonObject<T> &obj)
-        : m_writer(writer), m_printer(printer), m_obj(obj)
-      {}
 
       T &m_writer;
       JsonPrinter &m_printer;

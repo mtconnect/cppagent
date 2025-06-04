@@ -102,13 +102,17 @@ namespace mtconnect {
                           [&writer, &attrs](const double &d) {
                             addSimpleElement(writer, "Entry", format(d), attrs);
                           },
-                          [&writer, &attrs](const DataSet &row) {
+                          [&writer, &attrs](const TableRow &row) {
                             // Table
                             AutoElement ele(writer, "Entry");
                             addAttributes(writer, attrs);
                             for (auto &c : row)
                             {
                               map<string, string> attrs = {{"key", c.m_key}};
+                              if (c.m_removed)
+                              {
+                                attrs["removed"] = "true";
+                              }
                               visit(overloaded {
                                         [&writer, &attrs](const string &s) {
                                           addSimpleElement(writer, "Cell", s, attrs);
