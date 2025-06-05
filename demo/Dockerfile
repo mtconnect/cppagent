@@ -41,6 +41,9 @@ COPY --chown=agent:agent \
     ./demo/agent/agent.dock \
     ./demo/agent/Devices.xml \
     /mtconnect/config/
+COPY --chown=agent:agent \
+   ./demo/styles/styles.xsl \
+   /mtconnect/data/styles/
 
 USER agent
 WORKDIR /home/agent
