@@ -984,7 +984,7 @@
 								<DataItem type="TEMPERATURE" category="CONDITION" id="Stemp_cond"/>
 							</DataItems>
 							<Compositions>
-								<Composition id="C2motor" type="MOTOR"/>
+								<Composition id="Cmotor" type="MOTOR"/>
 							</Compositions>
 						</Rotary>
 						<Rotary id="br" name="B" nativeName="B">
@@ -1068,11 +1068,11 @@
 									</Constraints>
 								</DataItem>
 								<DataItem category="CONDITION" id="S2load_cond" type="LOAD"/>
-								<DataItem category="CONDITION" id="S2temp_cond" type="TEMPERATURE"/>
+								<DataItem category="CONDITION" id="S2temp_cond" type="TEMPERATURE" compositionId="C2motor"/>
 								<DataItem id="caxisstate" type="AXIS_STATE" category="EVENT"/>
 							</DataItems>
 							<Compositions>
-								<Composition id="Cmotor" type="MOTOR"/>
+								<Composition id="C2motor" type="MOTOR"/>
 							</Compositions>
 						</Rotary>
 					</Components>

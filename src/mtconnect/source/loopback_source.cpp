@@ -21,6 +21,7 @@
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/entity/xml_parser.hpp"
 #include "mtconnect/pipeline/convert_sample.hpp"
+#include "mtconnect/pipeline/correct_timestamp.hpp"
 #include "mtconnect/pipeline/deliver.hpp"
 #include "mtconnect/pipeline/delta_filter.hpp"
 #include "mtconnect/pipeline/duplicate_filter.hpp"
@@ -58,6 +59,9 @@ namespace mtconnect::source {
     // Convert values
     if (IsOptionSet(m_options, configuration::ConversionRequired))
       next = next->bind(make_shared<ConvertSample>());
+
+    if (IsOptionSet(m_options, configuration::CorrectTimestamps))
+      next = next->bind(make_shared<CorrectTimestamp>(m_context));
 
     // Validate Values
     if (IsOptionSet(m_options, configuration::Validation))

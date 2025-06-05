@@ -74,9 +74,9 @@ namespace mtconnect::pipeline {
         }
       }
 
-      m_state->m_timestamps.emplace(id, ts);
+      m_state->m_timestamps.insert_or_assign(id, ts);
 
-      return obs;
+      return next(std::move(obs));
     }
 
   protected:

@@ -41,6 +41,7 @@ using namespace std;
 namespace rj = ::rapidjson;
 
 namespace mtconnect::pipeline {
+  using namespace mtconnect::entity;
   enum class Expectation
   {
     NONE,
@@ -134,12 +135,12 @@ namespace mtconnect::pipeline {
           {
             LOG(warning) << "Error while parsing json: " << e->what();
           }
-          
+
           props.clear();
           props["VALUE"] = "UNAVAILABLE"s;
           if (m_pipelineContext->m_contract->isValidating())
             props["quality"] = "INVALID"s;
-          
+
           obs = observation::Observation::make(dataItem, props, *m_timestamp, errors);
         }
 
@@ -232,11 +233,13 @@ namespace mtconnect::pipeline {
     int m_depth {0};
   };
 
-  /// @brief SAX Parser handler for JSON Parsing
-  struct DataSetHandler : rj::BaseReaderHandler<rj::UTF8<>, DataSetHandler>
+  /// @brief SAX Parser handler for JSON DataSet Parsing
+  template <typename ST, typename ET, typename Encoding = rj::UTF8<>>
+  struct DataSetHandler : rj::BaseReaderHandler<Encoding, DataSetHandler<ST, ET>>
   {
-    DataSetHandler(entity::DataSet &set, optional<string> key, bool table = false)
-      : m_set(set), m_table(table)
+    using Ch = typename Encoding::Ch;
+
+    DataSetHandler(ST &set, optional<string> key, bool table = false) : m_set(set), m_table(table)
     {
       if (key)
       {
@@ -255,7 +258,7 @@ namespace mtconnect::pipeline {
       if (m_expectation != Expectation::VALUE)
         return false;
 
-      m_entry.m_value.emplace<monostate>();
+      m_entry.m_value.template emplace<monostate>();
       m_entry.m_removed = true;
       return true;
     }
@@ -269,7 +272,7 @@ namespace mtconnect::pipeline {
       if (m_expectation != Expectation::VALUE)
         return false;
 
-      m_entry.m_value.emplace<int64_t>(i);
+      m_entry.m_value.template emplace<int64_t>(i);
       return true;
     }
     bool Double(double d)
@@ -277,7 +280,7 @@ namespace mtconnect::pipeline {
       if (m_expectation != Expectation::VALUE)
         return false;
 
-      m_entry.m_value.emplace<double>(d);
+      m_entry.m_value.template emplace<double>(d);
       return true;
     }
     bool RawNumber(const Ch *str, rj::SizeType length, bool copy)
@@ -289,7 +292,7 @@ namespace mtconnect::pipeline {
       if (m_expectation != Expectation::VALUE)
         return false;
 
-      m_entry.m_value.emplace<std::string>(str, length);
+      m_entry.m_value.template emplace<std::string>((const char *)str, length);
       return true;
     }
     bool StartObject()
@@ -313,7 +316,7 @@ namespace mtconnect::pipeline {
     {
       // Check for resetTriggered
       m_expectation = Expectation::VALUE;
-      m_entry.m_key = string(str, length);
+      m_entry.m_key = std::string((const char *)str, length);
       return true;
     }
     bool EndObject(rj::SizeType memberCount)
@@ -344,10 +347,17 @@ namespace mtconnect::pipeline {
 
         if (m_expectation == Expectation::OBJECT)
         {
-          DataSetHandler handler(m_set, nullopt, m_table);
-          auto success = handler(reader, buff);
-          if (!success)
-            return success;
+          if constexpr (is_same_v<ST, DataSet>)
+          {
+            DataSetHandler<DataSet, DataSetEntry> handler(m_set, nullopt, m_table);
+            auto success = handler(reader, buff);
+            if (!success)
+              return success;
+          }
+          else
+          {
+            return false;
+          }
         }
         else
         {
@@ -358,12 +368,19 @@ namespace mtconnect::pipeline {
           if (m_expectation == Expectation::ROW)
           {
             // For tables, recurse down to read the entry data set
-            auto &row = m_entry.m_value.emplace<DataSet>();
-            DataSetHandler handler(row, nullopt, false);
-            auto success = handler(reader, buff);
-            if (!success)
-              return success;
-            m_expectation = Expectation::VALUE;
+            if constexpr (std::is_same_v<ET, DataSetEntry>)
+            {
+              auto &row = m_entry.m_value.template emplace<TableRow>();
+              DataSetHandler<TableRow, TableCell> handler(row, nullopt, false);
+              auto success = handler(reader, buff);
+              if (!success)
+                return success;
+              m_expectation = Expectation::VALUE;
+            }
+            else
+            {
+              return false;
+            }
           }
 
           if (m_expectation == Expectation::VALUE)
@@ -376,7 +393,7 @@ namespace mtconnect::pipeline {
               // Try again
               m_set.insert(m_entry);
             }
-            m_entry.m_value.emplace<monostate>();
+            m_entry.m_value.template emplace<monostate>();
           }
         }
 
@@ -385,8 +402,8 @@ namespace mtconnect::pipeline {
       return true;
     }
 
-    entity::DataSet &m_set;
-    entity::DataSetEntry m_entry;
+    ST &m_set;
+    ET m_entry;
     optional<string> m_resetTriggered;
     bool m_table {false};
     bool m_done {false};
@@ -586,7 +603,7 @@ namespace mtconnect::pipeline {
           {
             auto &value = m_props["VALUE"];
             DataSet &set = value.emplace<DataSet>();
-            DataSetHandler handler(set, m_key, m_dataItem->isTable());
+            DataSetHandler<DataSet, DataSetEntry> handler(set, m_key, m_dataItem->isTable());
             if (!handler(reader, buff))
               return false;
             m_expectation = Expectation::KEY;

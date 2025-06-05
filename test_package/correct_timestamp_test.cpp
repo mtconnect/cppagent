@@ -23,12 +23,12 @@
 
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/observation/observation.hpp"
+#include "mtconnect/pipeline/correct_timestamp.hpp"
 #include "mtconnect/pipeline/deliver.hpp"
 #include "mtconnect/pipeline/delta_filter.hpp"
 #include "mtconnect/pipeline/period_filter.hpp"
 #include "mtconnect/pipeline/pipeline.hpp"
 #include "mtconnect/pipeline/shdr_token_mapper.hpp"
-#include "mtconnect/pipeline/correct_timestamp.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -73,7 +73,7 @@ public:
   std::map<string, DataItemPtr> &m_dataItems;
 };
 
-class ValidateTimestampTest : public testing::Test
+class CorrectTimestampTest : public testing::Test
 {
 protected:
   void SetUp() override
@@ -115,7 +115,7 @@ protected:
   ComponentPtr m_component;
 };
 
-TEST_F(ValidateTimestampTest, should_not_change_timestamp_if_time_is_moving_forward)
+TEST_F(CorrectTimestampTest, should_not_change_timestamp_if_time_is_moving_forward)
 {
   makeDataItem({{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
 
@@ -140,7 +140,7 @@ TEST_F(ValidateTimestampTest, should_not_change_timestamp_if_time_is_moving_forw
   ASSERT_EQ(now + 1s, obs2->getTimestamp());
 }
 
-TEST_F(ValidateTimestampTest, should_change_timestamp_if_time_is_moving_backward)
+TEST_F(CorrectTimestampTest, should_change_timestamp_if_time_is_moving_backward)
 {
   makeDataItem({{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
 
@@ -164,4 +164,52 @@ TEST_F(ValidateTimestampTest, should_change_timestamp_if_time_is_moving_backward
   auto obs2 = dynamic_pointer_cast<Observation>(list2.front());
   ASSERT_NE(now - 1s, obs2->getTimestamp());
   ASSERT_LE(now, obs2->getTimestamp());
+}
+
+TEST_F(CorrectTimestampTest, should_handle_timestamp_in_the_future)
+{
+  makeDataItem({{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+
+  auto filter = make_shared<CorrectTimestamp>(m_context);
+  m_mapper->bind(filter);
+  filter->bind(make_shared<DeliverObservation>(m_context));
+
+  auto now = chrono::system_clock::now();
+
+  {
+    auto os = observe({"a", "READY"}, now - 1s);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+
+    auto obs = dynamic_pointer_cast<Observation>(list.front());
+    ASSERT_EQ(now - 1s, obs->getTimestamp());
+  }
+
+  {
+    auto os = observe({"a", "ACTIVE"}, now + 1s);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+
+    auto obs = dynamic_pointer_cast<Observation>(list.front());
+    ASSERT_EQ(now + 1s, obs->getTimestamp());
+  }
+
+  {
+    auto os = observe({"a", "READY"}, now);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+
+    auto obs = dynamic_pointer_cast<Observation>(list.front());
+    ASSERT_LT(now, obs->getTimestamp());
+    ASSERT_GT(now + 10ms, obs->getTimestamp());
+  }
+
+  {
+    auto os = observe({"a", "ACTIVE"}, now + 2s);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+
+    auto obs = dynamic_pointer_cast<Observation>(list.front());
+    ASSERT_EQ(now + 2s, obs->getTimestamp());
+  }
 }

@@ -96,7 +96,7 @@ namespace mtconnect {
       Entity(const std::string &name, const Properties &props) : m_name(name), m_properties(props)
       {}
       Entity(const Entity &entity)
-      : m_name(entity.m_name), m_properties(entity.m_properties), m_order(entity.m_order)
+        : m_name(entity.m_name), m_properties(entity.m_properties), m_order(entity.m_order)
       {
         if (entity.m_attributes)
           setAttributes(*entity.m_attributes);
@@ -415,6 +415,7 @@ namespace mtconnect {
       }
 
     protected:
+      template <typename ST>
       friend struct HashVisitor;
 
       /// @brief Computes the sha1 hash of the entity skipping properties in `skip`

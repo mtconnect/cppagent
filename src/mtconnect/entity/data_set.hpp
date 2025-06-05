@@ -30,13 +30,103 @@
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect::entity {
-  struct DataSetEntry;
+  /// @brief Data Set Value type enumeration
+  enum class TabelCellType : std::uint16_t
+  {
+    EMPTY = 0x0,    ///< monostate for no value
+    STRING = 0x02,  ///< string value
+    INTEGER = 0x3,  ///< 64 bit integer
+    DOUBLE = 0x4    ///< double
+  };
+
+  /// @brief Table Cell value variant
+  using TableCellValue = std::variant<std::monostate, std::string, int64_t, double>;
+
+  /// @brief One entry in a data set. Has necessary interface to be work with maps.
+  struct TableCell
+  {
+    /// @brief Create an entry with a key and value
+    /// @param key the key
+    /// @param value the value as a string
+    TableCell(std::string key, std::string &value, bool removed = false)
+      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
+    {}
+
+    /// @brief Create an entry for a data set
+    /// @param key the key
+    /// @param value the a data set variant
+    TableCell(std::string key, TableCellValue value, bool removed = false)
+      : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
+    {}
+
+    /// @brief Create a data set entry with just a key (used for search)
+    /// @param key
+    TableCell(std::string key) : m_key(std::move(key)), m_value(std::string("")) {}
+    TableCell(const TableCell &other) = default;
+    TableCell() {}
+
+    /// @brief copy another table cell
+    /// @param other the other cell
+    TableCell &operator=(const TableCell &other)
+    {
+      m_key = other.m_key;
+      m_value = other.m_value;
+      m_removed = other.m_removed;
+      return *this;
+    }
+
+    /// @brief only compares keys for equality
+    bool operator==(const TableCell &other) const { return m_key == other.m_key; }
+    /// @brief only compares keys for less than
+    bool operator<(const TableCell &other) const { return m_key < other.m_key; }
+
+    /// @brief helper visitor to compare variant values
+    struct SameValue
+    {
+      /// @brief Construct the with a cell value to compare
+      SameValue(const TableCellValue &o) : m_other(o) {}
+
+      /// @brief Compare the types are the same and the values are the same
+      /// @tparam T the data type
+      /// @param v the other value
+      /// @return `true` if they are the same
+      template <class T>
+      bool operator()(const T &v)
+      {
+        return std::holds_alternative<T>(m_other) && std::get<T>(m_other) == v;
+      }
+
+      /// @brief the other value to compare
+      const TableCellValue &m_other;
+    };
+
+    /// @brief Compares to cells
+    /// @param other the other cell
+    bool same(const TableCell &other) const
+    {
+      const auto &ov = other.m_value;
+      return m_key == other.m_key && m_removed == other.m_removed &&
+             std::visit(SameValue(ov), m_value);
+    }
+
+    /// @brief compares two cell values
+    /// @param other the other cell value to compare
+    bool sameValue(const TableCell &other) const
+    {
+      auto &ov = other.m_value;
+      return std::visit(SameValue(ov), m_value);
+    }
+
+    std::string m_key;
+    TableCellValue m_value;
+    bool m_removed {false};
+  };
 
   /// @brief A set of data set entries
-  class AGENT_LIB_API DataSet : public std::set<DataSetEntry>
+  class AGENT_LIB_API TableRow : public std::set<TableCell>
   {
   public:
-    using base = std::set<DataSetEntry>;
+    using base = std::set<TableCell>;
     using base::base;
 
     /// @brief Get a entry for a key
@@ -44,53 +134,38 @@ namespace mtconnect::entity {
     /// @param key the key
     /// @return the typed value of the entry
     template <typename T>
-    const T &get(const std::string &key) const;
+    const T &get(const std::string &key) const
+    {
+      return std::get<T>(find(TableCell(key))->m_value);
+    }
 
     /// @brief Get a entry for a key if it exists
     /// @tparam T the entry type
     /// @param key the key
     /// @return optional typed value of the entry
     template <typename T>
-    const std::optional<T> maybeGet(const std::string &key) const;
-
-    /// @brief Split the data set entries by space delimiters and account for the
-    /// use of single and double quotes as well as curly braces
-    bool parse(const std::string &s, bool table);
+    const std::optional<T> maybeGet(const std::string &key) const
+    {
+      auto v = find(TableCell(key));
+      if (v == end())
+        return std::nullopt;
+      else
+        return std::get<T>(v->m_value);
+    }
   };
 
   /// @brief Data Set Value type enumeration
   enum class DataSetValueType : std::uint16_t
   {
-    EMPTY = 0x0,      ///< monostate for no value
-    DATA_SET = 0x01,  ///< data set member for tables
-    STRING = 0x02,    ///< string value
-    INTEGER = 0x3,    ///< 64 bit integer
-    DOUBLE = 0x4      ///< double
+    EMPTY = 0x0,       ///< monostate for no value
+    TABLE_ROW = 0x01,  ///< data set member for tables
+    STRING = 0x02,     ///< string value
+    INTEGER = 0x3,     ///< 64 bit integer
+    DOUBLE = 0x4       ///< double
   };
 
   /// @brief Data set value variant
-  using DataSetValue = std::variant<std::monostate, DataSet, std::string, int64_t, double>;
-
-  /// @brief Equality visitor for a DataSetValue
-  struct DataSetValueSame
-  {
-    DataSetValueSame(const DataSetValue &other) : m_other(other) {}
-
-    bool operator()(const DataSet &v);
-
-    /// @brief Compare the types are the same and the values are the same
-    /// @tparam T the data type
-    /// @param v the other value
-    /// @return `true` if they are the same
-    template <class T>
-    bool operator()(const T &v)
-    {
-      return std::holds_alternative<T>(m_other) && std::get<T>(m_other) == v;
-    }
-
-  private:
-    const DataSetValue &m_other;
-  };
+  using DataSetValue = std::variant<std::monostate, TableRow, std::string, int64_t, double>;
 
   /// @brief One entry in a data set. Has necessary interface to be work with maps.
   struct DataSetEntry
@@ -107,9 +182,10 @@ namespace mtconnect::entity {
     /// @param key the key
     /// @param value the value as a DataSet
     /// @param removed `true` if the key has been removed
-    DataSetEntry(std::string key, DataSet &value, bool removed = false)
+    DataSetEntry(std::string key, TableRow &value, bool removed = false)
       : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {}
+
     /// @brief Create an entry for a data set
     /// @param key the key
     /// @param value the a data set variant
@@ -119,66 +195,114 @@ namespace mtconnect::entity {
     {}
     /// @brief Create a data set entry with just a key (used for search)
     /// @param key
-    DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false) {}
+    DataSetEntry(std::string key)
+      : m_key(std::move(key)), m_value(std::string("")), m_removed(false)
+    {}
     DataSetEntry(const DataSetEntry &other) = default;
     DataSetEntry() : m_removed(false) {}
+
+    /// @brief copy a data set entry from another
+    DataSetEntry &operator=(const DataSetEntry &other)
+    {
+      m_key = other.m_key;
+      m_value = other.m_value;
+      m_removed = other.m_removed;
+      return *this;
+    }
+
+    /// @brief only compares keys for equality
+    bool operator==(const DataSetEntry &other) const { return m_key == other.m_key; }
+    /// @brief only compares keys for less than
+    bool operator<(const DataSetEntry &other) const { return m_key < other.m_key; }
+
+    /// @brief compare a data entry ewith another
+    bool same(const DataSetEntry &other) const;
 
     std::string m_key;
     DataSetValue m_value;
     bool m_removed;
-
-    bool operator==(const DataSetEntry &other) const { return m_key == other.m_key; }
-    bool operator<(const DataSetEntry &other) const { return m_key < other.m_key; }
-
-    bool same(const DataSetEntry &other) const
-    {
-      return m_key == other.m_key && m_removed == other.m_removed &&
-             std::visit(DataSetValueSame(other.m_value), m_value);
-    }
   };
 
-  /// @brief Get a typed value from a data set
-  /// @tparam T the data type
-  /// @param key the key to search for
-  /// @return a typed value reference
-  /// @throws  std::bad_variant_access when type is incorrect
-  template <typename T>
-  const T &DataSet::get(const std::string &key) const
+  /// @brief A set of data set entries
+  class AGENT_LIB_API DataSet : public std::set<DataSetEntry>
   {
-    return std::get<T>(find(DataSetEntry(key))->m_value);
-  }
+  public:
+    using base = std::set<DataSetEntry>;
+    using base::base;
 
-  /// @brief Get a typed value if available
-  /// @tparam T they type
-  /// @param key the key to search for
-  /// @return an opton typed result
-  template <typename T>
-  const std::optional<T> DataSet::maybeGet(const std::string &key) const
-  {
-    auto v = find(DataSetEntry(key));
-    if (v == end())
-      return std::nullopt;
-    else
-      return std::get<T>(v->m_value);
-  }
-
-  inline bool DataSetValueSame::operator()(const DataSet &v)
-  {
-    if (!std::holds_alternative<DataSet>(m_other))
-      return false;
-
-    const auto &oset = std::get<DataSet>(m_other);
-
-    if (v.size() != oset.size())
-      return false;
-
-    for (const auto &e1 : v)
+    /// @brief Get a entry for a key
+    /// @tparam T the entry type
+    /// @param key the key
+    /// @return the typed value of the entry
+    template <typename T>
+    const T &get(const std::string &key) const
     {
-      const auto &e2 = oset.find(e1);
-      if (e2 == oset.end() || !visit(DataSetValueSame(e2->m_value), e1.m_value))
-        return false;
+      return std::get<T>(find(DataSetEntry(key))->m_value);
     }
 
-    return true;
+    /// @brief Get a entry for a key if it exists
+    /// @tparam T the entry type
+    /// @param key the key
+    /// @return optional typed value of the entry
+    template <typename T>
+    const std::optional<T> maybeGet(const std::string &key) const
+    {
+      auto v = find(DataSetEntry(key));
+      if (v == end())
+        return std::nullopt;
+      else
+        return std::get<T>(v->m_value);
+    }
+
+    /// @brief Split the data set entries by space delimiters and account for the
+    /// use of single and double quotes as well as curly braces
+    bool parse(const std::string &s, bool table);
+  };
+
+  /// @brief Equality visitor for a DataSetValue
+  struct DataSetValueSame
+  {
+    DataSetValueSame(const DataSetValue &other) : m_other(other) {}
+
+    /// @brief Compare two table rows and see if the are the same
+    /// @param v The other value
+    /// @return `true ` if they are the same
+    bool operator()(const TableRow &v)
+    {
+      if (!std::holds_alternative<TableRow>(m_other))
+        return false;
+
+      const auto &oset = std::get<TableRow>(m_other);
+
+      if (v.size() != oset.size())
+        return false;
+
+      for (const auto &e1 : v)
+      {
+        const auto &e2 = oset.find(e1);
+        if (e2 == oset.end() || e2->sameValue(e1))
+          return false;
+      }
+
+      return true;
+    }
+
+    /// @brief Compare the types are the same and the values are the same
+    /// @tparam T the data type
+    /// @param v the other value
+    /// @return `true` if they are the same
+    template <class T>
+    bool operator()(const T &v)
+    {
+      return std::holds_alternative<T>(m_other) && std::get<T>(m_other) == v;
+    }
+
+    const DataSetValue &m_other; //! the other data set value
+  };
+
+  inline bool DataSetEntry::same(const DataSetEntry &other) const
+  {
+    return m_key == other.m_key && m_removed == other.m_removed &&
+           std::visit(DataSetValueSame(other.m_value), m_value);
   }
 }  // namespace mtconnect::entity

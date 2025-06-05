@@ -16,11 +16,11 @@
 name: Build Docker image
 
 env:
-  PLATFORMS: linux/amd64 # ,linux/arm64
+  PLATFORMS: linux/amd64,linux/arm64
 
 # when to run workflow
 on:
-  # # run on push or pull request events for the master branch
+  # # run on push or pull tags request events for the master branch
   push:
     tags:
       - "v*.*.*"
@@ -41,7 +41,7 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - dockerfile: docker/ubuntu/Dockerfile
+          - dockerfile: docker/alpine/Dockerfile
             name: agent
 #          - dockerfile: demo/Dockerfile
 #            name: demo

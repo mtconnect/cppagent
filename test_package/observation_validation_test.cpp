@@ -28,10 +28,10 @@
 #include "mtconnect/device_model/data_item/data_item.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/observation/observation.hpp"
-#include "mtconnect/pipeline/validator.hpp"
+#include "mtconnect/pipeline/json_mapper.hpp"
 #include "mtconnect/pipeline/shdr_token_mapper.hpp"
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
-#include "mtconnect/pipeline/json_mapper.hpp"
+#include "mtconnect/pipeline/validator.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -52,7 +52,9 @@ int main(int argc, char *argv[])
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(int32_t schemaVersion, DataItemPtr &dataItem) : m_schemaVersion(schemaVersion), m_dataItem(dataItem) {}
+  MockPipelineContract(int32_t schemaVersion, DataItemPtr &dataItem)
+    : m_schemaVersion(schemaVersion), m_dataItem(dataItem)
+  {}
   DevicePtr findDevice(const std::string &) override { return m_device; }
   DataItemPtr findDataItem(const std::string &device, const std::string &name) override
   {
@@ -74,7 +76,7 @@ public:
   int32_t m_schemaVersion;
   DataItemPtr &m_dataItem;
   DevicePtr m_device;
-  bool m_validation { true };
+  bool m_validation {true};
 };
 
 /// @brief Validation tests for observations
@@ -85,7 +87,7 @@ protected:
   {
     ErrorList errors;
     m_dataItem =
-    DataItem::make({{"id", "exec"s}, {"category", "EVENT"s}, {"type", "EXECUTION"s}}, errors);
+        DataItem::make({{"id", "exec"s}, {"category", "EVENT"s}, {"type", "EXECUTION"s}}, errors);
 
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(SCHEMA_VERSION(2, 5), m_dataItem);
@@ -248,14 +250,15 @@ TEST_F(ObservationValidationTest, should_validate_data_item_types)
 {
   auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
   contract->m_schemaVersion = SCHEMA_VERSION(2, 5);
-  
+
   shared_ptr<ShdrTokenMapper> mapper;
   mapper = make_shared<ShdrTokenMapper>(m_context, "", 2);
   mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
 
   ErrorList errors;
-  m_dataItem =
-  DataItem::make({{"id", "pos"s}, {"category", "SAMPLE"s}, {"type", "POSITION"s}, {"units", "MILLIMETER"s}}, errors);
+  m_dataItem = DataItem::make(
+      {{"id", "pos"s}, {"category", "SAMPLE"s}, {"type", "POSITION"s}, {"units", "MILLIMETER"s}},
+      errors);
 
   auto ts = make_shared<Timestamped>();
   ts->m_tokens = {{"pos"s, "ABC"s}};
@@ -265,21 +268,20 @@ TEST_F(ObservationValidationTest, should_validate_data_item_types)
   auto observations = (*mapper)(ts);
   auto &r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
-  
+
   auto oblist = observations->getValue<EntityList>();
   ASSERT_EQ(1, oblist.size());
-  
+
   auto oi = oblist.begin();
- 
+
   {
     auto sample = dynamic_pointer_cast<Sample>(*oi++);
     ASSERT_TRUE(sample);
     ASSERT_EQ(m_dataItem, sample->getDataItem());
     ASSERT_TRUE(sample->isUnavailable());
-    
+
     ASSERT_EQ("INVALID", sample->get<string>("quality"));
   }
-
 }
 
 TEST_F(ObservationValidationTest, should_not_validate_if_validation_is_off)
@@ -287,62 +289,62 @@ TEST_F(ObservationValidationTest, should_not_validate_if_validation_is_off)
   auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
   contract->m_schemaVersion = SCHEMA_VERSION(2, 5);
   contract->m_validation = false;
-  
+
   shared_ptr<ShdrTokenMapper> mapper;
   mapper = make_shared<ShdrTokenMapper>(m_context, "", 2);
   mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
-  
+
   ErrorList errors;
-  m_dataItem =
-  DataItem::make({{"id", "pos"s}, {"category", "SAMPLE"s}, {"type", "POSITION"s}, {"units", "MILLIMETER"s}}, errors);
-  
+  m_dataItem = DataItem::make(
+      {{"id", "pos"s}, {"category", "SAMPLE"s}, {"type", "POSITION"s}, {"units", "MILLIMETER"s}},
+      errors);
+
   auto ts = make_shared<Timestamped>();
   ts->m_tokens = {{"pos"s, "ABC"s}};
   ts->m_timestamp = chrono::system_clock::now();
   ts->setProperty("timestamp", ts->m_timestamp);
-  
+
   auto observations = (*mapper)(ts);
   auto &r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
-  
+
   auto oblist = observations->getValue<EntityList>();
   ASSERT_EQ(1, oblist.size());
-  
+
   auto oi = oblist.begin();
-  
+
   {
     auto sample = dynamic_pointer_cast<Sample>(*oi++);
     ASSERT_TRUE(sample);
     ASSERT_EQ(m_dataItem, sample->getDataItem());
     ASSERT_TRUE(sample->isUnavailable());
-    
+
     ASSERT_FALSE(sample->hasProperty("quality"));
   }
-  
 }
 
 TEST_F(ObservationValidationTest, should_validate_json_data_item_types)
 {
   using namespace mtconnect::device_model;
-  
+
   ErrorList errors;
   auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
   contract->m_schemaVersion = SCHEMA_VERSION(2, 5);
   Properties dev {
-    {"id", "3"s}, {"name", "DeviceTest2"s}, {"uuid", "UnivUniqId2"s}, {"iso841Class", "6"s}};
+      {"id", "3"s}, {"name", "DeviceTest2"s}, {"uuid", "UnivUniqId2"s}, {"iso841Class", "6"s}};
   auto device = dynamic_pointer_cast<Device>(Device::getFactory()->make("Device", dev, errors));
 
-  
   shared_ptr<JsonMapper> mapper;
   mapper = make_shared<JsonMapper>(m_context);
   mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
-  
-  m_dataItem =
-  DataItem::make({{"id", "pos"s}, {"category", "SAMPLE"s}, {"type", "POSITION"s}, {"units", "MILLIMETER"s}}, errors);
+
+  m_dataItem = DataItem::make(
+      {{"id", "pos"s}, {"category", "SAMPLE"s}, {"type", "POSITION"s}, {"units", "MILLIMETER"s}},
+      errors);
   contract->m_dataItem = m_dataItem;
   device->addDataItem(m_dataItem, errors);
   ASSERT_EQ(0, errors.size());
-  
+
   auto jm = make_shared<JsonMessage>();
   jm->setValue(R"(
 {
@@ -351,19 +353,19 @@ TEST_F(ObservationValidationTest, should_validate_json_data_item_types)
 }
 )"s);
   jm->m_device = device;
-  
-  auto observations = (*mapper)(jm);  
+
+  auto observations = (*mapper)(jm);
   auto oblist = observations->getValue<EntityList>();
   ASSERT_EQ(1, oblist.size());
-  
+
   auto oi = oblist.begin();
-  
+
   {
     auto sample = dynamic_pointer_cast<Sample>(*oi++);
     ASSERT_TRUE(sample);
     ASSERT_EQ(m_dataItem, sample->getDataItem());
     ASSERT_TRUE(sample->isUnavailable());
-    
+
     ASSERT_EQ("INVALID", sample->get<string>("quality"));
-  }  
+  }
 }
