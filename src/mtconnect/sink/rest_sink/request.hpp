@@ -22,6 +22,7 @@
 
 #include <optional>
 
+#include "error.hpp"
 #include "mtconnect/config.hpp"
 #include "parameter.hpp"
 
@@ -47,6 +48,7 @@ namespace mtconnect::sink::rest_sink {
     std::string m_contentType;
     std::string m_body;
     boost::beast::http::status m_code;
+    entity::EntityPtr m_error;
   };
 
   class Session;

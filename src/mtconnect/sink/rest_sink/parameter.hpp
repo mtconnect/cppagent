@@ -22,6 +22,7 @@
 #include <set>
 #include <variant>
 
+#include "error.hpp"
 #include "mtconnect/config.hpp"
 
 namespace mtconnect::sink::rest_sink {
@@ -29,6 +30,8 @@ namespace mtconnect::sink::rest_sink {
   class AGENT_LIB_API ParameterError : public std::logic_error
   {
     using std::logic_error::logic_error;
+
+    entity::EntityPtr m_error;
   };
 
   /// @brief The parameter type for a REST request

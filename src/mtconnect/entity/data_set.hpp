@@ -297,7 +297,7 @@ namespace mtconnect::entity {
       return std::holds_alternative<T>(m_other) && std::get<T>(m_other) == v;
     }
 
-    const DataSetValue &m_other; //! the other data set value
+    const DataSetValue &m_other;  //! the other data set value
   };
 
   inline bool DataSetEntry::same(const DataSetEntry &other) const
