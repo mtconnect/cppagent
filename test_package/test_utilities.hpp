@@ -131,7 +131,8 @@ inline void assertIf(bool condition, const std::string &message, const std::stri
 
 using ValueResponse = std::pair<std::optional<std::string>, std::optional<std::string>>;
 
-inline ValueResponse xpathValue(xmlDocPtr doc, const char *xpath, const std::string &file, int line, bool noValue = false)
+inline ValueResponse xpathValue(xmlDocPtr doc, const char *xpath, const std::string &file, int line,
+                                bool noValue = false)
 {
   using namespace std;
 

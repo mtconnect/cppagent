@@ -99,7 +99,7 @@ namespace mtconnect::entity {
       /// @brief the other value to compare
       const TableCellValue &m_other;
     };
-    
+
     /// @brief compares two cell values
     /// @param other the other cell value to compare
     bool sameValue(const TableCell &other) const
@@ -112,8 +112,7 @@ namespace mtconnect::entity {
     /// @param other the other cell
     bool same(const TableCell &other) const
     {
-      return m_key == other.m_key && m_removed == other.m_removed &&
-        sameValue(other);
+      return m_key == other.m_key && m_removed == other.m_removed && sameValue(other);
     }
 
     std::string m_key;
@@ -296,7 +295,7 @@ namespace mtconnect::entity {
       return std::holds_alternative<T>(m_other) && std::get<T>(m_other) == v;
     }
 
-    const DataSetValue &m_other; //! the other data set value
+    const DataSetValue &m_other;  //! the other data set value
   };
 
   inline bool DataSetEntry::same(const DataSetEntry &other) const
