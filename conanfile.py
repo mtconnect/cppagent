@@ -115,7 +115,7 @@ class MTConnectAgentConan(ConanFile):
     def build_requirements(self):
         self.tool_requires_version("cmake", [3, 26, 4])
         if self.options.with_docs:
-            self.tool_requires_version("doxygen", [1, 9, 4])
+            self.tool_requires_version("doxygen", [1, 14, 0])
 
     def requirements(self):
         self.requires("boost/1.85.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
