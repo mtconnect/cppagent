@@ -100,6 +100,8 @@ inline void fillAttribute(std::string &xmlString, const std::string &attribute,
 #define ASSERT_XML_PATH_EQUAL(doc, path, expected) \
   xpathTest(doc, path, expected, __FILE__, __LINE__)
 
+#define XML_PATH_VALUE(doc, path) xpathValue(doc, path, __FILE__, __LINE__)
+
 #define PARSE_XML(expr)                                                         \
   string result = expr;                                                         \
   auto doc = xmlParseMemory(result.c_str(), static_cast<int>(result.length())); \
@@ -127,8 +129,10 @@ inline void assertIf(bool condition, const std::string &message, const std::stri
   ASSERT_TRUE(condition) << file << "(" << line << "): Failed " << message;
 }
 
-inline void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
-                      const std::string &file, int line)
+using ValueResponse = std::pair<std::optional<std::string>, std::optional<std::string>>;
+
+inline ValueResponse xpathValue(xmlDocPtr doc, const char *xpath, const std::string &file, int line,
+                                bool noValue = false)
 {
   using namespace std;
 
@@ -178,19 +182,20 @@ inline void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
             << ((const char *)memory);
     xmlFree(memory);
 
-    FAIL() << message.str();
-
     if (obj)
       xmlXPathFreeObject(obj);
-
     xmlXPathFreeContext(xpathCtx);
-    return;
+
+    if (noValue)
+      return ValueResponse(std::nullopt, std::nullopt);
+    else
+      return ValueResponse(std::nullopt, message.str());
   }
 
   // Special case when no children are expected
   xmlNodePtr first = obj->nodesetval->nodeTab[0];
 
-  if (expected == nullptr)
+  if (noValue)
   {
     bool has_content = false;
     stringstream message;
@@ -228,8 +233,10 @@ inline void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
     xmlXPathFreeObject(obj);
     xmlXPathFreeContext(xpathCtx);
 
-    failIf(has_content, message.str(), file, line);
-    return;
+    if (has_content)
+      return ValueResponse(std::nullopt, message.str());
+    else
+      return ValueResponse(std::nullopt, std::nullopt);
   }
 
   string actual;
@@ -275,16 +282,38 @@ inline void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
   xmlXPathFreeContext(xpathCtx);
 
   actual = mtconnect::trim(actual);
-  string message = (string) "Incorrect value for path " + xpath;
 
-  if (expected[0] != '!')
+  return ValueResponse(actual, std::nullopt);
+}
+
+inline void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
+                      const std::string &file, int line)
+{
+  using namespace std;
+
+  auto res = xpathValue(doc, xpath, file, line, expected == nullptr);
+  if (res.second)
+    ADD_FAILURE_AT(file.c_str(), line) << *res.second;
+  else if (expected != nullptr)
   {
-    failNotEqualIf(actual != expected, expected, actual, message, file, line);
-  }
-  else
-  {
-    expected += 1;
-    failNotEqualIf(actual == expected, expected, actual, message, file, line);
+    if (res.first)
+    {
+      string message = (string) "Incorrect value for path " + xpath;
+      auto actual = *res.first;
+      if (expected[0] != '!')
+      {
+        failNotEqualIf(actual != expected, expected, actual, message, file, line);
+      }
+      else
+      {
+        expected += 1;
+        failNotEqualIf(actual == expected, expected, actual, message, file, line);
+      }
+    }
+    else
+    {
+      ADD_FAILURE_AT(file.c_str(), line) << "No value for " << xpath;
+    }
   }
 }
 
