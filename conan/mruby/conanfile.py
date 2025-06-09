@@ -4,6 +4,7 @@ from conan.tools.layout import basic_layout
 from conan.errors import ConanInvalidConfiguration
 from conan.errors import ConanException
 from conan.tools.microsoft.visual import msvc_runtime_flag, is_msvc
+from conan.tools.microsoft import VCVars
 
 import os
 import io
@@ -45,6 +46,9 @@ class MRubyConan(ConanFile):
         basic_layout(self, src_folder="source")
 
     def generate(self):
+        if is_msvc(self):
+            VCVars(self).generate()
+
         self.build_config = os.path.join(self.build_folder, self.source_folder, "build_config", "mtconnect.rb")
 
         with open(self.build_config, "w") as f:
@@ -165,6 +169,12 @@ end
         trace = ''
         if self.options.trace:
             trace = '--trace'
+        # Show all current environment variables
+        self.output.info("=== Environment Variables ===")
+        self.run("set" if self.settings.os == "Windows" else "env", shell=True)
+
+        # Show PATH, Ruby version, and Rake version inline
+        self.output.info(f"PATH: {os.environ.get('PATH')}")
         self.run("rake %s MRUBY_CONFIG=%s MRUBY_BUILD_DIR=%s" % (trace, self.build_config, self.build_folder),
                  cwd=self.source_folder)
 

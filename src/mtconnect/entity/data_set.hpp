@@ -100,21 +100,19 @@ namespace mtconnect::entity {
       const TableCellValue &m_other;
     };
 
-    /// @brief Compares to cells
-    /// @param other the other cell
-    bool same(const TableCell &other) const
-    {
-      const auto &ov = other.m_value;
-      return m_key == other.m_key && m_removed == other.m_removed &&
-             std::visit(SameValue(ov), m_value);
-    }
-
     /// @brief compares two cell values
     /// @param other the other cell value to compare
     bool sameValue(const TableCell &other) const
     {
       auto &ov = other.m_value;
       return std::visit(SameValue(ov), m_value);
+    }
+
+    /// @brief Compares to cells
+    /// @param other the other cell
+    bool same(const TableCell &other) const
+    {
+      return m_key == other.m_key && m_removed == other.m_removed && sameValue(other);
     }
 
     std::string m_key;
@@ -280,7 +278,7 @@ namespace mtconnect::entity {
       for (const auto &e1 : v)
       {
         const auto &e2 = oset.find(e1);
-        if (e2 == oset.end() || e2->sameValue(e1))
+        if (e2 == oset.end() || !e2->sameValue(e1))
           return false;
       }
 
