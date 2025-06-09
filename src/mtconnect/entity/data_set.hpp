@@ -48,33 +48,10 @@ namespace mtconnect::entity {
     {
       return std::holds_alternative<T2>(v1) && std::get<T2>(v1) == v2;
     }
-
-    /// @brief helper visitor to compare variant values
-    /// @tparam T The type of the underlying data
-    template <typename T>
-    struct SameValueVisitor
-    {
-      /// @brief Construct the with a cell value to compare
-      SameValueVisitor(const T &o) : m_other(o) {}
-
-      /// @brief Compare the types are the same and the values are the same
-      /// @tparam T the data type
-      /// @param v the other value
-      /// @return `true` if they are the same
-      template <typename TV>
-      bool operator()(const TV &v)
-      {
-        return SameValue(m_other, v);
-      }
-
-      /// @brief the other value to compare
-      const T &m_other;
-    };
-
+    
     /// @brief One entry in a data set. Has necessary interface to be work with maps.
-    /// @tparam T The type of the underlying data
-    /// @tparam SV The visitor to compare values of the entry
-    template <typename T, typename SV = SameValueVisitor<T>>
+    /// @tparam T The type of the underlying variant data
+    template <typename T>
     struct Entry
     {
       /// @brief Create an entry with a key and value
@@ -130,10 +107,14 @@ namespace mtconnect::entity {
 
       /// @brief Compares the values of the entiry
       /// @param other the other value to compare against `m_value`
+      /// @returns `true` if the values are the same
+      ///
+      /// Compares using the `SameValue` free function in the `data_set` namespace. It must be overloaded
+      /// for any special types required by the variant type T.
       bool sameValue(const Entry &other) const
       {
         const auto &ov = other.m_value;
-        return std::visit(SV(m_value), ov);
+        return std::visit([&ov](const auto &v) { return SameValue(ov, v); }, m_value);
       }
 
       /// @brief compare a data entry ewith another
