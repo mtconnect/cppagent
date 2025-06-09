@@ -51,19 +51,9 @@ namespace mtconnect::entity {
       /// @brief the other value to compare
       const T &m_other;
     };
-    
-    /// @brief compares two cell values
-    /// @param other the other cell value to compare
-    template<typename T>
-    struct SameValue {
-      bool operator()(const T &v1, const T &v2)
-      {
-        return std::visit(SameValueVisitor<T>(v1), v2);
-      }
-    };
-    
+        
     /// @brief One entry in a data set. Has necessary interface to be work with maps.
-    template<typename T, typename SV = SameValue<T>>
+    template<typename T, typename SV = SameValueVisitor<T>>
     struct Entry
     {
       /// @brief Create an entry with a key and value
@@ -114,7 +104,7 @@ namespace mtconnect::entity {
       bool sameValue(const Entry &other) const
       {
         const auto &ov = other.m_value;
-        return SV()(m_value, ov);
+        return std::visit(SV(m_value), ov);
       }
       
       /// @brief compare a data entry ewith another
@@ -229,15 +219,8 @@ namespace mtconnect::entity {
 
   };
   
-  struct DataSetEntrySame {
-    bool operator ()(const DataSetValue &v1, const DataSetValue &v2) const
-    {
-      return std::visit(DataSetValueSameVisitor(v1), v2);
-    }
-  };
-
   /// @brief One entry in a data set. Has necessary interface to be work with maps.
-  using DataSetEntry = data_set::Entry<DataSetValue, DataSetEntrySame>;
+  using DataSetEntry = data_set::Entry<DataSetValue, DataSetValueSameVisitor>;
   
   /// @brief A set of data set entries
   class DataSet : public data_set::Set<DataSetEntry>
