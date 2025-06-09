@@ -52,7 +52,7 @@ namespace mtconnect::entity {
     /// @brief One entry in a data set. Has necessary interface to be work with maps.
     /// @tparam T The type of the underlying variant data
     template <typename T>
-    struct AGENT_LIB_API Entry
+    struct Entry
     {
       /// @brief Create an entry with a key and value
       /// @param key the key
@@ -132,7 +132,7 @@ namespace mtconnect::entity {
     /// @brief A set of data set entries
     /// @tparam EV the entry type for the set, must have < operator.
     template <typename ET>
-    class AGENT_LIB_API Set : public std::set<ET>
+    class Set : public std::set<ET>
     {
     public:
       using base = std::set<ET>;
