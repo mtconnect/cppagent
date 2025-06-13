@@ -16,6 +16,7 @@ services:
     volumes:
       - ./agent/agent.cfg:/mtconnect/config/agent.cfg
       - ../agent/Devices.xml:/mtconnect/config/Devices.xml
+      - ../styles/styles.xsl:/mtconnect/data/styles/styles.xsl
       - ./log:/mtconnect/log
       - ../twin:/mtconnect/data/demo/twin
     ports:

@@ -43,8 +43,8 @@ jobs:
         include:
           - dockerfile: docker/alpine/Dockerfile
             name: agent
-#          - dockerfile: demo/Dockerfile
-#            name: demo
+          - dockerfile: demo/Dockerfile
+            name: demo
 
     # steps represent a sequence of tasks that will be executed as part of the job
     steps:
