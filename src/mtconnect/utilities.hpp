@@ -689,12 +689,12 @@ namespace mtconnect {
                          std::string::const_iterator end)
   {
     using namespace std;
-    
+
     // Exceptions to the rule
     const static std::unordered_map<std::string_view, std::string_view> exceptions = {
-      {"AC", "AC"}, {"DC", "DC"},   {"PH", "PH"},
-      {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
-    
+        {"AC", "AC"}, {"DC", "DC"},   {"PH", "PH"},
+        {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
+
     std::string_view s(&*start, distance(start, end));
     const auto &w = exceptions.find(s);
     ostream_iterator<char> out(camel);
@@ -724,10 +724,10 @@ namespace mtconnect {
       return "";
 
     ostringstream camel;
-    
+
     auto start = type.begin();
     decltype(start) end;
-    
+
     auto colon = type.find(':');
 
     if (colon != string::npos)

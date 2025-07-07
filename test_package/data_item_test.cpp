@@ -164,7 +164,7 @@ TEST_F(DataItemTest, GetCamel)
   ASSERT_EQ((string) "ABCc", pascalize("A_B_CC", prefix));
 
   ASSERT_EQ((string) "ThreeHumpCamelCase", pascalize("THREE_HUMP_CAMEL_CASE", prefix));
-  
+
   prefix.reset();
   ASSERT_EQ((string) "CamelCase", pascalize("x:CAMEL_CASE", prefix));
   ASSERT_EQ((string) "x", *prefix);

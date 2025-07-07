@@ -152,7 +152,7 @@ namespace mtconnect {
       // Validate Values
       if (IsOptionSet(m_options, configuration::Validation))
         next = next->bind(make_shared<Validator>(m_context));
-      
+
       // Deliver
       std::optional<string> obsMetrics;
       obsMetrics = m_identity + "_observation_update_rate";
