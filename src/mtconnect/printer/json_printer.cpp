@@ -439,7 +439,10 @@ namespace mtconnect::printer {
         }
         else
         {
-          AutoJsonObject streams(writer, "Streams");
+          if (m_jsonVersion == 1)
+            AutoJsonArray streams(writer, "Streams");
+          else
+            AutoJsonObject streams(writer, "Streams");
         }
       }
     });
