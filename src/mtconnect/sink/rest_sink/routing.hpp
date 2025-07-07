@@ -206,7 +206,15 @@ namespace mtconnect::sink::rest_sink {
             catch (ParameterError &e)
             {
               std::string msg = std::string("for query parameter '") + p.m_name + "': " + e.what();
-              throw ParameterError(msg);
+              
+              auto error = InvalidParameterValue::make(request->m_path,
+                                                       p.m_name,
+                                                       q->second,
+                                                       p.getTypeName(),
+                                                       p.getTypeFormat(),
+                                                       msg);
+              
+              throw ParameterError(msg, error);
             }
           }
           else if (!std::holds_alternative<std::monostate>(p.m_default))

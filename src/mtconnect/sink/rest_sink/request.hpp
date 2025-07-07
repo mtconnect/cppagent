@@ -28,11 +28,11 @@
 
 namespace mtconnect::sink::rest_sink {
   /// @brief An error that occurred during a request
-  class AGENT_LIB_API RequestError : public std::logic_error
+  class AGENT_LIB_API RequestError : public RestError
   {
   public:
-    /// @brief Create a simple error message related to a request
-    RequestError(const char *w) : std::logic_error::logic_error(w) {}
+    using RestError::RestError;
+    
     /// @brief Create a request error
     /// @param w the message
     /// @param body the body of the request
@@ -40,7 +40,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param code the boost status code
     RequestError(const char *w, const std::string &body, const std::string &type,
                  boost::beast::http::status code)
-      : std::logic_error::logic_error(w), m_contentType(type), m_body(body), m_code(code)
+      : RestError(w), m_contentType(type), m_body(body), m_code(code)
     {}
     RequestError(const RequestError &) = default;
     ~RequestError() override = default;
@@ -48,7 +48,6 @@ namespace mtconnect::sink::rest_sink {
     std::string m_contentType;
     std::string m_body;
     boost::beast::http::status m_code;
-    entity::EntityPtr m_error;
   };
 
   class Session;

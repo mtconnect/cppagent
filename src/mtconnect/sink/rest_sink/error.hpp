@@ -150,7 +150,7 @@ namespace mtconnect::sink::rest_sink {
                                   const std::string &value, const std::string &type,
                                   const std::string &format,
                                   std::optional<std::string> errorMessage,
-                                  std::optional<std::string> request)
+                                  std::optional<std::string> request = std::nullopt)
     {
       using namespace std;
 
@@ -256,4 +256,19 @@ namespace mtconnect::sink::rest_sink {
       return std::make_shared<AssetNotFound>(props);
     }
   };
+  
+  class AGENT_LIB_API RestError : public std::logic_error
+  {
+  public:
+    RestError(entity::EntityPtr error) : std::logic_error("REST Error"), m_error(error) {}
+    RestError(const char *what, entity::EntityPtr error = nullptr) : std::logic_error(what), m_error(error) {}
+    RestError(const std::string &what, entity::EntityPtr error = nullptr) : std::logic_error(what), m_error(error) {}
+
+    auto getError() const { return m_error; }
+    void setError(entity::EntityPtr error) { m_error = error; }
+    
+  protected:
+    entity::EntityPtr m_error;
+  };
+
 }  // namespace mtconnect::sink::rest_sink
