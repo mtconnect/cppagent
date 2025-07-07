@@ -685,25 +685,27 @@ namespace mtconnect {
   ///
   /// @param[in,out] start starting iterator
   /// @param[in,out] end ending iterator
-  inline void capitalize(std::string::iterator start, std::string::iterator end)
+  inline void capitalize(std::ostringstream &camel, std::string::const_iterator start,
+                         std::string::const_iterator end)
   {
     using namespace std;
-
+    
     // Exceptions to the rule
-    const static std::unordered_map<std::string, std::string> exceptions = {
-        {"AC", "AC"}, {"DC", "DC"},   {"PH", "PH"},
-        {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
-
-    const auto &w = exceptions.find(std::string(start, end));
+    const static std::unordered_map<std::string_view, std::string_view> exceptions = {
+      {"AC", "AC"}, {"DC", "DC"},   {"PH", "PH"},
+      {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
+    
+    std::string_view s(&*start, distance(start, end));
+    const auto &w = exceptions.find(s);
+    ostream_iterator<char> out(camel);
     if (w != exceptions.end())
     {
-      copy(w->second.begin(), w->second.end(), start);
+      copy(w->second.begin(), w->second.end(), out);
     }
     else
     {
-      *start = ::toupper(*start);
-      start++;
-      transform(start, end, start, ::tolower);
+      camel << static_cast<char>(::toupper(*start));
+      transform(start + 1, end, out, ::tolower);
     }
   }
 
@@ -721,34 +723,33 @@ namespace mtconnect {
     if (type.empty())
       return "";
 
-    string camel;
+    ostringstream camel;
+    
+    auto start = type.begin();
+    decltype(start) end;
+    
     auto colon = type.find(':');
 
     if (colon != string::npos)
     {
       prefix = type.substr(0ul, colon);
-      camel = type.substr(colon + 1ul);
+      start += colon + 1;
     }
-    else
-      camel = type;
-
-    auto start = camel.begin();
-    decltype(start) end;
 
     bool done;
     do
     {
-      end = find(start, camel.end(), '_');
-      capitalize(start, end);
-      done = end == camel.end();
+      end = find(start, type.end(), '_');
+      if (start != end)
+        capitalize(camel, start, end);
+      done = end == type.end();
       if (!done)
       {
-        camel.erase(end);
-        start = end;
+        start = end + 1;
       }
     } while (!done);
 
-    return camel;
+    return camel.str();
   }
 
   /// @brief parse a string timestamp to a `Timestamp`

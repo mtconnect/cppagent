@@ -163,9 +163,14 @@ TEST_F(DataItemTest, GetCamel)
   ASSERT_EQ((string) "CamelCase", pascalize("CAMEL_CASE", prefix));
   ASSERT_EQ((string) "ABCc", pascalize("A_B_CC", prefix));
 
+  ASSERT_EQ((string) "ThreeHumpCamelCase", pascalize("THREE_HUMP_CAMEL_CASE", prefix));
+  
   prefix.reset();
   ASSERT_EQ((string) "CamelCase", pascalize("x:CAMEL_CASE", prefix));
   ASSERT_EQ((string) "x", *prefix);
+  prefix.reset();
+  ASSERT_EQ((string) "MySillyTag", pascalize("y:MY__SILLY_TAG", prefix));
+  ASSERT_EQ((string) "y", *prefix);
 }
 
 TEST_F(DataItemTest, Condition) { ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory()); }
