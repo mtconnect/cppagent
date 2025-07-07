@@ -144,15 +144,15 @@ namespace mtconnect {
       if (IsOptionSet(m_options, configuration::CorrectTimestamps))
         next = next->bind(make_shared<CorrectTimestamp>(m_context));
 
-      // Validate Values
-      if (IsOptionSet(m_options, configuration::Validation))
-        next = next->bind(make_shared<Validator>(m_context));
-
       // Filter dups, by delta, and by period
       next = next->bind(make_shared<DuplicateFilter>(m_context));
       next = next->bind(make_shared<DeltaFilter>(m_context));
       next = next->bind(make_shared<PeriodFilter>(m_context, m_strand));
 
+      // Validate Values
+      if (IsOptionSet(m_options, configuration::Validation))
+        next = next->bind(make_shared<Validator>(m_context));
+      
       // Deliver
       std::optional<string> obsMetrics;
       obsMetrics = m_identity + "_observation_update_rate";
