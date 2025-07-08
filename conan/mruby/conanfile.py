@@ -197,7 +197,6 @@ end
         self.run("{} --cflags".format(ruby), stdout=buf, shell=True)
 
         defines = [d[2:] for d in buf.getvalue().split(' ') if d.startswith('/D') or d.startswith('-D')]
-        defines.append('mruby=ON')
         self.cpp_info.defines = defines
 
         self.cpp_info.bindirs = ["bin"]
