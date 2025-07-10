@@ -48,7 +48,7 @@ namespace mtconnect::entity {
     {
       return std::holds_alternative<T2>(v1) && std::get<T2>(v1) == v2;
     }
-    
+
     /// @brief One entry in a data set. Has necessary interface to be work with maps.
     /// @tparam T The type of the underlying variant data
     template <typename T>
@@ -109,8 +109,8 @@ namespace mtconnect::entity {
       /// @param other the other value to compare against `m_value`
       /// @returns `true` if the values are the same
       ///
-      /// Compares using the `SameValue` free function in the `data_set` namespace. It must be overloaded
-      /// for any special types required by the variant type T.
+      /// Compares using the `SameValue` free function in the `data_set` namespace. It must be
+      /// overloaded for any special types required by the variant type T.
       bool sameValue(const Entry &other) const
       {
         const auto &ov = other.m_value;

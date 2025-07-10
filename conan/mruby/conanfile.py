@@ -195,9 +195,9 @@ end
 
         buf = io.StringIO()
         self.run("{} --cflags".format(ruby), stdout=buf, shell=True)
-        self.cpp_info.defines = [d[2:] for d in buf.getvalue().split(' ') if d.startswith('/D') or d.startswith('-D')]
 
-        self.conf_info.define('mruby', 'ON')
+        defines = [d[2:] for d in buf.getvalue().split(' ') if d.startswith('/D') or d.startswith('-D')]
+        self.cpp_info.defines = defines
 
         self.cpp_info.bindirs = ["bin"]
         if self.settings.os == 'Windows':
