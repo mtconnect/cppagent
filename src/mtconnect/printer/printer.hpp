@@ -58,25 +58,28 @@ namespace mtconnect {
       /// @param[in] instanceId the instance id
       /// @param[in] bufferSize the buffer size
       /// @param[in] nextSeq the next sequence
-      /// @param[in] errorCode an error code
-      /// @param[in] errorText the error text
+      /// @param[in] error the error being reported
+      /// @param[in] pretty `true` if content should be pretty printed
+      /// @param[in] requestId optional request id to include in the header
       /// @return the error document
       virtual std::string printError(
           const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-          const std::string &errorCode, const std::string &errorText, bool pretty = false,
+         entity::EntityPtr error, bool pretty = false,
           const std::optional<std::string> requestId = std::nullopt) const
       {
-        return printErrors(instanceId, bufferSize, nextSeq, {{errorCode, errorText}});
+        return printErrors(instanceId, bufferSize, nextSeq, entity::EntityList {error}, pretty, requestId);
       }
       /// @brief Generate an MTConnect Error document with a error list
       /// @param[in] instanceId the instance id
       /// @param[in] bufferSize the buffer size
       /// @param[in] nextSeq the next sequence
       /// @param[in] list the list of errors
+      /// @param[in] pretty `true` if content should be pretty printed
+      /// @param[in] requestId optional request id to include in the header
       /// @return the MTConnect Error document
       virtual std::string printErrors(
           const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-          const ProtoErrorList &list, bool pretty = false,
+                                      const entity::EntityList &list, bool pretty = false,
           const std::optional<std::string> requestId = std::nullopt) const = 0;
       /// @brief Generate an MTConnect Devices document
       /// @param[in] instanceId the instance id

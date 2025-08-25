@@ -26,6 +26,7 @@
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/parser/xml_parser.hpp"
 #include "mtconnect/printer//xml_printer.hpp"
+#include "mtconnect/sink/rest_sink/error.hpp"
 #include "mtconnect/utilities.hpp"
 #include "test_utilities.hpp"
 
@@ -36,6 +37,7 @@ using namespace mtconnect::observation;
 using namespace mtconnect::entity;
 using namespace mtconnect::printer;
 using namespace mtconnect::parser;
+using namespace mtconnect::sink::rest_sink;
 
 // main
 int main(int argc, char *argv[])
@@ -106,12 +108,14 @@ ObservationPtr XmlPrinterTest::addEventToCheckpoint(Checkpoint &checkpoint, cons
 TEST_F(XmlPrinterTest, PrintError)
 {
   m_printer->setSenderName("MachineXXX");
-  PARSE_XML(m_printer->printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+  
+  auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, "ERROR TEXT!");
+  PARSE_XML(m_printer->printError(123, 9999, 1, error, true));
 
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@bufferSize", "9999");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@sender", "MachineXXX");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "ERROR_CODE");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "ERROR TEXT!");
 }
 
@@ -373,7 +377,9 @@ TEST_F(XmlPrinterTest, ChangeErrorNamespace)
   // Error
 
   {
-    PARSE_XML(m_printer->printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+    auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, "ERROR_TEXT");
+    PARSE_XML(m_printer->printError(123, 9999, 1, error, true));
+
     ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectError@schemaLocation",
                           "urn:mtconnect.org:MTConnectError:1.2 "
                           "http://schemas.mtconnect.org/schemas/"
@@ -384,7 +390,8 @@ TEST_F(XmlPrinterTest, ChangeErrorNamespace)
     m_printer->addErrorNamespace("urn:machine.com:MachineError:1.3",
                                  "http://www.machine.com/schemas/MachineError_1.3.xsd", "e");
 
-    PARSE_XML(m_printer->printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+    auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, "ERROR_TEXT");
+    PARSE_XML(m_printer->printError(123, 9999, 1, error, true));
 
     ASSERT_XML_PATH_EQUAL(
         doc, "/m:MTConnectError@schemaLocation",
@@ -848,7 +855,8 @@ TEST_F(XmlPrinterTest, ErrorStyle)
 {
   m_printer->setErrorStyle("/styles/Error.xsl");
 
-  PARSE_XML(m_printer->printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
+  auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, "ERROR_TEXT");
+  PARSE_XML(m_printer->printError(123, 9999, 1, error, true));
 
   xmlNodePtr pi = doc->children;
   ASSERT_EQ(string("xml-stylesheet"), string((const char *)pi->name));

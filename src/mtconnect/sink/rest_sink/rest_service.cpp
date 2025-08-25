@@ -26,6 +26,7 @@
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
 #include "mtconnect/printer/xml_printer.hpp"
 #include "server.hpp"
+#include "error.hpp"
 
 namespace asio = boost::asio;
 using namespace std;
@@ -50,6 +51,9 @@ namespace mtconnect {
         m_options(options),
         m_logStreamData(GetOption<bool>(options, config::LogStreams).value_or(false))
     {
+      using placeholders::_1;
+      using placeholders::_2;
+      
       auto maxSize =
           ConvertFileSize(options, mtconnect::configuration::MaxCachedFileSize, 20 * 1024);
       auto compressSize =
@@ -65,16 +69,7 @@ namespace mtconnect {
       loadHttpHeaders(config);
 
       m_server = make_unique<Server>(context, m_options);
-      m_server->setErrorFunction(
-          [this](SessionPtr session, rest_sink::status st, const string &msg) {
-            if (m_sinkContract)
-            {
-              auto printer = m_sinkContract->getPrinter("xml");
-              auto doc = printError(printer, "INVALID_REQUEST", msg);
-              ResponsePtr resp = std::make_unique<Response>(st, doc, printer->mimeType());
-              session->writeFailureResponse(std::move(resp));
-            }
-          });
+      m_server->setErrorFunction(boost::bind(&RestService::writeErrorResponse, this, _1, _2));
 
       auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_sinkContract->getPrinter("xml"));
 
@@ -562,13 +557,8 @@ namespace mtconnect {
         }
         else
         {
-          auto format = request->parameter<string>("format");
-          auto printer = getPrinter(request->m_accepts, format);
-          auto error = printError(printer, "INVALID_REQUEST", "No asset given");
-
-          respond(session,
-                  make_unique<Response>(rest_sink::status::bad_request, error, printer->mimeType()),
-                  request->m_requestId);
+          auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, "No asset given");
+          throw RestError(error, request->m_accepts, rest_sink::status::bad_request);
         }
         return true;
       };
@@ -1105,14 +1095,13 @@ namespace mtconnect {
         return end;
       }
 
-      catch (RequestError &re)
+      catch (RestError &re)
       {
         LOG(error) << asyncResponse->m_session->getRemote().address()
                    << ": Error processing request: " << re.what();
         if (asyncResponse->m_session)
         {
-          ResponsePtr resp = std::make_unique<Response>(re);
-          asyncResponse->m_session->writeResponse(std::move(resp));
+          writeErrorResponse(asyncResponse->m_session, re);
           asyncResponse->m_session->close();
         }
       }
@@ -1237,14 +1226,13 @@ namespace mtconnect {
               asyncResponse->getRequestId());
         }
       }
-      catch (RequestError &re)
+      catch (RestError &re)
       {
         LOG(error) << asyncResponse->m_session->getRemote().address()
                    << ": Error processing request: " << re.what();
         if (asyncResponse->m_session)
         {
-          ResponsePtr resp = std::make_unique<Response>(re);
-          asyncResponse->m_session->writeResponse(std::move(resp));
+          writeErrorResponse(asyncResponse->m_session, re);
           asyncResponse->m_session->close();
         }
       }
@@ -1296,15 +1284,11 @@ namespace mtconnect {
       AssetList list;
       if (m_sinkContract->getAssetStorage()->getAssets(list, ids) == 0)
       {
-        stringstream str;
-        str << "Cannot find asset for asset Ids: ";
+        entity::EntityList errors;
         for (auto &id : ids)
-          str << id << ", ";
-
-        auto message = str.str().substr(0, str.str().size() - 2);
-        return make_unique<Response>(
-            status::not_found, printError(printer, "ASSET_NOT_FOUND", message, pretty, requestId),
-            printer->mimeType());
+          errors.emplace_back(AssetNotFound::make(id, "Cannot find asset: " + id));
+        throw RestError(errors, printer, status::not_found, 
+                        std::nullopt, requestId);
       }
       else
       {
@@ -1333,20 +1317,18 @@ namespace mtconnect {
       auto ap = m_loopback->receiveAsset(dev, asset, uuid, type, nullopt, errors);
       if (!ap || errors.size() > 0 || (type && ap->getType() != *type))
       {
-        ProtoErrorList errorResp;
+        entity::EntityList errorList;
+        
         if (!ap)
-          errorResp.emplace_back("INVALID_REQUEST", "Could not parse Asset.");
+          errorList.emplace_back(Error::make(Error::ErrorCode::INVALID_REQUEST, "Could not parse Asset."));
         else
-          errorResp.emplace_back("INVALID_REQUEST", "Asset parsed with errors.");
+          errorList.emplace_back(Error::make(Error::ErrorCode::INVALID_REQUEST, "Asset parsed with errors."));
         for (auto &e : errors)
         {
-          errorResp.emplace_back("INVALID_REQUEST", e->what());
+          errorList.emplace_back(Error::make(Error::ErrorCode::INVALID_REQUEST, e->what()));
         }
-        return make_unique<Response>(
-            status::bad_request,
-            printer->printErrors(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
-                                 m_sinkContract->getCircularBuffer().getSequence(), errorResp),
-            printer->mimeType());
+        
+        throw RestError(errorList, printer);
       }
 
       AssetList list {ap};
@@ -1379,9 +1361,10 @@ namespace mtconnect {
       }
       else
       {
-        return make_unique<Response>(status::not_found,
-                                     printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),
-                                     printer->mimeType());
+        entity::EntityList errors;
+        for (auto &id : ids)
+          errors.emplace_back(AssetNotFound::make(id, "Cannot find asset: " + id));
+        throw RestError(errors, printer, status::not_found);
       }
     }
 
@@ -1393,9 +1376,7 @@ namespace mtconnect {
       if (m_sinkContract->getAssetStorage()->getAssets(list, std::numeric_limits<size_t>().max(),
                                                        true, device, type) == 0)
       {
-        return make_unique<Response>(status::not_found,
-                                     printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),
-                                     printer->mimeType());
+        throw RestError(AssetNotFound::make("", "No assets to delete"), printer, status::not_found);
       }
       else
       {
@@ -1434,13 +1415,13 @@ namespace mtconnect {
 
       auto dev = checkDevice(printer, device);
 
-      ProtoErrorList errorResp;
+      entity::EntityList errors;
       for (auto &qp : observations)
       {
         auto di = dev->getDeviceDataItem(qp.first);
         if (di == nullptr)
         {
-          errorResp.emplace_back("BAD_REQUEST", "Cannot find data item: " + qp.first);
+          errors.emplace_back(Error::make(Error::ErrorCode::INVALID_REQUEST, "Cannot find data item: " + qp.first));
         }
         else
         {
@@ -1459,17 +1440,13 @@ namespace mtconnect {
         }
       }
 
-      if (errorResp.empty())
+      if (errors.empty())
       {
         return make_unique<Response>(status::ok, "<success/>", "text/xml");
       }
       else
       {
-        return make_unique<Response>(
-            status::not_found,
-            printer->printErrors(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
-                                 m_sinkContract->getCircularBuffer().getSequence(), errorResp),
-            printer->mimeType());
+        throw RestError(errors, printer);
       }
     }
 
@@ -1492,19 +1469,6 @@ namespace mtconnect {
       return "xml";
     }
 
-    string RestService::printError(const Printer *printer, const string &errorCode,
-                                   const string &text, bool pretty,
-                                   const std::optional<std::string> &requestId) const
-    {
-      LOG(debug) << "Returning error " << errorCode << ": " << text;
-      if (printer)
-        return printer->printError(
-            m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
-            m_sinkContract->getCircularBuffer().getSequence(), errorCode, text, pretty, requestId);
-      else
-        return errorCode + ": " + text;
-    }
-
     // -----------------------------------------------
     // Validation methods
     // -----------------------------------------------
@@ -1517,22 +1481,22 @@ namespace mtconnect {
       {
         stringstream str;
         str << '\'' << param << '\'' << " must be greater than " << min;
-        throw RequestError(str.str().c_str(), printError(printer, "OUT_OF_RANGE", str.str()),
-                           printer->mimeType(), status::bad_request);
+        auto error = OutOfRange::make(param, value, min, max, str.str());
+        throw RestError(error, printer);
       }
       if (value >= max)
       {
         stringstream str;
         str << '\'' << param << '\'' << " must be less than " << max;
-        throw RequestError(str.str().c_str(), printError(printer, "OUT_OF_RANGE", str.str()),
-                           printer->mimeType(), status::bad_request);
+        auto error = OutOfRange::make(param, value, min, max, str.str());
+        throw RestError(error, printer);
       }
       if (notZero && value == 0)
       {
         stringstream str;
         str << '\'' << param << '\'' << " must not be zero(0)";
-        throw RequestError(str.str().c_str(), printError(printer, "OUT_OF_RANGE", str.str()),
-                           printer->mimeType(), status::bad_request);
+        auto error = OutOfRange::make(param, value, min, max, str.str());
+        throw RestError(error, printer);
       }
     }
 
@@ -1546,15 +1510,17 @@ namespace mtconnect {
       }
       catch (exception &e)
       {
-        throw RequestError(e.what(), printError(printer, "INVALID_XPATH", e.what()),
-                           printer->mimeType(), status::bad_request);
+        
+        string msg = "The path could not be parsed. Invalid syntax: "s + e.what();
+        auto error = Error::make(Error::ErrorCode::INVALID_XPATH, printer->mimeType(), msg);
+        throw RestError(error, printer);
       }
 
       if (filter.empty())
       {
         string msg = "The path could not be parsed. Invalid syntax: " + *path;
-        throw RequestError(msg.c_str(), printError(printer, "INVALID_XPATH", msg),
-                           printer->mimeType(), status::bad_request);
+        auto error = Error::make(Error::ErrorCode::INVALID_XPATH, printer->mimeType(), msg);
+        throw RestError(error, printer);
       }
     }
 
@@ -1564,8 +1530,8 @@ namespace mtconnect {
       if (!dev)
       {
         string msg("Could not find the device '" + uuid + "'");
-        throw RequestError(msg.c_str(), printError(printer, "NO_DEVICE", msg), printer->mimeType(),
-                           status::not_found);
+        auto error = Error::make(Error::ErrorCode::NO_DEVICE, printer->mimeType(), msg);
+        throw RestError(error, printer, status::not_found);
       }
 
       return dev;

@@ -21,16 +21,16 @@
 #include <map>
 #include <set>
 #include <variant>
+#include <stdexcept>
 
 #include "error.hpp"
 #include "mtconnect/config.hpp"
 
 namespace mtconnect::sink::rest_sink {
   /// @brief Parameter related errors thrown during interpreting a REST request
-  class AGENT_LIB_API ParameterError : public RestError
+  class AGENT_LIB_API ParameterError : public std::invalid_argument
   {
-    ParameterError(entity::EntityPtr error) : RestError("Parameter Error", error) {}
-    using RestError::RestError;
+    using std::invalid_argument::invalid_argument;
   };
 
   /// @brief The parameter type for a REST request

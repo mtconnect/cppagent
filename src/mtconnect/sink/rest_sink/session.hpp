@@ -27,6 +27,7 @@
 #include "mtconnect/config.hpp"
 #include "mtconnect/observation/change_observer.hpp"
 #include "routing.hpp"
+#include "error.hpp"
 
 namespace mtconnect::sink::rest_sink {
   struct Response;
@@ -34,7 +35,7 @@ namespace mtconnect::sink::rest_sink {
   class Session;
   using SessionPtr = std::shared_ptr<Session>;
   using ErrorFunction =
-      std::function<void(SessionPtr, boost::beast::http::status status, const std::string &msg)>;
+      std::function<void(SessionPtr, const RestError &error)>;
 
   using Dispatch = std::function<bool(SessionPtr, RequestPtr)>;
   using Complete = std::function<void()>;
@@ -93,7 +94,9 @@ namespace mtconnect::sink::rest_sink {
       }
       else
       {
-        m_errorFunction(shared_from_this(), status, message);
+        auto error = Error::make(Error::ErrorCode::INTERNAL_ERROR, message);
+        RestError re(error, "application/xml", status);
+        m_errorFunction(shared_from_this(), re);
       }
     }
 

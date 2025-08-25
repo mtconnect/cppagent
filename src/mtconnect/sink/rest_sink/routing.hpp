@@ -167,71 +167,65 @@ namespace mtconnect::sink::rest_sink {
     /// @return `true` if the request was matched
     bool matches(SessionPtr session, RequestPtr request)
     {
-      try
+      if (!request->m_command)
       {
-        if (!request->m_command)
+        request->m_parameters.clear();
+        std::smatch m;
+        if (m_verb == request->m_verb && std::regex_match(request->m_path, m, m_pattern))
         {
-          request->m_parameters.clear();
-          std::smatch m;
-          if (m_verb == request->m_verb && std::regex_match(request->m_path, m, m_pattern))
+          auto s = m.begin();
+          s++;
+          for (auto &p : m_pathParameters)
           {
-            auto s = m.begin();
-            s++;
-            for (auto &p : m_pathParameters)
+            if (s != m.end())
             {
-              if (s != m.end())
-              {
-                ParameterValue v(s->str());
-                request->m_parameters.emplace(make_pair(p.m_name, v));
-                s++;
-              }
-            }
-          }
-          else
-          {
-            return false;
-          }
-        }
-
-        for (auto &p : m_queryParameters)
-        {
-          auto q = request->m_query.find(p.m_name);
-          if (q != request->m_query.end())
-          {
-            try
-            {
-              auto v = convertValue(q->second, p.m_type);
+              ParameterValue v(s->str());
               request->m_parameters.emplace(make_pair(p.m_name, v));
+              s++;
             }
-            catch (ParameterError &e)
-            {
-              std::string msg = std::string("for query parameter '") + p.m_name + "': " + e.what();
-              
-              auto error = InvalidParameterValue::make(request->m_path,
-                                                       p.m_name,
-                                                       q->second,
-                                                       p.getTypeName(),
-                                                       p.getTypeFormat(),
-                                                       msg);
-              
-              throw ParameterError(msg, error);
-            }
-          }
-          else if (!std::holds_alternative<std::monostate>(p.m_default))
-          {
-            request->m_parameters.emplace(make_pair(p.m_name, p.m_default));
           }
         }
-        return m_function(session, request);
+        else
+        {
+          return false;
+        }
       }
 
-      catch (ParameterError &e)
+      entity::EntityList errors;
+      for (auto &p : m_queryParameters)
       {
-        LOG(debug) << "Pattern error: " << e.what();
-        throw e;
+        auto q = request->m_query.find(p.m_name);
+        if (q != request->m_query.end())
+        {
+          try
+          {
+            auto v = convertValue(q->second, p.m_type);
+            request->m_parameters.emplace(make_pair(p.m_name, v));
+          }
+          catch (ParameterError &e)
+          {
+            std::string msg = std::string("for query parameter '") + p.m_name + "': " + e.what();
+            
+            LOG(warning) << "Parameter error: " << msg;
+            auto error = InvalidParameterValue::make(request->m_path,
+                                                     p.m_name,
+                                                     q->second,
+                                                     p.getTypeName(),
+                                                     p.getTypeFormat(),
+                                                     msg);
+            errors.emplace_back(error);
+          }
+        }
+        else if (!std::holds_alternative<std::monostate>(p.m_default))
+        {
+          request->m_parameters.emplace(make_pair(p.m_name, p.m_default));
+        }
       }
-
-      return false;
+      
+      if (!errors.empty())
+        throw RestError(errors, request->m_accepts);
+      else
+        return m_function(session, request);
     }
 
     /// @brief check if this is related to a swagger API

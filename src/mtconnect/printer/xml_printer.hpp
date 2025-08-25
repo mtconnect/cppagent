@@ -45,7 +45,7 @@ namespace mtconnect {
 
       std::string printErrors(
           const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-          const ProtoErrorList &list, bool pretty = false,
+          const entity::EntityList &list, bool pretty = false,
           const std::optional<std::string> requestId = std::nullopt) const override;
 
       std::string printProbe(
@@ -64,7 +64,7 @@ namespace mtconnect {
           const uint64_t anInstanceId, const unsigned int bufferSize, const unsigned int assetCount,
           const asset::AssetList &asset, bool pretty = false,
           const std::optional<std::string> requestId = std::nullopt) const override;
-      std::string mimeType() const override { return "text/xml"; }
+      std::string mimeType() const override { return "application/mtconnect+xml"; }
 
       /// @brief Print a single device in XML
       /// @param device A device poiinter

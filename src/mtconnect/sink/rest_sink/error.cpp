@@ -58,7 +58,7 @@ namespace mtconnect::sink::rest_sink {
         return "Unauthorized";
 
       case ErrorCode::UNSUPPORTED:
-        return "UNSUPPORTED";
+        return "Unsupported";
 
       case ErrorCode::INVALID_PARAMTER_VALUE:
         return "InvalidParamterValue";

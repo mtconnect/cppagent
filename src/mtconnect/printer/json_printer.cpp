@@ -117,7 +117,7 @@ namespace mtconnect::printer {
   }
 
   std::string JsonPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
-                                       const uint64_t nextSeq, const ProtoErrorList &list,
+                                       const uint64_t nextSeq, const entity::EntityList &list,
                                        bool pretty,
                                        const std::optional<std::string> requestId) const
   {
@@ -125,6 +125,8 @@ namespace mtconnect::printer {
 
     StringBuffer output;
     RenderJson(output, m_pretty || pretty, [&](auto &writer) {
+      entity::JsonPrinter printer(writer, m_jsonVersion);
+
       AutoJsonObject obj(writer);
       {
         AutoJsonObject obj(writer, "MTConnectError");
@@ -136,34 +138,8 @@ namespace mtconnect::printer {
                  m_modelChangeTime, m_validation, requestId);
         }
         {
-          if (m_jsonVersion > 1)
-          {
-            AutoJsonObject obj(writer, "Errors");
-            {
-              AutoJsonArray ary(writer, "Error");
-              for (auto &e : list)
-              {
-                AutoJsonObject obj(writer);
-                string s(e.second);
-                obj.AddPairs("errorCode", e.first, "value", trim(s));
-              }
-            }
-          }
-          else
-          {
-            AutoJsonArray obj(writer, "Errors");
-            {
-              for (auto &e : list)
-              {
-                AutoJsonObject obj(writer);
-                {
-                  AutoJsonObject obj(writer, "Error");
-                  string s(e.second);
-                  obj.AddPairs("errorCode", e.first, "value", trim(s));
-                }
-              }
-            }
-          }
+            obj.Key("Errors");
+            printer.printEntityList(list);
         }
       }
     });

@@ -75,8 +75,8 @@ namespace mtconnect::sink::rest_sink {
       if (fields)
         setHttpHeaders(*fields);
 
-      m_errorFunction = [](SessionPtr session, status st, const std::string &msg) {
-        ResponsePtr response = std::make_unique<Response>(st, msg, "text/plain");
+      m_errorFunction = [](SessionPtr session, const RestError &error) {
+        ResponsePtr response = std::make_unique<Response>(error.getStatus(), "Error occurred for request", "text/plain");
         session->writeFailureResponse(std::move(response));
         return true;
       };
@@ -189,18 +189,11 @@ namespace mtconnect::sink::rest_sink {
           session->fail(boost::beast::http::status::not_found, txt.str());
         }
       }
-      catch (RequestError &re)
+      catch (RestError &re)
       {
-        LOG(error) << session->getRemote().address() << ": Error processing request: " << re.what();
-        ResponsePtr resp = std::make_unique<Response>(re);
-        session->writeResponse(std::move(resp));
-      }
-      catch (ParameterError &pe)
-      {
-        std::stringstream txt;
-        txt << session->getRemote().address() << ": Parameter Error: " << pe.what();
-        LOG(error) << txt.str();
-        session->fail(boost::beast::http::status::not_found, txt.str());
+        LOG(error) << session->getRemote().address() << ": Error processing request: " << request->m_path;
+        re.setUri(request->m_path);
+        m_errorFunction(session, re);
       }
       catch (std::logic_error &le)
       {
