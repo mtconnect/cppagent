@@ -39,6 +39,7 @@
 #include "mtconnect/logging.hpp"
 #include "mtconnect/printer/json_printer_helper.hpp"
 #include "mtconnect/version.h"
+#include "mtconnect/sink/rest_sink/error.hpp"
 
 using namespace std;
 
@@ -122,6 +123,7 @@ namespace mtconnect::printer {
                                        const std::optional<std::string> requestId) const
   {
     defaultSchemaVersion();
+    auto version = IntSchemaVersion(*m_schemaVersion);
 
     StringBuffer output;
     RenderJson(output, m_pretty || pretty, [&](auto &writer) {
@@ -138,8 +140,19 @@ namespace mtconnect::printer {
                  m_modelChangeTime, m_validation, requestId);
         }
         {
-            obj.Key("Errors");
-            printer.printEntityList(list);
+          obj.Key("Errors");
+          entity::EntityList errors;
+          if (version < SCHEMA_VERSION(2, 6))
+          {
+            for (auto &err : list)
+            {
+              auto re = dynamic_pointer_cast<sink::rest_sink::Error>(err);
+              errors.emplace_back(re->makeLegacyError());
+            }
+          }
+          else
+            errors = list;
+          printer.printEntityList(errors);
         }
       }
     });
