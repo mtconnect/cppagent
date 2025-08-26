@@ -33,6 +33,7 @@ namespace mtconnect {
     class Printer;
   }
   namespace sink::rest_sink {
+    class RestService;
     using status = boost::beast::http::status;
 
     /// @brief A response for a simple request request returning some content
@@ -51,10 +52,6 @@ namespace mtconnect {
       /// @param[in] file the file
       Response(status status, CachedFilePtr file)
         : m_status(status), m_mimeType(file->m_mimeType), m_expires(0), m_file(file)
-      {}
-      /// @brief Creates a response with an error
-      /// @param[in] e the error
-      Response(RequestError &e) : m_status(e.m_code), m_body(e.m_body), m_mimeType(e.m_contentType)
       {}
 
       status m_status;                        ///< The return status

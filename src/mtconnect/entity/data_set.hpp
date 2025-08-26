@@ -124,9 +124,9 @@ namespace mtconnect::entity {
         return m_key == other.m_key && m_removed == other.m_removed && sameValue(other);
       }
 
-      std::string m_key;  ///< The key of the entry
-      T m_value;          ///< The value of the entry
-      bool m_removed;     ///< boolean indicator if this entry is removed.
+      std::string m_key;  //! The key of the entry
+      T m_value;          //! The value of the entry
+      bool m_removed;     //! boolean indicator if this entry is removed.
     };
 
     /// @brief A set of data set entries
@@ -171,10 +171,10 @@ namespace mtconnect::entity {
   /// @brief Data Set Value type enumeration
   enum class TabelCellType : std::uint16_t
   {
-    EMPTY = 0x0,    ///< monostate for no value
-    STRING = 0x02,  ///< string value
-    INTEGER = 0x3,  ///< 64 bit integer
-    DOUBLE = 0x4    ///< double
+    EMPTY = 0x0,    //! monostate for no value
+    STRING = 0x02,  //! string value
+    INTEGER = 0x3,  //! 64 bit integer
+    DOUBLE = 0x4    //! double
   };
 
   /// @brief Table Cell value variant
@@ -216,11 +216,11 @@ namespace mtconnect::entity {
   /// @brief Data Set Value type enumeration
   enum class DataSetValueType : std::uint16_t
   {
-    EMPTY = 0x0,       ///< monostate for no value
-    TABLE_ROW = 0x01,  ///< data set member for tables
-    STRING = 0x02,     ///< string value
-    INTEGER = 0x3,     ///< 64 bit integer
-    DOUBLE = 0x4       ///< double
+    EMPTY = 0x0,       //! monostate for no value
+    TABLE_ROW = 0x01,  //! data set member for tables
+    STRING = 0x02,     //! string value
+    INTEGER = 0x3,     //! 64 bit integer
+    DOUBLE = 0x4       //! double
   };
 
   /// @brief Data set value variant

@@ -33,10 +33,13 @@
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/printer//json_printer.hpp"
+#include "mtconnect/sink/rest_sink/error.hpp"
 #include "mtconnect/utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::sink::rest_sink;
+
 using json = nlohmann::json;
 
 // main
@@ -54,19 +57,120 @@ protected:
   std::unique_ptr<printer::JsonPrinter> m_printer;
 };
 
-TEST_F(JsonPrinterErrorTest, PrintError)
+TEST_F(JsonPrinterErrorTest, should_print_legacy_error)
 {
-  auto doc = m_printer->printError(12345u, 1024u, 56u, "BAD_BAD", "Never do that again");
+  m_printer->setSchemaVersion("2.5");
+  auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, "ERROR TEXT!");
+  auto doc = m_printer->printError(123, 9999, 1, error, true);
+
   // cout << doc << endl;
   auto jdoc = json::parse(doc);
   auto it = jdoc.begin();
   ASSERT_EQ(string("MTConnectError"), it.key());
-  ASSERT_EQ(12345, jdoc.at("/MTConnectError/Header/instanceId"_json_pointer).get<int32_t>());
-  ASSERT_EQ(1024, jdoc.at("/MTConnectError/Header/bufferSize"_json_pointer).get<int32_t>());
+  ASSERT_EQ(123, jdoc.at("/MTConnectError/Header/instanceId"_json_pointer).get<int32_t>());
+  ASSERT_EQ(9999, jdoc.at("/MTConnectError/Header/bufferSize"_json_pointer).get<int32_t>());
   ASSERT_EQ(false, jdoc.at("/MTConnectError/Header/testIndicator"_json_pointer).get<bool>());
 
-  ASSERT_EQ(string("BAD_BAD"),
+  ASSERT_EQ(string("INVALID_REQUEST"),
             jdoc.at("/MTConnectError/Errors/0/Error/errorCode"_json_pointer).get<string>());
-  ASSERT_EQ(string("Never do that again"),
+  ASSERT_EQ(string("ERROR TEXT!"),
             jdoc.at("/MTConnectError/Errors/0/Error/value"_json_pointer).get<string>());
+}
+
+TEST_F(JsonPrinterErrorTest, should_print_error_with_2_6_invalid_request)
+{
+  m_printer->setSchemaVersion("2.6");
+  m_printer->setSenderName("MachineXXX");
+
+  auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, "ERROR TEXT!");
+  auto doc = m_printer->printError(123, 9999, 1, error, true);
+
+  // cout << doc << endl;
+  auto jdoc = json::parse(doc);
+  auto it = jdoc.begin();
+  ASSERT_EQ(string("MTConnectError"), it.key());
+  ASSERT_EQ(123, jdoc.at("/MTConnectError/Header/instanceId"_json_pointer).get<int32_t>());
+  ASSERT_EQ(9999, jdoc.at("/MTConnectError/Header/bufferSize"_json_pointer).get<int32_t>());
+  ASSERT_EQ(false, jdoc.at("/MTConnectError/Header/testIndicator"_json_pointer).get<bool>());
+
+  ASSERT_EQ(
+      string("INVALID_REQUEST"),
+      jdoc.at("/MTConnectError/Errors/0/InvalidRequest/errorCode"_json_pointer).get<string>());
+  ASSERT_EQ(
+      string("ERROR TEXT!"),
+      jdoc.at("/MTConnectError/Errors/0/InvalidRequest/ErrorMessage"_json_pointer).get<string>());
+}
+
+TEST_F(JsonPrinterErrorTest, should_print_error_with_2_6_invalid_parameter_value)
+{
+  m_printer->setSchemaVersion("2.6");
+  m_printer->setSenderName("MachineXXX");
+
+  auto error = InvalidParameterValue::make("interval", "XXX", "integer", "int64", "Bad Value");
+  auto doc = m_printer->printError(123, 9999, 1, error, true);
+
+  // cout << doc << endl;
+  auto jdoc = json::parse(doc);
+  auto it = jdoc.begin();
+  ASSERT_EQ(string("MTConnectError"), it.key());
+  ASSERT_EQ(123, jdoc.at("/MTConnectError/Header/instanceId"_json_pointer).get<int32_t>());
+  ASSERT_EQ(9999, jdoc.at("/MTConnectError/Header/bufferSize"_json_pointer).get<int32_t>());
+  ASSERT_EQ(false, jdoc.at("/MTConnectError/Header/testIndicator"_json_pointer).get<bool>());
+
+  ASSERT_EQ(string("INVALID_PARAMETER_VALUE"),
+            jdoc.at("/MTConnectError/Errors/0/InvalidParameterValue/errorCode"_json_pointer)
+                .get<string>());
+  ASSERT_EQ(string("Bad Value"),
+            jdoc.at("/MTConnectError/Errors/0/InvalidParameterValue/ErrorMessage"_json_pointer)
+                .get<string>());
+  ASSERT_EQ(
+      string("interval"),
+      jdoc.at("/MTConnectError/Errors/0/InvalidParameterValue/QueryParameter/name"_json_pointer)
+          .get<string>());
+  ASSERT_EQ(
+      string("XXX"),
+      jdoc.at("/MTConnectError/Errors/0/InvalidParameterValue/QueryParameter/Value"_json_pointer)
+          .get<string>());
+  ASSERT_EQ(
+      string("integer"),
+      jdoc.at("/MTConnectError/Errors/0/InvalidParameterValue/QueryParameter/Type"_json_pointer)
+          .get<string>());
+  ASSERT_EQ(
+      string("int64"),
+      jdoc.at("/MTConnectError/Errors/0/InvalidParameterValue/QueryParameter/Format"_json_pointer)
+          .get<string>());
+}
+
+TEST_F(JsonPrinterErrorTest, should_print_error_with_2_6_out_of_range)
+{
+  m_printer->setSchemaVersion("2.6");
+  m_printer->setSenderName("MachineXXX");
+
+  auto error = OutOfRange::make("from", 9999999, 10904772, 12907777, "Bad Value");
+  auto doc = m_printer->printError(123, 9999, 1, error, true);
+
+  // cout << doc << endl;
+  auto jdoc = json::parse(doc);
+  auto it = jdoc.begin();
+  ASSERT_EQ(string("MTConnectError"), it.key());
+  ASSERT_EQ(123, jdoc.at("/MTConnectError/Header/instanceId"_json_pointer).get<int32_t>());
+  ASSERT_EQ(9999, jdoc.at("/MTConnectError/Header/bufferSize"_json_pointer).get<int32_t>());
+  ASSERT_EQ(false, jdoc.at("/MTConnectError/Header/testIndicator"_json_pointer).get<bool>());
+
+  ASSERT_EQ(string("OUT_OF_RANGE"),
+            jdoc.at("/MTConnectError/Errors/0/OutOfRange/errorCode"_json_pointer).get<string>());
+  ASSERT_EQ(string("Bad Value"),
+            jdoc.at("/MTConnectError/Errors/0/OutOfRange/ErrorMessage"_json_pointer).get<string>());
+  ASSERT_EQ(string("from"),
+            jdoc.at("/MTConnectError/Errors/0/OutOfRange/QueryParameter/name"_json_pointer)
+                .get<string>());
+  ASSERT_EQ(9999999,
+            jdoc.at("/MTConnectError/Errors/0/OutOfRange/QueryParameter/Value"_json_pointer)
+                .get<int32_t>());
+  ASSERT_EQ(10904772,
+            jdoc.at("/MTConnectError/Errors/0/OutOfRange/QueryParameter/Minimum"_json_pointer)
+                .get<int32_t>());
+  ASSERT_EQ(12907777,
+            jdoc.at("/MTConnectError/Errors/0/OutOfRange/QueryParameter/Maximum"_json_pointer)
+                .get<int32_t>());
 }

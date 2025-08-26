@@ -20,15 +20,17 @@
 #include <list>
 #include <map>
 #include <set>
+#include <stdexcept>
 #include <variant>
 
+#include "error.hpp"
 #include "mtconnect/config.hpp"
 
 namespace mtconnect::sink::rest_sink {
   /// @brief Parameter related errors thrown during interpreting a REST request
-  class AGENT_LIB_API ParameterError : public std::logic_error
+  class AGENT_LIB_API ParameterError : public std::invalid_argument
   {
-    using std::logic_error::logic_error;
+    using std::invalid_argument::invalid_argument;
   };
 
   /// @brief The parameter type for a REST request
@@ -64,14 +66,66 @@ namespace mtconnect::sink::rest_sink {
     {}
     Parameter(const Parameter &o) = default;
 
+    /// @brief to support std::set interface
+    bool operator<(const Parameter &o) const { return m_name < o.m_name; }
+
+    const std::string getTypeName() const
+    {
+      switch (m_type)
+      {
+        case NONE:
+          return "unknown";
+
+        case STRING:
+          return "string";
+
+        case INTEGER:
+          return "integer";
+
+        case UNSIGNED_INTEGER:
+          return "integer";
+
+        case DOUBLE:
+          return "double";
+
+        case BOOL:
+          return "boolean";
+      }
+
+      return "unknown";
+    }
+
+    const std::string getTypeFormat() const
+    {
+      switch (m_type)
+      {
+        case NONE:
+          return "unknown";
+
+        case STRING:
+          return "string";
+
+        case INTEGER:
+          return "int32";
+
+        case UNSIGNED_INTEGER:
+          return "uint64";
+
+        case DOUBLE:
+          return "double";
+
+        case BOOL:
+          return "bool";
+      }
+
+      return "unknown";
+    }
+
     std::string m_name;
     ParameterType m_type {STRING};
     /// @brief Default value if one is available
     ParameterValue m_default;
     UrlPart m_part {PATH};
-
-    /// @brief to support std::set interface
-    bool operator<(const Parameter &o) const { return m_name < o.m_name; }
 
     std::optional<std::string> m_description;
   };

@@ -22,33 +22,11 @@
 
 #include <optional>
 
+#include "error.hpp"
 #include "mtconnect/config.hpp"
 #include "parameter.hpp"
 
 namespace mtconnect::sink::rest_sink {
-  /// @brief An error that occurred during a request
-  class AGENT_LIB_API RequestError : public std::logic_error
-  {
-  public:
-    /// @brief Create a simple error message related to a request
-    RequestError(const char *w) : std::logic_error::logic_error(w) {}
-    /// @brief Create a request error
-    /// @param w the message
-    /// @param body the body of the request
-    /// @param type the request type
-    /// @param code the boost status code
-    RequestError(const char *w, const std::string &body, const std::string &type,
-                 boost::beast::http::status code)
-      : std::logic_error::logic_error(w), m_contentType(type), m_body(body), m_code(code)
-    {}
-    RequestError(const RequestError &) = default;
-    ~RequestError() override = default;
-
-    std::string m_contentType;
-    std::string m_body;
-    boost::beast::http::status m_code;
-  };
-
   class Session;
   using SessionPtr = std::shared_ptr<Session>;
 
@@ -71,8 +49,13 @@ namespace mtconnect::sink::rest_sink {
     QueryMap m_query;                 ///< The parsed query parameters
     ParameterMap m_parameters;        ///< The parsed path parameters
 
+    /// @name Websocket related properties
+    ///@{
+
     std::optional<std::string> m_requestId;  ///< Request id from websocket sub
     std::optional<std::string> m_command;    ///< Specific request from websocket
+
+    ///@}
 
     /// @brief Find a parameter by type
     /// @tparam T the type of the parameter
@@ -86,6 +69,27 @@ namespace mtconnect::sink::rest_sink {
         return std::nullopt;
       else
         return std::get<T>(v->second);
+    }
+
+    /// @brief Get the URI for this request
+    /// @return the URI
+    std::string getUri() const
+    {
+      std::string s;
+      if (!m_query.empty())
+      {
+        std::stringstream uri;
+        uri << m_path << '?';
+        for (auto &q : m_query)
+          uri << q.first << '=' << q.second << '&';
+        s = uri.str();
+        s.erase(s.length() - 1);
+      }
+      else
+      {
+        s = m_path;
+      }
+      return s;
     }
   };
 

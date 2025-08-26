@@ -38,6 +38,7 @@
 #include "mtconnect/entity/json_printer.hpp"
 #include "mtconnect/logging.hpp"
 #include "mtconnect/printer/json_printer_helper.hpp"
+#include "mtconnect/sink/rest_sink/error.hpp"
 #include "mtconnect/version.h"
 
 using namespace std;
@@ -117,14 +118,17 @@ namespace mtconnect::printer {
   }
 
   std::string JsonPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
-                                       const uint64_t nextSeq, const ProtoErrorList &list,
+                                       const uint64_t nextSeq, const entity::EntityList &list,
                                        bool pretty,
                                        const std::optional<std::string> requestId) const
   {
     defaultSchemaVersion();
+    auto version = IntSchemaVersion(*m_schemaVersion);
 
     StringBuffer output;
     RenderJson(output, m_pretty || pretty, [&](auto &writer) {
+      entity::JsonPrinter printer(writer, m_jsonVersion);
+
       AutoJsonObject obj(writer);
       {
         AutoJsonObject obj(writer, "MTConnectError");
@@ -136,34 +140,19 @@ namespace mtconnect::printer {
                  m_modelChangeTime, m_validation, requestId);
         }
         {
-          if (m_jsonVersion > 1)
+          obj.Key("Errors");
+          entity::EntityList errors;
+          if (version < SCHEMA_VERSION(2, 6))
           {
-            AutoJsonObject obj(writer, "Errors");
+            for (auto &err : list)
             {
-              AutoJsonArray ary(writer, "Error");
-              for (auto &e : list)
-              {
-                AutoJsonObject obj(writer);
-                string s(e.second);
-                obj.AddPairs("errorCode", e.first, "value", trim(s));
-              }
+              auto re = dynamic_pointer_cast<sink::rest_sink::Error>(err);
+              errors.emplace_back(re->makeLegacyError());
             }
           }
           else
-          {
-            AutoJsonArray obj(writer, "Errors");
-            {
-              for (auto &e : list)
-              {
-                AutoJsonObject obj(writer);
-                {
-                  AutoJsonObject obj(writer, "Error");
-                  string s(e.second);
-                  obj.AddPairs("errorCode", e.first, "value", trim(s));
-                }
-              }
-            }
-          }
+            errors = list;
+          printer.printEntityList(errors);
         }
       }
     });
