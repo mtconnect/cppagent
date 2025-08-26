@@ -60,8 +60,8 @@ namespace mtconnect::sink::rest_sink {
       case ErrorCode::UNSUPPORTED:
         return "Unsupported";
 
-      case ErrorCode::INVALID_PARAMTER_VALUE:
-        return "InvalidParamterValue";
+      case ErrorCode::INVALID_PARAMETER_VALUE:
+        return "InvalidParameterValue";
 
       case ErrorCode::INVALID_QUERY_PARAMETER:
         return "InvalidQueryParameter";
@@ -107,8 +107,8 @@ namespace mtconnect::sink::rest_sink {
       case ErrorCode::UNSUPPORTED:
         return "UNSUPPORTED";
 
-      case ErrorCode::INVALID_PARAMTER_VALUE:
-        return "INVALID_PARAMTER_VALUE";
+      case ErrorCode::INVALID_PARAMETER_VALUE:
+        return "INVALID_PARAMETER_VALUE";
 
       case ErrorCode::INVALID_QUERY_PARAMETER:
         return "INVALID_QUERY_PARAMETER";

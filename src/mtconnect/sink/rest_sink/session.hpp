@@ -24,18 +24,17 @@
 #include <functional>
 #include <memory>
 
+#include "error.hpp"
 #include "mtconnect/config.hpp"
 #include "mtconnect/observation/change_observer.hpp"
 #include "routing.hpp"
-#include "error.hpp"
 
 namespace mtconnect::sink::rest_sink {
   struct Response;
   using ResponsePtr = std::unique_ptr<Response>;
   class Session;
   using SessionPtr = std::shared_ptr<Session>;
-  using ErrorFunction =
-      std::function<void(SessionPtr, const RestError &error)>;
+  using ErrorFunction = std::function<void(SessionPtr, const RestError &error)>;
 
   using Dispatch = std::function<bool(SessionPtr, RequestPtr)>;
   using Complete = std::function<void()>;

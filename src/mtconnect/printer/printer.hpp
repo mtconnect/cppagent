@@ -64,10 +64,11 @@ namespace mtconnect {
       /// @return the error document
       virtual std::string printError(
           const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-         entity::EntityPtr error, bool pretty = false,
+          entity::EntityPtr error, bool pretty = false,
           const std::optional<std::string> requestId = std::nullopt) const
       {
-        return printErrors(instanceId, bufferSize, nextSeq, entity::EntityList {error}, pretty, requestId);
+        return printErrors(instanceId, bufferSize, nextSeq, entity::EntityList {error}, pretty,
+                           requestId);
       }
       /// @brief Generate an MTConnect Error document with a error list
       /// @param[in] instanceId the instance id
@@ -79,7 +80,7 @@ namespace mtconnect {
       /// @return the MTConnect Error document
       virtual std::string printErrors(
           const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-                                      const entity::EntityList &list, bool pretty = false,
+          const entity::EntityList &list, bool pretty = false,
           const std::optional<std::string> requestId = std::nullopt) const = 0;
       /// @brief Generate an MTConnect Devices document
       /// @param[in] instanceId the instance id

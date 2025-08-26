@@ -76,7 +76,8 @@ namespace mtconnect::sink::rest_sink {
         setHttpHeaders(*fields);
 
       m_errorFunction = [](SessionPtr session, const RestError &error) {
-        ResponsePtr response = std::make_unique<Response>(error.getStatus(), "Error occurred for request", "text/plain");
+        ResponsePtr response =
+            std::make_unique<Response>(error.getStatus(), error.what(), "text/plain");
         session->writeFailureResponse(std::move(response));
         return true;
       };
@@ -186,13 +187,20 @@ namespace mtconnect::sink::rest_sink {
           std::stringstream txt;
           txt << session->getRemote().address() << ": Cannot find handler for: " << request->m_verb
               << " " << request->m_path;
-          session->fail(boost::beast::http::status::not_found, txt.str());
+          auto error = Error::make(Error::ErrorCode::INVALID_URI, txt.str());
+          RestError re(error, request->m_accepts, status::not_found, std::nullopt,
+                       request->m_requestId);
+          re.setUri(request->getUri());
+          m_errorFunction(session, re);
         }
       }
       catch (RestError &re)
       {
-        LOG(error) << session->getRemote().address() << ": Error processing request: " << request->m_path;
-        re.setUri(request->m_path);
+        LOG(error) << session->getRemote().address()
+                   << ": Error processing request: " << request->m_path;
+        re.setUri(request->getUri());
+        if (request->m_requestId)
+          re.setRequest(*request->m_requestId);
         m_errorFunction(session, re);
       }
       catch (std::logic_error &le)

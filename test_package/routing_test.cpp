@@ -31,6 +31,7 @@
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::entity;
 using namespace mtconnect::sink::rest_sink;
 using verb = boost::beast::http::verb;
 
@@ -202,7 +203,80 @@ TEST_F(RoutingTest, TestQueryParameterError)
   request->m_verb = verb::get;
   request->m_path = "/ABC123/sample";
   request->m_query = {{"count", "xxx"}};
-  ASSERT_THROW(r.matches(0, request), ParameterError);
+  ASSERT_THROW(r.matches(0, request), RestError);
+}
+
+TEST_F(RoutingTest, should_throw_a_rest_error_with_an_invalid_parameter)
+{
+  Routing r(verb::get,
+            "/{device}/sample?from={unsigned_integer}&"
+            "interval={double}&count={integer:100}&"
+            "heartbeat={double:10000}",
+            m_func);
+  RequestPtr request = make_shared<Request>();
+  request->m_verb = verb::get;
+  request->m_path = "/ABC123/sample";
+  request->m_query = {{"count", "xxx"}};
+  try
+  {
+    r.matches(0, request);
+  }
+  catch (RestError &e)
+  {
+    auto errors = e.getErrors();
+    ASSERT_EQ(1, errors.size());
+    auto error = dynamic_pointer_cast<InvalidParameterValue>(errors.front());
+    ASSERT_EQ("query parameter 'count': cannot convert string 'xxx' to integer",
+              error->get<string>("ErrorMessage"));
+    auto qp = error->get<EntityPtr>("QueryParameter");
+    ASSERT_TRUE(qp);
+    ASSERT_EQ("count", qp->get<string>("name"));
+    ASSERT_EQ("xxx", qp->get<string>("Value"));
+    ASSERT_EQ("integer", qp->get<string>("Type"));
+    ASSERT_EQ("int32", qp->get<string>("Format"));
+  }
+}
+
+TEST_F(RoutingTest, should_throw_a_rest_error_with_multiple_invalid_parameters)
+{
+  Routing r(verb::get,
+            "/{device}/sample?from={unsigned_integer}&"
+            "interval={double}&count={integer:100}&"
+            "heartbeat={double:10000}",
+            m_func);
+  RequestPtr request = make_shared<Request>();
+  request->m_verb = verb::get;
+  request->m_path = "/ABC123/sample";
+  request->m_query = {{"count", "xxx"}, {"heartbeat", "yyy"}};
+  try
+  {
+    r.matches(0, request);
+  }
+  catch (RestError &e)
+  {
+    auto errors = e.getErrors();
+    ASSERT_EQ(2, errors.size());
+    auto it = errors.begin();
+    auto error = dynamic_pointer_cast<InvalidParameterValue>(*it++);
+    ASSERT_EQ("query parameter 'count': cannot convert string 'xxx' to integer",
+              error->get<string>("ErrorMessage"));
+    auto qp = error->get<EntityPtr>("QueryParameter");
+    ASSERT_TRUE(qp);
+    ASSERT_EQ("count", qp->get<string>("name"));
+    ASSERT_EQ("xxx", qp->get<string>("Value"));
+    ASSERT_EQ("integer", qp->get<string>("Type"));
+    ASSERT_EQ("int32", qp->get<string>("Format"));
+
+    error = dynamic_pointer_cast<InvalidParameterValue>(*it++);
+    ASSERT_EQ("query parameter 'heartbeat': cannot convert string 'yyy' to double",
+              error->get<string>("ErrorMessage"));
+    qp = error->get<EntityPtr>("QueryParameter");
+    ASSERT_TRUE(qp);
+    ASSERT_EQ("heartbeat", qp->get<string>("name"));
+    ASSERT_EQ("yyy", qp->get<string>("Value"));
+    ASSERT_EQ("double", qp->get<string>("Type"));
+    ASSERT_EQ("double", qp->get<string>("Format"));
+  }
 }
 
 TEST_F(RoutingTest, RegexPatterns)

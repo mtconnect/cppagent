@@ -20,8 +20,8 @@
 #include <list>
 #include <map>
 #include <set>
-#include <variant>
 #include <stdexcept>
+#include <variant>
 
 #include "error.hpp"
 #include "mtconnect/config.hpp"
@@ -68,60 +68,58 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief to support std::set interface
     bool operator<(const Parameter &o) const { return m_name < o.m_name; }
-    
+
     const std::string getTypeName() const
     {
-      switch(m_type)
+      switch (m_type)
       {
-          
         case NONE:
           return "unknown";
-          
+
         case STRING:
           return "string";
-          
+
         case INTEGER:
           return "integer";
-          
+
         case UNSIGNED_INTEGER:
           return "integer";
-          
+
         case DOUBLE:
           return "double";
-          
+
         case BOOL:
           return "boolean";
       }
-      
-      return "unknown";
-    }
-    
-    const std::string getTypeFormat() const
-    {
-      switch(m_type)
-      {
-        case NONE:
-          return "unknown";
-          
-        case STRING:
-          return "string";
-          
-        case INTEGER:
-          return "in32";
-          
-        case UNSIGNED_INTEGER:
-          return "uint64";
-          
-        case DOUBLE:
-          return "double";
-          
-        case BOOL:
-          return "bool";
-      }
-      
+
       return "unknown";
     }
 
+    const std::string getTypeFormat() const
+    {
+      switch (m_type)
+      {
+        case NONE:
+          return "unknown";
+
+        case STRING:
+          return "string";
+
+        case INTEGER:
+          return "int32";
+
+        case UNSIGNED_INTEGER:
+          return "uint64";
+
+        case DOUBLE:
+          return "double";
+
+        case BOOL:
+          return "bool";
+      }
+
+      return "unknown";
+    }
 
     std::string m_name;
     ParameterType m_type {STRING};

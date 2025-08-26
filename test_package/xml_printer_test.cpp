@@ -108,7 +108,7 @@ ObservationPtr XmlPrinterTest::addEventToCheckpoint(Checkpoint &checkpoint, cons
 TEST_F(XmlPrinterTest, should_print_legacy_error)
 {
   m_printer->setSenderName("MachineXXX");
-  
+
   auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, "ERROR TEXT!");
   PARSE_XML(m_printer->printError(123, 9999, 1, error, true));
 
@@ -123,10 +123,10 @@ TEST_F(XmlPrinterTest, should_print_error_with_2_6_invalid_request)
 {
   m_printer->setSchemaVersion("2.6");
   m_printer->setSenderName("MachineXXX");
-  
+
   auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, "ERROR TEXT!");
   PARSE_XML(m_printer->printError(123, 9999, 1, error, true));
-  
+
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@bufferSize", "9999");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@sender", "MachineXXX");
@@ -138,29 +138,33 @@ TEST_F(XmlPrinterTest, should_print_error_with_2_6_invalid_parameter_value)
 {
   m_printer->setSchemaVersion("2.6");
   m_printer->setSenderName("MachineXXX");
-  
+
   auto error = InvalidParameterValue::make("interval", "XXX", "integer", "int64", "Bad Value");
   PARSE_XML(m_printer->printError(123, 9999, 1, error, true));
-  
+
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@bufferSize", "9999");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@sender", "MachineXXX");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:InvalidParameterValue@errorCode", "INVALID_PARAMTER_VALUE");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:InvalidParameterValue@errorCode",
+                        "INVALID_PARAMETER_VALUE");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:InvalidParameterValue/m:ErrorMessage", "Bad Value");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:InvalidParameterValue/m:QueryParameter@name", "interval");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:InvalidParameterValue/m:QueryParameter@name",
+                        "interval");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:InvalidParameterValue/m:QueryParameter/m:Value", "XXX");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:InvalidParameterValue/m:QueryParameter/m:Type", "integer");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:InvalidParameterValue/m:QueryParameter/m:Format", "int64");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:InvalidParameterValue/m:QueryParameter/m:Type",
+                        "integer");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:InvalidParameterValue/m:QueryParameter/m:Format",
+                        "int64");
 }
 
 TEST_F(XmlPrinterTest, should_print_error_with_2_6_out_of_range)
 {
   m_printer->setSchemaVersion("2.6");
   m_printer->setSenderName("MachineXXX");
-  
+
   auto error = OutOfRange::make("from", 9999999, 10904772, 12907777, "Bad Value");
   PARSE_XML(m_printer->printError(123, 9999, 1, error, true));
-  
+
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@bufferSize", "9999");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@sender", "MachineXXX");
@@ -171,7 +175,6 @@ TEST_F(XmlPrinterTest, should_print_error_with_2_6_out_of_range)
   ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:OutOfRange/m:QueryParameter/m:Minimum", "10904772");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:OutOfRange/m:QueryParameter/m:Maximum", "12907777");
 }
-
 
 TEST_F(XmlPrinterTest, PrintProbe)
 {

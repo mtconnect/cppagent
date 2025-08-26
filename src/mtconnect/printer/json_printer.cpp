@@ -38,8 +38,8 @@
 #include "mtconnect/entity/json_printer.hpp"
 #include "mtconnect/logging.hpp"
 #include "mtconnect/printer/json_printer_helper.hpp"
-#include "mtconnect/version.h"
 #include "mtconnect/sink/rest_sink/error.hpp"
+#include "mtconnect/version.h"
 
 using namespace std;
 

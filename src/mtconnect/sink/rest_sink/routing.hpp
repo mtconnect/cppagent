@@ -204,15 +204,11 @@ namespace mtconnect::sink::rest_sink {
           }
           catch (ParameterError &e)
           {
-            std::string msg = std::string("for query parameter '") + p.m_name + "': " + e.what();
-            
+            std::string msg = std::string("query parameter '") + p.m_name + "': " + e.what();
+
             LOG(warning) << "Parameter error: " << msg;
-            auto error = InvalidParameterValue::make(request->m_path,
-                                                     p.m_name,
-                                                     q->second,
-                                                     p.getTypeName(),
-                                                     p.getTypeFormat(),
-                                                     msg);
+            auto error = InvalidParameterValue::make(p.m_name, q->second, p.getTypeName(),
+                                                     p.getTypeFormat(), msg);
             errors.emplace_back(error);
           }
         }
@@ -221,7 +217,7 @@ namespace mtconnect::sink::rest_sink {
           request->m_parameters.emplace(make_pair(p.m_name, p.m_default));
         }
       }
-      
+
       if (!errors.empty())
         throw RestError(errors, request->m_accepts);
       else

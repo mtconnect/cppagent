@@ -19,6 +19,7 @@
 
 #include <regex>
 
+#include "error.hpp"
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/entity/xml_parser.hpp"
 #include "mtconnect/pipeline/shdr_token_mapper.hpp"
@@ -26,7 +27,6 @@
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
 #include "mtconnect/printer/xml_printer.hpp"
 #include "server.hpp"
-#include "error.hpp"
 
 namespace asio = boost::asio;
 using namespace std;
@@ -53,7 +53,7 @@ namespace mtconnect {
     {
       using placeholders::_1;
       using placeholders::_2;
-      
+
       auto maxSize =
           ConvertFileSize(options, mtconnect::configuration::MaxCachedFileSize, 20 * 1024);
       auto compressSize =
@@ -1287,8 +1287,7 @@ namespace mtconnect {
         entity::EntityList errors;
         for (auto &id : ids)
           errors.emplace_back(AssetNotFound::make(id, "Cannot find asset: " + id));
-        throw RestError(errors, printer, status::not_found, 
-                        std::nullopt, requestId);
+        throw RestError(errors, printer, status::not_found, std::nullopt, requestId);
       }
       else
       {
@@ -1318,16 +1317,18 @@ namespace mtconnect {
       if (!ap || errors.size() > 0 || (type && ap->getType() != *type))
       {
         entity::EntityList errorList;
-        
+
         if (!ap)
-          errorList.emplace_back(Error::make(Error::ErrorCode::INVALID_REQUEST, "Could not parse Asset."));
+          errorList.emplace_back(
+              Error::make(Error::ErrorCode::INVALID_REQUEST, "Could not parse Asset."));
         else
-          errorList.emplace_back(Error::make(Error::ErrorCode::INVALID_REQUEST, "Asset parsed with errors."));
+          errorList.emplace_back(
+              Error::make(Error::ErrorCode::INVALID_REQUEST, "Asset parsed with errors."));
         for (auto &e : errors)
         {
           errorList.emplace_back(Error::make(Error::ErrorCode::INVALID_REQUEST, e->what()));
         }
-        
+
         throw RestError(errorList, printer);
       }
 
@@ -1421,7 +1422,8 @@ namespace mtconnect {
         auto di = dev->getDeviceDataItem(qp.first);
         if (di == nullptr)
         {
-          errors.emplace_back(Error::make(Error::ErrorCode::INVALID_REQUEST, "Cannot find data item: " + qp.first));
+          errors.emplace_back(
+              Error::make(Error::ErrorCode::INVALID_REQUEST, "Cannot find data item: " + qp.first));
         }
         else
         {
@@ -1477,25 +1479,22 @@ namespace mtconnect {
     void RestService::checkRange(const Printer *printer, const T value, const T min, const T max,
                                  const string &param, bool notZero) const
     {
+      stringstream str;
       if (value <= min)
       {
-        stringstream str;
         str << '\'' << param << '\'' << " must be greater than " << min;
-        auto error = OutOfRange::make(param, value, min, max, str.str());
-        throw RestError(error, printer);
       }
-      if (value >= max)
+      else if (value >= max)
       {
-        stringstream str;
         str << '\'' << param << '\'' << " must be less than " << max;
-        auto error = OutOfRange::make(param, value, min, max, str.str());
-        throw RestError(error, printer);
       }
-      if (notZero && value == 0)
+      else if (notZero && value == 0)
       {
-        stringstream str;
         str << '\'' << param << '\'' << " must not be zero(0)";
-        auto error = OutOfRange::make(param, value, min, max, str.str());
+      }
+      if (str.tellp() > 0)
+      {
+        auto error = OutOfRange::make(param, value, min + 1, max - 1, str.str());
         throw RestError(error, printer);
       }
     }
@@ -1510,16 +1509,15 @@ namespace mtconnect {
       }
       catch (exception &e)
       {
-        
         string msg = "The path could not be parsed. Invalid syntax: "s + e.what();
-        auto error = Error::make(Error::ErrorCode::INVALID_XPATH, printer->mimeType(), msg);
+        auto error = Error::make(Error::ErrorCode::INVALID_XPATH, msg);
         throw RestError(error, printer);
       }
 
       if (filter.empty())
       {
         string msg = "The path could not be parsed. Invalid syntax: " + *path;
-        auto error = Error::make(Error::ErrorCode::INVALID_XPATH, printer->mimeType(), msg);
+        auto error = Error::make(Error::ErrorCode::INVALID_XPATH, msg);
         throw RestError(error, printer);
       }
     }
@@ -1530,7 +1528,7 @@ namespace mtconnect {
       if (!dev)
       {
         string msg("Could not find the device '" + uuid + "'");
-        auto error = Error::make(Error::ErrorCode::NO_DEVICE, printer->mimeType(), msg);
+        auto error = Error::make(Error::ErrorCode::NO_DEVICE, msg);
         throw RestError(error, printer, status::not_found);
       }
 

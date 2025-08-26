@@ -30,9 +30,9 @@
 #include "mtconnect/asset/cutting_tool.hpp"
 #include "mtconnect/device_model/composition.hpp"
 #include "mtconnect/device_model/configuration/configuration.hpp"
-#include "mtconnect/sink/rest_sink/error.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/logging.hpp"
+#include "mtconnect/sink/rest_sink/error.hpp"
 #include "mtconnect/version.h"
 #include "xml_printer.hpp"
 
@@ -359,11 +359,11 @@ namespace mtconnect::printer {
       {
         AutoElement e1(writer, "Errors");
         entity::XmlPrinter printer;
-        
+
         auto version = IntSchemaVersion(*m_schemaVersion);
         for (auto &e : list)
         {
-          entity::EntityPtr err { e };
+          entity::EntityPtr err {e};
           if (version < SCHEMA_VERSION(2, 6))
           {
             auto re = dynamic_pointer_cast<sink::rest_sink::Error>(err);

@@ -51,7 +51,7 @@ namespace mtconnect::sink::rest_sink {
 
     /// @name Websocket related properties
     ///@{
-    
+
     std::optional<std::string> m_requestId;  ///< Request id from websocket sub
     std::optional<std::string> m_command;    ///< Specific request from websocket
 
@@ -70,7 +70,28 @@ namespace mtconnect::sink::rest_sink {
       else
         return std::get<T>(v->second);
     }
+
+    /// @brief Get the URI for this request
+    /// @return the URI
+    std::string getUri() const
+    {
+      std::string s;
+      if (!m_query.empty())
+      {
+        std::stringstream uri;
+        uri << m_path << '?';
+        for (auto &q : m_query)
+          uri << q.first << '=' << q.second << '&';
+        s = uri.str();
+        s.erase(s.length() - 1);
+      }
+      else
+      {
+        s = m_path;
+      }
+      return s;
+    }
   };
 
-  using RequestPtr = std::shared_ptr<Request>;  
+  using RequestPtr = std::shared_ptr<Request>;
 }  // namespace mtconnect::sink::rest_sink

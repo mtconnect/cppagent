@@ -52,7 +52,7 @@ namespace mtconnect {
       /// @param[in] file the file
       Response(status status, CachedFilePtr file)
         : m_status(status), m_mimeType(file->m_mimeType), m_expires(0), m_file(file)
-      {}      
+      {}
 
       status m_status;                        ///< The return status
       std::string m_body;                     ///< The body of the response

@@ -32,7 +32,7 @@ namespace mtconnect::printer {
 
     std::string printErrors(
         const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-                            const entity::EntityList &list, bool pretty = false,
+        const entity::EntityList &list, bool pretty = false,
         const std::optional<std::string> requestId = std::nullopt) const override;
 
     std::string printProbe(

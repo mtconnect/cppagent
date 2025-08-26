@@ -144,7 +144,7 @@ TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
   ASSERT_THROW(agent->initialize(context), std::runtime_error);
 }
 
-TEST_F(AgentTest, BadDevices)
+TEST_F(AgentTest, should_return_error_for_unknown_device)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCN/probe");
@@ -155,7 +155,22 @@ TEST_F(AgentTest, BadDevices)
   }
 }
 
-TEST_F(AgentTest, BadXPath)
+TEST_F(AgentTest, should_return_2_6_error_for_unknown_device)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.6", 4, false,
+                                              true, {{configuration::Validation, false}});
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCN/probe");
+    string message = (string) "Could not find the device 'LinuxCN'";
+    ASSERT_XML_PATH_EQUAL(doc, "//m:NoDevice@errorCode", "NO_DEVICE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:NoDevice/m:ErrorMessage", message.c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:NoDevice/m:URI", "/LinuxCN/probe");
+    ASSERT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
+  }
+}
+
+TEST_F(AgentTest, should_return_error_when_path_cannot_be_parsed)
 {
   {
     QueryMap query {{"path", "//////Linear"}};
@@ -183,7 +198,42 @@ TEST_F(AgentTest, BadXPath)
   }
 }
 
-TEST_F(AgentTest, GoodPath)
+TEST_F(AgentTest, should_return_2_6_error_when_path_cannot_be_parsed)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.6", 4, false, true,
+                                 {{configuration::Validation, false}});
+
+  {
+    QueryMap query {{"path", "//////Linear"}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    string message = (string) "The path could not be parsed. Invalid syntax: //////Linear";
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidXPath@errorCode", "INVALID_XPATH");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidXPath/m:ErrorMessage", message.c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidXPath/m:URI", "/current?path=//////Linear");
+  }
+
+  {
+    QueryMap query {{"path", "//Axes?//Linear"}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    string message = (string) "The path could not be parsed. Invalid syntax: //Axes?//Linear";
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidXPath@errorCode", "INVALID_XPATH");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidXPath/m:ErrorMessage", message.c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidXPath/m:URI", "/current?path=//Axes?//Linear");
+  }
+
+  {
+    QueryMap query {{"path", "//Devices/Device[@name=\"I_DON'T_EXIST\""}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    string message = (string)
+    "The path could not be parsed. Invalid syntax: //Devices/Device[@name=\"I_DON'T_EXIST\"";
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidXPath@errorCode", "INVALID_XPATH");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidXPath/m:ErrorMessage", message.c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidXPath/m:URI",
+                          "/current?path=//Devices/Device[@name=\"I_DON'T_EXIST\"");
+  }
+}
+
+TEST_F(AgentTest, should_handle_a_correct_path)
 {
   {
     QueryMap query {{"path", "//Power"}};
@@ -205,12 +255,12 @@ TEST_F(AgentTest, GoodPath)
   }
 }
 
-TEST_F(AgentTest, BadPath)
+TEST_F(AgentTest, should_report_an_invalid_uri)
 {
   using namespace rest_sink;
   {
     PARSE_XML_RESPONSE("/bad_path");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_URI");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "0.0.0.0: Cannot find handler for: GET /bad_path");
     EXPECT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
@@ -218,7 +268,7 @@ TEST_F(AgentTest, BadPath)
 
   {
     PARSE_XML_RESPONSE("/bad/path/");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_URI");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "0.0.0.0: Cannot find handler for: GET /bad/path/");
     EXPECT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
@@ -226,7 +276,7 @@ TEST_F(AgentTest, BadPath)
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/current/blah");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_URI");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
                           "0.0.0.0: Cannot find handler for: GET /LinuxCNC/current/blah");
     EXPECT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
@@ -234,7 +284,47 @@ TEST_F(AgentTest, BadPath)
   }
 }
 
-TEST_F(AgentTest, CurrentAt)
+TEST_F(AgentTest, should_report_a_2_6_invalid_uri)
+{
+  using namespace rest_sink;
+
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.6", 4, false, true,
+                                 {{configuration::Validation, false}});
+
+  {
+    PARSE_XML_RESPONSE("/bad_path");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidURI@errorCode", "INVALID_URI");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidURI/m:ErrorMessage",
+                          "0.0.0.0: Cannot find handler for: GET /bad_path");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidURI/m:URI", "/bad_path");
+    EXPECT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
+    EXPECT_FALSE(m_agentTestHelper->m_dispatched);
+  }
+
+  {
+    PARSE_XML_RESPONSE("/bad/path/");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidURI@errorCode", "INVALID_URI");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidURI/m:ErrorMessage",
+                          "0.0.0.0: Cannot find handler for: GET /bad/path/");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidURI/m:URI", "/bad/path/");
+
+    EXPECT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
+    EXPECT_FALSE(m_agentTestHelper->m_dispatched);
+  }
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current/blah");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidURI@errorCode", "INVALID_URI");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidURI/m:ErrorMessage",
+                          "0.0.0.0: Cannot find handler for: GET /LinuxCNC/current/blah");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidURI/m:URI", "/LinuxCNC/current/blah");
+
+    EXPECT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
+    EXPECT_FALSE(m_agentTestHelper->m_dispatched);
+  }
+}
+
+TEST_F(AgentTest, should_handle_current_at)
 {
   QueryMap query;
   PARSE_XML_RESPONSE_QUERY("/current", query);
@@ -303,7 +393,7 @@ TEST_F(AgentTest, CurrentAt)
   }
 }
 
-TEST_F(AgentTest, CurrentAt64)
+TEST_F(AgentTest, should_handle_64_bit_current_at)
 {
   QueryMap query;
 
@@ -335,7 +425,7 @@ TEST_F(AgentTest, CurrentAt64)
   }
 }
 
-TEST_F(AgentTest, CurrentAtOutOfRange)
+TEST_F(AgentTest, should_report_out_of_range_for_current_at)
 {
   QueryMap query;
 
@@ -373,9 +463,56 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
   }
 }
 
+TEST_F(AgentTest, should_report_2_6_out_of_range_for_current_at)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.6", 4, false, true,
+                                 {{configuration::Validation, false}});
+
+  QueryMap query;
+
+  addAdapter();
+
+  // Get the current position
+  char line[80] = {0};
+
+  // Add many events
+  for (int i = 1; i <= 200; i++)
+  {
+    sprintf(line, "2021-02-01T12:00:00Z|line|%d", i);
+    m_agentTestHelper->m_adapter->processData(line);
+  }
+
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto seq = circ.getSequence();
+
+  {
+    query["at"] = to_string(seq);
+    sprintf(line, "'at' must be less than %d", int32_t(seq));
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", "/current?at=252");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Value", "252");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Minimum", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Maximum", "251");
+  }
+
+  seq = circ.getFirstSequence() - 1;
+
+  {
+    query["at"] = to_string(seq);
+    sprintf(line, "'at' must be greater than %d", int32_t(seq));
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", "/current?at=0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Value", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Minimum", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Maximum", "251");
+  }
+}
+
 TEST_F(AgentTest, AddAdapter) { addAdapter(); }
 
-TEST_F(AgentTest, FileDownload)
+TEST_F(AgentTest, should_download_file)
 {
   QueryMap query;
 
@@ -394,7 +531,7 @@ TEST_F(AgentTest, FileDownload)
               string::npos);
 }
 
-TEST_F(AgentTest, FailedFileDownload)
+TEST_F(AgentTest, should_report_not_found_when_cannot_find_file)
 {
   QueryMap query;
 
@@ -406,13 +543,35 @@ TEST_F(AgentTest, FailedFileDownload)
 
   {
     PARSE_XML_RESPONSE(uri.c_str());
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "INVALID_URI");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error",
                           ("0.0.0.0: Cannot find handler for: GET " + uri).c_str());
   }
 }
 
-TEST_F(AgentTest, Composition)
+TEST_F(AgentTest, should_report_2_6_not_found_when_cannot_find_file)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.6", 4, false, true,
+                                 {{configuration::Validation, false}});
+
+  QueryMap query;
+
+  string uri("/schemas/MTConnectDevices_1.1.xsd");
+
+  // Register a file with the agent.
+  auto rest = m_agentTestHelper->getRestService();
+  rest->getFileCache()->registerFile(uri, string("./BadFileName.xsd"), "1.1");
+
+  {
+    PARSE_XML_RESPONSE(uri.c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidURI@errorCode", "INVALID_URI");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidURI/m:ErrorMessage",
+                          ("0.0.0.0: Cannot find handler for: GET " + uri).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidURI/m:URI", "/schemas/MTConnectDevices_1.1.xsd");
+  }
+}
+
+TEST_F(AgentTest, should_include_composition_ids_in_observations)
 {
   auto agent = m_agentTestHelper->m_agent.get();
   addAdapter();
@@ -437,16 +596,16 @@ TEST_F(AgentTest, Composition)
   }
 }
 
-TEST_F(AgentTest, BadCount)
+TEST_F(AgentTest, should_report_an_error_when_the_count_is_out_of_range)
 {
   auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   int size = circ.getBufferSize() + 1;
   {
     QueryMap query {{"count", "NON_INTEGER"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_PARAMETER_VALUE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
-                          "0.0.0.0: Parameter Error: for query parameter 'count': cannot convert "
+                          "query parameter 'count': cannot convert "
                           "string 'NON_INTEGER' to integer");
   }
 
@@ -494,7 +653,110 @@ TEST_F(AgentTest, BadCount)
   }
 }
 
-TEST_F(AgentTest, Adapter)
+TEST_F(AgentTest, should_report_a_2_6_error_when_the_count_is_out_of_range)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.6", 4, false, true,
+                                 {{configuration::Validation, false}});
+
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  int size = circ.getBufferSize() + 1;
+  {
+    QueryMap query {{"count", "NON_INTEGER"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue@errorCode", "INVALID_PARAMETER_VALUE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue/m:URI", "/sample?count=NON_INTEGER");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue/m:ErrorMessage",
+                          "query parameter 'count': cannot convert "
+                          "string 'NON_INTEGER' to integer");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue/m:QueryParameter@name", "count");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue/m:QueryParameter/m:Format", "int32");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue/m:QueryParameter/m:Type", "integer");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue/m:QueryParameter/m:Value", "NON_INTEGER");
+  }
+
+  {
+    QueryMap query {{"count", "-500"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
+    string value("'count' must be greater than ");
+    value += to_string(-size);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:ErrorMessage", value.c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", "/sample?count=-500");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter@name", "count");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Value", "-500");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Maximum",
+                          to_string(size - 1).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Minimum",
+                          to_string(-size + 1).c_str());
+  }
+
+  {
+    QueryMap query {{"count", "0"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:ErrorMessage", "'count' must not be zero(0)");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", "/sample?count=0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter@name", "count");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Value", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Maximum",
+                          to_string(size - 1).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Minimum",
+                          to_string(-size + 1).c_str());
+  }
+
+  {
+    QueryMap query {{"count", "500"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    string value("'count' must be less than ");
+    value += to_string(size);
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:ErrorMessage", value.c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", "/sample?count=500");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter@name", "count");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Value", "500");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Maximum",
+                          to_string(size - 1).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Minimum",
+                          to_string(-size + 1).c_str());
+  }
+
+  {
+    QueryMap query {{"count", "9999999"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    string value("'count' must be less than ");
+    value += to_string(size);
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:ErrorMessage", value.c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", "/sample?count=9999999");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter@name", "count");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Value", "9999999");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Maximum",
+                          to_string(size - 1).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Minimum",
+                          to_string(-size + 1).c_str());
+  }
+
+  {
+    QueryMap query {{"count", "-9999999"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    string value("'count' must be greater than ");
+    value += to_string(-size);
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:ErrorMessage", value.c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", "/sample?count=-9999999");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter@name", "count");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Value", "-9999999");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Maximum",
+                          to_string(size - 1).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Minimum",
+                          to_string(-size + 1).c_str());
+  }
+}
+
+TEST_F(AgentTest, should_process_addapter_data)
 {
   addAdapter();
 
@@ -524,7 +786,7 @@ TEST_F(AgentTest, Adapter)
   }
 }
 
-TEST_F(AgentTest, SampleAtNextSeq)
+TEST_F(AgentTest, should_get_samples_using_next_sequence)
 {
   QueryMap query;
   addAdapter();
@@ -705,7 +967,7 @@ TEST_F(AgentTest, should_give_empty_stream_with_no_new_samples)
   }
 }
 
-TEST_F(AgentTest, AddToBuffer)
+TEST_F(AgentTest, should_not_leak_observations_when_added_to_buffer)
 {
   auto agent = m_agentTestHelper->m_agent.get();
   QueryMap query;
@@ -797,7 +1059,7 @@ TEST_F(AgentTest, should_int_64_sequences_should_not_truncate_at_32_bits)
 #endif
 }
 
-TEST_F(AgentTest, DuplicateCheck)
+TEST_F(AgentTest, should_not_allow_duplicates_values)
 {
   addAdapter();
 
@@ -824,7 +1086,7 @@ TEST_F(AgentTest, DuplicateCheck)
   }
 }
 
-TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
+TEST_F(AgentTest, should_not_duplicate_unavailable_when_disconnected)
 {
   addAdapter({{configuration::FilterDuplicates, true}});
 
@@ -863,7 +1125,7 @@ TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
   }
 }
 
-TEST_F(AgentTest, AutoAvailable)
+TEST_F(AgentTest, should_handle_auto_available_if_adapter_option_is_set)
 {
   addAdapter({{configuration::AutoAvailable, true}});
   auto agent = m_agentTestHelper->m_agent.get();
@@ -906,7 +1168,7 @@ TEST_F(AgentTest, AutoAvailable)
   }
 }
 
-TEST_F(AgentTest, MultipleDisconnect)
+TEST_F(AgentTest, should_handle_multiple_disconnnects)
 {
   addAdapter();
   auto agent = m_agentTestHelper->m_agent.get();
@@ -976,7 +1238,7 @@ TEST_F(AgentTest, MultipleDisconnect)
   }
 }
 
-TEST_F(AgentTest, IgnoreTimestamps)
+TEST_F(AgentTest, should_ignore_timestamps_if_configured_to_do_so)
 {
   addAdapter();
 
@@ -1010,7 +1272,7 @@ TEST_F(AgentTest, InitialTimeSeriesValues)
   }
 }
 
-TEST_F(AgentTest, DynamicCalibration)
+TEST_F(AgentTest, should_support_dynamic_calibration_data)
 {
   addAdapter({{configuration::ConversionRequired, true}});
   auto agent = m_agentTestHelper->getAgent();
@@ -1052,7 +1314,7 @@ TEST_F(AgentTest, DynamicCalibration)
   }
 }
 
-TEST_F(AgentTest, FilterValues13)
+TEST_F(AgentTest, should_filter_as_specified_in_1_3_test_1)
 {
   m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
   addAdapter();
@@ -1091,7 +1353,7 @@ TEST_F(AgentTest, FilterValues13)
   }
 }
 
-TEST_F(AgentTest, FilterValues)
+TEST_F(AgentTest, should_filter_as_specified_in_1_3_test_2)
 {
   m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
   addAdapter();
@@ -1155,7 +1417,7 @@ TEST_F(AgentTest, FilterValues)
   }
 }
 
-TEST_F(AgentTest, TestPeriodFilterWithIgnoreTimestamps)
+TEST_F(AgentTest, period_filter_should_work_with_ignore_timestamps)
 {
   // Test period filter with ignore timestamps
   m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
@@ -1186,7 +1448,7 @@ TEST_F(AgentTest, TestPeriodFilterWithIgnoreTimestamps)
   }
 }
 
-TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
+TEST_F(AgentTest, period_filter_should_work_with_relative_time)
 {
   // Test period filter with relative time
   m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
@@ -1216,7 +1478,7 @@ TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
   }
 }
 
-TEST_F(AgentTest, ResetTriggered)
+TEST_F(AgentTest, reset_triggered_should_work)
 {
   addAdapter();
 
@@ -1239,7 +1501,7 @@ TEST_F(AgentTest, ResetTriggered)
   }
 }
 
-TEST_F(AgentTest, References)
+TEST_F(AgentTest, should_honor_references_when_getting_current_or_sample)
 {
   using namespace device_model;
 
@@ -1301,7 +1563,7 @@ TEST_F(AgentTest, References)
   }
 }
 
-TEST_F(AgentTest, Discrete)
+TEST_F(AgentTest, should_honor_discrete_data_items_and_not_filter_dups)
 {
   m_agentTestHelper->createAgent("/samples/discrete_example.xml");
   addAdapter({{configuration::FilterDuplicates, true}});
@@ -1345,7 +1607,7 @@ TEST_F(AgentTest, Discrete)
 
 // ------------------------------
 
-TEST_F(AgentTest, UpcaseValues)
+TEST_F(AgentTest, should_honor_upcase_values)
 {
   addAdapter({{configuration::FilterDuplicates, true}, {configuration::UpcaseDataItemValue, true}});
 
@@ -1365,7 +1627,7 @@ TEST_F(AgentTest, UpcaseValues)
   }
 }
 
-TEST_F(AgentTest, ConditionSequence)
+TEST_F(AgentTest, should_handle_condition_activation)
 {
   addAdapter({{configuration::FilterDuplicates, true}});
   auto agent = m_agentTestHelper->getAgent();
@@ -1544,7 +1806,7 @@ TEST_F(AgentTest, ConditionSequence)
   }
 }
 
-TEST_F(AgentTest, EmptyLastItemFromAdapter)
+TEST_F(AgentTest, should_handle_empty_entry_as_last_pair_from_adapter)
 {
   addAdapter({{configuration::FilterDuplicates, true}});
   auto agent = m_agentTestHelper->getAgent();
@@ -1605,7 +1867,7 @@ TEST_F(AgentTest, EmptyLastItemFromAdapter)
   }
 }
 
-TEST_F(AgentTest, ConstantValue)
+TEST_F(AgentTest, should_handle_constant_values)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
@@ -1632,7 +1894,7 @@ TEST_F(AgentTest, ConstantValue)
   }
 }
 
-TEST_F(AgentTest, BadDataItem)
+TEST_F(AgentTest, should_handle_bad_data_item_from_adapter)
 {
   addAdapter();
 
@@ -1844,7 +2106,7 @@ TEST_F(AgentTest, should_handle_uuid_change)
 
 // ------------------------- Asset Tests ---------------------------------
 
-TEST_F(AgentTest, AssetStorage)
+TEST_F(AgentTest, should_store_assets_in_buffer)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
 
@@ -1879,7 +2141,7 @@ TEST_F(AgentTest, AssetStorage)
   }
 }
 
-TEST_F(AgentTest, AssetBuffer)
+TEST_F(AgentTest, should_handle_asset_buffer_and_buffer_limits)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
   string body = "<Part assetId='P1'>TEST 1</Part>";
@@ -2001,8 +2263,7 @@ TEST_F(AgentTest, AssetBuffer)
   {
     PARSE_XML_RESPONSE("/asset/P1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error",
-                          "Cannot find asset for asset Ids: P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset: P1");
   }
 
   body = "<Part assetId='P3'>TEST 6</Part>";
@@ -2051,22 +2312,53 @@ TEST_F(AgentTest, AssetBuffer)
   {
     PARSE_XML_RESPONSE("/asset/P4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error",
-                          "Cannot find asset for asset Ids: P4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset: P4");
   }
 }
 
-TEST_F(AgentTest, AssetError)
+TEST_F(AgentTest, should_report_asset_not_found_error)
 {
   {
     PARSE_XML_RESPONSE("/asset/123");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error",
-                          "Cannot find asset for asset Ids: 123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset: 123");
   }
 }
 
-TEST_F(AgentTest, AdapterAddAsset)
+TEST_F(AgentTest, should_report_asset_not_found_2_6_error)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.6", 4, false, true,
+                                 {{configuration::Validation, false}});
+
+  {
+    PARSE_XML_RESPONSE("/asset/123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetNotFound@errorCode", "ASSET_NOT_FOUND");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetNotFound/m:ErrorMessage", "Cannot find asset: 123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetNotFound/m:AssetId", "123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetNotFound/m:URI", "/asset/123");
+  }
+}
+
+TEST_F(AgentTest, should_report_asset_not_found_2_6_error_with_multiple_assets)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.6", 4, false, true,
+                                 {{configuration::Validation, false}});
+
+  {
+    PARSE_XML_RESPONSE("/asset/123;456");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:AssetNotFound[1]@errorCode", "ASSET_NOT_FOUND");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetNotFound[1]/m:ErrorMessage", "Cannot find asset: 123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetNotFound[1]/m:AssetId", "123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetNotFound[1]/m:URI", "/asset/123;456");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Errors/m:AssetNotFound[2]@errorCode", "ASSET_NOT_FOUND");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetNotFound[2]/m:ErrorMessage", "Cannot find asset: 456");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetNotFound[2]/m:AssetId", "456");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetNotFound[2]/m:URI", "/asset/123;456");
+  }
+}
+
+TEST_F(AgentTest, should_handle_asset_from_adapter_on_one_line)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
@@ -2084,7 +2376,7 @@ TEST_F(AgentTest, AdapterAddAsset)
   }
 }
 
-TEST_F(AgentTest, MultiLineAsset)
+TEST_F(AgentTest, should_handle_multiline_asset)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
@@ -2122,7 +2414,7 @@ TEST_F(AgentTest, MultiLineAsset)
   }
 }
 
-TEST_F(AgentTest, BadAsset)
+TEST_F(AgentTest, should_handle_bad_asset_from_adapter)
 {
   addAdapter();
   const auto &storage = m_agentTestHelper->m_agent->getAssetStorage();
@@ -2134,7 +2426,7 @@ TEST_F(AgentTest, BadAsset)
   ASSERT_EQ((unsigned int)0, storage->getCount());
 }
 
-TEST_F(AgentTest, AssetRemoval)
+TEST_F(AgentTest, should_handle_asset_removal_from_REST_api)
 {
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap query;
@@ -2228,7 +2520,7 @@ TEST_F(AgentTest, AssetRemoval)
   }
 }
 
-TEST_F(AgentTest, AssetRemovalByAdapter)
+TEST_F(AgentTest, should_handle_asset_removal_from_adapter)
 {
   addAdapter();
   QueryMap query;
@@ -2641,9 +2933,9 @@ TEST_F(AgentTest, interval_should_be_a_valid_integer_value)
   {
     query["interval"] = "NON_INTEGER";
     PARSE_XML_RESPONSE_QUERY("/sample", query);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_PARAMETER_VALUE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
-                          "0.0.0.0: Parameter Error: for query parameter 'interval': cannot "
+                          "query parameter 'interval': cannot "
                           "convert string 'NON_INTEGER' to integer");
   }
 
@@ -2669,6 +2961,73 @@ TEST_F(AgentTest, interval_should_be_a_valid_integer_value)
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be greater than -1");
+  }
+}
+
+/// @test ensure an error is returned when the interval has an invalid value using 2.6 error
+/// reporting
+TEST_F(AgentTest, interval_should_be_a_valid_integer_value_in_2_6)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.6", 4, false, true,
+                                 {{configuration::Validation, false}});
+  QueryMap query;
+
+  ///    - Cannot be test or a non-integer value
+  {
+    query["interval"] = "NON_INTEGER";
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue@errorCode", "INVALID_PARAMETER_VALUE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue/m:URI", "/sample?interval=NON_INTEGER");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue/m:ErrorMessage",
+                          "query parameter 'interval': cannot convert "
+                          "string 'NON_INTEGER' to integer");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue/m:QueryParameter@name", "interval");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue/m:QueryParameter/m:Format", "int32");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue/m:QueryParameter/m:Type", "integer");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:InvalidParameterValue/m:QueryParameter/m:Value", "NON_INTEGER");
+  }
+
+  ///     - Cannot be nagative
+  {
+    query["interval"] = "-123";
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", "/sample?interval=-123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:ErrorMessage",
+                          "'interval' must be greater than -1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter@name", "interval");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Value", "-123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Minimum", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Maximum", "2147483646");
+  }
+
+  ///    - Cannot be >= 2147483647
+  {
+    query["interval"] = "2147483647";
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", "/sample?interval=2147483647");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:ErrorMessage",
+                          "'interval' must be less than 2147483647");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter@name", "interval");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Value", "2147483647");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Minimum", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Maximum", "2147483646");
+  }
+
+  ///     - Cannot wrap around and create a negative number was set as a int32
+  {
+    query["interval"] = "999999999999999999";
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", "/sample?interval=999999999999999999");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:ErrorMessage",
+                          "'interval' must be greater than -1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter@name", "interval");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Value", "-1486618625");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Minimum", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Maximum", "2147483646");
   }
 }
 

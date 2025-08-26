@@ -289,8 +289,9 @@ namespace mtconnect {
     protected:
       /// @brief Write an error response to the session
       ///
-      /// This produces an MTConnect Error document using the error information and writes it the session.
-      /// Uses the accepts and format information from the error to determine the printer to use.
+      /// This produces an MTConnect Error document using the error information and writes it the
+      /// session. Uses the accepts and format information from the error to determine the printer
+      /// to use.
       /// @param session the session to write to
       /// @param error the error to write
       void writeErrorResponse(SessionPtr session, const RestError &error)
@@ -302,21 +303,19 @@ namespace mtconnect {
           const auto *prnt = error.getPrinter();
           if (!prnt)
           {
-            prnt = getPrinter(error.getAccepts(),
-                                 error.getFormat());
+            prnt = getPrinter(error.getAccepts(), error.getFormat());
           }
-          auto body = prnt->printErrors(m_instanceId,
-                                           m_sinkContract->getCircularBuffer().getBufferSize(),
-                                           m_sinkContract->getCircularBuffer().getSequence(),
-                                           error.getErrors(), false, error.getRequest());
-          
-          ResponsePtr resp = std::make_unique<Response>(error.getStatus(), body,
-                                                        prnt->mimeType());
-          
+          auto body =
+              prnt->printErrors(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
+                                m_sinkContract->getCircularBuffer().getSequence(),
+                                error.getErrors(), false, error.getRequest());
+
+          ResponsePtr resp = std::make_unique<Response>(error.getStatus(), body, prnt->mimeType());
+
           session->writeFailureResponse(std::move(resp));
         }
       }
-      
+
       // Configuration
       void loadNamespace(const boost::property_tree::ptree &tree, const char *namespaceType,
                          printer::XmlPrinter *xmlPrinter, NamespaceFunction callback);
