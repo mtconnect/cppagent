@@ -378,9 +378,9 @@ namespace mtconnect {
     bool removeAllAssets(const std::optional<std::string> device,
                          const std::optional<std::string> type, const std::optional<Timestamp> time,
                          asset::AssetList &list);
-    /// @brief Send asset removed observation when an asset is removed.
+    /// @brief Send asset changed and added observation when an asset is removed.
     ///
-    /// Also sets asset changed to `UNAVAILABLE` if the asset removed asset was the last changed.
+    /// Also sets asset changed and added  to `UNAVAILABLE` if the asset removed asset was the last changed.
     ///
     /// @param device The device related to the asset
     /// @param asset The asset

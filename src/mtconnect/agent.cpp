@@ -366,12 +366,24 @@ namespace mtconnect {
     if (device)
     {
       DataItemPtr di;
+      auto added = device->getAssetAdded();
       if (asset->isRemoved())
         di = device->getAssetRemoved();
-      else if (old || !device->getAssetAdded())
+      else if (old || !added)
+      {
         di = device->getAssetChanged();
-      else if (device->getAssetAdded())
-        di = device->getAssetAdded();
+        /// If we have changed the asset that is currently recorded as added. Make added unavailable.
+        if (added)
+        {
+          auto last = getLatest(added);
+          if (last && asset->getAssetId() == last->getValue<string>())
+          {
+            m_loopback->receive(added, {{"assetType", asset->getName()}, {"VALUE", g_unavailable}});
+          }
+        }
+      }
+      else if (added)
+        di = added;
       if (di)
       {
         entity::Properties props {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}};
@@ -783,11 +795,10 @@ namespace mtconnect {
             m_loopback->receive(added, {{"assetType", asset->getName()}, {"VALUE", g_unavailable}});
           }
         }
-
       }
     }
   }
-
+  
   // ---------------------------------------
   // Agent Device
   // ---------------------------------------
