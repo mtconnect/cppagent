@@ -284,6 +284,7 @@ add_agent_test(observation_validation TRUE pipeline)
 add_agent_test(correct_timestamp TRUE pipeline)
 
 add_agent_test(agent TRUE core)
+add_agent_test(agent_asset TRUE core)
 add_agent_test(globals FALSE core)
 
 add_agent_test(config_parser FALSE configuration)

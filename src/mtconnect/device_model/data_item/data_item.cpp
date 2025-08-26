@@ -151,6 +151,8 @@ namespace mtconnect {
           m_specialClass = ASSET_REMOVED_CLS;
         else if (type == "ASSET_CHANGED")
           m_specialClass = ASSET_CHANGED_CLS;
+        else if (type == "ASSET_ADDED")
+          m_specialClass = ASSET_ADDED_CLS;
       }
       else if (category == "CONDITION")
       {

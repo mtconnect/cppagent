@@ -427,7 +427,7 @@ namespace mtconnect::pipeline {
               return true;
             }
 
-            if (di->isAssetChanged())
+            if (di->isAssetChanged() || di->isAssetAdded())
               out.m_assetEvents.emplace_back((obs));
             else
               out.m_entities.emplace_back(obs);

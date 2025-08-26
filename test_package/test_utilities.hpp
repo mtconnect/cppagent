@@ -111,6 +111,9 @@ inline void fillAttribute(std::string &xmlString, const std::string &attribute,
 #define ASSERT_XML_PATH_COUNT(doc, path, expected) \
   xpathTestCount(doc, path, expected, __FILE__, __LINE__)
 
+#define DUMP_XML(doc) \
+  dumpXml(doc)
+
 inline void failIf(bool condition, const std::string &message, const std::string &file, int line)
 {
   ASSERT_FALSE(condition) << file << "(" << line << "): Failed " << message;
@@ -130,6 +133,18 @@ inline void assertIf(bool condition, const std::string &message, const std::stri
 }
 
 using ValueResponse = std::pair<std::optional<std::string>, std::optional<std::string>>;
+
+inline std::string dumpXml(xmlDocPtr doc)
+{
+  int size;
+  xmlChar *memory;
+  xmlDocDumpFormatMemory(doc, &memory, &size, 1);
+  
+  std::string s((const char *) memory, size);
+  xmlFree(memory);
+  
+  return s;
+}
 
 inline ValueResponse xpathValue(xmlDocPtr doc, const char *xpath, const std::string &file, int line,
                                 bool noValue = false)
@@ -172,15 +187,10 @@ inline ValueResponse xpathValue(xmlDocPtr doc, const char *xpath, const std::str
 
   if (!obj || !obj->nodesetval || obj->nodesetval->nodeNr == 0)
   {
-    int size;
-    xmlChar *memory;
-    xmlDocDumpFormatMemory(doc, &memory, &size, 1);
-
     stringstream message;
     message << file << "(" << line << "): "
             << "Xpath " << xpath << " did not match any nodes in XML document" << endl
-            << ((const char *)memory);
-    xmlFree(memory);
+            << dumpXml(doc);
 
     if (obj)
       xmlXPathFreeObject(obj);

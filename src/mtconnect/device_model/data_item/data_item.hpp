@@ -75,7 +75,8 @@ namespace mtconnect {
           THREE_SPACE_CLS,
           NONE_CLS,
           ASSET_REMOVED_CLS,
-          ASSET_CHANGED_CLS
+          ASSET_CHANGED_CLS,
+          ASSET_ADDED_CLS
         };
 
       public:
@@ -164,6 +165,7 @@ namespace mtconnect {
         bool isCondition() const { return m_category == CONDITION; }
         bool isAlarm() const { return m_specialClass == ALARM_CLS; }
         bool isMessage() const { return m_specialClass == MESSAGE_CLS; }
+        bool isAssetAdded() const { return m_specialClass == ASSET_ADDED_CLS; }
         bool isAssetChanged() const { return m_specialClass == ASSET_CHANGED_CLS; }
         bool isAssetRemoved() const { return m_specialClass == ASSET_REMOVED_CLS; }
         bool isTimeSeries() const { return m_representation == TIME_SERIES; }
