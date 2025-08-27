@@ -38,16 +38,17 @@ namespace mtconnect::sink::rest_sink {
     Request() = default;
     Request(const Request &request) = default;
 
-    boost::beast::http::verb m_verb;  ///< GET, PUT, POST, or DELETE
-    std::string m_body;               ///< The body of the request
-    std::string m_accepts;            ///< The accepts header
-    std::string m_acceptsEncoding;    ///< Encodings that can be returned
-    std::string m_contentType;        ///< The content type for the body
-    std::string m_path;               ///< The URI for the request
-    std::string m_foreignIp;          ///< The requestors IP Address
-    uint16_t m_foreignPort;           ///< The requestors Port
-    QueryMap m_query;                 ///< The parsed query parameters
-    ParameterMap m_parameters;        ///< The parsed path parameters
+    boost::beast::http::verb m_verb;       ///< GET, PUT, POST, or DELETE
+    std::string m_body;                    ///< The body of the request
+    std::string m_accepts;                 ///< The accepts header
+    std::string m_acceptsEncoding;         ///< Encodings that can be returned
+    std::string m_contentType;             ///< The content type for the body
+    std::string m_path;                    ///< The URI for the request
+    std::string m_foreignIp;               ///< The requestors IP Address
+    uint16_t m_foreignPort;                ///< The requestors Port
+    QueryMap m_query;                      ///< The parsed query parameters
+    ParameterMap m_parameters;             ///< The parsed path parameters
+    std::optional<std::string> m_request;  ///< The request type for error reporting
 
     /// @name Websocket related properties
     ///@{

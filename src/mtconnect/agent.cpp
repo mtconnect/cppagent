@@ -372,7 +372,8 @@ namespace mtconnect {
       else if (old || !added)
       {
         di = device->getAssetChanged();
-        /// If we have changed the asset that is currently recorded as added. Make added unavailable.
+        /// If we have changed the asset that is currently recorded as added. Make added
+        /// unavailable.
         if (added)
         {
           auto last = getLatest(added);
@@ -782,10 +783,11 @@ namespace mtconnect {
           auto last = getLatest(changed);
           if (last && asset->getAssetId() == last->getValue<string>())
           {
-            m_loopback->receive(changed, {{"assetType", asset->getName()}, {"VALUE", g_unavailable}});
+            m_loopback->receive(changed,
+                                {{"assetType", asset->getName()}, {"VALUE", g_unavailable}});
           }
         }
-        
+
         auto added = dev->getAssetAdded();
         if (added)
         {
@@ -798,7 +800,7 @@ namespace mtconnect {
       }
     }
   }
-  
+
   // ---------------------------------------
   // Agent Device
   // ---------------------------------------
@@ -934,8 +936,9 @@ namespace mtconnect {
       // Create asset removed data item and add it to the device.
       entity::ErrorList errors;
       auto di = DataItem::make({{"type", "ASSET_ADDED"s},
-        {"id", device->getId() + "_asset_add"}, {"discrete", true},
-        {"category", "EVENT"s}},
+                                {"id", device->getId() + "_asset_add"},
+                                {"discrete", true},
+                                {"category", "EVENT"s}},
                                errors);
       device->addDataItem(di, errors);
     }

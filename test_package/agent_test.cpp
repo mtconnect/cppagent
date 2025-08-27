@@ -165,6 +165,7 @@ TEST_F(AgentTest, should_return_2_6_error_for_unknown_device)
     string message = (string) "Could not find the device 'LinuxCN'";
     ASSERT_XML_PATH_EQUAL(doc, "//m:NoDevice@errorCode", "NO_DEVICE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:NoDevice/m:ErrorMessage", message.c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:NoDevice/m:Request", "MTConnectDevices");
     ASSERT_XML_PATH_EQUAL(doc, "//m:NoDevice/m:URI", "/LinuxCN/probe");
     ASSERT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
   }
@@ -492,6 +493,7 @@ TEST_F(AgentTest, should_report_2_6_out_of_range_for_current_at)
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:ErrorMessage", line);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:Request", "MTConnectStreams");
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", ("/current?at=" + s).c_str());
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter@name", "at");
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Value", s.c_str());
@@ -507,6 +509,7 @@ TEST_F(AgentTest, should_report_2_6_out_of_range_for_current_at)
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:ErrorMessage", line);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:Request", "MTConnectStreams");
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", "/current?at=0");
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter@name", "at");
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter/m:Value", "0");
@@ -685,6 +688,7 @@ TEST_F(AgentTest, should_report_a_2_6_error_when_the_count_is_out_of_range)
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange@errorCode", "OUT_OF_RANGE");
     string value("'count' must be greater than ");
     value += to_string(-size);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:Request", "MTConnectStreams");
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:ErrorMessage", value.c_str());
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:URI", "/sample?count=-500");
     ASSERT_XML_PATH_EQUAL(doc, "//m:OutOfRange/m:QueryParameter@name", "count");
@@ -2108,7 +2112,6 @@ TEST_F(AgentTest, should_handle_uuid_change)
     // ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream@uuid", "MK-1234");
   }
 }
-
 
 /// @name Streaming Tests
 /// Tests that validate HTTP long poll behavior of the agent

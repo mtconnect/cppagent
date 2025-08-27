@@ -198,9 +198,11 @@ namespace mtconnect::sink::rest_sink {
       {
         LOG(error) << session->getRemote().address()
                    << ": Error processing request: " << request->m_path;
+        if (request->m_request)
+          re.setRequest(*request->m_request);
         re.setUri(request->getUri());
         if (request->m_requestId)
-          re.setRequest(*request->m_requestId);
+          re.setRequestId(*request->m_requestId);
         m_errorFunction(session, re);
       }
       catch (std::logic_error &le)

@@ -28,9 +28,13 @@
 namespace mtconnect::sink::rest_sink {
   using status = boost::beast::http::status;
 
+  /// @brief An Error entity for error reporting
+  /// Builds an Error entity with errorCode, URI, Request, and ErrorMessage.
+  /// Subclasses can add additional information
   class AGENT_LIB_API Error : public mtconnect::entity::Entity
   {
   public:
+    /// @brief Error codes for MTConnect REST API
     enum class ErrorCode
     {
       ASSET_NOT_FOUND,
@@ -69,9 +73,17 @@ namespace mtconnect::sink::rest_sink {
       return error;
     }
 
+    /// @brief Get the name for an error code
+    /// @param code the error code
     static const std::string nameForCode(ErrorCode code);
+    /// @brief Get the controlled vocabulary enumeration string for an error code
+    /// @param code the error code
     static const std::string enumForCode(ErrorCode code);
 
+    /// @brief static error factory method
+    /// @param code the error code
+    /// @param errorMessage optional error message
+    /// @param request optional request string
     static entity::EntityPtr make(const ErrorCode code,
                                   std::optional<std::string> errorMessage = std::nullopt,
                                   std::optional<std::string> request = std::nullopt)
@@ -97,6 +109,7 @@ namespace mtconnect::sink::rest_sink {
 
   using ErrorPtr = std::shared_ptr<Error>;
 
+  /// @brief A QueryParameter entity for error reporting
   class AGENT_LIB_API QueryParameter : public entity::Entity
   {
   public:
@@ -123,12 +136,16 @@ namespace mtconnect::sink::rest_sink {
       return qp;
     }
 
+    /// @brief static factory method
+    /// @param properties the properties for the QueryParameter
     static entity::EntityPtr make(const entity::Properties &properties)
     {
       return std::make_shared<QueryParameter>(properties);
     }
   };
 
+  /// @brief An InvalidParameterValue error
+  /// Builds a QueryParameter with name, value, type, and format
   class AGENT_LIB_API InvalidParameterValue : public Error
   {
   public:
@@ -158,6 +175,13 @@ namespace mtconnect::sink::rest_sink {
       return factory;
     }
 
+    /// @brief static factory method
+    /// @param name the name of the parameter
+    /// @param value the value of the parameter
+    /// @param type the type of the parameter
+    /// @param format the format of the parameter
+    /// @param errorMessage optional error message
+    /// @param request optional request string
     static entity::EntityPtr make(const std::string &name, const std::string &value,
                                   const std::string &type, const std::string &format,
                                   std::optional<std::string> errorMessage = std::nullopt,
@@ -180,6 +204,8 @@ namespace mtconnect::sink::rest_sink {
     }
   };
 
+  /// @brief An OutOfRange error
+  /// Builds a QueryParameter with name, value, min, and max
   class AGENT_LIB_API OutOfRange : public Error
   {
   public:
@@ -205,6 +231,13 @@ namespace mtconnect::sink::rest_sink {
       return factory;
     }
 
+    /// @brief static factory method
+    /// @param name the name of the parameter
+    /// @param value the value of the parameter
+    /// @param min the minimum value of the parameter
+    /// @param max the maximum value of the parameter
+    /// @param errorMessage optional error message
+    /// @param request optional request string
     static entity::EntityPtr make(const std::string &name, int64_t value, int64_t min, int64_t max,
                                   std::optional<std::string> errorMessage = std::nullopt,
                                   std::optional<std::string> request = std::nullopt)
@@ -225,6 +258,7 @@ namespace mtconnect::sink::rest_sink {
     }
   };
 
+  /// @brief An AssetNotFound error
   class AGENT_LIB_API AssetNotFound : public Error
   {
   public:
@@ -249,6 +283,10 @@ namespace mtconnect::sink::rest_sink {
       return factory;
     }
 
+    /// @brief static factory method
+    /// @param assetId the asset ID that was not found
+    /// @param errorMessage optional error message
+    /// @param request optional request string
     static entity::EntityPtr make(const std::string &assetId,
                                   std::optional<std::string> errorMessage = std::nullopt,
                                   std::optional<std::string> request = std::nullopt)
@@ -266,6 +304,7 @@ namespace mtconnect::sink::rest_sink {
     }
   };
 
+  /// @brief An exception that gets thrown during REST processing with an error and a status
   class AGENT_LIB_API RestError
   {
   public:
@@ -276,12 +315,13 @@ namespace mtconnect::sink::rest_sink {
     /// @param format optional format for the error
     RestError(entity::EntityPtr error, std::string accepts = "application/xml",
               status st = status::bad_request, std::optional<std::string> format = std::nullopt,
-              std::optional<std::string> request = std::nullopt)
-      : m_errors({error}), m_accepts(accepts), m_status(st), m_format(format)
-    {
-      if (request)
-        setRequest(*request);
-    }
+              std::optional<std::string> requestId = std::nullopt)
+      : m_errors({error}),
+        m_accepts(accepts),
+        m_status(st),
+        m_format(format),
+        m_requestId(requestId)
+    {}
 
     /// @brief An exception that gets thrown during REST processing with an error and a status
     /// @param errors a list of errors
@@ -290,12 +330,9 @@ namespace mtconnect::sink::rest_sink {
     /// @param format optional format for the error
     RestError(entity::EntityList &errors, std::string accepts = "application/xml",
               status st = status::bad_request, std::optional<std::string> format = std::nullopt,
-              std::optional<std::string> request = std::nullopt)
-      : m_errors(errors), m_accepts(accepts), m_status(st), m_format(format)
-    {
-      if (request)
-        setRequest(*request);
-    }
+              std::optional<std::string> requestId = std::nullopt)
+      : m_errors(errors), m_accepts(accepts), m_status(st), m_format(format), m_requestId(requestId)
+    {}
 
     /// @brief An exception that gets thrown during REST processing with an error and a status
     /// @param error the error entity
@@ -304,12 +341,14 @@ namespace mtconnect::sink::rest_sink {
     /// @param format optional format for the error
     RestError(entity::EntityPtr error, const printer::Printer *printer = nullptr,
               status st = status::bad_request, std::optional<std::string> format = std::nullopt,
-              std::optional<std::string> request = std::nullopt)
-      : m_errors({error}), m_status(st), m_format(format), m_printer(printer)
-    {
-      if (request)
-        setRequest(*request);
-    }
+              std::optional<std::string> requestId = std::nullopt)
+      : m_errors({error}),
+        m_status(st),
+        m_format(format),
+        m_requestId(requestId),
+        m_printer(printer)
+
+    {}
 
     /// @brief An exception that gets thrown during REST processing with an error and a status
     /// @param errors a list of errors
@@ -318,12 +357,9 @@ namespace mtconnect::sink::rest_sink {
     /// @param format optional format for the error
     RestError(entity::EntityList &errors, const printer::Printer *printer = nullptr,
               status st = status::bad_request, std::optional<std::string> format = std::nullopt,
-              std::optional<std::string> request = std::nullopt)
-      : m_errors(errors), m_status(st), m_format(format), m_printer(printer)
-    {
-      if (request)
-        setRequest(*request);
-    }
+              std::optional<std::string> requestId = std::nullopt)
+      : m_errors(errors), m_status(st), m_format(format), m_requestId(requestId), m_printer(printer)
+    {}
 
     ~RestError() = default;
     RestError(const RestError &o) = default;
@@ -336,24 +372,33 @@ namespace mtconnect::sink::rest_sink {
         e->setProperty("URI", uri);
     }
 
-    /// @brief set the Request for all errors
+    /// @brief set the Request ID for the websocket responses
+    /// @param requestId the Request ID
+    void setRequestId(const std::string &requestId) { m_requestId = requestId; }
+    const auto &getRequestId() const { return m_requestId; }
+
+    /// @brief The response document type for the request (e.g. MTConnectDevices)
     /// @param request the Request
     void setRequest(const std::string &request)
     {
-      m_request = request;
       for (auto &e : m_errors)
         e->setProperty("Request", request);
     }
 
     const auto &getErrors() const { return m_errors; }
+
     void setStatus(status st) { m_status = st; }
     const auto &getStatus() const { return m_status; }
+
     void setFormat(const std::string &format) { m_format = format; }
     const auto &getFormat() const { return m_format; }
+
     const auto &getAccepts() const { return m_accepts; }
-    const auto &getRequest() const { return m_request; }
+
     auto getPrinter() const { return m_printer; }
 
+    /// @brief Get a string representation of the error(s) concating the error messages.
+    /// @return a string representation of the error(s)
     std::string what() const
     {
       std::stringstream ss;
@@ -371,12 +416,14 @@ namespace mtconnect::sink::rest_sink {
     }
 
   protected:
-    entity::EntityList m_errors;
-    std::string m_accepts {"application/xml"};
-    status m_status;
-    std::optional<std::string> m_format;
-    std::optional<std::string> m_request;
-    const printer::Printer *m_printer {nullptr};
+    entity::EntityList m_errors;                ///< The list of errors to be reported
+    std::string m_accepts {"application/xml"};  ///< The accepted mime types for the response
+    status m_status;                            ///< The HTTP status code
+    std::optional<std::string> m_format;  ///< The format for the error response overriding accepts
+    std::optional<std::string> m_requestId;  ///< The request id for the response
+    const printer::Printer *m_printer {
+        nullptr};  ///< The printer to use for the response. If the printer is not specified it will
+                   ///< be inferred from the accepts or format.
   };
 
 }  // namespace mtconnect::sink::rest_sink

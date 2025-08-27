@@ -111,8 +111,7 @@ inline void fillAttribute(std::string &xmlString, const std::string &attribute,
 #define ASSERT_XML_PATH_COUNT(doc, path, expected) \
   xpathTestCount(doc, path, expected, __FILE__, __LINE__)
 
-#define DUMP_XML(doc) \
-  dumpXml(doc)
+#define DUMP_XML(doc) dumpXml(doc)
 
 inline void failIf(bool condition, const std::string &message, const std::string &file, int line)
 {
@@ -139,10 +138,10 @@ inline std::string dumpXml(xmlDocPtr doc)
   int size;
   xmlChar *memory;
   xmlDocDumpFormatMemory(doc, &memory, &size, 1);
-  
-  std::string s((const char *) memory, size);
+
+  std::string s((const char *)memory, size);
   xmlFree(memory);
-  
+
   return s;
 }
 
