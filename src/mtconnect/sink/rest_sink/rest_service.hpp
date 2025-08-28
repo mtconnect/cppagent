@@ -311,7 +311,9 @@ namespace mtconnect {
                                 error.getErrors(), false, error.getRequestId());
 
           ResponsePtr resp = std::make_unique<Response>(error.getStatus(), body, prnt->mimeType());
-
+          if (error.getRequestId())
+            resp->m_requestId = error.getRequestId();
+          
           session->writeFailureResponse(std::move(resp));
         }
       }

@@ -309,6 +309,165 @@ namespace mtconnect::sink::rest_sink {
         }
       }
     }
+    
+    RequestPtr parseRequest(const std::string &buffer)
+    {
+      using namespace rapidjson;
+      using namespace std;
+
+      Document doc;
+      doc.Parse(buffer.c_str());
+      
+      RequestPtr request;
+      
+      if (doc.HasParseError())
+      {
+        stringstream err;
+        err << "Websocket Read Error(offset (" << doc.GetErrorOffset()
+        << "): " << GetParseError_En(doc.GetParseError());
+        LOG(warning) << err.str();
+        LOG(warning) << "  " << buffer;
+        auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, err.str());
+        throw RestError(error, m_request->m_accepts, rest_sink::status::bad_request,
+                        std::nullopt, "ERROR");
+      }
+      if (!doc.IsObject())
+      {
+        LOG(warning) << "Websocket Read Error: JSON message does not have a top level object";
+        LOG(warning) << "  " << buffer;
+        auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, "JSON message does not have a top level object");
+        throw RestError(error, m_request->m_accepts, rest_sink::status::bad_request,
+                        std::nullopt, "ERROR");
+      }
+      else
+      {
+        // Extract the parameters from the json doc to map them to the REST
+        // protocol parameters
+        request = make_unique<Request>(*m_request);
+        
+        request->m_verb = beast::http::verb::get;
+        request->m_parameters.clear();
+#ifdef GetObject
+#define __GOSave__ GetObject
+#undef GetObject
+#endif
+        
+        const auto &object = doc.GetObject();
+#ifdef __GOSave__
+#define GetObject __GOSave__
+#endif
+        
+        for (auto &it : object)
+        {
+          switch (it.value.GetType())
+          {
+            case rapidjson::kNullType:
+              // Skip nulls
+              break;
+            case rapidjson::kFalseType:
+              request->m_parameters.emplace(
+                                            make_pair(string(it.name.GetString()), ParameterValue(false)));
+              break;
+            case rapidjson::kTrueType:
+              request->m_parameters.emplace(
+                                            make_pair(string(it.name.GetString()), ParameterValue(true)));
+              break;
+            case rapidjson::kObjectType:
+              break;
+            case rapidjson::kArrayType:
+              break;
+            case rapidjson::kStringType:
+              request->m_parameters.emplace(
+                                            make_pair(it.name.GetString(), ParameterValue(string(it.value.GetString()))));
+              
+              break;
+            case rapidjson::kNumberType:
+              if (it.value.IsInt())
+                request->m_parameters.emplace(
+                                              make_pair(it.name.GetString(), ParameterValue(it.value.GetInt())));
+              else if (it.value.IsUint())
+                request->m_parameters.emplace(
+                                              make_pair(it.name.GetString(), ParameterValue(uint64_t(it.value.GetUint()))));
+              else if (it.value.IsInt64())
+                request->m_parameters.emplace(
+                                              make_pair(it.name.GetString(), ParameterValue(uint64_t(it.value.GetInt64()))));
+              else if (it.value.IsUint64())
+                request->m_parameters.emplace(
+                                              make_pair(it.name.GetString(), ParameterValue(it.value.GetUint64())));
+              else if (it.value.IsDouble())
+                request->m_parameters.emplace(
+                                              make_pair(it.name.GetString(), ParameterValue(double(it.value.GetDouble()))));
+              
+              break;
+          }
+        }
+      }
+      
+      return request;
+    }
+      
+    bool dispatchRequest(RequestPtr &&request)
+    {
+      using namespace std;
+
+      if (request->m_parameters.count("id") > 0)
+      {
+        auto &v = request->m_parameters["id"];
+        string id = visit(overloaded {[](monostate m) { return ""s; },
+          [](auto v) { return boost::lexical_cast<string>(v); }},
+                          v);
+        request->m_requestId = id;
+        request->m_parameters.erase("id");
+      }
+      else
+      {
+        auto error = InvalidParameterValue::make("id", "", "string", "string",
+                                                 "No id given");
+        throw RestError(error, request->m_accepts, rest_sink::status::bad_request,
+                        std::nullopt, "ERROR");
+      }
+
+      auto &id = *(request->m_requestId);
+      auto res = m_requests.emplace(id, id);
+      if (!res.second)
+      {
+        LOG(error) << "Duplicate request id: " << id;
+        auto error = InvalidParameterValue::make("id", *request->m_requestId, "string", "string",
+                                                 "Duplicate id given");
+        throw RestError(error, request->m_accepts, rest_sink::status::bad_request,
+                        std::nullopt, "ERROR");
+      }
+      
+      if (request->m_parameters.count("request") > 0)
+      {
+        request->m_command = get<string>(request->m_parameters["request"]);
+        request->m_parameters.erase("request");
+      }
+      else
+      {
+        auto error = InvalidParameterValue::make("request", "", "string", "string",
+                                                 "No request given");
+        throw RestError(error, request->m_accepts, rest_sink::status::bad_request,
+                        std::nullopt, id);
+      }
+      
+      // Check parameters for command
+      LOG(debug) << "Received request id: " << id;
+      
+      res.first->second.m_request = std::move(request);
+      try
+      {
+        return m_dispatch(derived().shared_ptr(), res.first->second.m_request);
+      }
+      
+      catch (RestError &re)
+      {
+        re.setRequestId(id);
+        throw re;
+      }
+      
+      return false;
+    }
 
     void onRead(beast::error_code ec, std::size_t len)
     {
@@ -316,9 +475,6 @@ namespace mtconnect::sink::rest_sink {
 
       if (ec)
         return fail(boost::beast::http::status::internal_server_error, "shutdown", ec);
-
-      using namespace rapidjson;
-      using namespace std;
 
       if (len == 0)
       {
@@ -332,124 +488,51 @@ namespace mtconnect::sink::rest_sink {
       auto buffer = beast::buffers_to_string(m_buffer.data());
       m_buffer.consume(m_buffer.size());
 
-      LOG(debug) << "Received :" << buffer.c_str();
-
-      Document doc;
-      doc.Parse(buffer.c_str(), len);
-
-      if (doc.HasParseError())
+      LOG(debug) << "Received :" << buffer;
+            
+      try
       {
-        LOG(warning) << "Websocket Read Error(offset (" << doc.GetErrorOffset()
-                     << "): " << GetParseError_En(doc.GetParseError());
-        LOG(warning) << "  " << buffer;
-      }
-      if (!doc.IsObject())
-      {
-        LOG(warning) << "Websocket Read Error: JSON message does not have a top level object";
-        LOG(warning) << "  " << buffer;
-      }
-      else
-      {
-        // Extract the parameters from the json doc to map them to the REST
-        // protocol parameters
-        auto request = make_unique<Request>(*m_request);
-
-        request->m_verb = beast::http::verb::get;
-        request->m_parameters.clear();
-#ifdef GetObject
-#define __GOSave__ GetObject
-#undef GetObject
-#endif
-
-        const auto &object = doc.GetObject();
-#ifdef __GOSave__
-#define GetObject __GOSave__
-#endif
-
-        for (auto &it : object)
+        auto request = parseRequest(buffer);
+        if (!request || !dispatchRequest(std::move(request)))
         {
-          switch (it.value.GetType())
-          {
-            case rapidjson::kNullType:
-              // Skip nulls
-              break;
-            case rapidjson::kFalseType:
-              request->m_parameters.emplace(
-                  make_pair(string(it.name.GetString()), ParameterValue(false)));
-              break;
-            case rapidjson::kTrueType:
-              request->m_parameters.emplace(
-                  make_pair(string(it.name.GetString()), ParameterValue(true)));
-              break;
-            case rapidjson::kObjectType:
-              break;
-            case rapidjson::kArrayType:
-              break;
-            case rapidjson::kStringType:
-              request->m_parameters.emplace(
-                  make_pair(it.name.GetString(), ParameterValue(string(it.value.GetString()))));
-
-              break;
-            case rapidjson::kNumberType:
-              if (it.value.IsInt())
-                request->m_parameters.emplace(
-                    make_pair(it.name.GetString(), ParameterValue(it.value.GetInt())));
-              else if (it.value.IsUint())
-                request->m_parameters.emplace(
-                    make_pair(it.name.GetString(), ParameterValue(uint64_t(it.value.GetUint()))));
-              else if (it.value.IsInt64())
-                request->m_parameters.emplace(
-                    make_pair(it.name.GetString(), ParameterValue(uint64_t(it.value.GetInt64()))));
-              else if (it.value.IsUint64())
-                request->m_parameters.emplace(
-                    make_pair(it.name.GetString(), ParameterValue(it.value.GetUint64())));
-              else if (it.value.IsDouble())
-                request->m_parameters.emplace(
-                    make_pair(it.name.GetString(), ParameterValue(double(it.value.GetDouble()))));
-
-              break;
-          }
-        }
-
-        if (request->m_parameters.count("request") > 0)
-        {
-          request->m_command = get<string>(request->m_parameters["request"]);
-          request->m_parameters.erase("request");
-        }
-        if (request->m_parameters.count("id") > 0)
-        {
-          auto &v = request->m_parameters["id"];
-          string id = visit(overloaded {[](monostate m) { return ""s; },
-                                        [](auto v) { return boost::lexical_cast<string>(v); }},
-                            v);
-          request->m_requestId = id;
-          request->m_parameters.erase("id");
-        }
-
-        auto &id = *(request->m_requestId);
-        auto res = m_requests.emplace(id, id);
-        if (!res.second)
-        {
-          LOG(error) << "Duplicate request id: " << id;
-          boost::system::error_code ec;
-          fail(status::bad_request, "Duplicate request Id", ec);
-        }
-        else
-        {
-          LOG(debug) << "Received request id: " << id;
-
-          res.first->second.m_request = std::move(request);
-          if (!m_dispatch(derived().shared_ptr(), res.first->second.m_request))
-          {
-            ostringstream txt;
-            txt << "Failed to find handler for " << buffer;
-            LOG(error) << txt.str();
-            boost::system::error_code ec;
-            fail(status::bad_request, "Duplicate request Id", ec);
-          }
+          std::stringstream txt;
+          txt << getRemote().address() << ": Dispatch failed for: " << buffer;
+          LOG(error) << txt.str();
         }
       }
-
+      
+      catch (RestError &re)
+      {
+        auto id = re.getRequestId();
+        if (!id)
+        {
+          id = "ERROR";
+          re.setRequestId(*id);
+        }
+        
+        auto res = m_requests.find(*id);
+        if (res == m_requests.end())
+          m_requests.emplace(*id, *id);
+        
+        m_errorFunction(derived().shared_ptr(), re);
+      }
+      
+      catch (std::logic_error &le)
+      {
+        std::stringstream txt;
+        txt << getRemote().address() << ": Logic Error: " << le.what();
+        LOG(error) << txt.str();
+        fail(boost::beast::http::status::not_found, txt.str());
+      }
+      
+      catch (...)
+      {
+        std::stringstream txt;
+        txt << getRemote().address() << ": Unknown Error thrown";
+        LOG(error) << txt.str();
+        fail(boost::beast::http::status::not_found, txt.str());
+      }
+      
       derived().stream().async_read(
           m_buffer, beast::bind_front_handler(&WebsocketSession::onRead, derived().shared_ptr()));
     }

@@ -160,39 +160,36 @@ namespace mtconnect::sink::rest_sink {
     {
       try
       {
+        Routing * routing = nullptr;
         if (request->m_command)
         {
           auto route = m_commands.find(*request->m_command);
           if (route != m_commands.end())
-          {
-            if (route->second->matches(session, request))
-              return true;
-          }
-          else
-          {
-            std::stringstream txt;
-            txt << session->getRemote().address()
-                << ": Cannot find handler for command: " << *request->m_command;
-            session->fail(boost::beast::http::status::not_found, txt.str());
-          }
+            routing = route->second;
         }
         else
         {
           for (auto &r : m_routings)
           {
             if (r.matches(session, request))
-              return true;
+            {
+              routing = &r;
+              break;
+            }
           }
-
-          std::stringstream txt;
-          txt << session->getRemote().address() << ": Cannot find handler for: " << request->m_verb
-              << " " << request->m_path;
-          auto error = Error::make(Error::ErrorCode::INVALID_URI, txt.str());
-          RestError re(error, request->m_accepts, status::not_found, std::nullopt,
-                       request->m_requestId);
-          re.setUri(request->getUri());
-          m_errorFunction(session, re);
         }
+        
+        if (routing)
+          return routing->run(session, request);
+        
+        std::stringstream txt;
+        txt << session->getRemote().address() << ": Cannot find handler for: " << request->m_verb
+            << " " << request->m_path;
+        auto error = Error::make(Error::ErrorCode::INVALID_URI, txt.str());
+        RestError re(error, request->m_accepts, status::not_found, std::nullopt,
+                     request->m_requestId);
+        re.setUri(request->getUri());
+        m_errorFunction(session, re);
       }
       catch (RestError &re)
       {
