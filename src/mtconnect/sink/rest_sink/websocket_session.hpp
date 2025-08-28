@@ -324,7 +324,7 @@ namespace mtconnect::sink::rest_sink {
       {
         stringstream err;
         err << "Websocket Read Error(offset (" << doc.GetErrorOffset()
-        << "): " << GetParseError_En(doc.GetParseError());
+        << ")): " << GetParseError_En(doc.GetParseError());
         LOG(warning) << err.str();
         LOG(warning) << "  " << buffer;
         auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, err.str());

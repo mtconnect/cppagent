@@ -258,7 +258,7 @@ namespace mtconnect::sink::rest_sink {
         {
           if (!validateValueType(p.m_type, it->second))
           {
-            std::string msg = std::string("path parameter '") + p.m_name + "': invalid type, expected " + p.getTypeName();
+            std::string msg = std::string("path parameter '") + p.m_name + "': invalid type, expected " + p.getTypeFormat();
             LOG(warning) << "Parameter error: " << msg;
             auto error = InvalidParameterValue::make(p.m_name, toString(it->second), p.getTypeName(),
                                                      p.getTypeFormat(), msg);
@@ -274,7 +274,7 @@ namespace mtconnect::sink::rest_sink {
         {
           if (!validateValueType(p.m_type, it->second))
           {
-            std::string msg = std::string("query parameter '") + p.m_name + "': invalid type, expected " + p.getTypeName();
+            std::string msg = std::string("query parameter '") + p.m_name + "': invalid type, expected " + p.getTypeFormat();
             LOG(warning) << "Parameter error: " << msg;
             auto error = InvalidParameterValue::make(p.m_name, toString(it->second), p.getTypeName(),
                           p.getTypeFormat(), msg);
