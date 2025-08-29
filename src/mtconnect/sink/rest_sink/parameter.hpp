@@ -120,20 +120,19 @@ namespace mtconnect::sink::rest_sink {
 
       return "unknown";
     }
-    
+
     /// @brief Helper to convert a ParameterValue to a string
     static std::string toString(const ParameterValue &v)
     {
       using namespace std::string_literals;
       return std::visit(overloaded {[](const std::monostate &) { return "none"s; },
-        [](const std::string &s) { return s; },
-        [](int32_t i) { return std::to_string(i); },
-        [](uint64_t i) { return std::to_string(i); },
-        [](double d) { return std::to_string(d); },
-        [](bool b) { return b ? "true"s : "false"s; }},
+                                    [](const std::string &s) { return s; },
+                                    [](int32_t i) { return std::to_string(i); },
+                                    [](uint64_t i) { return std::to_string(i); },
+                                    [](double d) { return std::to_string(d); },
+                                    [](bool b) { return b ? "true"s : "false"s; }},
                         v);
     }
-
 
     std::string m_name;
     ParameterType m_type {STRING};

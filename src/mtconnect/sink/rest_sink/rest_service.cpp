@@ -476,7 +476,7 @@ namespace mtconnect {
         auto deviceType = request->parameter<string>("deviceType");
         auto format = request->parameter<string>("format");
         auto printer = getPrinter(request->m_accepts, format);
-        
+
         if (device && !ends_with(request->m_path, string("probe")) &&
             m_sinkContract->findDeviceByUUIDorName(*device) == nullptr)
           return false;
@@ -531,7 +531,7 @@ namespace mtconnect {
         auto pretty = request->parameter<bool>("pretty").value_or(false);
         auto format = request->parameter<string>("format");
         auto printer = getPrinter(request->m_accepts, format);
-        
+
         request->m_request = "MTConnectAssets";
 
         respond(session,

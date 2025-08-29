@@ -157,7 +157,7 @@ namespace mtconnect::sink::rest_sink {
     const ParameterList &getPathParameters() const { return m_pathParameters; }
     /// @brief get the unordered set of query parameters
     const QuerySet &getQueryParameters() const { return m_queryParameters; }
-    
+
     /// @brief run the session's request if this routing matches
     ///
     /// Call the associated lambda when matched
@@ -202,7 +202,7 @@ namespace mtconnect::sink::rest_sink {
               s++;
             }
           }
-          
+
           entity::EntityList errors;
           for (auto &p : m_queryParameters)
           {
@@ -217,7 +217,7 @@ namespace mtconnect::sink::rest_sink {
               catch (ParameterError &e)
               {
                 std::string msg = std::string("query parameter '") + p.m_name + "': " + e.what();
-                
+
                 LOG(warning) << "Parameter error: " << msg;
                 auto error = InvalidParameterValue::make(p.m_name, q->second, p.getTypeName(),
                                                          p.getTypeFormat(), msg);
@@ -229,7 +229,7 @@ namespace mtconnect::sink::rest_sink {
               request->m_parameters.emplace(make_pair(p.m_name, p.m_default));
             }
           }
-          
+
           if (!errors.empty())
             throw RestError(errors, request->m_accepts);
 
@@ -241,7 +241,7 @@ namespace mtconnect::sink::rest_sink {
         }
       }
     }
-    
+
     /// @brief Validate the request parameters without matching the path
     /// @param[in] session the session making the request to pass to the Routing if matched
     /// @param[in,out] request the incoming request with a verb and a path
@@ -258,15 +258,16 @@ namespace mtconnect::sink::rest_sink {
         {
           if (!validateValueType(p.m_type, it->second))
           {
-            std::string msg = std::string("path parameter '") + p.m_name + "': invalid type, expected " + p.getTypeFormat();
+            std::string msg = std::string("path parameter '") + p.m_name +
+                              "': invalid type, expected " + p.getTypeFormat();
             LOG(warning) << "Parameter error: " << msg;
-            auto error = InvalidParameterValue::make(p.m_name, Parameter::toString(it->second), p.getTypeName(),
-                                                     p.getTypeFormat(), msg);
+            auto error = InvalidParameterValue::make(p.m_name, Parameter::toString(it->second),
+                                                     p.getTypeName(), p.getTypeFormat(), msg);
             errors.emplace_back(error);
           }
         }
       }
-      
+
       for (auto &p : m_queryParameters)
       {
         auto it = request->m_parameters.find(p.m_name);
@@ -274,10 +275,11 @@ namespace mtconnect::sink::rest_sink {
         {
           if (!validateValueType(p.m_type, it->second))
           {
-            std::string msg = std::string("query parameter '") + p.m_name + "': invalid type, expected " + p.getTypeFormat();
+            std::string msg = std::string("query parameter '") + p.m_name +
+                              "': invalid type, expected " + p.getTypeFormat();
             LOG(warning) << "Parameter error: " << msg;
-            auto error = InvalidParameterValue::make(p.m_name, Parameter::toString(it->second), p.getTypeName(),
-                          p.getTypeFormat(), msg);
+            auto error = InvalidParameterValue::make(p.m_name, Parameter::toString(it->second),
+                                                     p.getTypeName(), p.getTypeFormat(), msg);
             errors.emplace_back(error);
           }
         }
@@ -285,10 +287,10 @@ namespace mtconnect::sink::rest_sink {
 
       if (!errors.empty())
         throw RestError(errors, request->m_accepts);
-      
+
       return true;
     }
-    
+
     /// @brief check if this is related to a swagger API
     /// @returns `true` if related to swagger
     auto isSwagger() const { return m_swagger; }
@@ -437,14 +439,14 @@ namespace mtconnect::sink::rest_sink {
 
       return ParameterValue();
     }
-    
+
     bool validateValueType(ParameterType t, ParameterValue &value)
     {
       switch (t)
       {
         case STRING:
           return std::holds_alternative<std::string>(value);
-          
+
         case NONE:
           return std::holds_alternative<std::monostate>(value);
 
@@ -453,7 +455,7 @@ namespace mtconnect::sink::rest_sink {
             value = double(std::get<int32_t>(value));
           else if (std::holds_alternative<uint64_t>(value))
             value = double(std::get<uint64_t>(value));
-          
+
           return std::holds_alternative<double>(value);
 
         case INTEGER:
@@ -471,7 +473,7 @@ namespace mtconnect::sink::rest_sink {
               value = int32_t(v);
           }
           return std::holds_alternative<int32_t>(value);
-          
+
         case UNSIGNED_INTEGER:
           if (std::holds_alternative<int32_t>(value))
           {
@@ -486,7 +488,7 @@ namespace mtconnect::sink::rest_sink {
               value = uint64_t(v);
           }
           return std::holds_alternative<uint64_t>(value);
-          
+
         case BOOL:
           return std::holds_alternative<bool>(value);
       }

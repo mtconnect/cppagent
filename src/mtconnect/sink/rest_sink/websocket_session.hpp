@@ -309,7 +309,7 @@ namespace mtconnect::sink::rest_sink {
         }
       }
     }
-    
+
     RequestPtr parseRequest(const std::string &buffer)
     {
       using namespace rapidjson;
@@ -317,46 +317,47 @@ namespace mtconnect::sink::rest_sink {
 
       Document doc;
       doc.Parse(buffer.c_str());
-      
+
       RequestPtr request;
-      
+
       if (doc.HasParseError())
       {
         stringstream err;
         err << "Websocket Read Error(offset (" << doc.GetErrorOffset()
-        << ")): " << GetParseError_En(doc.GetParseError());
+            << ")): " << GetParseError_En(doc.GetParseError());
         LOG(warning) << err.str();
         LOG(warning) << "  " << buffer;
         auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, err.str());
-        throw RestError(error, m_request->m_accepts, rest_sink::status::bad_request,
-                        std::nullopt, "ERROR");
+        throw RestError(error, m_request->m_accepts, rest_sink::status::bad_request, std::nullopt,
+                        "ERROR");
       }
       if (!doc.IsObject())
       {
         LOG(warning) << "Websocket Read Error: JSON message does not have a top level object";
         LOG(warning) << "  " << buffer;
-        auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, "JSON message does not have a top level object");
-        throw RestError(error, m_request->m_accepts, rest_sink::status::bad_request,
-                        std::nullopt, "ERROR");
+        auto error = Error::make(Error::ErrorCode::INVALID_REQUEST,
+                                 "JSON message does not have a top level object");
+        throw RestError(error, m_request->m_accepts, rest_sink::status::bad_request, std::nullopt,
+                        "ERROR");
       }
       else
       {
         // Extract the parameters from the json doc to map them to the REST
         // protocol parameters
         request = make_unique<Request>(*m_request);
-        
+
         request->m_verb = beast::http::verb::get;
         request->m_parameters.clear();
 #ifdef GetObject
 #define __GOSave__ GetObject
 #undef GetObject
 #endif
-        
+
         const auto &object = doc.GetObject();
 #ifdef __GOSave__
 #define GetObject __GOSave__
 #endif
-        
+
         for (auto &it : object)
         {
           switch (it.value.GetType())
@@ -366,11 +367,11 @@ namespace mtconnect::sink::rest_sink {
               break;
             case rapidjson::kFalseType:
               request->m_parameters.emplace(
-                                            make_pair(string(it.name.GetString()), ParameterValue(false)));
+                  make_pair(string(it.name.GetString()), ParameterValue(false)));
               break;
             case rapidjson::kTrueType:
               request->m_parameters.emplace(
-                                            make_pair(string(it.name.GetString()), ParameterValue(true)));
+                  make_pair(string(it.name.GetString()), ParameterValue(true)));
               break;
             case rapidjson::kObjectType:
               break;
@@ -378,34 +379,34 @@ namespace mtconnect::sink::rest_sink {
               break;
             case rapidjson::kStringType:
               request->m_parameters.emplace(
-                                            make_pair(it.name.GetString(), ParameterValue(string(it.value.GetString()))));
-              
+                  make_pair(it.name.GetString(), ParameterValue(string(it.value.GetString()))));
+
               break;
             case rapidjson::kNumberType:
               if (it.value.IsInt())
                 request->m_parameters.emplace(
-                                              make_pair(it.name.GetString(), ParameterValue(it.value.GetInt())));
+                    make_pair(it.name.GetString(), ParameterValue(it.value.GetInt())));
               else if (it.value.IsUint())
                 request->m_parameters.emplace(
-                                              make_pair(it.name.GetString(), ParameterValue(uint64_t(it.value.GetUint()))));
+                    make_pair(it.name.GetString(), ParameterValue(uint64_t(it.value.GetUint()))));
               else if (it.value.IsInt64())
                 request->m_parameters.emplace(
-                                              make_pair(it.name.GetString(), ParameterValue(uint64_t(it.value.GetInt64()))));
+                    make_pair(it.name.GetString(), ParameterValue(uint64_t(it.value.GetInt64()))));
               else if (it.value.IsUint64())
                 request->m_parameters.emplace(
-                                              make_pair(it.name.GetString(), ParameterValue(it.value.GetUint64())));
+                    make_pair(it.name.GetString(), ParameterValue(it.value.GetUint64())));
               else if (it.value.IsDouble())
                 request->m_parameters.emplace(
-                                              make_pair(it.name.GetString(), ParameterValue(double(it.value.GetDouble()))));
-              
+                    make_pair(it.name.GetString(), ParameterValue(double(it.value.GetDouble()))));
+
               break;
           }
         }
       }
-      
+
       return request;
     }
-      
+
     bool dispatchRequest(RequestPtr &&request)
     {
       using namespace std;
@@ -414,17 +415,16 @@ namespace mtconnect::sink::rest_sink {
       {
         auto &v = request->m_parameters["id"];
         string id = visit(overloaded {[](monostate m) { return ""s; },
-          [](auto v) { return boost::lexical_cast<string>(v); }},
+                                      [](auto v) { return boost::lexical_cast<string>(v); }},
                           v);
         request->m_requestId = id;
         request->m_parameters.erase("id");
       }
       else
       {
-        auto error = InvalidParameterValue::make("id", "", "string", "string",
-                                                 "No id given");
-        throw RestError(error, request->m_accepts, rest_sink::status::bad_request,
-                        std::nullopt, "ERROR");
+        auto error = InvalidParameterValue::make("id", "", "string", "string", "No id given");
+        throw RestError(error, request->m_accepts, rest_sink::status::bad_request, std::nullopt,
+                        "ERROR");
       }
 
       auto &id = *(request->m_requestId);
@@ -434,10 +434,10 @@ namespace mtconnect::sink::rest_sink {
         LOG(error) << "Duplicate request id: " << id;
         auto error = InvalidParameterValue::make("id", *request->m_requestId, "string", "string",
                                                  "Duplicate id given");
-        throw RestError(error, request->m_accepts, rest_sink::status::bad_request,
-                        std::nullopt, "ERROR");
+        throw RestError(error, request->m_accepts, rest_sink::status::bad_request, std::nullopt,
+                        "ERROR");
       }
-      
+
       if (request->m_parameters.count("request") > 0)
       {
         request->m_command = get<string>(request->m_parameters["request"]);
@@ -445,27 +445,27 @@ namespace mtconnect::sink::rest_sink {
       }
       else
       {
-        auto error = InvalidParameterValue::make("request", "", "string", "string",
-                                                 "No request given");
-        throw RestError(error, request->m_accepts, rest_sink::status::bad_request,
-                        std::nullopt, id);
+        auto error =
+            InvalidParameterValue::make("request", "", "string", "string", "No request given");
+        throw RestError(error, request->m_accepts, rest_sink::status::bad_request, std::nullopt,
+                        id);
       }
-      
+
       // Check parameters for command
       LOG(debug) << "Received request id: " << id;
-      
+
       res.first->second.m_request = std::move(request);
       try
       {
         return m_dispatch(derived().shared_ptr(), res.first->second.m_request);
       }
-      
+
       catch (RestError &re)
       {
         re.setRequestId(id);
         throw re;
       }
-      
+
       return false;
     }
 
@@ -489,7 +489,7 @@ namespace mtconnect::sink::rest_sink {
       m_buffer.consume(m_buffer.size());
 
       LOG(debug) << "Received :" << buffer;
-            
+
       try
       {
         auto request = parseRequest(buffer);
@@ -500,7 +500,7 @@ namespace mtconnect::sink::rest_sink {
           LOG(error) << txt.str();
         }
       }
-      
+
       catch (RestError &re)
       {
         auto id = re.getRequestId();
@@ -509,14 +509,14 @@ namespace mtconnect::sink::rest_sink {
           id = "ERROR";
           re.setRequestId(*id);
         }
-        
+
         auto res = m_requests.find(*id);
         if (res == m_requests.end())
           m_requests.emplace(*id, *id);
-        
+
         m_errorFunction(derived().shared_ptr(), re);
       }
-      
+
       catch (std::logic_error &le)
       {
         std::stringstream txt;
@@ -524,7 +524,7 @@ namespace mtconnect::sink::rest_sink {
         LOG(error) << txt.str();
         fail(boost::beast::http::status::not_found, txt.str());
       }
-      
+
       catch (...)
       {
         std::stringstream txt;
@@ -532,7 +532,7 @@ namespace mtconnect::sink::rest_sink {
         LOG(error) << txt.str();
         fail(boost::beast::http::status::not_found, txt.str());
       }
-      
+
       derived().stream().async_read(
           m_buffer, beast::bind_front_handler(&WebsocketSession::onRead, derived().shared_ptr()));
     }

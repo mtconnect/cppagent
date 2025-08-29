@@ -25,7 +25,6 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/beast/websocket.hpp>
-#include "test_utilities.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -36,6 +35,7 @@
 
 #include "mtconnect/logging.hpp"
 #include "mtconnect/sink/rest_sink/server.hpp"
+#include "test_utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -167,10 +167,7 @@ public:
 class WebsocketsTest : public testing::Test
 {
 protected:
-  void SetUp() override
-  {
-    createServer({});
-  }
+  void SetUp() override { createServer({}); }
 
   void createServer(const ConfigOptions& options)
   {
@@ -178,14 +175,13 @@ protected:
     ConfigOptions opts {{Port, 0}, {ServerIp, "127.0.0.1"s}};
     opts.merge(ConfigOptions(options));
     m_server = make_unique<Server>(m_context, opts);
-    m_server->setErrorFunction([](SessionPtr session, const RestError &error)
-       {
-         ResponsePtr resp = std::make_unique<Response>(error.getStatus(), error.what(), "plain/text");
-         if (error.getRequestId())
-           resp->m_requestId = error.getRequestId();
-         
-         session->writeFailureResponse(std::move(resp));
-       });          
+    m_server->setErrorFunction([](SessionPtr session, const RestError& error) {
+      ResponsePtr resp = std::make_unique<Response>(error.getStatus(), error.what(), "plain/text");
+      if (error.getRequestId())
+        resp->m_requestId = error.getRequestId();
+
+      session->writeFailureResponse(std::move(resp));
+    });
   }
 
   void start()
@@ -256,7 +252,7 @@ TEST_F(WebsocketsTest, should_make_simple_request)
 TEST_F(WebsocketsTest, should_return_error_when_there_is_no_id)
 {
   weak_ptr<Session> savedSession;
-  
+
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
     ResponsePtr resp = make_unique<Response>(status::ok);
@@ -265,18 +261,18 @@ TEST_F(WebsocketsTest, should_return_error_when_there_is_no_id)
     session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
     return true;
   };
-  
+
   m_server->addRouting({boost::beast::http::verb::get, "/probe", probe}).command("probe");
   m_server->addCommands();
-  
+
   start();
   startClient();
-  
-  asio::spawn(m_context, std::bind(&Client::request, m_client.get(),
-                                   "{\"request\":\"probe\"}"s, std::placeholders::_1));
-  
+
+  asio::spawn(m_context, std::bind(&Client::request, m_client.get(), "{\"request\":\"probe\"}"s,
+                                   std::placeholders::_1));
+
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
-  
+
   ASSERT_TRUE(m_client->m_done);
   ASSERT_EQ("InvalidParameterValue: No id given", m_client->m_result);
 }
@@ -284,7 +280,7 @@ TEST_F(WebsocketsTest, should_return_error_when_there_is_no_id)
 TEST_F(WebsocketsTest, should_return_error_when_there_is_no_request)
 {
   weak_ptr<Session> savedSession;
-  
+
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
     ResponsePtr resp = make_unique<Response>(status::ok);
@@ -293,27 +289,26 @@ TEST_F(WebsocketsTest, should_return_error_when_there_is_no_request)
     session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
     return true;
   };
-  
+
   m_server->addRouting({boost::beast::http::verb::get, "/probe", probe}).command("probe");
   m_server->addCommands();
-  
+
   start();
   startClient();
-  
-  asio::spawn(m_context, std::bind(&Client::request, m_client.get(),
-                                   "{\"id\": 3}"s, std::placeholders::_1));
-  
+
+  asio::spawn(m_context,
+              std::bind(&Client::request, m_client.get(), "{\"id\": 3}"s, std::placeholders::_1));
+
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
-  
+
   ASSERT_TRUE(m_client->m_done);
   ASSERT_EQ("InvalidParameterValue: No request given", m_client->m_result);
 }
 
-
 TEST_F(WebsocketsTest, should_return_error_when_a_parameter_is_invalid)
 {
   weak_ptr<Session> savedSession;
-  
+
   auto sample = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
     ResponsePtr resp = make_unique<Response>(status::ok);
@@ -322,26 +317,30 @@ TEST_F(WebsocketsTest, should_return_error_when_a_parameter_is_invalid)
     session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
     return true;
   };
-  
-  m_server->addRouting({boost::beast::http::verb::get, "/sample?interval={integer}", sample}).command("sample");
+
+  m_server->addRouting({boost::beast::http::verb::get, "/sample?interval={integer}", sample})
+      .command("sample");
   m_server->addCommands();
-  
+
   start();
   startClient();
-  
-  asio::spawn(m_context, std::bind(&Client::request, m_client.get(),
-                                   "{\"id\": 3, \"request\": \"sample\", \"interval\": 99999999999}"s, std::placeholders::_1));
-  
+
+  asio::spawn(m_context,
+              std::bind(&Client::request, m_client.get(),
+                        "{\"id\": 3, \"request\": \"sample\", \"interval\": 99999999999}"s,
+                        std::placeholders::_1));
+
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
-  
+
   ASSERT_TRUE(m_client->m_done);
-  ASSERT_EQ("InvalidParameterValue: query parameter 'interval': invalid type, expected int32", m_client->m_result);
+  ASSERT_EQ("InvalidParameterValue: query parameter 'interval': invalid type, expected int32",
+            m_client->m_result);
 }
 
 TEST_F(WebsocketsTest, should_return_error_when_bad_json_is_sent)
 {
   weak_ptr<Session> savedSession;
-  
+
   auto sample = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
     ResponsePtr resp = make_unique<Response>(status::ok);
@@ -350,18 +349,19 @@ TEST_F(WebsocketsTest, should_return_error_when_bad_json_is_sent)
     session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
     return true;
   };
-  
-  m_server->addRouting({boost::beast::http::verb::get, "/sample?interval={integer}", sample}).command("sample");
+
+  m_server->addRouting({boost::beast::http::verb::get, "/sample?interval={integer}", sample})
+      .command("sample");
   m_server->addCommands();
-  
+
   start();
   startClient();
-  
-  asio::spawn(m_context, std::bind(&Client::request, m_client.get(),
-                                   "!}}"s, std::placeholders::_1));
-  
+
+  asio::spawn(m_context,
+              std::bind(&Client::request, m_client.get(), "!}}"s, std::placeholders::_1));
+
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
-  
+
   ASSERT_TRUE(m_client->m_done);
   ASSERT_EQ("InvalidRequest: Websocket Read Error(offset (0)): Invalid value.", m_client->m_result);
 }
@@ -369,7 +369,7 @@ TEST_F(WebsocketsTest, should_return_error_when_bad_json_is_sent)
 TEST_F(WebsocketsTest, should_return_multiple_errors_when_parameters_are_invalid)
 {
   weak_ptr<Session> savedSession;
-  
+
   auto sample = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
     ResponsePtr resp = make_unique<Response>(status::ok);
@@ -378,27 +378,35 @@ TEST_F(WebsocketsTest, should_return_multiple_errors_when_parameters_are_invalid
     session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
     return true;
   };
-  
-  m_server->addRouting({boost::beast::http::verb::get, "/sample?interval={integer}&to={unsigned_integer}", sample}).command("sample");
+
+  m_server
+      ->addRouting({boost::beast::http::verb::get,
+                    "/sample?interval={integer}&to={unsigned_integer}", sample})
+      .command("sample");
   m_server->addCommands();
-  
+
   start();
   startClient();
-  
-  asio::spawn(m_context, std::bind(&Client::request, m_client.get(),
-                                   R"DOC({"id": 3, "request": "sample", "interval": 99999999999,"to": -1 })DOC", std::placeholders::_1));
-  
+
+  asio::spawn(
+      m_context,
+      std::bind(&Client::request, m_client.get(),
+                R"DOC({"id": 3, "request": "sample", "interval": 99999999999,"to": -1 })DOC",
+                std::placeholders::_1));
+
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
-  
+
   ASSERT_TRUE(m_client->m_done);
-  ASSERT_EQ("InvalidParameterValue: query parameter 'interval': invalid type, expected int32, "
-            "InvalidParameterValue: query parameter 'to': invalid type, expected uint64", m_client->m_result);
+  ASSERT_EQ(
+      "InvalidParameterValue: query parameter 'interval': invalid type, expected int32, "
+      "InvalidParameterValue: query parameter 'to': invalid type, expected uint64",
+      m_client->m_result);
 }
 
 TEST_F(WebsocketsTest, should_return_error_for_an_invalid_command)
 {
   weak_ptr<Session> savedSession;
-  
+
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
     ResponsePtr resp = make_unique<Response>(status::ok);
@@ -407,18 +415,19 @@ TEST_F(WebsocketsTest, should_return_error_for_an_invalid_command)
     session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
     return true;
   };
-  
+
   m_server->addRouting({boost::beast::http::verb::get, "/probe", probe}).command("probe");
   m_server->addCommands();
-  
+
   start();
   startClient();
-  
-  asio::spawn(m_context, std::bind(&Client::request, m_client.get(),
-                                   "{\"id\":\"1\",\"request\":\"sample\"}"s, std::placeholders::_1));
-  
+
+  asio::spawn(m_context,
+              std::bind(&Client::request, m_client.get(), "{\"id\":\"1\",\"request\":\"sample\"}"s,
+                        std::placeholders::_1));
+
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
-  
+
   ASSERT_TRUE(m_client->m_done);
   ASSERT_EQ("InvalidURI: 0.0.0.0: Command failed: sample", m_client->m_result);
 }

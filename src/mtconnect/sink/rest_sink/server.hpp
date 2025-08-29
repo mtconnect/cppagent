@@ -181,12 +181,11 @@ namespace mtconnect::sink::rest_sink {
           if (!success)
           {
             std::stringstream txt;
-            txt << "Cannot find handler for: " << request->m_verb
-            << " " << request->m_path;
+            txt << "Cannot find handler for: " << request->m_verb << " " << request->m_path;
             message = txt.str();
           }
         }
-        
+
         if (!success)
         {
           std::stringstream txt;
@@ -202,8 +201,7 @@ namespace mtconnect::sink::rest_sink {
       {
         auto uri = request->getUri();
         re.setUri(uri);
-        LOG(error) << session->getRemote().address()
-          << ": Error processing request: " << uri;
+        LOG(error) << session->getRemote().address() << ": Error processing request: " << uri;
 
         if (request->m_request)
           re.setRequest(*request->m_request);
