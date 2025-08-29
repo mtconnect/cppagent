@@ -160,33 +160,36 @@ namespace mtconnect::sink::rest_sink {
     {
       try
       {
+        auto success = false;
+        std::string message;
         if (request->m_command)
         {
           auto route = m_commands.find(*request->m_command);
           if (route != m_commands.end())
-          {
-            if (route->second->matches(session, request))
-              return true;
-          }
+            success = route->second->run(session, request);
           else
-          {
-            std::stringstream txt;
-            txt << session->getRemote().address()
-                << ": Cannot find handler for command: " << *request->m_command;
-            session->fail(boost::beast::http::status::not_found, txt.str());
-          }
+            message = "Command failed: " + *request->m_command;
         }
         else
         {
           for (auto &r : m_routings)
           {
-            if (r.matches(session, request))
-              return true;
+            success = r.matches(session, request) && r.run(session, request);
+            if (success)
+              break;
           }
+          if (!success)
+          {
+            std::stringstream txt;
+            txt << "Cannot find handler for: " << request->m_verb << " " << request->m_path;
+            message = txt.str();
+          }
+        }
 
+        if (!success)
+        {
           std::stringstream txt;
-          txt << session->getRemote().address() << ": Cannot find handler for: " << request->m_verb
-              << " " << request->m_path;
+          txt << session->getRemote().address() << ": " << message;
           auto error = Error::make(Error::ErrorCode::INVALID_URI, txt.str());
           RestError re(error, request->m_accepts, status::not_found, std::nullopt,
                        request->m_requestId);
@@ -196,11 +199,14 @@ namespace mtconnect::sink::rest_sink {
       }
       catch (RestError &re)
       {
-        LOG(error) << session->getRemote().address()
-                   << ": Error processing request: " << request->m_path;
-        re.setUri(request->getUri());
+        auto uri = request->getUri();
+        re.setUri(uri);
+        LOG(error) << session->getRemote().address() << ": Error processing request: " << uri;
+
+        if (request->m_request)
+          re.setRequest(*request->m_request);
         if (request->m_requestId)
-          re.setRequest(*request->m_requestId);
+          re.setRequestId(*request->m_requestId);
         m_errorFunction(session, re);
       }
       catch (std::logic_error &le)

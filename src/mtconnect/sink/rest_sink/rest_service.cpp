@@ -113,10 +113,10 @@ namespace mtconnect {
             "Time in ms between publishing a empty document when no data has changed"},
            {"id", PATH, "webservice request id"}});
 
-      createProbeRoutings();
       createCurrentRoutings();
       createSampleRoutings();
       createAssetRoutings();
+      createProbeRoutings();
       createPutObservationRoutings();
       createFileRoutings();
       m_server->addCommands();
@@ -469,6 +469,8 @@ namespace mtconnect {
       using namespace rest_sink;
       // Probe
       auto handler = [&](SessionPtr session, const RequestPtr request) -> bool {
+        request->m_request = "MTConnectDevices";
+
         auto device = request->parameter<string>("device");
         auto pretty = *request->parameter<bool>("pretty");
         auto deviceType = request->parameter<string>("deviceType");
@@ -530,6 +532,8 @@ namespace mtconnect {
         auto format = request->parameter<string>("format");
         auto printer = getPrinter(request->m_accepts, format);
 
+        request->m_request = "MTConnectAssets";
+
         respond(session,
                 assetRequest(printer, count, removed, request->parameter<string>("type"),
                              request->parameter<string>("device"), pretty, request->m_requestId),
@@ -539,6 +543,7 @@ namespace mtconnect {
 
       auto idHandler = [&](SessionPtr session, RequestPtr request) -> bool {
         auto asset = request->parameter<string>("assetIds");
+        request->m_request = "MTConnectAssets";
 
         if (asset)
         {
@@ -679,6 +684,8 @@ namespace mtconnect {
     {
       using namespace rest_sink;
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
+        request->m_request = "MTConnectStreams";
+
         auto interval = request->parameter<int32_t>("interval");
         if (interval)
         {
@@ -725,6 +732,8 @@ namespace mtconnect {
     {
       using namespace rest_sink;
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
+        request->m_request = "MTConnectStreams";
+
         auto interval = request->parameter<int32_t>("interval");
         if (interval)
         {
@@ -1101,6 +1110,8 @@ namespace mtconnect {
                    << ": Error processing request: " << re.what();
         if (asyncResponse->m_session)
         {
+          if (asyncResponse->getRequestId())
+            re.setRequestId(*asyncResponse->getRequestId());
           writeErrorResponse(asyncResponse->m_session, re);
           asyncResponse->m_session->close();
         }
@@ -1232,6 +1243,8 @@ namespace mtconnect {
                    << ": Error processing request: " << re.what();
         if (asyncResponse->m_session)
         {
+          if (asyncResponse->getRequestId())
+            re.setRequestId(*asyncResponse->getRequestId());
           writeErrorResponse(asyncResponse->m_session, re);
           asyncResponse->m_session->close();
         }

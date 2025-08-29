@@ -279,16 +279,16 @@ TEST_F(RoutingTest, should_throw_a_rest_error_with_multiple_invalid_parameters)
   }
 }
 
-TEST_F(RoutingTest, RegexPatterns)
+TEST_F(RoutingTest, should_correctly_match_regex_patterns)
 {
   Routing r(verb::get, regex("/.+"), m_func);
   RequestPtr request = make_shared<Request>();
   request->m_verb = verb::get;
   request->m_path = "/some random stuff";
-  ASSERT_TRUE(r.matches(0, request));
+  ASSERT_TRUE(r.run(0, request));
 
   Routing no(verb::get, regex("/.+"), [](SessionPtr, const RequestPtr) { return false; });
-  ASSERT_FALSE(no.matches(0, request));
+  ASSERT_FALSE(no.run(0, request));
 }
 
 TEST_F(RoutingTest, simple_put_with_trailing_slash)

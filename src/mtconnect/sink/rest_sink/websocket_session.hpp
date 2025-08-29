@@ -310,49 +310,41 @@ namespace mtconnect::sink::rest_sink {
       }
     }
 
-    void onRead(beast::error_code ec, std::size_t len)
+    RequestPtr parseRequest(const std::string &buffer)
     {
-      NAMED_SCOPE("PlainWebsocketSession::onRead");
-
-      if (ec)
-        return fail(boost::beast::http::status::internal_server_error, "shutdown", ec);
-
       using namespace rapidjson;
       using namespace std;
 
-      if (len == 0)
-      {
-        LOG(debug) << "Empty message received";
-        return;
-      }
-
-      // Parse the buffer as a JSON request with parameters matching
-      // REST API
-      derived().stream().text(derived().stream().got_text());
-      auto buffer = beast::buffers_to_string(m_buffer.data());
-      m_buffer.consume(m_buffer.size());
-
-      LOG(debug) << "Received :" << buffer.c_str();
-
       Document doc;
-      doc.Parse(buffer.c_str(), len);
+      doc.Parse(buffer.c_str());
+
+      RequestPtr request;
 
       if (doc.HasParseError())
       {
-        LOG(warning) << "Websocket Read Error(offset (" << doc.GetErrorOffset()
-                     << "): " << GetParseError_En(doc.GetParseError());
+        stringstream err;
+        err << "Websocket Read Error(offset (" << doc.GetErrorOffset()
+            << ")): " << GetParseError_En(doc.GetParseError());
+        LOG(warning) << err.str();
         LOG(warning) << "  " << buffer;
+        auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, err.str());
+        throw RestError(error, m_request->m_accepts, rest_sink::status::bad_request, std::nullopt,
+                        "ERROR");
       }
       if (!doc.IsObject())
       {
         LOG(warning) << "Websocket Read Error: JSON message does not have a top level object";
         LOG(warning) << "  " << buffer;
+        auto error = Error::make(Error::ErrorCode::INVALID_REQUEST,
+                                 "JSON message does not have a top level object");
+        throw RestError(error, m_request->m_accepts, rest_sink::status::bad_request, std::nullopt,
+                        "ERROR");
       }
       else
       {
         // Extract the parameters from the json doc to map them to the REST
         // protocol parameters
-        auto request = make_unique<Request>(*m_request);
+        request = make_unique<Request>(*m_request);
 
         request->m_verb = beast::http::verb::get;
         request->m_parameters.clear();
@@ -410,44 +402,135 @@ namespace mtconnect::sink::rest_sink {
               break;
           }
         }
+      }
 
-        if (request->m_parameters.count("request") > 0)
+      return request;
+    }
+
+    bool dispatchRequest(RequestPtr &&request)
+    {
+      using namespace std;
+
+      if (request->m_parameters.count("id") > 0)
+      {
+        auto &v = request->m_parameters["id"];
+        string id = visit(overloaded {[](monostate m) { return ""s; },
+                                      [](auto v) { return boost::lexical_cast<string>(v); }},
+                          v);
+        request->m_requestId = id;
+        request->m_parameters.erase("id");
+      }
+      else
+      {
+        auto error = InvalidParameterValue::make("id", "", "string", "string", "No id given");
+        throw RestError(error, request->m_accepts, rest_sink::status::bad_request, std::nullopt,
+                        "ERROR");
+      }
+
+      auto &id = *(request->m_requestId);
+      auto res = m_requests.emplace(id, id);
+      if (!res.second)
+      {
+        LOG(error) << "Duplicate request id: " << id;
+        auto error = InvalidParameterValue::make("id", *request->m_requestId, "string", "string",
+                                                 "Duplicate id given");
+        throw RestError(error, request->m_accepts, rest_sink::status::bad_request, std::nullopt,
+                        "ERROR");
+      }
+
+      if (request->m_parameters.count("request") > 0)
+      {
+        request->m_command = get<string>(request->m_parameters["request"]);
+        request->m_parameters.erase("request");
+      }
+      else
+      {
+        auto error =
+            InvalidParameterValue::make("request", "", "string", "string", "No request given");
+        throw RestError(error, request->m_accepts, rest_sink::status::bad_request, std::nullopt,
+                        id);
+      }
+
+      // Check parameters for command
+      LOG(debug) << "Received request id: " << id;
+
+      res.first->second.m_request = std::move(request);
+      try
+      {
+        return m_dispatch(derived().shared_ptr(), res.first->second.m_request);
+      }
+
+      catch (RestError &re)
+      {
+        re.setRequestId(id);
+        throw re;
+      }
+
+      return false;
+    }
+
+    void onRead(beast::error_code ec, std::size_t len)
+    {
+      NAMED_SCOPE("PlainWebsocketSession::onRead");
+
+      if (ec)
+        return fail(boost::beast::http::status::internal_server_error, "shutdown", ec);
+
+      if (len == 0)
+      {
+        LOG(debug) << "Empty message received";
+        return;
+      }
+
+      // Parse the buffer as a JSON request with parameters matching
+      // REST API
+      derived().stream().text(derived().stream().got_text());
+      auto buffer = beast::buffers_to_string(m_buffer.data());
+      m_buffer.consume(m_buffer.size());
+
+      LOG(debug) << "Received :" << buffer;
+
+      try
+      {
+        auto request = parseRequest(buffer);
+        if (!request || !dispatchRequest(std::move(request)))
         {
-          request->m_command = get<string>(request->m_parameters["request"]);
-          request->m_parameters.erase("request");
+          std::stringstream txt;
+          txt << getRemote().address() << ": Dispatch failed for: " << buffer;
+          LOG(error) << txt.str();
         }
-        if (request->m_parameters.count("id") > 0)
+      }
+
+      catch (RestError &re)
+      {
+        auto id = re.getRequestId();
+        if (!id)
         {
-          auto &v = request->m_parameters["id"];
-          string id = visit(overloaded {[](monostate m) { return ""s; },
-                                        [](auto v) { return boost::lexical_cast<string>(v); }},
-                            v);
-          request->m_requestId = id;
-          request->m_parameters.erase("id");
+          id = "ERROR";
+          re.setRequestId(*id);
         }
 
-        auto &id = *(request->m_requestId);
-        auto res = m_requests.emplace(id, id);
-        if (!res.second)
-        {
-          LOG(error) << "Duplicate request id: " << id;
-          boost::system::error_code ec;
-          fail(status::bad_request, "Duplicate request Id", ec);
-        }
-        else
-        {
-          LOG(debug) << "Received request id: " << id;
+        auto res = m_requests.find(*id);
+        if (res == m_requests.end())
+          m_requests.emplace(*id, *id);
 
-          res.first->second.m_request = std::move(request);
-          if (!m_dispatch(derived().shared_ptr(), res.first->second.m_request))
-          {
-            ostringstream txt;
-            txt << "Failed to find handler for " << buffer;
-            LOG(error) << txt.str();
-            boost::system::error_code ec;
-            fail(status::bad_request, "Duplicate request Id", ec);
-          }
-        }
+        m_errorFunction(derived().shared_ptr(), re);
+      }
+
+      catch (std::logic_error &le)
+      {
+        std::stringstream txt;
+        txt << getRemote().address() << ": Logic Error: " << le.what();
+        LOG(error) << txt.str();
+        fail(boost::beast::http::status::not_found, txt.str());
+      }
+
+      catch (...)
+      {
+        std::stringstream txt;
+        txt << getRemote().address() << ": Unknown Error thrown";
+        LOG(error) << txt.str();
+        fail(boost::beast::http::status::not_found, txt.str());
       }
 
       derived().stream().async_read(
