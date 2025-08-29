@@ -314,7 +314,7 @@ TEST_F(WebsocketsTest, should_return_error_when_a_parameter_is_invalid)
 {
   weak_ptr<Session> savedSession;
   
-  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
+  auto sample = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
     ResponsePtr resp = make_unique<Response>(status::ok);
     resp->m_body = "All Devices for "s + *request->m_requestId;
@@ -323,7 +323,7 @@ TEST_F(WebsocketsTest, should_return_error_when_a_parameter_is_invalid)
     return true;
   };
   
-  m_server->addRouting({boost::beast::http::verb::get, "/sample?interval={integer}", probe}).command("sample");
+  m_server->addRouting({boost::beast::http::verb::get, "/sample?interval={integer}", sample}).command("sample");
   m_server->addCommands();
   
   start();
@@ -342,7 +342,7 @@ TEST_F(WebsocketsTest, should_return_error_when_bad_json_is_sent)
 {
   weak_ptr<Session> savedSession;
   
-  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
+  auto sample = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
     ResponsePtr resp = make_unique<Response>(status::ok);
     resp->m_body = "All Devices for "s + *request->m_requestId;
@@ -351,7 +351,7 @@ TEST_F(WebsocketsTest, should_return_error_when_bad_json_is_sent)
     return true;
   };
   
-  m_server->addRouting({boost::beast::http::verb::get, "/sample?interval={integer}", probe}).command("sample");
+  m_server->addRouting({boost::beast::http::verb::get, "/sample?interval={integer}", sample}).command("sample");
   m_server->addCommands();
   
   start();
@@ -370,7 +370,7 @@ TEST_F(WebsocketsTest, should_return_multiple_errors_when_parameters_are_invalid
 {
   weak_ptr<Session> savedSession;
   
-  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
+  auto sample = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
     ResponsePtr resp = make_unique<Response>(status::ok);
     resp->m_body = "All Devices for "s + *request->m_requestId;
@@ -379,7 +379,7 @@ TEST_F(WebsocketsTest, should_return_multiple_errors_when_parameters_are_invalid
     return true;
   };
   
-  m_server->addRouting({boost::beast::http::verb::get, "/sample?interval={integer}&to={unsigned_integer}", probe}).command("sample");
+  m_server->addRouting({boost::beast::http::verb::get, "/sample?interval={integer}&to={unsigned_integer}", sample}).command("sample");
   m_server->addCommands();
   
   start();
@@ -395,3 +395,30 @@ TEST_F(WebsocketsTest, should_return_multiple_errors_when_parameters_are_invalid
             "InvalidParameterValue: query parameter 'to': invalid type, expected uint64", m_client->m_result);
 }
 
+TEST_F(WebsocketsTest, should_return_error_for_an_invalid_command)
+{
+  weak_ptr<Session> savedSession;
+  
+  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
+    savedSession = session;
+    ResponsePtr resp = make_unique<Response>(status::ok);
+    resp->m_body = "All Devices for "s + *request->m_requestId;
+    resp->m_requestId = request->m_requestId;
+    session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
+    return true;
+  };
+  
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", probe}).command("probe");
+  m_server->addCommands();
+  
+  start();
+  startClient();
+  
+  asio::spawn(m_context, std::bind(&Client::request, m_client.get(),
+                                   "{\"id\":\"1\",\"request\":\"sample\"}"s, std::placeholders::_1));
+  
+  m_client->waitFor(2s, [this]() { return m_client->m_done; });
+  
+  ASSERT_TRUE(m_client->m_done);
+  ASSERT_EQ("InvalidURI: 0.0.0.0: Command failed: sample", m_client->m_result);
+}

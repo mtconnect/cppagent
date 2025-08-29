@@ -77,7 +77,18 @@ namespace mtconnect::sink::rest_sink {
     std::string getUri() const
     {
       std::string s;
-      if (!m_query.empty())
+      if (m_command)
+      {
+        std::stringstream uri;
+        uri << m_path << '/' << *m_command << '?';
+        for (auto &p : m_parameters)
+        {
+          uri << p.first << '=' << Parameter::toString(p.second) << '&';
+        }
+        s = uri.str();
+        s.erase(s.length() - 1);
+      }
+      else if (!m_query.empty())
       {
         std::stringstream uri;
         uri << m_path << '?';

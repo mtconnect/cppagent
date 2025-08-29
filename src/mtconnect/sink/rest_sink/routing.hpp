@@ -167,7 +167,7 @@ namespace mtconnect::sink::rest_sink {
     /// @return `true` if the request was matched
     bool run(SessionPtr session, RequestPtr request)
     {
-      if (matches(session, request) && validateRequest(session, request))
+      if (validateRequest(session, request))
         return m_function(session, request);
       else
         return false;
@@ -260,7 +260,7 @@ namespace mtconnect::sink::rest_sink {
           {
             std::string msg = std::string("path parameter '") + p.m_name + "': invalid type, expected " + p.getTypeFormat();
             LOG(warning) << "Parameter error: " << msg;
-            auto error = InvalidParameterValue::make(p.m_name, toString(it->second), p.getTypeName(),
+            auto error = InvalidParameterValue::make(p.m_name, Parameter::toString(it->second), p.getTypeName(),
                                                      p.getTypeFormat(), msg);
             errors.emplace_back(error);
           }
@@ -276,7 +276,7 @@ namespace mtconnect::sink::rest_sink {
           {
             std::string msg = std::string("query parameter '") + p.m_name + "': invalid type, expected " + p.getTypeFormat();
             LOG(warning) << "Parameter error: " << msg;
-            auto error = InvalidParameterValue::make(p.m_name, toString(it->second), p.getTypeName(),
+            auto error = InvalidParameterValue::make(p.m_name, Parameter::toString(it->second), p.getTypeName(),
                           p.getTypeFormat(), msg);
             errors.emplace_back(error);
           }
@@ -491,19 +491,6 @@ namespace mtconnect::sink::rest_sink {
           return std::holds_alternative<bool>(value);
       }
       return false;
-    }
-
-    /// @brief Helper to convert a ParameterValue to a string
-    std::string toString(const ParameterValue &v)
-    {
-      using namespace std::string_literals;
-      return std::visit(overloaded {[](const std::monostate &) { return "none"s; },
-        [](const std::string &s) { return s; },
-        [](int32_t i) { return std::to_string(i); },
-        [](uint64_t i) { return std::to_string(i); },
-        [](double d) { return std::to_string(d); },
-        [](bool b) { return b ? "true"s : "false"s; }},
-                        v);
     }
 
   protected:

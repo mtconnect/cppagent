@@ -160,44 +160,53 @@ namespace mtconnect::sink::rest_sink {
     {
       try
       {
-        Routing * routing = nullptr;
+        auto success = false;
+        std::string message;
         if (request->m_command)
         {
           auto route = m_commands.find(*request->m_command);
           if (route != m_commands.end())
-            routing = route->second;
+            success = route->second->run(session, request);
+          else
+            message = "Command failed: " + *request->m_command;
         }
         else
         {
           for (auto &r : m_routings)
           {
-            if (r.matches(session, request))
-            {
-              routing = &r;
+            success = r.matches(session, request) && r.run(session, request);
+            if (success)
               break;
-            }
+          }
+          if (!success)
+          {
+            std::stringstream txt;
+            txt << "Cannot find handler for: " << request->m_verb
+            << " " << request->m_path;
+            message = txt.str();
           }
         }
         
-        if (routing)
-          return routing->run(session, request);
-        
-        std::stringstream txt;
-        txt << session->getRemote().address() << ": Cannot find handler for: " << request->m_verb
-            << " " << request->m_path;
-        auto error = Error::make(Error::ErrorCode::INVALID_URI, txt.str());
-        RestError re(error, request->m_accepts, status::not_found, std::nullopt,
-                     request->m_requestId);
-        re.setUri(request->getUri());
-        m_errorFunction(session, re);
+        if (!success)
+        {
+          std::stringstream txt;
+          txt << session->getRemote().address() << ": " << message;
+          auto error = Error::make(Error::ErrorCode::INVALID_URI, txt.str());
+          RestError re(error, request->m_accepts, status::not_found, std::nullopt,
+                       request->m_requestId);
+          re.setUri(request->getUri());
+          m_errorFunction(session, re);
+        }
       }
       catch (RestError &re)
       {
+        auto uri = request->getUri();
+        re.setUri(uri);
         LOG(error) << session->getRemote().address()
-                   << ": Error processing request: " << request->m_path;
+          << ": Error processing request: " << uri;
+
         if (request->m_request)
           re.setRequest(*request->m_request);
-        re.setUri(request->getUri());
         if (request->m_requestId)
           re.setRequestId(*request->m_requestId);
         m_errorFunction(session, re);
