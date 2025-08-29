@@ -158,9 +158,9 @@ namespace mtconnect::sink::rest_sink {
     /// @return `true` if the request was matched and dispatched
     bool dispatch(SessionPtr session, RequestPtr request)
     {
+      auto success = false;
       try
       {
-        auto success = false;
         std::string message;
         if (request->m_command)
         {
@@ -224,7 +224,7 @@ namespace mtconnect::sink::rest_sink {
         session->fail(boost::beast::http::status::not_found, txt.str());
       }
 
-      return false;
+      return success;
     }
 
     /// @brief accept a connection from a client
