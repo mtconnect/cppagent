@@ -64,7 +64,7 @@ namespace mtconnect {
           const uint64_t anInstanceId, const unsigned int bufferSize, const unsigned int assetCount,
           const asset::AssetList &asset, bool pretty = false,
           const std::optional<std::string> requestId = std::nullopt) const override;
-      std::string mimeType() const override { return "application/mtconnect+xml"; }
+      std::string mimeType() const override { return "application/xml"; }
 
       /// @brief Print a single device in XML
       /// @param device A device poiinter
