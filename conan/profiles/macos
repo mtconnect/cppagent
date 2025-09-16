@@ -6,3 +6,7 @@ compiler.cppstd=gnu17
 
 [system_tools]
 cmake/>3.26.0
+
+[conf]
+oniguruma/*:tools.cmake.cmaketoolchain:extra_variables={"CMAKE_POLICY_VERSION_MINIMUM": "3.5"}
+

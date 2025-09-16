@@ -113,7 +113,8 @@ class MTConnectAgentConan(ConanFile):
             self.output.info(f"Using system version {package}: {ver}")
         
     def build_requirements(self):
-        self.tool_requires_version("cmake", [3, 26, 4])
+        # self.tool_requires_version("cmake", [3, 26, 4])
+        self.tool_requires('cmake/3.26.4')
         if self.options.with_docs:
             self.tool_requires_version("doxygen", [1, 14, 0])
 
@@ -157,6 +158,7 @@ class MTConnectAgentConan(ConanFile):
         self.run("conan export conan/mqtt_cpp", cwd=os.path.dirname(__file__))
         if self.options.with_ruby:
             self.run("conan export conan/mruby", cwd=os.path.dirname(__file__))
+            self.run("conan export conan/oniguruma", cwd=os.path.dirname(__file__))
 
         if not self.options.cpack_generator:
             if is_msvc(self):

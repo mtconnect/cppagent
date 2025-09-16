@@ -3,8 +3,9 @@ include(default)
 [settings]
 compiler.cppstd=17
 
-[system_tools]
-cmake/>3.23.0
+[platform_tool_requires]
+cmake/3.26.4
 
 [conf]
 tools.cmake.cmaketoolchain:generator=Xcode
+

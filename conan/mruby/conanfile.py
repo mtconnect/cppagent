@@ -25,7 +25,7 @@ class MRubyConan(ConanFile):
 
     options = { "shared": [True, False], "trace": [True, False] }
 
-    requires = ["oniguruma/6.9.8"]
+    requires = ["oniguruma/6.9.10"]
 
     default_options = {
         "shared": False,
