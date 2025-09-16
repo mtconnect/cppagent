@@ -72,7 +72,7 @@ class MTConnectAgentConan(ConanFile):
         }
 
     exports_sources = "*", "!build", "!test_package/build", "!*~"
-    exports = "conan/mqtt_cpp/*", "conan/mruby/*"
+    exports = "conan/mqtt_cpp/*", "conan/mruby/*", "conan/oniguruma/*"
 
     def validate(self):
         if is_msvc(self) and self.options.shared and self.settings.compiler.runtime != 'dynamic':
