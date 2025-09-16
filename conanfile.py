@@ -113,8 +113,7 @@ class MTConnectAgentConan(ConanFile):
             self.output.info(f"Using system version {package}: {ver}")
         
     def build_requirements(self):
-        # self.tool_requires_version("cmake", [3, 26, 4])
-        self.tool_requires('cmake/3.26.4')
+        self.tool_requires_version("cmake", [3, 26, 4])
         if self.options.with_docs:
             self.tool_requires_version("doxygen", [1, 14, 0])
 
