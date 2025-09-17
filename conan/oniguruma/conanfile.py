@@ -49,6 +49,7 @@ class OnigurumaConan(ConanFile):
         tc = CMakeToolchain(self)
         tc.variables["ENABLE_POSIX_API"] = self.options.posix_api
         tc.variables["ENABLE_BINARY_COMPATIBLE_POSIX_API"] = self.options.posix_api
+        tc.variables["BUILD_TEST"] = False
         if Version(self.version) >= "6.9.8":
             tc.variables["INSTALL_DOCUMENTATION"] = False
             tc.variables["INSTALL_EXAMPLES"] = False
