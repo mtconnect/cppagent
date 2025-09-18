@@ -155,7 +155,7 @@ end
             if is_msvc(self):
                 if self.settings.build_type == 'Debug':
                     f.write("  conf.compilers.each { |c|  c.flags << '/Od' }\n")
-                f.write("  conf.compilers.each { |c| c.flags << '/std:c++17' }\n")
+                f.write("  conf.compilers.each { |c| c.flags << '/std:c++20' }\n")
                 f.write("  conf.compilers.each { |c| c.flags << '/%s' }\n" % msvc_runtime_flag(self))
             else:
                 if self.settings.build_type == 'Debug':

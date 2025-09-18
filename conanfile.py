@@ -130,7 +130,7 @@ class MTConnectAgentConan(ConanFile):
         if self.options.with_ruby:
             self.requires("mruby/3.2.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
 
-        self.requires("gtest/1.10.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True, test=True)
+        self.requires("gtest/1.17.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True, test=True)
         
     def configure(self):
         if self.options.shared:
