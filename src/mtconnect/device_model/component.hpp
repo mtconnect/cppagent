@@ -219,7 +219,14 @@ namespace mtconnect {
       /// @return the data item list
       auto getDataItems() const { return getList("DataItems"); }
 
+      /// @brief compares the ids of the component for sorting
+      /// @param comp other component to compare against
+      /// @return `true` if this id is less than the comp id
       bool operator<(const Component &comp) const { return m_id < comp.getId(); }
+
+      /// @brief compares the ids for equality
+      /// @param comp other component to compare against
+      /// @return `true` if this id is equal than the comp id
       bool operator==(const Component &comp) const { return m_id == comp.getId(); }
 
       /// @brief connected references by looking them up in the device

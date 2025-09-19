@@ -46,13 +46,12 @@ ARG CONAN_CPU_COUNT=2
 ARG WITH_RUBY='True'
 
 # set some variables
-ENV PATH="$HOME/venv3.9/bin:$PATH"
 ENV CONAN_PROFILE='/root/agent/cppagent/conan/profiles/docker'
 
 # update os and add dependencies
 # note: Dockerfiles run as root by default, so don't need sudo
-RUN  apt-get update \
-  && apt-get install -y \
+RUN  apt clean && apt update \
+  && apt install -y \
        autoconf \
        automake \
        build-essential \
@@ -72,7 +71,7 @@ WORKDIR /root/agent
 COPY . cppagent
 
 ARG WITH_TESTS=false
-ARG WITH_TESTS_ARG=argument
+ARG WITH_TESTS_ARG=
 
 # Build and optionally test
 RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
@@ -91,7 +90,7 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
        -o cpack_name=dist \
        -o cpack_generator=TGZ \
        -pr "$CONAN_PROFILE" \
-       "${WITH_TESTS_ARG}" \
+       ${WITH_TESTS_ARG} \
   && tar xf dist.tar.gz \
   && rm dist.tar.gz
 

@@ -74,7 +74,7 @@ WORKDIR /root/agent
 COPY . cppagent
 
 ARG WITH_TESTS=false
-ARG WITH_TESTS_ARG=argument
+ARG WITH_TESTS_ARG=
 
 # Build and optionally test. Unpack the dist to reduce overhead in the following release step.
 RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
@@ -94,7 +94,7 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
        -o cpack_name=dist \
        -o cpack_generator=TGZ \
        -pr "$CONAN_PROFILE" \
-       "${WITH_TESTS_ARG}" \
+       ${WITH_TESTS_ARG} \
   && tar xf dist.tar.gz \
   && rm dist.tar.gz
 

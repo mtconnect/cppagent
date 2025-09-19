@@ -368,16 +368,26 @@ namespace mtconnect {
         else
           return empty;
       }
-
+      
+      /// @brief checks if two entity models are different–does a deep analysis
+      /// @param other the other entity to check
+      /// @return `true` if the entities are different
+      bool different(const Entity &other) const;
+      
+      /// @brief cover method for entity comparison
+      /// @param other the other entity to check
+      /// @return `true` if the entities are different
+      bool different(const std::shared_ptr<Entity> other) const { return different(*other); }
+      
       /// @brief compare two entities for equality
       /// @param other the other entity
       /// @return `true` if they have equal name and properties
-      bool operator==(const Entity &other) const;
+      bool operator==(const Entity &other) const { return !different(other); }
 
       /// @brief compare two entities for inequality
       /// @param other the other entity
       /// @return `true` if they have unequal name and properties
-      bool operator!=(const Entity &other) const { return !(*this == other); }
+      bool operator!=(const Entity &other) const { return different(other); }
 
       /// @brief update this entity to be the same as other
       /// @param other the other entity
@@ -517,23 +527,23 @@ namespace mtconnect {
 
     inline bool operator!=(const Value &v1, const Value &v2) { return !(v1 == v2); }
 
-    inline bool Entity::operator==(const Entity &other) const
+    inline bool Entity::different(const Entity &other) const
     {
       if (m_name != other.m_name)
-        return false;
+        return true;
 
       if (m_properties.size() != other.m_properties.size())
-        return false;
+        return true;
 
       for (auto it1 = m_properties.cbegin(), it2 = other.m_properties.cbegin();
            it1 != m_properties.cend(); it1++, it2++)
       {
         if (it1->first != it2->first || it1->second != it2->second)
         {
-          return false;
+          return true;
         }
       }
-      return true;
+      return false;
     }
 
     /// @brief variant visitor to merge two entities
