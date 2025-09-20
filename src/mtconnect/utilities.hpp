@@ -31,6 +31,7 @@
 
 #include <chrono>
 #include <date/date.h>
+#include <date/tz.h>
 #include <filesystem>
 #include <map>
 #include <mtconnect/version.h>
@@ -228,12 +229,11 @@ namespace mtconnect {
       case GMT_UV_SEC:
         return date::format(ISO_8601_FMT, date::floor<microseconds>(timePoint));
       case LOCAL:
-        auto time = system_clock::to_time_t(timePoint);
-        struct tm timeinfo = {0};
-        mt_localtime(&time, &timeinfo);
-        char timestamp[64] = {0};
-        strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
-        return timestamp;
+      {
+        auto zone = date::current_zone();
+        auto zt = date::zoned_time(zone, timePoint);
+        return date::format("%Y-%m-%dT%H:%M:%S%z", zt);
+      }
     }
 
     return "";
@@ -757,14 +757,9 @@ namespace mtconnect {
   /// @return converted `Timestamp`
   inline Timestamp parseTimestamp(const std::string &timestamp)
   {
-    using namespace date;
-    using namespace std::chrono;
-    using namespace std::chrono_literals;
-    using namespace date::literals;
-
     Timestamp ts;
     std::istringstream in(timestamp);
-    in >> std::setw(6) >> std::chrono::parse("%FT%T", ts);
+    in >> std::setw(6) >> date::parse("%FT%T", ts);
     if (!in.good())
     {
       ts = std::chrono::system_clock::now();
