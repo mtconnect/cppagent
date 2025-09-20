@@ -764,7 +764,7 @@ namespace mtconnect {
 
     Timestamp ts;
     std::istringstream in(timestamp);
-    in >> std::setw(6) >> parse("%FT%T", ts);
+    in >> std::setw(6) >> std::chrono::parse("%FT%T", ts);
     if (!in.good())
     {
       ts = std::chrono::system_clock::now();

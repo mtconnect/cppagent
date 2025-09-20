@@ -220,7 +220,7 @@ namespace mtconnect {
 
         g_service = this;
         m_isService = true;
-        SERVICE_TABLE_ENTRY DispatchTable[] = {{"", (LPSERVICE_MAIN_FUNCTION)SvcMain},
+        SERVICE_TABLE_ENTRY DispatchTable[] = {{LPSTR(""), (LPSERVICE_MAIN_FUNCTION)SvcMain},
                                                {nullptr, nullptr}};
 
         if (StartServiceCtrlDispatcher(DispatchTable) == 0)
@@ -229,7 +229,7 @@ namespace mtconnect {
         }
         else
         {
-          SvcReportEvent("StartServiceCtrlDispatcher");
+          SvcReportEvent(LPSTR("StartServiceCtrlDispatcher"));
         }
       }
       catch (std::exception &e)
@@ -516,7 +516,7 @@ namespace mtconnect {
 
       if (!g_svcStatusHandle)
       {
-        SvcReportEvent("RegisterServiceCtrlHandler");
+        SvcReportEvent(LPSTR("RegisterServiceCtrlHandler"));
         return;
       }
 
@@ -554,7 +554,7 @@ namespace mtconnect {
       auto res = RegOpenKeyExA(HKEY_LOCAL_MACHINE, key, 0ul, KEY_READ, &agent);
       if (res != ERROR_SUCCESS)
       {
-        SvcReportEvent("RegOpenKey: Could not open MTConnect Agent Key");
+        SvcReportEvent(LPSTR("RegOpenKey: Could not open MTConnect Agent Key"));
         ReportSvcStatus(SERVICE_STOPPED, 1ul, 0ul);
         return;
       }
@@ -566,7 +566,7 @@ namespace mtconnect {
       agent = nullptr;
       if (res != ERROR_SUCCESS)
       {
-        SvcReportEvent("RegOpenKey: Could not open ConfigurationFile");
+        SvcReportEvent(LPSTR("RegOpenKey: Could not open ConfigurationFile"));
         ReportSvcStatus(SERVICE_STOPPED, 1ul, 0ul);
         return;
       }

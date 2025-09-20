@@ -104,7 +104,7 @@ namespace mtconnect::pipeline {
     if (has_t)
     {
       istringstream in(timestamp.data());
-      in >> std::setw(6) >> parse("%FT%T", result);
+      in >> std::setw(6) >> std::chrono::parse("%FT%T", result);
       if (!in.good())
       {
         result = now();
