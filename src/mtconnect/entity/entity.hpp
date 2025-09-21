@@ -368,17 +368,17 @@ namespace mtconnect {
         else
           return empty;
       }
-      
+
       /// @brief checks if two entity models are different–does a deep analysis
       /// @param other the other entity to check
       /// @return `true` if the entities are different
       bool different(const Entity &other) const;
-      
+
       /// @brief cover method for entity comparison
       /// @param other the other entity to check
       /// @return `true` if the entities are different
       bool different(const std::shared_ptr<Entity> other) const { return different(*other); }
-      
+
       /// @brief compare two entities for equality
       /// @param other the other entity
       /// @return `true` if they have equal name and properties

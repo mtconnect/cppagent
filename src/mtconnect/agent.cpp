@@ -477,7 +477,7 @@ namespace mtconnect {
       return;
     }
 
-    auto callback = [=,this](config::AsyncContext &context) {
+    auto callback = [=, this](config::AsyncContext &context) {
       try
       {
         bool changed = false;
