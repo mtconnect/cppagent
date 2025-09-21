@@ -30,7 +30,6 @@ using namespace mtconnect::entity;
 using namespace std;
 using namespace std::literals;
 using namespace date;
-using namespace date::literals;
 
 // main
 int main(int argc, char *argv[])

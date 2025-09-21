@@ -29,7 +29,6 @@ using namespace mtconnect;
 using namespace mtconnect::pipeline;
 using namespace mtconnect::observation;
 using namespace std;
-using namespace date::literals;
 using namespace std::literals;
 
 // main

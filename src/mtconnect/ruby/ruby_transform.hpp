@@ -28,7 +28,6 @@
 namespace mtconnect::ruby {
   using namespace mtconnect::pipeline;
   using namespace std::literals;
-  using namespace date::literals;
   using namespace entity;
   using namespace observation;
 

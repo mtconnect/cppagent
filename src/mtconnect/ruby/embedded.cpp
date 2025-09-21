@@ -62,7 +62,6 @@ using namespace std;
 namespace mtconnect::ruby {
   using namespace mtconnect::pipeline;
   using namespace std::literals;
-  using namespace date::literals;
   using namespace observation;
 
   RClass *RubyObservation::m_eventClass;

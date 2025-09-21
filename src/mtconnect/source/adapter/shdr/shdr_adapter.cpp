@@ -34,7 +34,6 @@
 
 using namespace std;
 using namespace std::literals;
-using namespace date::literals;
 
 namespace mtconnect::source::adapter::shdr {
   // Adapter public methods

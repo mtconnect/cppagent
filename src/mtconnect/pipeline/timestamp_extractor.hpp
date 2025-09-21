@@ -87,7 +87,6 @@ namespace mtconnect::pipeline {
     using namespace date;
     using namespace chrono;
     using namespace chrono_literals;
-    using namespace date::literals;
     using namespace date;
 
     // Extract duration

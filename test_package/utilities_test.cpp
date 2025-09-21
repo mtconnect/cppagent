@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
-TEST(GlobalsTest, IntToString)
+TEST(UtilitiesTest, IntToString)
 {
   ASSERT_EQ((string) "1234", to_string(1234));
   ASSERT_EQ((string) "0", to_string(0));
@@ -42,7 +42,7 @@ TEST(GlobalsTest, IntToString)
   ASSERT_EQ((string) "1", to_string(1));
 }
 
-TEST(GlobalsTest, FloatToString)
+TEST(UtilitiesTest, FloatToString)
 {
   ASSERT_EQ((string) "1.234", format(1.234));
   ASSERT_EQ((string) "0", format(0.0));
@@ -50,7 +50,7 @@ TEST(GlobalsTest, FloatToString)
   ASSERT_EQ((string) "1", format(1.0));
 }
 
-TEST(GlobalsTest, ToUpperCase)
+TEST(UtilitiesTest, ToUpperCase)
 {
   string lower = "abcDef";
   ASSERT_EQ((string) "ABCDEF", toUpperCase(lower));
@@ -62,7 +62,7 @@ TEST(GlobalsTest, ToUpperCase)
   ASSERT_EQ((string) "QWERTY.ASDF|", toUpperCase(lower));
 }
 
-TEST(GlobalsTest, IsNonNegativeInteger)
+TEST(UtilitiesTest, IsNonNegativeInteger)
 {
   ASSERT_TRUE(isNonNegativeInteger("12345"));
   ASSERT_TRUE(isNonNegativeInteger("123456789012345678901234567890"));
@@ -72,7 +72,7 @@ TEST(GlobalsTest, IsNonNegativeInteger)
   ASSERT_TRUE(!isNonNegativeInteger("123.45"));
 }
 
-TEST(GlobalsTest, Time)
+TEST(UtilitiesTest, Time)
 {
   auto time1 = getCurrentTime(GMT);
   auto time2 = getCurrentTime(GMT);
@@ -99,7 +99,7 @@ TEST(GlobalsTest, Time)
   ASSERT_TRUE(time7 < time9);
 }
 
-TEST(GlobalsTest, IllegalCharacters)
+TEST(UtilitiesTest, IllegalCharacters)
 {
   string before1("Don't Change Me"), after1("Don't Change Me");
   replaceIllegalCharacters(before1);
@@ -114,7 +114,7 @@ TEST(GlobalsTest, IllegalCharacters)
   ASSERT_EQ(before3, after3);
 }
 
-TEST(GlobalsTest, GetCurrentTime)
+TEST(UtilitiesTest, GetCurrentTime)
 {
   auto gmt = getCurrentTime(GMT);
   auto time = parseTimeMicro(gmt);
@@ -140,7 +140,7 @@ TEST(GlobalsTest, GetCurrentTime)
   ASSERT_EQ(8, n);
 }
 
-TEST(GlobalsTest, GetCurrentTime2)
+TEST(UtilitiesTest, GetCurrentTime2)
 {
   // Build a known system time point
   auto knownTimePoint = std::chrono::system_clock::from_time_t(0);  // 1 Jan 1970 00:00:00
@@ -173,14 +173,14 @@ TEST(GlobalsTest, GetCurrentTime2)
   ASSERT_EQ(string("Thu, 01 Jan 1970 00:00:10 GMT"), humRead);
 }
 
-TEST(GlobalsTest, ParseTimeMicro)
+TEST(UtilitiesTest, ParseTimeMicro)
 {
   // This time is 123456 microseconds after the epoch
   auto v = parseTimeMicro("1970-01-01T00:00:00.123456Z");
   ASSERT_EQ(uint64_t {123456}, v);
 }
 
-TEST(GlobalsTest, AddNamespace)
+TEST(UtilitiesTest, AddNamespace)
 {
   auto result = addNamespace("//Device//Foo", "m");
   ASSERT_EQ(string("//m:Device//m:Foo"), result);
@@ -201,7 +201,7 @@ TEST(GlobalsTest, AddNamespace)
   ASSERT_EQ(string("//m:Device/m:DataItems/"), result);
 }
 
-TEST(GlobalsTest, ParseTimeMilli)
+TEST(UtilitiesTest, ParseTimeMilli)
 {
   string v = "2012-11-20T12:33:22.123456";
 
@@ -213,4 +213,4 @@ TEST(GlobalsTest, ParseTimeMilli)
   ASSERT_TRUE(1353414802123000LL == time);
 }
 
-TEST(GlobalsTest, Int64ToString) { ASSERT_EQ((string) "8805345009", to_string(8805345009ULL)); }
+TEST(UtilitiesTest, Int64ToString) { ASSERT_EQ((string) "8805345009", to_string(8805345009ULL)); }
