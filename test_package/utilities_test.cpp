@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
-TEST(UtilitiesTest, IntToString)
+TEST(UtilitiesTest, should_be_able_to_convert_from_integer_to_string)
 {
   ASSERT_EQ((string) "1234", to_string(1234));
   ASSERT_EQ((string) "0", to_string(0));
@@ -42,7 +42,7 @@ TEST(UtilitiesTest, IntToString)
   ASSERT_EQ((string) "1", to_string(1));
 }
 
-TEST(UtilitiesTest, FloatToString)
+TEST(UtilitiesTest, should_be_able_to_convert_from_float_to_string)
 {
   ASSERT_EQ((string) "1.234", format(1.234));
   ASSERT_EQ((string) "0", format(0.0));
@@ -50,7 +50,7 @@ TEST(UtilitiesTest, FloatToString)
   ASSERT_EQ((string) "1", format(1.0));
 }
 
-TEST(UtilitiesTest, ToUpperCase)
+TEST(UtilitiesTest, should_uppercase_string)
 {
   string lower = "abcDef";
   ASSERT_EQ((string) "ABCDEF", toUpperCase(lower));
