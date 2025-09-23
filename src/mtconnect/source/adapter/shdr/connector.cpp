@@ -103,7 +103,7 @@ namespace mtconnect::source::adapter::shdr {
       LOG(error) << "Will retry resolution of " << m_server << " in " << m_reconnectInterval.count()
                  << " milliseconds";
 
-      m_timer.expires_from_now(m_reconnectInterval);
+      m_timer.expires_after(m_reconnectInterval);
       m_timer.async_wait([this](boost::system::error_code ec) {
         if (ec != boost::asio::error::operation_aborted)
         {
@@ -131,11 +131,7 @@ namespace mtconnect::source::adapter::shdr {
     // Using a smart pointer to ensure connection is deleted if exception thrown
     LOG(debug) << "Connecting to data source: " << m_server << " on port: " << m_port;
 
-    asio::async_connect(
-        m_socket, m_results.begin(), m_results.end(),
-        [this](const boost::system::error_code &ec, ip::tcp::resolver::iterator it) {
-          asio::dispatch(m_strand, boost::bind(&Connector::connected, this, ec, it));
-        });
+    asio::async_connect(m_socket, m_results, boost::bind(&Connector::connected, this, _1, _2));
 
     return true;
   }
@@ -144,7 +140,7 @@ namespace mtconnect::source::adapter::shdr {
   {
     NAMED_SCOPE("Connector::asyncTryConnect");
 
-    m_timer.expires_from_now(m_reconnectInterval);
+    m_timer.expires_after(m_reconnectInterval);
     m_timer.async_wait([this](boost::system::error_code ec) {
       if (ec != boost::asio::error::operation_aborted)
       {
@@ -176,7 +172,7 @@ namespace mtconnect::source::adapter::shdr {
     asyncTryConnect();
   }
 
-  void Connector::connected(const boost::system::error_code &ec, ip::tcp::resolver::iterator it)
+  void Connector::connected(const boost::system::error_code &ec, const ip::tcp::endpoint &endpoint)
   {
     NAMED_SCOPE("Connector::connected");
 
@@ -229,7 +225,7 @@ namespace mtconnect::source::adapter::shdr {
       while (parseSocketBuffer())
         ;
 
-      m_timer.expires_from_now(m_receiveTimeLimit);
+      m_timer.expires_after(m_receiveTimeLimit);
       m_timer.async_wait([this](boost::system::error_code ec) {
         if (ec != boost::asio::error::operation_aborted)
         {
@@ -267,7 +263,7 @@ namespace mtconnect::source::adapter::shdr {
   {
     NAMED_SCOPE("Connector::setReceiveTimeout");
 
-    m_receiveTimeout.expires_from_now(m_receiveTimeLimit);
+    m_receiveTimeout.expires_after(m_receiveTimeLimit);
     m_receiveTimeout.async_wait([this](sys::error_code ec) {
       if (!ec)
       {
@@ -385,7 +381,7 @@ namespace mtconnect::source::adapter::shdr {
     {
       LOG(debug) << "Sending heartbeat";
       sendCommand("PING");
-      m_heartbeatTimer.expires_from_now(m_heartbeatFrequency);
+      m_heartbeatTimer.expires_after(m_heartbeatFrequency);
       m_heartbeatTimer.async_wait([this](boost::system::error_code ec) {
         asio::dispatch(m_strand, boost::bind(&Connector::heartbeat, this, ec));
       });
@@ -420,7 +416,7 @@ namespace mtconnect::source::adapter::shdr {
         m_receiveTimeLimit = 2 * m_heartbeatFrequency;
         setReceiveTimeout();
 
-        m_heartbeatTimer.expires_from_now(m_heartbeatFrequency);
+        m_heartbeatTimer.expires_after(m_heartbeatFrequency);
         m_heartbeatTimer.async_wait([this](boost::system::error_code ec) {
           asio::dispatch(m_strand, boost::bind(&Connector::heartbeat, this, ec));
         });

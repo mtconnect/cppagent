@@ -18,6 +18,7 @@
 #pragma once
 
 #include <future>
+#include <boost/asio/dispatch.hpp>
 
 #include "mtconnect/config.hpp"
 #include "pipeline_context.hpp"
@@ -95,7 +96,7 @@ namespace mtconnect {
           {
             std::promise<void> p;
             auto f = p.get_future();
-            m_strand.dispatch([this, &p]() {
+            boost::asio::dispatch(m_strand, [this, &p]() {
               clearTransforms();
               p.set_value();
             });

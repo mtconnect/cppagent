@@ -366,7 +366,7 @@ namespace mtconnect::configuration {
 
             using std::placeholders::_1;
 
-            m_monitorTimer.expires_from_now(100ms);
+            m_monitorTimer.expires_after(100ms);
             m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
           }
           else
@@ -388,7 +388,7 @@ namespace mtconnect::configuration {
 
     using std::placeholders::_1;
 
-    m_monitorTimer.expires_from_now(m_monitorInterval);
+    m_monitorTimer.expires_after(m_monitorInterval);
     m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
   }
 
@@ -1252,3 +1252,4 @@ namespace mtconnect::configuration {
     return false;
   }
 }  // namespace mtconnect::configuration
+

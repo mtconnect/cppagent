@@ -827,7 +827,7 @@ namespace mtconnect {
     };
 
     sha1.process_bytes(id.data(), id.length());
-    unsigned int digest[5];
+    unsigned char digest[20];
     sha1.get_digest(digest);
 
     string s(32, ' ');

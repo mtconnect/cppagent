@@ -134,15 +134,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     }
 
     m_name = m_url.getUrlText(m_sourceDevice);
-    boost::uuids::detail::sha1 sha1;
-    sha1.process_bytes(m_name.c_str(), m_name.length());
-    boost::uuids::detail::sha1::digest_type digest;
-    sha1.get_digest(digest);
-
-    stringstream identity;
-    identity << std::hex << digest[0] << digest[1] << digest[2];
-    m_identity = string("_") + (identity.str()).substr(0, 10);
-
+    m_identity = CreateIdentityHash(m_name);
+    
     m_options.insert_or_assign(configuration::AdapterIdentity, m_identity);
     m_feedbackId = "XmlTransformFeedback:" + m_identity;
 

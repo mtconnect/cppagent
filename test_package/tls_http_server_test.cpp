@@ -75,7 +75,7 @@ public:
     SSL_set_tlsext_host_name(m_stream.native_handle(), "localhost");
 
     // These objects perform our I/O
-    tcp::endpoint server(asio::ip::address_v4::from_string("127.0.0.1"), port);
+    tcp::endpoint server(asio::ip::make_address("127.0.0.1"), port);
 
     // Set the timeout.
     beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
@@ -252,7 +252,7 @@ public:
     m_done = false;
     m_count = 0;
     asio::spawn(m_context, std::bind(&Client::request, this, verb, target, body, close, contentType,
-                                     std::placeholders::_1));
+                                     std::placeholders::_1), boost::asio::detached);
 
     while (!m_done && !m_failed && m_context.run_for(20ms) > 0)
       ;
@@ -271,7 +271,7 @@ public:
       m_done = true;
     };
 
-    asio::spawn(m_context, std::bind(closeStream, std::placeholders::_1));
+    asio::spawn(m_context, std::bind(closeStream, std::placeholders::_1), boost::asio::detached);
     while (!m_done && m_context.run_for(100ms) > 0)
       ;
   }
@@ -362,7 +362,8 @@ protected:
     m_client->m_clientCert = clientCert;
     asio::spawn(m_context,
                 std::bind(&Client::connect, m_client.get(),
-                          static_cast<unsigned short>(m_server->getPort()), std::placeholders::_1));
+                          static_cast<unsigned short>(m_server->getPort()), std::placeholders::_1),
+                boost::asio::detached);
 
     while (!m_client->m_connected && !m_client->m_failed)
       m_context.run_one();

@@ -115,7 +115,7 @@ protected:
   bool waitFor(const chrono::duration<Rep, Period> &time, function<bool()> pred)
   {
     boost::asio::steady_timer timer(m_agentTestHelper->m_ioContext);
-    timer.expires_from_now(time);
+    timer.expires_after(time);
     bool timeout = false;
     timer.async_wait([&timeout](boost::system::error_code ec) {
       if (!ec)

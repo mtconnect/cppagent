@@ -15,7 +15,11 @@
 //    limitations under the License.
 //
 
+#include <sstream>
+
 #include "mtconnect/source/source.hpp"
+
+#include <boost/uuid/name_generator_sha1.hpp>
 
 #include "mtconnect/logging.hpp"
 
@@ -38,4 +42,21 @@ namespace mtconnect::source {
     return nullptr;
   }
 
+  std::string CreateIdentityHash(const std::string &input)
+  {
+    using namespace std;
+    
+    boost::uuids::detail::sha1 sha1;
+    sha1.process_bytes(input.c_str(), input.length());
+    boost::uuids::detail::sha1::digest_type digest;
+    sha1.get_digest(digest);
+    
+    ostringstream identity;
+    identity << '_' << std::hex;
+    for (int i = 0; i < 5; i++)
+      identity << (uint16_t) digest[i];
+
+    return identity.str();
+  }
+  
 }  // namespace mtconnect::source

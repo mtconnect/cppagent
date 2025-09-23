@@ -180,7 +180,7 @@ TEST_F(FileCacheTest, file_cache_should_compress_file_async)
   });
 
   bool ran {false};
-  context.post([&ran] { ran = true; });
+  boost::asio::post(context, [&ran] { ran = true; });
 
   context.run();
   // EXPECT_TRUE(ran);

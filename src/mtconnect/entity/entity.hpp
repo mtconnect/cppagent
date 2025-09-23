@@ -408,7 +408,7 @@ namespace mtconnect {
         boost::uuids::detail::sha1 sha1;
         hash(sha1);
 
-        unsigned int digest[5];
+        unsigned char digest[20];
         sha1.get_digest(digest);
 
         char encoded[32];

@@ -366,28 +366,24 @@ namespace mtconnect {
           if (!host.empty())
           {
             // Check if it is a simple numeric address
-            using br = ip::resolver_base;
             boost::system::error_code ec;
             auto addr = ip::make_address(host, ec);
             if (ec)
             {
               ip::tcp::resolver resolver(m_context);
-              ip::tcp::resolver::query query(host, "0", br::v4_mapped);
-
-              auto it = resolver.resolve(query, ec);
+              auto results = resolver.resolve(host, "0", ip::resolver_base::flags::v4_mapped, ec);
               if (ec)
               {
                 cout << "Failed to resolve " << host << ": " << ec.message() << endl;
               }
               else
               {
-                ip::tcp::resolver::iterator end;
-                for (; it != end; it++)
+                for (const auto &res : results)
                 {
-                  const auto &addr = it->endpoint().address();
-                  if (!addr.is_multicast() && !addr.is_unspecified())
+                  const auto &a = res.endpoint().address();
+                  if (!a.is_multicast() && !a.is_unspecified())
                   {
-                    m_server->allowPutFrom(addr.to_string());
+                    m_server->allowPutFrom(a.to_string());
                   }
                 }
               }
@@ -1229,7 +1225,7 @@ namespace mtconnect {
               boost::asio::bind_executor(
                   m_strand,
                   [this, asyncResponse]() {
-                    asyncResponse->m_timer.expires_from_now(asyncResponse->getInterval());
+                    asyncResponse->m_timer.expires_after(asyncResponse->getInterval());
                     asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
                         m_strand,
                         boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
@@ -1620,3 +1616,4 @@ namespace mtconnect {
 
   }  // namespace sink::rest_sink
 }  // namespace mtconnect
+

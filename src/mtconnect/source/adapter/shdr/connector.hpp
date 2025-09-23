@@ -105,7 +105,7 @@ namespace mtconnect::source::adapter::shdr {
     void resolved(const boost::system::error_code &error,
                   boost::asio::ip::tcp::resolver::results_type results);
     void connected(const boost::system::error_code &error,
-                   boost::asio::ip::tcp::resolver::iterator it);
+                   const boost::asio::ip::tcp::endpoint& endpoint);
     void writer(boost::system::error_code ec, std::size_t length);
     void reader(boost::system::error_code ec, std::size_t length);
     bool parseSocketBuffer();

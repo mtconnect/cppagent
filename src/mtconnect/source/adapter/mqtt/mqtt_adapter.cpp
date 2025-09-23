@@ -166,16 +166,7 @@ namespace mtconnect {
             identity << s;
         }
 
-        boost::uuids::detail::sha1 sha1;
-        sha1.process_bytes(identity.str().c_str(), identity.str().length());
-        boost::uuids::detail::sha1::digest_type digest;
-        sha1.get_digest(digest);
-
-        identity.str("");
-        identity << std::hex << digest[0] << digest[1] << digest[2];
-        m_identity = string("_") + (identity.str()).substr(0, 10);
-
-        m_options[configuration::AdapterIdentity] = m_identity;
+        m_options[configuration::AdapterIdentity] = CreateIdentityHash(identity.str());
       }
 
       m_pipeline.build(m_options);

@@ -73,7 +73,7 @@ public:
     beast::error_code ec;
 
     // These objects perform our I/O
-    tcp::endpoint server(asio::ip::address_v4::from_string("127.0.0.1"), port);
+    tcp::endpoint server(asio::ip::make_address("127.0.0.1"), port);
 
     // Make the connection on the IP address we get from a lookup
     beast::get_lowest_layer(m_stream).async_connect(server, yield[ec]);
@@ -126,7 +126,7 @@ public:
   bool waitFor(const chrono::duration<Rep, Period>& time, function<bool()> pred)
   {
     boost::asio::steady_timer timer(m_context);
-    timer.expires_from_now(time);
+    timer.expires_after(time);
     bool timeout = false;
     timer.async_wait([&timeout](boost::system::error_code ec) {
       if (!ec)
@@ -197,7 +197,8 @@ protected:
     m_client->m_connected = false;
     asio::spawn(m_context,
                 std::bind(&Client::connect, m_client.get(),
-                          static_cast<unsigned short>(m_server->getPort()), std::placeholders::_1));
+                          static_cast<unsigned short>(m_server->getPort()), std::placeholders::_1),
+                boost::asio::detached);
 
     m_client->waitFor(1s, [this]() { return m_client->m_connected; });
   }
@@ -241,7 +242,8 @@ TEST_F(WebsocketsTest, should_make_simple_request)
   startClient();
 
   asio::spawn(m_context, std::bind(&Client::request, m_client.get(),
-                                   "{\"id\":\"1\",\"request\":\"probe\"}"s, std::placeholders::_1));
+                                   "{\"id\":\"1\",\"request\":\"probe\"}"s, std::placeholders::_1),
+              boost::asio::detached);
 
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
 
@@ -269,7 +271,8 @@ TEST_F(WebsocketsTest, should_return_error_when_there_is_no_id)
   startClient();
 
   asio::spawn(m_context, std::bind(&Client::request, m_client.get(), "{\"request\":\"probe\"}"s,
-                                   std::placeholders::_1));
+                                   std::placeholders::_1),
+              boost::asio::detached);
 
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
 
@@ -297,7 +300,8 @@ TEST_F(WebsocketsTest, should_return_error_when_there_is_no_request)
   startClient();
 
   asio::spawn(m_context,
-              std::bind(&Client::request, m_client.get(), "{\"id\": 3}"s, std::placeholders::_1));
+              std::bind(&Client::request, m_client.get(), "{\"id\": 3}"s, std::placeholders::_1),
+              boost::asio::detached);
 
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
 
@@ -358,7 +362,8 @@ TEST_F(WebsocketsTest, should_return_error_when_bad_json_is_sent)
   startClient();
 
   asio::spawn(m_context,
-              std::bind(&Client::request, m_client.get(), "!}}"s, std::placeholders::_1));
+              std::bind(&Client::request, m_client.get(), "!}}"s, std::placeholders::_1),
+              boost::asio::detached);
 
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
 
@@ -392,7 +397,8 @@ TEST_F(WebsocketsTest, should_return_multiple_errors_when_parameters_are_invalid
       m_context,
       std::bind(&Client::request, m_client.get(),
                 R"DOC({"id": 3, "request": "sample", "interval": 99999999999,"to": -1 })DOC",
-                std::placeholders::_1));
+                std::placeholders::_1),
+              boost::asio::detached);
 
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
 
@@ -424,7 +430,8 @@ TEST_F(WebsocketsTest, should_return_error_for_an_invalid_command)
 
   asio::spawn(m_context,
               std::bind(&Client::request, m_client.get(), "{\"id\":\"1\",\"request\":\"sample\"}"s,
-                        std::placeholders::_1));
+                        std::placeholders::_1),
+              boost::asio::detached);
 
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
 
