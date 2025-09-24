@@ -166,7 +166,8 @@ namespace mtconnect {
             identity << s;
         }
 
-        m_options[configuration::AdapterIdentity] = CreateIdentityHash(identity.str());
+        m_identity = CreateIdentityHash(identity.str());
+        m_options[configuration::AdapterIdentity] = m_identity;
       }
 
       m_pipeline.build(m_options);

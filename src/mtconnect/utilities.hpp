@@ -814,11 +814,12 @@ namespace mtconnect {
   /// @param[in] sha the sha1 namespace to use as context
   /// @param[in] id the id to use transform
   /// @returns Returns the first 16 characters of the  base 64 encoded sha1
-  inline std::string makeUniqueId(const ::boost::uuids::detail::sha1 &sha, const std::string &id)
+  inline std::string makeUniqueId(const ::boost::uuids::detail::sha1 &contextSha, const std::string &id)
   {
     using namespace std;
+    using namespace boost::uuids::detail;
 
-    ::boost::uuids::detail::sha1 sha1(sha);
+    sha1 sha(contextSha);
 
     constexpr string_view startc("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_");
     constexpr auto isIDStartChar = [](unsigned char c) -> bool { return isalpha(c) || c == '_'; };
@@ -826,9 +827,9 @@ namespace mtconnect {
       return isIDStartChar(c) || isdigit(c) || c == '.' || c == '-';
     };
 
-    sha1.process_bytes(id.data(), id.length());
-    unsigned char digest[20];
-    sha1.get_digest(digest);
+    sha.process_bytes(id.data(), id.length());
+    sha1::digest_type  digest;
+    sha.get_digest(digest);
 
     string s(32, ' ');
     auto len = boost::beast::detail::base64::encode(s.data(), digest, sizeof(digest));
@@ -845,7 +846,7 @@ namespace mtconnect {
       s[0] = startc[c % startc.size()];
     }
 
-    s.erase(16);
+    s.erase(16); //DFYX7ls4d4to2Lhb
 
     return s;
   }
