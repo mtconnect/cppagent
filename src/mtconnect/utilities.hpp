@@ -831,8 +831,10 @@ namespace mtconnect {
     sha1::digest_type  digest;
     sha.get_digest(digest);
 
+     auto data = (unsigned int *) digest;
+    
     string s(32, ' ');
-    auto len = boost::beast::detail::base64::encode(s.data(), digest, sizeof(digest));
+    auto len = boost::beast::detail::base64::encode(s.data(), data, sizeof(digest));
 
     s.erase(len - 1);
     s.erase(std::remove_if(++(s.begin()), s.end(), not_fn(isIDChar)), s.end());
@@ -846,7 +848,7 @@ namespace mtconnect {
       s[0] = startc[c % startc.size()];
     }
 
-    s.erase(16); //DFYX7ls4d4to2Lhb
+    s.erase(16);
 
     return s;
   }

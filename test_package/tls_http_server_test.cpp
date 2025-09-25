@@ -241,7 +241,8 @@ public:
 
   void spawnReadChunk()
   {
-    asio::spawn(m_context, std::bind(&Client::readChunk, this, std::placeholders::_1));
+    asio::spawn(m_context, std::bind(&Client::readChunk, this, std::placeholders::_1),
+                asio::detached);
   }
 
   void spawnRequest(boost::beast::http::verb verb, std::string const& target,
@@ -309,7 +310,7 @@ const string ClientKeyFile {TEST_RESOURCE_DIR "/client.key"};
 const string ClientDhFile {TEST_RESOURCE_DIR "/dh2048.pem"};
 const string ClientCAFile(TEST_RESOURCE_DIR "/clientca.crt");
 
-class TlsRestServiceTest : public testing::Test
+class TlsHttpServerTest : public testing::Test
 {
 protected:
   void SetUp() override
@@ -385,7 +386,7 @@ protected:
   unique_ptr<Client> m_client;
 };
 
-TEST_F(TlsRestServiceTest, create_server_and_load_certificates)
+TEST_F(TlsHttpServerTest, create_server_and_load_certificates)
 {
   weak_ptr<Session> savedSession;
 
@@ -423,7 +424,7 @@ TEST_F(TlsRestServiceTest, create_server_and_load_certificates)
   ASSERT_TRUE(savedSession.expired());
 }
 
-TEST_F(TlsRestServiceTest, streaming_response)
+TEST_F(TlsHttpServerTest, streaming_response)
 {
   struct context
   {
@@ -506,7 +507,7 @@ TEST_F(TlsRestServiceTest, streaming_response)
     ;
 }
 
-TEST_F(TlsRestServiceTest, check_failed_client_certificate)
+TEST_F(TlsHttpServerTest, check_failed_client_certificate)
 {
   using namespace mtconnect::configuration;
   ConfigOptions options {{TlsCertificateChain, CertFile},
@@ -534,7 +535,7 @@ TEST_F(TlsRestServiceTest, check_failed_client_certificate)
 
 const string ClientCA(TEST_RESOURCE_DIR "/clientca.crt");
 
-TEST_F(TlsRestServiceTest, check_valid_client_certificate)
+TEST_F(TlsHttpServerTest, check_valid_client_certificate)
 {
   using namespace mtconnect::configuration;
   ConfigOptions options {{TlsCertificateChain, CertFile},
@@ -565,7 +566,7 @@ TEST_F(TlsRestServiceTest, check_valid_client_certificate)
   EXPECT_EQ(200, m_client->m_status);
 }
 
-TEST_F(TlsRestServiceTest, check_valid_client_certificate_without_server_ca)
+TEST_F(TlsHttpServerTest, check_valid_client_certificate_without_server_ca)
 {
   using namespace mtconnect::configuration;
   ConfigOptions options {{TlsCertificateChain, CertFile},

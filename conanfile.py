@@ -124,7 +124,7 @@ class MTConnectAgentConan(ConanFile):
         self.requires("nlohmann_json/3.9.1", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
         self.requires("openssl/3.0.8", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("rapidjson/cci.20220822", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
-        self.requires("mqtt_cpp/13.2.1", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
+        self.requires("mqtt_cpp/13.2.2", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
         self.requires("bzip2/1.0.8", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         
         if self.options.with_ruby:

@@ -332,7 +332,8 @@ TEST_F(WebsocketsTest, should_return_error_when_a_parameter_is_invalid)
   asio::spawn(m_context,
               std::bind(&Client::request, m_client.get(),
                         "{\"id\": 3, \"request\": \"sample\", \"interval\": 99999999999}"s,
-                        std::placeholders::_1));
+                        std::placeholders::_1),
+              asio::detached);
 
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
 
