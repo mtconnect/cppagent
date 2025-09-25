@@ -83,7 +83,7 @@ namespace mtconnect::entity {
       /// @param value the a data set variant
       /// @param removed `true` if the key has been removed
       Entry(const std::string &key, T value, bool removed = false)
-        : m_key(key), m_value(std::move(value)), m_removed(removed)
+        : m_key(key), m_value(std::forward<T>(value)), m_removed(removed)
       {}
       /// @brief Create a data set entry with just a key (used for search)
       /// @param key
