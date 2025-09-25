@@ -34,7 +34,7 @@ namespace mtconnect::pipeline {
     using entity::Entity::Entity;
     Tokens(const Tokens &) = default;
     Tokens() = default;
-    Tokens(const Tokens &ts, TokenList list) : Entity(ts), m_tokens(list) {}
+    Tokens(const Tokens &ts, const TokenList &list) : Entity(ts), m_tokens(list) {}
 
     TokenList m_tokens;
   };

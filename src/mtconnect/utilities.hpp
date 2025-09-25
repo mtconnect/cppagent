@@ -219,7 +219,12 @@ namespace mtconnect {
     using namespace std;
     using namespace std::chrono;
     constexpr char ISO_8601_FMT[] = "%Y-%m-%dT%H:%M:%SZ";
-
+#ifdef _WINDOWS
+    namespace tzchrono = std::chrono;
+#else
+    namespace tzchrono = date;
+#endif
+    
     switch (format)
     {
       case HUM_READ:
@@ -230,7 +235,7 @@ namespace mtconnect {
         return date::format(ISO_8601_FMT, date::floor<microseconds>(timePoint));
       case LOCAL:
       {
-        auto zone = date::current_zone();
+        auto zone = tzchrono::current_zone();
         auto zt = date::zoned_time(zone, timePoint);
         return date::format("%Y-%m-%dT%H:%M:%S%z", zt);
       }
