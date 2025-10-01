@@ -32,7 +32,7 @@ jobs:
     name: "Windows latest Arch: ${{ matrix.arch }}, Shared: ${{ matrix.shared }}"
     strategy:
       matrix:
-        arch: ["x86", "amd64"]
+        arch: ["amd64"] # ["x86", "amd64"]
         shared: ["True", "False"]
         include:
           - arch: "x86"
