@@ -84,10 +84,6 @@ class MTConnectAgentConan(ConanFile):
         self.folders.build_folder_vars = ["options.shared", "settings.arch"]
         cmake_layout(self)
 
-    def layout(self):
-        self.folders.build_folder_vars = ["options.shared", "settings.arch"]
-        cmake_layout(self)
-
     def config_options(self):
         if is_msvc(self):
             self.options.rm_safe("fPIC")
@@ -105,6 +101,7 @@ class MTConnectAgentConan(ConanFile):
             self.output.info(f"Version of {package} is {ver}")
         else:
             self.output.info(f"Command: '{command}' returned {res}")
+        
         if ver < version:
             ver_text = '.'.join([str(x) for x in version])
             self.output.info(f"Old version of {package}, requesting tool {package}/{ver_text}")
@@ -141,10 +138,7 @@ class MTConnectAgentConan(ConanFile):
             self.package_type = "shared-library"
 
         if is_msvc(self):
-            self.options["boost/*"].extra_b2_flags = ("define=BOOST_USE_WINAPI_VERSION=" + str(self.options.winver))
-            
-        if is_msvc(self):
-            self.options["boost/*"].extra_b2_flags = ("define=BOOST_USE_WINAPI_VERSION=" + str(self.options.winver))
+            self.options["boost/*"].extra_b2_flags = ("define=BOOST_USE_WINAPI_VERSION=" + str(self.options.winver) + " -d+2")
             
         # Make sure shared builds use shared boost
         if is_msvc(self) and self.options.shared:
