@@ -120,7 +120,7 @@ class MTConnectAgentConan(ConanFile):
         self.requires("date/3.0.4", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("nlohmann_json/3.12.0", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
         self.requires("openssl/3.5.4", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
-        self.requires("rapidjson/1.1.0", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
+        self.requires("rapidjson/cci.20230929", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
         self.requires("mqtt_cpp/13.2.2", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
         self.requires("bzip2/1.0.8", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         

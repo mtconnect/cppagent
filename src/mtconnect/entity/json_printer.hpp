@@ -306,7 +306,7 @@ namespace mtconnect::entity {
         printer.printEntity(entity);
       });
 
-      return std::string(output.GetString(), output.GetLength());
+      return std::string(output.GetString(), output.GetSize());
     }
 
     /// @brief wrapper around the JsonPrinter print method that creates the correct printer
@@ -325,7 +325,7 @@ namespace mtconnect::entity {
         printer.print(entity);
       });
 
-      return std::string(output.GetString(), output.GetLength());
+      return std::string(output.GetString(), output.GetSize());
     }
 
   protected:

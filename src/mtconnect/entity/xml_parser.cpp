@@ -32,7 +32,7 @@ using namespace std;
 namespace mtconnect::entity {
   using namespace mtconnect::printer;
 
-  extern "C" void XMLCDECL entityXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
+  extern "C" void XMLCDECL entityXMLErrorFunc([[maybe_unused]] void *ctx, const char *msg, ...)
   {
     va_list args;
 
