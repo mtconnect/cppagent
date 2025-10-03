@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -180,7 +180,7 @@ TEST_F(FileCacheTest, file_cache_should_compress_file_async)
   });
 
   bool ran {false};
-  context.post([&ran] { ran = true; });
+  boost::asio::post(context, [&ran] { ran = true; });
 
   context.run();
   // EXPECT_TRUE(ran);

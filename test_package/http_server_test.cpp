@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,6 +42,7 @@ using namespace mtconnect::sink::rest_sink;
 namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace http = boost::beast::http;
+namespace ip = asio::ip;
 using tcp = boost::asio::ip::tcp;
 
 // main
@@ -70,7 +71,7 @@ public:
     beast::error_code ec;
 
     // These objects perform our I/O
-    tcp::endpoint server(asio::ip::address_v4::from_string("127.0.0.1"), port);
+    tcp::endpoint server(ip::make_address("127.0.0.1"), port);
 
     // Set the timeout.
     m_stream.expires_after(std::chrono::seconds(30));
@@ -231,7 +232,8 @@ public:
 
   void spawnReadChunk()
   {
-    asio::spawn(m_context, std::bind(&Client::readChunk, this, std::placeholders::_1));
+    asio::spawn(m_context, std::bind(&Client::readChunk, this, std::placeholders::_1),
+                boost::asio::detached);
   }
 
   void spawnRequest(boost::beast::http::verb verb, std::string const& target,
@@ -242,7 +244,8 @@ public:
     m_done = false;
     m_count = 0;
     asio::spawn(m_context, std::bind(&Client::request, this, verb, target, body, close, contentType,
-                                     std::placeholders::_1));
+                                     std::placeholders::_1),
+                boost::asio::detached);
 
     while (!m_done && m_context.run_for(20ms) > 0)
       ;
@@ -307,7 +310,9 @@ protected:
     m_client->m_connected = false;
     asio::spawn(m_context,
                 std::bind(&Client::connect, m_client.get(),
-                          static_cast<unsigned short>(m_server->getPort()), std::placeholders::_1));
+                          static_cast<unsigned short>(m_server->getPort()), std::placeholders::_1),
+                           boost::asio::detached);
+    
 
     while (!m_client->m_connected)
       m_context.run_one();

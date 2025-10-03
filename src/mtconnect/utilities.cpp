@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -150,13 +150,13 @@ namespace mtconnect {
   {
     using namespace boost;
     using namespace asio;
-    using res = ip::udp::resolver;
+    using res = ip::tcp::resolver;
 
     string address;
 
     boost::system::error_code ec;
     res resolver(context);
-    auto iter = resolver.resolve(ip::host_name(), "5000", res::flags::address_configured, ec);
+    auto results = resolver.resolve(ip::host_name(), "5000", res::flags::address_configured, ec);
     if (ec)
     {
       LOG(warning) << "Cannot find IP address: " << ec.message();
@@ -164,11 +164,9 @@ namespace mtconnect {
     }
     else
     {
-      res::iterator end;
-      while (iter != end)
+      for (auto &res : results)
       {
-        const auto &ep = iter->endpoint();
-        const auto &ad = ep.address();
+        const auto &ad = res.endpoint().address();
         if (!ad.is_unspecified() && !ad.is_loopback() && (!onlyV4 || !ad.is_v6()))
         {
           auto ads {ad.to_string()};
@@ -178,7 +176,6 @@ namespace mtconnect {
             address = ads;
           }
         }
-        iter++;
       }
     }
 
@@ -210,7 +207,7 @@ namespace mtconnect {
     /// @return a boost ipv6 address
     static boost::asio::ip::address_v6 from_v6_string(std::vector<char> str)
     {
-      return boost::asio::ip::address_v6::from_string(str.data());
+      return boost::asio::ip::make_address_v6(str.data());
     }
 
     BOOST_PHOENIX_ADAPT_FUNCTION(boost::asio::ip::address_v4, v4_from_4number, from_four_number, 4)

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -1006,7 +1006,7 @@ Port = 0
     ASSERT_EQ("SPINDLE_SPEED", dataItem->getType());
 
     boost::asio::steady_timer timer1(context.get());
-    timer1.expires_from_now(1s);
+    timer1.expires_after(1s);
     timer1.async_wait([this, &devices, agent](boost::system::error_code ec) {
       if (ec)
       {
@@ -1025,7 +1025,7 @@ Port = 0
     });
 
     boost::asio::steady_timer timer2(context.get());
-    timer2.expires_from_now(6s);
+    timer2.expires_after(6s);
     timer2.async_wait([this, agent, &chg](boost::system::error_code ec) {
       if (!ec)
       {
@@ -1085,7 +1085,7 @@ Port = 0
     ASSERT_EQ("SPINDLE_SPEED", dataItem->getType());
 
     boost::asio::steady_timer timer1(context.get());
-    timer1.expires_from_now(1s);
+    timer1.expires_after(1s);
     timer1.async_wait([this, &devices](boost::system::error_code ec) {
       if (ec)
       {
@@ -1098,7 +1098,7 @@ Port = 0
     });
 
     boost::asio::steady_timer timer2(context.get());
-    timer2.expires_from_now(6s);
+    timer2.expires_after(6s);
     timer2.async_wait([this, &chg](boost::system::error_code ec) {
       if (!ec)
       {
@@ -1151,7 +1151,7 @@ Port = 0
     auto instance = rest->instanceId();
 
     boost::asio::steady_timer timer1(context.get());
-    timer1.expires_from_now(1s);
+    timer1.expires_after(1s);
     timer1.async_wait([this, &config](boost::system::error_code ec) {
       if (ec)
       {
@@ -1167,7 +1167,7 @@ Port = 0
       this_thread::sleep_for(5s);
 
       boost::asio::steady_timer timer1(context.get());
-      timer1.expires_from_now(1s);
+      timer1.expires_after(1s);
       timer1.async_wait([this, agent, instance](boost::system::error_code ec) {
         if (!ec)
         {
@@ -1228,7 +1228,7 @@ Port = 0
     DataItemPtr di;
 
     boost::asio::steady_timer timer1(context.get());
-    timer1.expires_from_now(1s);
+    timer1.expires_after(1s);
     timer1.async_wait([this, &devices](boost::system::error_code ec) {
       if (ec)
       {
@@ -1242,7 +1242,7 @@ Port = 0
     });
 
     boost::asio::steady_timer timer2(context.get());
-    timer2.expires_from_now(6s);
+    timer2.expires_after(6s);
     timer2.async_wait([this](boost::system::error_code ec) {
       if (!ec)
       {
@@ -1345,7 +1345,7 @@ Port = 0
     ASSERT_EQ("1.2", *printer->getSchemaVersion());
 
     boost::asio::steady_timer timer1(context.get());
-    timer1.expires_from_now(1s);
+    timer1.expires_after(1s);
     timer1.async_wait([this, &devices, agent](boost::system::error_code ec) {
       if (ec)
       {
@@ -1368,7 +1368,7 @@ Port = 0
       this_thread::sleep_for(5s);
 
       boost::asio::steady_timer timer1(context.get());
-      timer1.expires_from_now(1s);
+      timer1.expires_after(1s);
       timer1.async_wait([this, agent, instance](boost::system::error_code ec) {
         if (!ec)
         {
@@ -1501,13 +1501,13 @@ Adapters {
 )");
         adapter->processData("--multiline--AAAAA");
 
-        timer2.expires_from_now(500ms);
+        timer2.expires_after(500ms);
         timer2.async_wait(validate);
       }
     };
 
     boost::asio::steady_timer timer1(asyncContext.get());
-    timer1.expires_from_now(100ms);
+    timer1.expires_after(100ms);
     timer1.async_wait(send);
 
     m_config->start();
@@ -1634,13 +1634,13 @@ Port = 0
 )");
         adapter->processData("--multiline--AAAAA");
 
-        timer2.expires_from_now(500ms);
+        timer2.expires_after(500ms);
         timer2.async_wait(validate);
       }
     };
 
     boost::asio::steady_timer timer1(asyncContext.get());
-    timer1.expires_from_now(100ms);
+    timer1.expires_after(100ms);
     timer1.async_wait(send);
 
     m_config->start();
@@ -1807,13 +1807,13 @@ Port = 0
 )");
         adapter->processData("--multiline--AAAAA");
 
-        timer2.expires_from_now(500ms);
+        timer2.expires_after(500ms);
         timer2.async_wait(validate);
       }
     };
 
     boost::asio::steady_timer timer1(asyncContext.get());
-    timer1.expires_from_now(100ms);
+    timer1.expires_after(100ms);
     timer1.async_wait(send);
 
     m_config->start();
@@ -1913,13 +1913,13 @@ Adapters {
 )");
         adapter->processData("--multiline--AAAAA");
 
-        timer2.expires_from_now(500ms);
+        timer2.expires_after(500ms);
         timer2.async_wait(validate);
       }
     };
 
     boost::asio::steady_timer timer1(asyncContext.get());
-    timer1.expires_from_now(100ms);
+    timer1.expires_after(100ms);
     timer1.async_wait(send);
 
     m_config->start();
@@ -2003,7 +2003,7 @@ Port = 0
         ASSERT_EQ("001", pipeline->getDevice());
       }
 
-      shutdownTimer.expires_from_now(3s);
+      shutdownTimer.expires_after(3s);
       shutdownTimer.async_wait(shudown);
     };
 
@@ -2039,13 +2039,13 @@ Port = 0
 )");
         adapter->processData("--multiline--AAAAA");
 
-        timer2.expires_from_now(500ms);
+        timer2.expires_after(500ms);
         timer2.async_wait(validate);
       }
     };
 
     boost::asio::steady_timer timer1(asyncContext.get());
-    timer1.expires_from_now(100ms);
+    timer1.expires_after(100ms);
     timer1.async_wait(send);
 
     m_config->start();
@@ -2116,13 +2116,13 @@ Adapters {
         adapter->processData("* device: none");
         adapter->processData("* uuid: 12345");
 
-        timer2.expires_from_now(500ms);
+        timer2.expires_after(500ms);
         timer2.async_wait(validate);
       }
     };
 
     boost::asio::steady_timer timer1(asyncContext.get());
-    timer1.expires_from_now(100ms);
+    timer1.expires_after(100ms);
     timer1.async_wait(send);
 
     m_config->start();

@@ -2,7 +2,7 @@
 set(AGENT_VERSION_MAJOR 2)
 set(AGENT_VERSION_MINOR 6)
 set(AGENT_VERSION_PATCH 0)
-set(AGENT_VERSION_BUILD 2)
+set(AGENT_VERSION_BUILD 3)
 set(AGENT_VERSION_RC "")
 
 # This minimum version is to support Visual Studio 2019 and C++ feature checking and FetchContent
@@ -22,13 +22,14 @@ set(CMAKE_INSTALL_DATADIR "${CMAKE_INSTALL_DATADIR}/mtconnect")
 
 message(INFO " Shared build: ${SHARED_AGENT_LIB}")
 
-project(cppagent LANGUAGES C CXX)
-
 # We will define these properties by default for each CMake target to be created.
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CXX_COMPILE_FEATURES cxx_std_17)
+set(CXX_COMPILE_FEATURES cxx_std_20)
+set(CMAKE_OSX_DEPLOYMENT_TARGET 13.3)
+
+project(cppagent LANGUAGES C CXX)
 
 set(WITH_RUBY ON CACHE STRING "With Ruby Support")
 

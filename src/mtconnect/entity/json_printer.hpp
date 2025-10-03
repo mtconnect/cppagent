@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -306,7 +306,7 @@ namespace mtconnect::entity {
         printer.printEntity(entity);
       });
 
-      return std::string(output.GetString(), output.GetLength());
+      return std::string(output.GetString(), output.GetSize());
     }
 
     /// @brief wrapper around the JsonPrinter print method that creates the correct printer
@@ -325,7 +325,7 @@ namespace mtconnect::entity {
         printer.print(entity);
       });
 
-      return std::string(output.GetString(), output.GetLength());
+      return std::string(output.GetString(), output.GetSize());
     }
 
   protected:

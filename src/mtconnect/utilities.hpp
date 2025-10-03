@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,6 +31,7 @@
 
 #include <chrono>
 #include <date/date.h>
+#include <date/tz.h>
 #include <filesystem>
 #include <map>
 #include <mtconnect/version.h>
@@ -163,7 +164,7 @@ namespace mtconnect {
   /// @brief Convert text to upper case
   /// @param[in,out] text text
   /// @return upper-case of text as string
-  inline std::string toUpperCase(std::string &text)
+  constexpr std::string &toUpperCase(std::string &text)
   {
     std::transform(text.begin(), text.end(), text.begin(),
                    [](unsigned char c) { return std::toupper(c); });
@@ -174,7 +175,7 @@ namespace mtconnect {
   /// @brief Simple check if a number as a string is negative
   /// @param s the numbeer
   /// @return `true` if positive
-  inline bool isNonNegativeInteger(const std::string &s)
+  constexpr bool isNonNegativeInteger(const std::string &s)
   {
     for (const char c : s)
     {
@@ -188,7 +189,7 @@ namespace mtconnect {
   /// @brief Checks if a string is a valid integer
   /// @param s the string
   /// @return `true` if is `[+-]\d+`
-  inline bool isInteger(const std::string &s)
+  constexpr bool isInteger(const std::string &s)
   {
     auto iter = s.cbegin();
     if (*iter == '-' || *iter == '+')
@@ -218,7 +219,12 @@ namespace mtconnect {
     using namespace std;
     using namespace std::chrono;
     constexpr char ISO_8601_FMT[] = "%Y-%m-%dT%H:%M:%SZ";
-
+#ifdef _WINDOWS
+    namespace tzchrono = std::chrono;
+#else
+    namespace tzchrono = date;
+#endif
+    
     switch (format)
     {
       case HUM_READ:
@@ -228,12 +234,11 @@ namespace mtconnect {
       case GMT_UV_SEC:
         return date::format(ISO_8601_FMT, date::floor<microseconds>(timePoint));
       case LOCAL:
-        auto time = system_clock::to_time_t(timePoint);
-        struct tm timeinfo = {0};
-        mt_localtime(&time, &timeinfo);
-        char timestamp[64] = {0};
-        strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
-        return timestamp;
+      {
+        auto zone = tzchrono::current_zone();
+        auto zt = date::zoned_time(zone, timePoint);
+        return date::format("%Y-%m-%dT%H:%M:%S%z", zt);
+      }
     }
 
     return "";
@@ -757,14 +762,9 @@ namespace mtconnect {
   /// @return converted `Timestamp`
   inline Timestamp parseTimestamp(const std::string &timestamp)
   {
-    using namespace date;
-    using namespace std::chrono;
-    using namespace std::chrono_literals;
-    using namespace date::literals;
-
     Timestamp ts;
     std::istringstream in(timestamp);
-    in >> std::setw(6) >> parse("%FT%T", ts);
+    in >> std::setw(6) >> date::parse("%FT%T", ts);
     if (!in.good())
     {
       ts = std::chrono::system_clock::now();
@@ -819,11 +819,12 @@ namespace mtconnect {
   /// @param[in] sha the sha1 namespace to use as context
   /// @param[in] id the id to use transform
   /// @returns Returns the first 16 characters of the  base 64 encoded sha1
-  inline std::string makeUniqueId(const ::boost::uuids::detail::sha1 &sha, const std::string &id)
+  inline std::string makeUniqueId(const ::boost::uuids::detail::sha1 &contextSha, const std::string &id)
   {
     using namespace std;
+    using namespace boost::uuids::detail;
 
-    ::boost::uuids::detail::sha1 sha1(sha);
+    sha1 sha(contextSha);
 
     constexpr string_view startc("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_");
     constexpr auto isIDStartChar = [](unsigned char c) -> bool { return isalpha(c) || c == '_'; };
@@ -831,12 +832,14 @@ namespace mtconnect {
       return isIDStartChar(c) || isdigit(c) || c == '.' || c == '-';
     };
 
-    sha1.process_bytes(id.data(), id.length());
-    unsigned int digest[5];
-    sha1.get_digest(digest);
+    sha.process_bytes(id.data(), id.length());
+    sha1::digest_type  digest;
+    sha.get_digest(digest);
 
+     auto data = (unsigned int *) digest;
+    
     string s(32, ' ');
-    auto len = boost::beast::detail::base64::encode(s.data(), digest, sizeof(digest));
+    auto len = boost::beast::detail::base64::encode(s.data(), data, sizeof(digest));
 
     s.erase(len - 1);
     s.erase(std::remove_if(++(s.begin()), s.end(), not_fn(isIDChar)), s.end());

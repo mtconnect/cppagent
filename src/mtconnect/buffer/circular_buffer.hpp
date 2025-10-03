@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -326,8 +326,8 @@ namespace mtconnect::buffer {
     mutable std::recursive_mutex m_sequenceLock;
 
     // Sequence number
-    volatile SequenceNumber_t m_sequence;
-    volatile SequenceNumber_t m_firstSequence;
+    SequenceNumber_t m_sequence;
+    SequenceNumber_t m_firstSequence;
 
     // The sliding/circular buffer to hold all of the events/sample data
     unsigned int m_slidingBufferSize;

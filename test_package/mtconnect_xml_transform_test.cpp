@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,6 @@ using namespace mtconnect::pipeline;
 using namespace mtconnect::observation;
 using namespace mtconnect::asset;
 using namespace std;
-using namespace date::literals;
 using namespace std::literals;
 
 // main

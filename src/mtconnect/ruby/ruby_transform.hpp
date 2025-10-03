@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,6 @@
 namespace mtconnect::ruby {
   using namespace mtconnect::pipeline;
   using namespace std::literals;
-  using namespace date::literals;
   using namespace entity;
   using namespace observation;
 

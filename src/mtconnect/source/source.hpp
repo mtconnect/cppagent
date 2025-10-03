@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -95,6 +95,11 @@ namespace mtconnect {
       std::string m_name;
       boost::asio::io_context::strand m_strand;
     };
+    
+    /// @brief create a unique identity hash for an XML id starting with an `_` and 10 hex digits
+    /// @param text the text to create the hashed id
+    /// @returns a string with the hashed result
+    AGENT_LIB_API std::string CreateIdentityHash(const std::string &input);
 
     /// @brief A factory for creating the source
     class AGENT_LIB_API SourceFactory

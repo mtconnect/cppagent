@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,6 @@
 using namespace std::chrono_literals;
 using namespace std;
 using namespace std::literals;
-using namespace date::literals;
 
 using WorkGuard = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
 

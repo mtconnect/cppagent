@@ -1,5 +1,5 @@
 
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 
 //   Licensed under the Apache License, Version 2.0 (the "License");
@@ -115,7 +115,7 @@ protected:
   bool waitFor(const chrono::duration<Rep, Period> &time, function<bool()> pred)
   {
     boost::asio::steady_timer timer(m_agentTestHelper->m_ioContext);
-    timer.expires_from_now(time);
+    timer.expires_after(time);
     bool timeout = false;
     timer.async_wait([&timeout](boost::system::error_code ec) {
       if (!ec)

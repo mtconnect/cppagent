@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -477,7 +477,7 @@ namespace mtconnect {
       return;
     }
 
-    auto callback = [=](config::AsyncContext &context) {
+    auto callback = [=, this](config::AsyncContext &context) {
       try
       {
         bool changed = false;
@@ -604,7 +604,7 @@ namespace mtconnect {
       createUniqueIds(device);
 
       LOG(info) << "Checking if device " << *uuid << " has changed";
-      if (*device != *oldDev)
+      if (device->different(*oldDev))
       {
         LOG(info) << "Device " << *uuid << " changed, updating model";
 

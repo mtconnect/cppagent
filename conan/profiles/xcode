@@ -1,7 +1,7 @@
 include(default)
 
 [settings]
-compiler.cppstd=17
+compiler.cppstd=20
 
 [platform_tool_requires]
 cmake/3.26.4
