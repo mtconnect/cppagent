@@ -1,3 +1,20 @@
+//
+// Copyright Copyright 2009-2023, AMT – The Association For Manufacturing Technology (“AMT”)
+// All rights reserved.
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
 #include "mqtt_entity_sink.hpp"
 
 #include <iomanip>
@@ -60,6 +77,26 @@ namespace mtconnect {
         m_assetTopicPrefix = get<string>(m_options[configuration::AssetTopicPrefix]);
       }
 
+      static MqttClient::QOS parseQos(const ConfigOptions& options)
+      {
+        if (auto qosInt = GetOption<int>(options, configuration::MqttQOS))
+        {
+          return *qosInt == 0   ? MqttClient::QOS::at_most_once
+                 : *qosInt == 2 ? MqttClient::QOS::exactly_once
+                                : MqttClient::QOS::at_least_once;
+        }
+
+        if (auto qosStr = GetOption<std::string>(options, configuration::MqttQOS))
+        {
+          if (*qosStr == "at_most_once" || *qosStr == "0")
+            return MqttClient::QOS::at_most_once;
+          if (*qosStr == "exactly_once" || *qosStr == "2")
+            return MqttClient::QOS::exactly_once;
+        }
+
+        return MqttClient::QOS::at_least_once;
+      }
+
       void MqttEntitySink::start()
       {
         if (!m_client)
@@ -76,8 +113,7 @@ namespace mtconnect {
               boost::replace_all(lwtTopic, "[device]", *agentDevice->getUuid());
 
               // Get QoS and Retain from options
-              auto qos = static_cast<MqttClient::QOS>(
-                  GetOption<int>(m_options, configuration::MqttQOS).value_or(1));
+              auto qos = parseQos(m_options);
               bool retain = GetOption<bool>(m_options, configuration::MqttRetain).value_or(false);
               LOG(debug) << "Publishing availability to: " << lwtTopic;
 
@@ -118,8 +154,7 @@ namespace mtconnect {
           // Publish UNAVAILABLE before disconnecting
           if (m_client->isConnected())
           {
-            auto qos = static_cast<MqttClient::QOS>(
-                GetOption<int>(m_options, configuration::MqttQOS).value_or(1));
+            auto qos = parseQos(m_options);
             m_client->publish(m_lastWillTopic, "UNAVAILABLE", true, qos);
           }
           m_client->stop();
@@ -450,8 +485,7 @@ namespace mtconnect {
         }
 
         // Get QoS setting
-        auto qos = static_cast<MqttClient::QOS>(
-            GetOption<int>(m_options, configuration::MqttQOS).value_or(1));
+        auto qos = parseQos(m_options);
         bool retain = GetOption<bool>(m_options, configuration::MqttRetain).value_or(false);
 
         try
