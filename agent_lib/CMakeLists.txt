@@ -256,14 +256,6 @@ set(AGENT_SOURCES
 #src/sink/mqtt_sink SOURCE_FILES_ONLY
 
 	"${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.cpp"
-
-# src/sink/mqtt_sink HEADER_FILE_ONLY
-
-        "${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.hpp"
-
-#src/sink/mqtt_sink SOURCE_FILES_ONLY
-
-        "${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.cpp"
         
 # src/sink/mqtt_entity_sink HEADER_FILE_ONLY
 
