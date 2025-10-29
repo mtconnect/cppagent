@@ -409,11 +409,11 @@ namespace mtconnect::sink::rest_sink {
       LOG(debug) << "WebsocketSession::parseRequest command: " << *request->parameter<string>("request");
       LOG(debug) << "WebsocketSession::parseRequest assetIds: " << *request->parameter<string>("assetIds");
 
-      string value = *request->parameter<string>("assetIds");
-      if (!value.empty() && !(value == "asset")) {
-        request->m_parameters["request"] = "assetIds";
-        LOG(debug) << "WebsocketSession::parseRequest command: " << *request->parameter<string>("request");
-      }
+      // string value = *request->parameter<string>("assetIds");
+      // if (!value.empty() && !(value == "asset")) {
+      //   request->m_parameters["request"] = "assetIds";
+      //   LOG(debug) << "WebsocketSession::parseRequest command: " << *request->parameter<string>("request");
+      // }
 
       return request;
     }
