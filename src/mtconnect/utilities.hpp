@@ -66,7 +66,42 @@ namespace boost::asio {
 namespace mtconnect {
   // Message for when enumerations do not exist in an array/enumeration
   const int ENUM_MISS = -1;
-
+  
+  /// @brtief Fatal Error Exception
+  /// An exception that get thrown to shut down the application. Only caught by the top level worker thread.
+  class FatalException : public std::exception
+  {
+  public:
+    /// @brief Create a fatal exception with a message
+    /// @param str The message
+    FatalException(const std::string &str) : m_what(str) {}
+    /// @brief Create a fatal exception with a message
+    /// @param str The message
+    FatalException(const std::string_view &str) : m_what(str) {}
+    /// @brief Create a fatal exception with a message
+    /// @param str The message
+    FatalException(const char *str) : m_what(str) {}
+    /// @brief Create a default fatal exception
+    /// Has the message `Fatal Exception Occurred`
+    FatalException() : m_what("Fatal Exception Occurred") {}    
+    /// @brief Copy construction from an exception
+    /// @param ex the exception
+    FatalException(const std::exception &ex) : m_what(ex.what()) {}
+    /// @brief Defaut construction
+    FatalException(const FatalException &) = default;
+    /// @brief Default destructor
+    ~FatalException() = default;
+    
+    /// @brief gets the message
+    /// @returns the message as a string
+    const char* what() const noexcept override { return m_what.c_str(); }
+    
+  protected:
+    std::string m_what;
+    
+  };
+  
+  
   /// @brief Time formats
   enum TimeFormat
   {
@@ -75,7 +110,7 @@ namespace mtconnect {
     GMT_UV_SEC,  ///< GMT with microsecond resolution
     LOCAL        ///< Time using local time zone
   };
-
+  
   /// @brief Converts string to floating point numberss
   /// @param[in] text the number
   /// @return the converted value or 0.0 if incorrect.
@@ -96,7 +131,7 @@ namespace mtconnect {
     }
     return value;
   }
-
+  
   /// @brief Converts string to integer
   /// @param[in] text the number
   /// @return the converted value or 0 if incorrect.
@@ -117,7 +152,7 @@ namespace mtconnect {
     }
     return value;
   }
-
+  
   /// @brief converts a double to a string
   /// @param[in] value the double
   /// @return the string representation of the double (10 places max)
@@ -128,18 +163,18 @@ namespace mtconnect {
     s << std::setprecision(precision) << value;
     return s.str();
   }
-
+  
   /// @brief inline formattor support for doubles
   class format_double_stream
   {
   protected:
     double val;
-
+    
   public:
     /// @brief create a formatter
     /// @param[in] v the value
     format_double_stream(double v) { val = v; }
-
+    
     /// @brief writes a double to an output stream with up to 10 digits of precision
     /// @tparam _CharT from std::basic_ostream
     /// @tparam _Traits from std::basic_ostream
@@ -148,19 +183,19 @@ namespace mtconnect {
     /// @return reference to the output stream
     template <class _CharT, class _Traits>
     inline friend std::basic_ostream<_CharT, _Traits> &operator<<(
-        std::basic_ostream<_CharT, _Traits> &os, const format_double_stream &fmter)
+                                                                  std::basic_ostream<_CharT, _Traits> &os, const format_double_stream &fmter)
     {
       constexpr int precision = std::numeric_limits<double>::digits10;
       os << std::setprecision(precision) << fmter.val;
       return os;
     }
   };
-
+  
   /// @brief create a `format_doulble_stream`
   /// @param[in] v the value
   /// @return the format_double_stream
   inline format_double_stream formatted(double v) { return format_double_stream(v); }
-
+  
   /// @brief Convert text to upper case
   /// @param[in,out] text text
   /// @return upper-case of text as string
@@ -168,10 +203,10 @@ namespace mtconnect {
   {
     std::transform(text.begin(), text.end(), text.begin(),
                    [](unsigned char c) { return std::toupper(c); });
-
+    
     return text;
   }
-
+  
   /// @brief Simple check if a number as a string is negative
   /// @param s the numbeer
   /// @return `true` if positive
@@ -182,10 +217,10 @@ namespace mtconnect {
       if (!isdigit(c))
         return false;
     }
-
+    
     return true;
   }
-
+  
   /// @brief Checks if a string is a valid integer
   /// @param s the string
   /// @return `true` if is `[+-]\d+`
@@ -194,21 +229,21 @@ namespace mtconnect {
     auto iter = s.cbegin();
     if (*iter == '-' || *iter == '+')
       ++iter;
-
+    
     for (; iter != s.end(); iter++)
     {
       if (!isdigit(*iter))
         return false;
     }
-
+    
     return true;
   }
-
+  
   /// @brief Gets the local time
   /// @param[in] time the time
   /// @param[out] buf struct tm
   AGENT_LIB_API void mt_localtime(const time_t *time, struct tm *buf);
-
+  
   /// @brief Formats the timePoint as  string given the format
   /// @param[in] timePoint the time
   /// @param[in] format the format
@@ -240,10 +275,10 @@ namespace mtconnect {
         return date::format("%Y-%m-%dT%H:%M:%S%z", zt);
       }
     }
-
+    
     return "";
   }
-
+  
   /// @brief get the current time in the given format
   ///
   /// cover method for `getCurrentTime()` with `system_clock::now()`
@@ -254,7 +289,7 @@ namespace mtconnect {
   {
     return getCurrentTime(std::chrono::system_clock::now(), format);
   }
-
+  
   /// @brief Get the current time as a unsigned uns64 since epoch
   /// @tparam timePeriod the resolution type of time
   /// @return the time as an uns64
@@ -262,18 +297,18 @@ namespace mtconnect {
   inline uint64_t getCurrentTimeIn()
   {
     return std::chrono::duration_cast<timePeriod>(
-               std::chrono::system_clock::now().time_since_epoch())
-        .count();
+                                                  std::chrono::system_clock::now().time_since_epoch())
+    .count();
   }
-
+  
   /// @brief Current time in microseconds since epoch
   /// @return the time as uns64 in microsecnods
   inline uint64_t getCurrentTimeInMicros() { return getCurrentTimeIn<std::chrono::microseconds>(); }
-
+  
   /// @brief Current time in seconds since epoch
   /// @return the time as uns64 in seconds
   inline uint64_t getCurrentTimeInSec() { return getCurrentTimeIn<std::chrono::seconds>(); }
-
+  
   /// @brief Parse the given time
   /// @param aTime the time in text
   /// @return uns64 in microseconds since epoch
@@ -293,12 +328,12 @@ namespace mtconnect {
     date::from_stream(str, "%FT%T%Z", fields, &abbrev, &offset);
     if (!fields.ymd.ok() || !fields.tod.in_conventional_range())
       return 0;
-
+    
     micros microdays {date::sys_days(fields.ymd)};
     auto us = fields.tod.to_duration().count() + microdays.time_since_epoch().count();
     return us;
   }
-
+  
   /// @brief escaped reserved XML characters from text
   /// @param data text with reserved characters escaped
   inline void replaceIllegalCharacters(std::string &data)
@@ -306,41 +341,30 @@ namespace mtconnect {
     for (auto i = 0u; i < data.length(); i++)
     {
       char c = data[i];
-
+      
       switch (c)
       {
         case '&':
           data.replace(i, 1, "&amp;");
           break;
-
+          
         case '<':
           data.replace(i, 1, "&lt;");
           break;
-
+          
         case '>':
           data.replace(i, 1, "&gt;");
           break;
       }
     }
   }
-
+  
   /// @brief add namespace prefixes to each element of the XPath
   /// @param[in] aPath the path to modify
   /// @param[in] aPrefix the prefix to add
   /// @return the modified path prefixed
   AGENT_LIB_API std::string addNamespace(const std::string aPath, const std::string aPrefix);
-
-  /// @brief determines of a string ends with an ending
-  /// @param[in] value the string to check
-  /// @param[in] ending the ending to verify
-  /// @return `true` if the string ends with ending
-  inline bool ends_with(const std::string &value, const std::string_view &ending)
-  {
-    if (ending.size() > value.size())
-      return false;
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-  }
-
+  
   /// @brief removes white space at the beginning of a string
   /// @param[in,out] s the string
   /// @return string with spaces removed
@@ -349,7 +373,7 @@ namespace mtconnect {
     boost::algorithm::trim_left(s);
     return s;
   }
-
+  
   /// @brief removes whitespace from the end of the string
   /// @param[in,out] s the string
   /// @return string with spaces removed
@@ -358,7 +382,7 @@ namespace mtconnect {
     boost::algorithm::trim_right(s);
     return s;
   }
-
+  
   /// @brief removes spaces from the beginning and end of a string
   /// @param[in] s the string
   /// @return string with spaces removed
@@ -367,7 +391,7 @@ namespace mtconnect {
     boost::algorithm::trim(s);
     return s;
   }
-
+  
   /// @brief split a string into two parts using a ':' separator
   /// @param key the key to split
   /// @return a pair of the key and an optional prefix.
@@ -379,18 +403,7 @@ namespace mtconnect {
     else
       return {key, std::nullopt};
   }
-
-  /// @brief determines of a string starts with a beginning
-  /// @param[in] value the string to check
-  /// @param[in] beginning the beginning to verify
-  /// @return `true` if the string begins with beginning
-  inline bool starts_with(const std::string &value, const std::string_view &beginning)
-  {
-    if (beginning.size() > value.size())
-      return false;
-    return std::equal(beginning.begin(), beginning.end(), value.begin());
-  }
-
+  
   /// @brief Case insensitive equals
   /// @param a first string
   /// @param b second string
@@ -399,14 +412,14 @@ namespace mtconnect {
   {
     if (a.size() != b.size())
       return false;
-
+    
     return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char a, char b) {
-             return tolower(a) == tolower(b);
-           });
+      return tolower(a) == tolower(b);
+    });
   }
-
+  
   using Attributes = std::map<std::string, std::string>;
-
+  
   /// @brief overloaded pattern for variant visitors using list of lambdas
   /// @tparam ...Ts list of lambda classes
   template <class... Ts>
@@ -416,7 +429,7 @@ namespace mtconnect {
   };
   template <class... Ts>
   overloaded(Ts...) -> overloaded<Ts...>;
-
+  
   /// @brief Reverse an iterable
   /// @tparam T The iterable type
   template <typename T>
@@ -424,13 +437,13 @@ namespace mtconnect {
   {
   private:
     T &m_iterable;
-
+    
   public:
     explicit reverse(T &iterable) : m_iterable(iterable) {}
     auto begin() const { return std::rbegin(m_iterable); }
     auto end() const { return std::rend(m_iterable); }
   };
-
+  
   /// @brief observation sequence type
   using SequenceNumber_t = uint64_t;
   /// @brief set of data item ids for filtering
@@ -442,16 +455,16 @@ namespace mtconnect {
   using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
   using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
   using StringList = std::list<std::string>;
-
+  
   /// @name Configuration related methods
   ///@{
-
+  
   /// @brief Variant for configuration options
   using ConfigOption = std::variant<std::monostate, bool, int, std::string, double, Seconds,
-                                    Milliseconds, StringList>;
+  Milliseconds, StringList>;
   /// @brief A map of name to option value
   using ConfigOptions = std::map<std::string, ConfigOption>;
-
+  
   /// @brief Get an option if available
   /// @tparam T the option type
   /// @param options the set of options
@@ -466,7 +479,7 @@ namespace mtconnect {
     else
       return std::nullopt;
   }
-
+  
   /// @brief checks if a boolean option is set
   /// @param options the set of options
   /// @param name the name of the option
@@ -479,7 +492,7 @@ namespace mtconnect {
     else
       return false;
   }
-
+  
   /// @brief checks if there is an option
   /// @param[in] options the set of options
   /// @param[in] name the name of the option
@@ -489,7 +502,7 @@ namespace mtconnect {
     auto v = options.find(name);
     return v != options.end();
   }
-
+  
   /// @brief convert an option from a string to a typed option
   /// @param[in] s the
   /// @param[in] def template for the option
@@ -502,29 +515,29 @@ namespace mtconnect {
     {
       std::string sv = std::get<std::string>(option);
       visit(overloaded {[&option, &sv](const std::string &) {
-                          if (sv.empty())
-                            option = std::monostate();
-                          else
-                            option = sv;
-                        },
-                        [&option, &sv](const int &) { option = stoi(sv); },
-                        [&option, &sv](const Milliseconds &) { option = Milliseconds {stoi(sv)}; },
-                        [&option, &sv](const Seconds &) { option = Seconds {stoi(sv)}; },
-                        [&option, &sv](const double &) { option = stod(sv); },
-                        [&option, &sv](const bool &) { option = sv == "yes" || sv == "true"; },
-                        [&option, &sv](const StringList &) {
-                          StringList list;
-                          boost::split(list, sv, boost::is_any_of(","));
-                          for (auto &s : list)
-                            boost::trim(s);
-                          option = list;
-                        },
-                        [](const auto &) {}},
+        if (sv.empty())
+          option = std::monostate();
+        else
+          option = sv;
+      },
+        [&option, &sv](const int &) { option = stoi(sv); },
+        [&option, &sv](const Milliseconds &) { option = Milliseconds {stoi(sv)}; },
+        [&option, &sv](const Seconds &) { option = Seconds {stoi(sv)}; },
+        [&option, &sv](const double &) { option = stod(sv); },
+        [&option, &sv](const bool &) { option = sv == "yes" || sv == "true"; },
+        [&option, &sv](const StringList &) {
+          StringList list;
+          boost::split(list, sv, boost::is_any_of(","));
+          for (auto &s : list)
+            boost::trim(s);
+          option = list;
+        },
+        [](const auto &) {}},
             def);
     }
     return option;
   }
-
+  
   /// @brief convert from a string option to a size
   ///
   /// Recognizes the following suffixes:
@@ -542,7 +555,7 @@ namespace mtconnect {
     using namespace std;
     using boost::regex;
     using boost::smatch;
-
+    
     auto value = GetOption<string>(options, name);
     if (value)
     {
@@ -559,11 +572,11 @@ namespace mtconnect {
             case 'G':
             case 'g':
               size *= 1024;
-
+              
             case 'M':
             case 'm':
               size *= 1024;
-
+              
             case 'K':
             case 'k':
               size *= 1024;
@@ -577,10 +590,10 @@ namespace mtconnect {
         throw std::runtime_error(msg.str());
       }
     }
-
+    
     return size;
   }
-
+  
   /// @brief adds a property tree node to an option set
   /// @param[in] tree the property tree coming from configuration parser
   /// @param[in,out] options the options set
@@ -606,7 +619,7 @@ namespace mtconnect {
       }
     }
   }
-
+  
   /// @brief adds a property tree node to an option set with defaults
   /// @param[in] tree the property tree coming from configuration parser
   /// @param[in,out] options the option set
@@ -634,7 +647,7 @@ namespace mtconnect {
         options.insert_or_assign(e.first, e.second);
     }
   }
-
+  
   /// @brief combine two option sets
   /// @param[in,out] options existing set of options
   /// @param[in] entries options to add or update
@@ -645,7 +658,7 @@ namespace mtconnect {
       options.insert_or_assign(e.first, e.second);
     }
   }
-
+  
   /// @brief get options from a property tree and create typed options
   /// @param[in] tree the property tree coming from configuration parser
   /// @param[in,out] options option set to modify
@@ -663,9 +676,9 @@ namespace mtconnect {
     }
     AddOptions(tree, options, entries);
   }
-
+  
   /// @}
-
+  
   /// @brief Format a timestamp as a string in microseconds
   /// @param[in] ts the timestamp
   /// @return the time with microsecond resolution
@@ -683,7 +696,7 @@ namespace mtconnect {
     time.append("Z");
     return time;
   }
-
+  
   /// @brief Capitalize a word
   ///
   /// Has special treatment of acronyms like AC, DC, PH, etc.
@@ -694,12 +707,12 @@ namespace mtconnect {
                          std::string::const_iterator end)
   {
     using namespace std;
-
+    
     // Exceptions to the rule
     const static std::unordered_map<std::string_view, std::string_view> exceptions = {
-        {"AC", "AC"}, {"DC", "DC"},   {"PH", "PH"},
-        {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
-
+      {"AC", "AC"}, {"DC", "DC"},   {"PH", "PH"},
+      {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
+    
     std::string_view s(&*start, distance(start, end));
     const auto &w = exceptions.find(s);
     ostream_iterator<char> out(camel);
@@ -713,7 +726,7 @@ namespace mtconnect {
       transform(start + 1, end, out, ::tolower);
     }
   }
-
+  
   /// @brief creates an upper-camel-case string from words separated by an underscore (`_`) with
   /// optional prefix
   ///
@@ -727,20 +740,20 @@ namespace mtconnect {
     using namespace std;
     if (type.empty())
       return "";
-
+    
     ostringstream camel;
-
+    
     auto start = type.begin();
     decltype(start) end;
-
+    
     auto colon = type.find(':');
-
+    
     if (colon != string::npos)
     {
       prefix = type.substr(0ul, colon);
       start += colon + 1;
     }
-
+    
     bool done;
     do
     {
@@ -753,10 +766,10 @@ namespace mtconnect {
         start = end + 1;
       }
     } while (!done);
-
+    
     return camel.str();
   }
-
+  
   /// @brief parse a string timestamp to a `Timestamp`
   /// @param timestamp[in] the timestamp as a string
   /// @return converted `Timestamp`
@@ -771,22 +784,22 @@ namespace mtconnect {
     }
     return ts;
   }
-
-/// @brief Creates a comparable schema version from a major and minor number
+  
+  /// @brief Creates a comparable schema version from a major and minor number
 #define SCHEMA_VERSION(major, minor) (major * 100 + minor)
-
+  
   /// @brief Get the default schema version of the agent as a string
   /// @return the version
   inline std::string StrDefaultSchemaVersion()
   {
     return std::to_string(AGENT_VERSION_MAJOR) + "." + std::to_string(AGENT_VERSION_MINOR);
   }
-
+  
   inline constexpr int32_t IntDefaultSchemaVersion()
   {
     return SCHEMA_VERSION(AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR);
   }
-
+  
   /// @brief convert a string version to a major and minor as two integers separated by a char.
   /// @param s the version
   inline int32_t IntSchemaVersion(const std::string &s)
@@ -804,12 +817,12 @@ namespace mtconnect {
       return SCHEMA_VERSION(major, minor);
     }
   }
-
+  
   /// @brief Retrieve the best Host IP address from the network interfaces.
   /// @param[in] context the boost asio io_context for resolving the address
   /// @param[in] onlyV4 only consider IPV4 addresses if `true`
   std::string GetBestHostAddress(boost::asio::io_context &context, bool onlyV4 = false);
-
+  
   /// @brief Function to create a unique id given a sha1 namespace and an id.
   ///
   /// Creates a base 64 encoded version of the string and removes any illegal characters
@@ -823,27 +836,27 @@ namespace mtconnect {
   {
     using namespace std;
     using namespace boost::uuids::detail;
-
+    
     sha1 sha(contextSha);
-
+    
     constexpr string_view startc("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_");
     constexpr auto isIDStartChar = [](unsigned char c) -> bool { return isalpha(c) || c == '_'; };
     constexpr auto isIDChar = [isIDStartChar](unsigned char c) -> bool {
       return isIDStartChar(c) || isdigit(c) || c == '.' || c == '-';
     };
-
+    
     sha.process_bytes(id.data(), id.length());
     sha1::digest_type  digest;
     sha.get_digest(digest);
-
-     auto data = (unsigned int *) digest;
+    
+    auto data = (unsigned int *) digest;
     
     string s(32, ' ');
     auto len = boost::beast::detail::base64::encode(s.data(), data, sizeof(digest));
-
+    
     s.erase(len - 1);
     s.erase(std::remove_if(++(s.begin()), s.end(), not_fn(isIDChar)), s.end());
-
+    
     // Check if the character is legal.
     if (!isIDStartChar(s[0]))
     {
@@ -852,39 +865,39 @@ namespace mtconnect {
       s.erase(0, 1);
       s[0] = startc[c % startc.size()];
     }
-
+    
     s.erase(16);
-
+    
     return s;
   }
-
+  
   namespace url {
     using UrlQueryPair = std::pair<std::string, std::string>;
-
+    
     /// @brief A map of URL query parameters that can format as a string
     struct AGENT_LIB_API UrlQuery : public std::map<std::string, std::string>
     {
       using std::map<std::string, std::string>::map;
-
+      
       /// @brief join the parameters as `<key1>=<value1>&<key2>=<value2>&...`
       /// @return
       std::string join() const
       {
         std::stringstream ss;
         bool has_pre = false;
-
+        
         for (const auto &kv : *this)
         {
           if (has_pre)
             ss << '&';
-
+          
           ss << kv.first << '=' << kv.second;
           has_pre = true;
         }
-
+        
         return ss.str();
       }
-
+      
       /// @brief Merge twos sets over-writing existing pairs set with `query` and adding new pairs
       /// @param query query to merge
       void merge(UrlQuery query)
@@ -895,15 +908,15 @@ namespace mtconnect {
         }
       }
     };
-
+    
     /// @brief URL struct to parse and format URLs
     struct AGENT_LIB_API Url
     {
       /// @brief Variant for the Host that is either a host name or an ip address
       using Host = std::variant<std::string, boost::asio::ip::address>;
-
+      
       std::string m_protocol;  ///< either `http` or `https`
-
+      
       Host m_host;                            ///< the host component
       std::optional<std::string> m_username;  ///< optional username
       std::optional<std::string> m_password;  ///< optional password
@@ -911,22 +924,22 @@ namespace mtconnect {
       std::string m_path = "/";               ///< The path component
       UrlQuery m_query;                       ///< Query parameters
       std::string m_fragment;                 ///< The component after a `#`
-
+      
       /// @brief Visitor to format the Host as a string
       struct HostVisitor
       {
         std::string operator()(std::string v) const { return v; }
-
+        
         std::string operator()(boost::asio::ip::address v) const { return v.to_string(); }
       };
-
+      
       /// @brief Get the host as a string
       /// @return the host
       std::string getHost() const { return std::visit(HostVisitor(), m_host); }
       /// @brief Get the port as a string
       /// @return the port
       std::string getService() const { return boost::lexical_cast<std::string>(getPort()); }
-
+      
       /// @brief Get the path and the query portion of the URL
       /// @return the path and query
       std::string getTarget() const
@@ -936,7 +949,7 @@ namespace mtconnect {
         else
           return m_path;
       }
-
+      
       /// @brief Format a target using the existing host and port to make a request
       /// @param device an optional device
       /// @param operation the operation (probe,sample,current, or asset)
@@ -948,7 +961,7 @@ namespace mtconnect {
         UrlQuery uq {m_query};
         if (!query.empty())
           uq.merge(query);
-
+        
         std::stringstream path;
         path << m_path;
         if (m_path[m_path.size() - 1] != '/')
@@ -959,10 +972,10 @@ namespace mtconnect {
           path << operation;
         if (uq.size() > 0)
           path << '?' << uq.join();
-
+        
         return path.str();
       }
-
+      
       int getPort() const
       {
         if (m_port)
@@ -974,7 +987,7 @@ namespace mtconnect {
         else
           return 0;
       }
-
+      
       /// @brief Format the URL as text
       /// @param device optional device to add to the URL
       /// @return formatted URL
@@ -986,7 +999,7 @@ namespace mtconnect {
           url << *device;
         return url.str();
       }
-
+      
       /// @brief parse a string to a Url
       /// @return parsed URL
       static Url parse(const std::string_view &url);

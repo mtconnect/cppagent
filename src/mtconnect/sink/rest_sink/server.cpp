@@ -43,12 +43,12 @@ namespace mtconnect::sink::rest_sink {
   using tcp = boost::asio::ip::tcp;
   namespace algo = boost::algorithm;
   namespace ssl = boost::asio::ssl;
-
+  
   using namespace std;
   using namespace rapidjson;
   using std::placeholders::_1;
   using std::placeholders::_2;
-
+  
   void Server::loadTlsCertificate()
   {
     if (HasOption(m_options, configuration::TlsCertificateChain) &&
@@ -59,27 +59,27 @@ namespace mtconnect::sink::rest_sink {
       if (HasOption(m_options, configuration::TlsCertificatePassword))
       {
         m_sslContext.set_password_callback(
-            [this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
-              return *GetOption<string>(m_options, configuration::TlsCertificatePassword);
-            });
+                                           [this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
+                                             return *GetOption<string>(m_options, configuration::TlsCertificatePassword);
+                                           });
       }
-
+      
       m_sslContext.set_options(ssl::context::default_workarounds | asio::ssl::context::no_sslv2 |
                                asio::ssl::context::single_dh_use);
       m_sslContext.use_certificate_chain_file(
-          *GetOption<string>(m_options, configuration::TlsCertificateChain));
+                                              *GetOption<string>(m_options, configuration::TlsCertificateChain));
       m_sslContext.use_private_key_file(*GetOption<string>(m_options, configuration::TlsPrivateKey),
                                         asio::ssl::context::file_format::pem);
       m_sslContext.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
-
+      
       m_tlsEnabled = true;
-
+      
       m_tlsOnly = IsOptionSet(m_options, configuration::TlsOnly);
-
+      
       if (IsOptionSet(m_options, configuration::TlsVerifyClientCertificate))
       {
         LOG(info) << "Will only accept client connections with valid certificates";
-
+        
         m_sslContext.set_verify_mode(ssl::verify_peer | ssl::verify_fail_if_no_peer_cert);
         if (HasOption(m_options, configuration::TlsClientCAs))
         {
@@ -89,7 +89,7 @@ namespace mtconnect::sink::rest_sink {
       }
     }
   }
-
+  
   void Server::start()
   {
     try
@@ -100,17 +100,17 @@ namespace mtconnect::sink::rest_sink {
     catch (exception &e)
     {
       LOG(fatal) << "Cannot start server: " << e.what();
-      std::exit(1);
+      throw FatalException(e.what());
     }
   }
-
+  
   // Listen for an HTTP server connection
   void Server::listen()
   {
     NAMED_SCOPE("Server::listen");
-
+    
     beast::error_code ec;
-
+    
     // Blocking call to listen for a connection
     tcp::endpoint ep(m_address, m_port);
     m_acceptor.open(ep.protocol(), ec);
@@ -135,23 +135,23 @@ namespace mtconnect::sink::rest_sink {
     {
       m_port = m_acceptor.local_endpoint().port();
     }
-
+    
     m_acceptor.listen(net::socket_base::max_listen_connections, ec);
     if (ec)
     {
       fail(ec, "Cannot set listen queue length");
       return;
     }
-
+    
     m_listening = true;
     m_acceptor.async_accept(net::make_strand(m_context),
                             beast::bind_front_handler(&Server::accept, this));
   }
-
+  
   bool Server::allowPutFrom(const std::string &host)
   {
     NAMED_SCOPE("Server::allowPutFrom");
-
+    
     // Resolve the host to an ip address to verify remote addr
     beast::error_code ec;
     ip::tcp::resolver resolve(m_context);
@@ -162,25 +162,25 @@ namespace mtconnect::sink::rest_sink {
       LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
       return false;
     }
-
+    
     // Add the results to the set of allowed hosts
     for (auto &addr : results)
     {
       m_allowPutsFrom.insert(addr.endpoint().address());
     }
     m_allowPuts = true;
-
+    
     return true;
   }
-
+  
   void Server::accept(beast::error_code ec, tcp::socket socket)
   {
     NAMED_SCOPE("Server::accept");
-
+    
     if (ec)
     {
       LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
-
+      
       fail(ec, "Accept failed");
     }
     else if (m_run)
@@ -188,7 +188,7 @@ namespace mtconnect::sink::rest_sink {
       auto dispatcher = [this](SessionPtr session, RequestPtr request) {
         if (!m_run)
           return false;
-
+        
         if (m_lastSession)
           m_lastSession(session);
         dispatch(session, request);
@@ -197,9 +197,9 @@ namespace mtconnect::sink::rest_sink {
       if (m_tlsEnabled)
       {
         auto dectector =
-            make_shared<TlsDector>(std::move(socket), m_sslContext, m_tlsOnly, m_allowPuts,
-                                   m_allowPutsFrom, m_fields, dispatcher, m_errorFunction);
-
+        make_shared<TlsDector>(std::move(socket), m_sslContext, m_tlsOnly, m_allowPuts,
+                               m_allowPutsFrom, m_fields, dispatcher, m_errorFunction);
+        
         dectector->run();
       }
       else
@@ -208,34 +208,34 @@ namespace mtconnect::sink::rest_sink {
         boost::beast::tcp_stream stream(std::move(socket));
         auto session = make_shared<HttpSession>(std::move(stream), std::move(buffer), m_fields,
                                                 dispatcher, m_errorFunction);
-
+        
         if (!m_allowPutsFrom.empty())
           session->allowPutsFrom(m_allowPutsFrom);
         else if (m_allowPuts)
           session->allowPuts();
-
+        
         session->run();
       }
       m_acceptor.async_accept(net::make_strand(m_context),
                               beast::bind_front_handler(&Server::accept, this));
     }
   }
-
+  
   //------------------------------------------------------------------------------
-
+  
   // Report a failure
   void Server::fail(beast::error_code ec, char const *what)
   {
     LOG(error) << " error: " << ec.message();
   }
-
+  
   using namespace mtconnect::printer;
-
+  
   template <typename T>
   void AddParameter(T &writer, const Parameter &param)
   {
     AutoJsonObject<T> obj(writer);
-
+    
     obj.AddPairs("name", param.m_name, "in", param.m_part == PATH ? "path" : "query", "required",
                  param.m_part == PATH);
     {
@@ -245,23 +245,23 @@ namespace mtconnect::sink::rest_sink {
         case ParameterType::STRING:
           obj.AddPairs("type", "string", "format", "string");
           break;
-
+          
         case ParameterType::INTEGER:
           obj.AddPairs("type", "integer", "format", "int64");
           break;
-
+          
         case ParameterType::UNSIGNED_INTEGER:
           obj.AddPairs("type", "integer", "format", "uint64");
           break;
-
+          
         case ParameterType::DOUBLE:
           obj.AddPairs("type", "double", "format", "double");
           break;
-
+          
         case ParameterType::BOOL:
           obj.AddPairs("type", "boolean", "format", "bool");
           break;
-
+          
         case ParameterType::NONE:
           obj.AddPairs("type", "unknown", "format", "unknown");
           break;
@@ -270,30 +270,30 @@ namespace mtconnect::sink::rest_sink {
       {
         obj.Key("default");
         visit(
-            overloaded {[](const std::monostate &) {}, [&obj](const std::string &s) { obj.Add(s); },
-                        [&obj](int32_t i) { obj.Add(i); }, [&obj](uint64_t i) { obj.Add(i); },
-                        [&obj](double d) { obj.Add(d); }, [&obj](bool b) { obj.Add(b); }},
-            param.m_default);
+              overloaded {[](const std::monostate &) {}, [&obj](const std::string &s) { obj.Add(s); },
+                [&obj](int32_t i) { obj.Add(i); }, [&obj](uint64_t i) { obj.Add(i); },
+                [&obj](double d) { obj.Add(d); }, [&obj](bool b) { obj.Add(b); }},
+              param.m_default);
       }
     }
     if (param.m_description)
       obj.AddPairs("description", *param.m_description);
   }
-
+  
   template <typename T>
   void AddRouting(T &writer, const Routing &routing)
   {
     string verb {to_string(routing.getVerb())};
     boost::to_lower(verb);
-
+    
     {
       AutoJsonObject<T> obj(writer, verb.data());
-
+      
       if (routing.getSummary())
         obj.AddPairs("summary", *routing.getSummary());
       if (routing.getDescription())
         obj.AddPairs("description", *routing.getDescription());
-
+      
       if (!routing.getPathParameters().empty() || !routing.getQueryParameters().empty())
       {
         AutoJsonArray<T> ary(writer, "parameters");
@@ -306,7 +306,7 @@ namespace mtconnect::sink::rest_sink {
           AddParameter(writer, param);
         }
       }
-
+      
       {
         AutoJsonObject<T> obj(writer, "responses");
         {
@@ -326,36 +326,36 @@ namespace mtconnect::sink::rest_sink {
       }
     }
   }
-
+  
   // Swagger stuff
   template <typename T>
   const void Server::renderSwaggerResponse(T &writer)
   {
     {
       AutoJsonObject<T> obj(writer);
-
+      
       obj.AddPairs("openapi", "3.0.0");
-
+      
       {
         AutoJsonObject<T> obj(writer, "info");
         obj.AddPairs("title", "MTConnect – REST API", "description", "MTConnect REST API ");
-
+        
         {
           AutoJsonObject<T> obj(writer, "contact");
           obj.AddPairs("email", "will@metalogi.io");
         }
         {
           AutoJsonObject<T> obj(writer, "license");
-
+          
           obj.AddPairs("name", "Apache 2.0", "url",
                        "http://www.apache.org/licenses/LICENSE-2.0.html");
         }
-
+        
         obj.AddPairs("version", GetAgentVersion());
       }
       {
         AutoJsonObject<T> obj(writer, "externalDocs");
-
+        
         obj.AddPairs("description", "For information related to MTConnect", "url",
                      "http://mtconnect.org");
       }
@@ -363,27 +363,27 @@ namespace mtconnect::sink::rest_sink {
         AutoJsonArray<T> ary(writer, "servers");
         {
           AutoJsonObject<T> obj(writer);
-
+          
           stringstream str;
           if (m_tlsEnabled)
             str << "https://";
           else
             str << "http://";
-
+          
           str << GetBestHostAddress(m_context, true) << ':' << m_port << '/';
           obj.AddPairs("url", str.str());
         }
       }
       {
         AutoJsonObject<T> obj(writer, "paths");
-
+        
         multimap<string, const Routing *> routings;
         for (const auto &routing : m_routings)
         {
           if (!routing.isSwagger() && routing.getPath())
             routings.emplace(make_pair(*routing.getPath(), &routing));
         }
-
+        
         AutoJsonObject<T> robj(writer, false);
         for (const auto &[path, routing] : routings)
         {
@@ -394,23 +394,23 @@ namespace mtconnect::sink::rest_sink {
       }
     }
   }
-
+  
   void Server::addSwaggerRoutings()
   {
     auto handler = [&](SessionPtr session, const RequestPtr request) -> bool {
       auto pretty = *request->parameter<bool>("pretty");
-
+      
       StringBuffer output;
       RenderJson(output, pretty, [this](auto &writer) { renderSwaggerResponse(writer); });
-
+      
       session->writeResponse(
-          make_unique<Response>(status::ok, string(output.GetString()), "application/json"));
-
+                             make_unique<Response>(status::ok, string(output.GetString()), "application/json"));
+      
       return true;
     };
-
+    
     addRouting({boost::beast::http::verb::get, "/swagger?pretty={bool:false}", handler, true});
     // addRouting({boost::beast::http::verb::get, "/swagger.yaml", handler, true});
   }
-
+  
 }  // namespace mtconnect::sink::rest_sink

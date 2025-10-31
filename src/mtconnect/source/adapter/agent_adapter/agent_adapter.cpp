@@ -125,7 +125,10 @@ namespace mtconnect::source::adapter::agent_adapter {
     }
     else if (device || HasOption(m_options, configuration::SourceDevice))
     {
-      m_sourceDevice = GetOption<string>(m_options, configuration::SourceDevice).value_or(*device);
+      
+      m_sourceDevice = GetOption<string>(m_options, configuration::SourceDevice);
+      if (!m_sourceDevice)
+        m_sourceDevice = device;
     }
     else
     {

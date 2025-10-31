@@ -176,6 +176,8 @@ namespace mtconnect {
 
       using namespace std;
 
+      int res = 0;
+      
       try
       {
         // If command-line parameter is "install", install the service. If debug or run
@@ -208,9 +210,9 @@ namespace mtconnect {
               m_isDebug = true;
 
             initialize(options);
-            start();
+            res = start();
             std::thread cmd(commandLine);
-            return 0;
+            return res;
           }
           else
           {
@@ -236,14 +238,16 @@ namespace mtconnect {
       {
         LOG(fatal) << "Agent top level exception: " << e.what();
         std::cerr << "Agent top level exception: " << e.what() << std::endl;
+        res = 1;        
       }
       catch (std::string &s)
       {
         LOG(fatal) << "Agent top level exception: " << s;
         std::cerr << "Agent top level exception: " << s << std::endl;
+        res = 1;
       }
 
-      return 0;
+      return res;
     }
 
     bool MTConnectService::isElevated()
@@ -841,8 +845,7 @@ namespace mtconnect {
         usage(1);
       }
 
-      start();
-      return 0;
+      return start();
     }
 
     void MTConnectService::install() {}

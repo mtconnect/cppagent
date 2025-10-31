@@ -47,7 +47,7 @@ namespace mtconnect {
   namespace device_model {
     class Device;
   }
-
+  
 #ifdef WITH_PYTHON
   namespace python {
     class Embedded;
@@ -58,13 +58,13 @@ namespace mtconnect {
     class Embedded;
   }
 #endif
-
+  
   class XmlPrinter;
-
+  
   /// @brief Configuration namespace
   namespace configuration {
     using DevicePtr = std::shared_ptr<device_model::Device>;
-
+    
     /// @brief Parses the configuration file and creates the `Agent`. Manages config
     ///        file tracking and restarting of the agent.
     class AGENT_LIB_API AgentConfiguration : public MTConnectService
@@ -77,19 +77,19 @@ namespace mtconnect {
         XML,
         UNKNOWN
       };
-
+      
       using InitializationFn = void(const boost::property_tree::ptree &, AgentConfiguration &);
       using InitializationFunction = boost::function<InitializationFn>;
-
+      
       using ptree = boost::property_tree::ptree;
-
+      
       /// @brief Construct the agent configuration
       AgentConfiguration();
       virtual ~AgentConfiguration();
-
+      
       /// @name Callbacks for initialization phases
       ///@{
-
+      
       /// @brief Get the callback manager after the agent is created
       /// @return the callback manager
       auto &afterAgentHooks() { return m_afterAgentHooks; }
@@ -100,32 +100,33 @@ namespace mtconnect {
       /// @return the callback manager
       auto &beforeStopHooks() { return m_beforeStopHooks; }
       ///@}
-
+      
       /// @brief stops the agent. Used in daemons.
       void stop() override;
       /// @brief starts the agent. Used in daemons.
-      void start() override;
+      /// @return 0 on success
+      int start() override;
       /// @brief initializes the configuration of the agent from the command line parameters
       /// @param[in] options command line parameters
       void initialize(const boost::program_options::variables_map &options) override;
-
+      
       /// @brief  Configure the logger with the config node from the config file
       /// @param channelName the log channel name
       /// @param config the configuration node
       /// @param formatter optional custom message format
       void configureLoggerChannel(
-          const std::string &channelName, const ptree &config,
-          std::optional<boost::log::basic_formatter<char>> formatter = std::nullopt);
-
+                                  const std::string &channelName, const ptree &config,
+                                  std::optional<boost::log::basic_formatter<char>> formatter = std::nullopt);
+      
       /// @brief  Configure the agent logger with the config node from the config file
       /// @param config the configuration node
       void configureLogger(const ptree &config);
-
+      
       /// @brief load a configuration text
       /// @param[in] text the configuration text loaded from a file
       /// @param[in] fmt the file format, can be MTCONNECT, JSON, or XML
       void loadConfig(const std::string &text, FileFormat fmt = MTCONNECT);
-
+      
       /// @brief assign the agent associated with this configuration
       /// @param[in] agent the agent the configuration will take ownership of
       void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
@@ -135,10 +136,10 @@ namespace mtconnect {
       auto &getContext() { return m_context->get(); }
       /// @brief get a pointer to the async io manager
       auto &getAsyncContext() { return *m_context.get(); }
-
+      
       /// @brief sets the path for the working directory to the current path
       void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
-
+      
       /// @name Configuration factories
       ///@{
       /// @brief get the factory for creating sinks
@@ -148,11 +149,11 @@ namespace mtconnect {
       /// @return the factory
       auto &getSourceFactory() { return m_sourceFactory; }
       ///@}
-
+      
       /// @brief get the pipeline context for this configuration
       /// @note set after the agent is created
       auto getPipelineContext() { return m_pipelineContext; }
-
+      
       /// @name Logging methods
       ///@{
       /// @brief gets the boost log sink
@@ -209,7 +210,7 @@ namespace mtconnect {
       {
         return m_logChannels[channelName].m_logLevel;
       }
-
+      
       /// @brief set the logging level
       /// @param[in] level the new logging level
       void setLoggingLevel(const boost::log::trivial::severity_level level);
@@ -217,62 +218,62 @@ namespace mtconnect {
       /// @param level the new logging level
       /// @return the logging level
       boost::log::trivial::severity_level setLoggingLevel(const std::string &level);
-
+      
       std::optional<std::filesystem::path> findConfigFile(const std::string &file)
       {
         return findFile(m_configPaths, file);
       }
-
+      
       std::optional<std::filesystem::path> findDataFile(const std::string &file)
       {
         return findFile(m_dataPaths, file);
       }
-
+      
       /// @brief Create a sink contract with functions to find config and data files.
       /// @return shared pointer to a sink contract
       sink::SinkContractPtr makeSinkContract()
       {
         auto contract = m_agent->makeSinkContract();
         contract->m_findConfigFile =
-            [this](const std::string &n) -> std::optional<std::filesystem::path> {
+        [this](const std::string &n) -> std::optional<std::filesystem::path> {
           return findConfigFile(n);
         };
         contract->m_findDataFile =
-            [this](const std::string &n) -> std::optional<std::filesystem::path> {
+        [this](const std::string &n) -> std::optional<std::filesystem::path> {
           return findDataFile(n);
         };
         return contract;
       }
-
+      
       /// @brief add a path to the config paths
       /// @param path the path to add
       void addConfigPath(const std::filesystem::path &path) { addPathBack(m_configPaths, path); }
-
+      
       /// @brief add a path to the data paths
       /// @param path the path to add
       void addDataPath(const std::filesystem::path &path) { addPathBack(m_dataPaths, path); }
-
+      
       /// @brief add a path to the plugin paths
       /// @param path the path to add
       void addPluginPath(const std::filesystem::path &path) { addPathBack(m_pluginPaths, path); }
-
+      
     protected:
       DevicePtr getDefaultDevice();
       void loadAdapters(const ptree &tree, const ConfigOptions &options);
       void loadSinks(const ptree &sinks, ConfigOptions &options);
-
+      
 #ifdef WITH_PYTHON
       void configurePython(const ptree &tree, ConfigOptions &options);
 #endif
 #ifdef WITH_RUBY
       void configureRuby(const ptree &tree, ConfigOptions &options);
 #endif
-
+      
       void loadPlugins(const ptree &tree);
       bool loadPlugin(const std::string &name, const ptree &tree);
       void monitorFiles(boost::system::error_code ec);
       void scheduleMonitorTimer();
-
+      
     protected:
       std::optional<std::filesystem::path> findFile(const std::list<std::filesystem::path> &paths,
                                                     const std::string file)
@@ -284,33 +285,33 @@ namespace mtconnect {
           if (std::filesystem::exists(tst, ec) && !ec)
           {
             LOG(debug) << "Found file '" << file << "' "
-                       << " in path " << path;
+            << " in path " << path;
             auto con {std::filesystem::canonical(tst)};
             return con;
           }
           else
           {
             LOG(debug) << "Cannot find file '" << file << "' "
-                       << " in path " << path;
+            << " in path " << path;
           }
         }
-
+        
         return std::nullopt;
       }
-
+      
       void addPathBack(std::list<std::filesystem::path> &paths, std::filesystem::path path)
       {
         std::error_code ec;
         auto con {std::filesystem::canonical(path, ec)};
         if (std::find(paths.begin(), paths.end(), con) != paths.end())
           return;
-
+        
         if (!ec)
           paths.emplace_back(con);
         else
           LOG(debug) << "Cannot file path: " << path << ", " << ec.message();
       }
-
+      
       void addPathFront(std::list<std::filesystem::path> &paths, std::filesystem::path path)
       {
         std::error_code ec;
@@ -321,7 +322,7 @@ namespace mtconnect {
         else
           LOG(debug) << "Cannot file path: " << path << ", " << ec.message();
       }
-
+      
       template <typename T>
       void logPaths(T lvl, const std::list<std::filesystem::path> &paths)
       {
@@ -329,52 +330,52 @@ namespace mtconnect {
         {
           BOOST_LOG_STREAM_WITH_PARAMS(::boost::log::trivial::logger::get(),
                                        (::boost::log::keywords::severity = lvl))
-              << "  " << p;
+          << "  " << p;
         }
       }
-
+      
       void expandConfigVariables(boost::property_tree::ptree &);
-
+      
     protected:
       using text_sink = boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>;
       using console_sink =
-          boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend>;
-
+      boost::log::sinks::synchronous_sink<boost::log::sinks::text_ostream_backend>;
+      
       struct LogChannel
       {
         std::string m_channelName;
         std::filesystem::path m_logDirectory;
         std::filesystem::path m_logArchivePattern;
         std::filesystem::path m_logFileName;
-
+        
         int64_t m_maxLogFileSize {0};
         int64_t m_logRotationSize {0};
         int64_t m_rotationLogInterval {0};
-
+        
         boost::log::trivial::severity_level m_logLevel {boost::log::trivial::severity_level::info};
-
+        
         boost::shared_ptr<boost::log::sinks::sink> m_logSink;
       };
-
+      
       std::map<std::string, LogChannel> m_logChannels;
-
+      
       std::map<std::string, InitializationFunction> m_initializers;
-
+      
       std::unique_ptr<AsyncContext> m_context;
       std::unique_ptr<Agent> m_agent;
-
+      
       pipeline::PipelineContextPtr m_pipelineContext;
       std::unique_ptr<source::adapter::Handler> m_adapterHandler;
-
+      
       std::string m_version;
       std::string m_devicesFile;
       std::filesystem::path m_exePath;
       std::filesystem::path m_working;
-
+      
       std::list<std::filesystem::path> m_configPaths;
       std::list<std::filesystem::path> m_dataPaths;
       std::list<std::filesystem::path> m_pluginPaths;
-
+      
       // File monitoring
       boost::asio::steady_timer m_monitorTimer;
       bool m_monitorFiles = false;
@@ -383,23 +384,23 @@ namespace mtconnect {
       bool m_restart = false;
       std::optional<std::filesystem::file_time_type> m_configTime;
       std::optional<std::filesystem::file_time_type> m_deviceTime;
-
+      
       // Factories
       sink::SinkFactory m_sinkFactory;
       source::SourceFactory m_sourceFactory;
-
+      
       int m_workerThreadCount {1};
-
+      
       // Reference to the global logger
       boost::log::trivial::logger_type *m_logger {nullptr};
-
+      
 #ifdef WITH_RUBY
       std::unique_ptr<ruby::Embedded> m_ruby;
 #endif
 #ifdef WITH_PYTHON
       std::unique_ptr<python::Embedded> m_python;
 #endif
-
+      
       HookManager<AgentConfiguration> m_afterAgentHooks;
       HookManager<AgentConfiguration> m_beforeStartHooks;
       HookManager<AgentConfiguration> m_beforeStopHooks;

@@ -263,7 +263,7 @@ namespace mtconnect::sink::rest_sink {
 
     for (const auto &dir : m_directories)
     {
-      if (boost::starts_with(name, dir.first))
+      if (name.starts_with(dir.first))
       {
         auto fileName = boost::erase_first_copy(name, dir.first);
         if (fileName.empty())
@@ -382,7 +382,7 @@ namespace mtconnect::sink::rest_sink {
     if (fs::exists(path))
     {
       string root(uri);
-      if (boost::ends_with(root, "/"))
+      if (root.ends_with("/"))
       {
         boost::erase_last(root, "/");
       }

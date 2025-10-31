@@ -60,9 +60,11 @@ namespace mtconnect {
     {
       if (auto it = m_dataItems.get<ById>().find(di->getId()); it != m_dataItems.get<ById>().end())
       {
-        LOG(fatal) << "Device " << getName() << ": Duplicatie data item id  '" << di->getId()
+        stringstream msg;
+        msg << "Device " << getName() << ": Duplicatie data item id  '" << di->getId()
                    << "', Exiting";
-        exit(1);
+        LOG(fatal) << msg.str();
+        throw FatalException(msg.str());
       }
 
       if (di->hasProperty("Source") && di->getSource()->hasValue())
@@ -93,9 +95,11 @@ namespace mtconnect {
       auto [id, added] = m_dataItems.emplace(di);
       if (!added)
       {
-        LOG(fatal) << "Device " << getName() << ": DataItem '" << di->getId()
+        stringstream msg;
+        msg << "Device " << getName() << ": DataItem '" << di->getId()
                    << " could not be added, exiting";
-        exit(1);
+        LOG(fatal) << msg.str();
+        throw FatalException(msg.str());
       }
     }
 

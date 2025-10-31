@@ -75,7 +75,7 @@ void AgentTestHelper::putResponseHelper(const char *file, int line, const string
                                         const char *accepts)
 {
   makeRequest(file, line, http::verb::put, body, aQueries, path, accepts);
-  if (ends_with(m_session->m_mimeType, "xml"))
+  if (m_session->m_mimeType.ends_with("xml"sv))
     *doc = xmlParseMemory(m_session->m_body.c_str(), int32_t(m_session->m_body.size()));
 }
 
@@ -83,7 +83,7 @@ void AgentTestHelper::deleteResponseHelper(const char *file, int line, const Que
                                            xmlDocPtr *doc, const char *path, const char *accepts)
 {
   makeRequest(file, line, http::verb::delete_, "", aQueries, path, accepts);
-  if (ends_with(m_session->m_mimeType, "xml"))
+  if (m_session->m_mimeType.ends_with("xml"sv))
     *doc = xmlParseMemory(m_session->m_body.c_str(), int32_t(m_session->m_body.size()));
 }
 
