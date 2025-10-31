@@ -177,7 +177,7 @@ namespace mtconnect {
       using namespace std;
 
       int res = 0;
-      
+
       try
       {
         // If command-line parameter is "install", install the service. If debug or run
@@ -238,7 +238,7 @@ namespace mtconnect {
       {
         LOG(fatal) << "Agent top level exception: " << e.what();
         std::cerr << "Agent top level exception: " << e.what() << std::endl;
-        res = 1;        
+        res = 1;
       }
       catch (std::string &s)
       {

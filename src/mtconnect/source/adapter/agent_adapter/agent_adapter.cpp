@@ -125,7 +125,6 @@ namespace mtconnect::source::adapter::agent_adapter {
     }
     else if (device || HasOption(m_options, configuration::SourceDevice))
     {
-      
       m_sourceDevice = GetOption<string>(m_options, configuration::SourceDevice);
       if (!m_sourceDevice)
         m_sourceDevice = device;
@@ -138,7 +137,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     m_name = m_url.getUrlText(m_sourceDevice);
     m_identity = CreateIdentityHash(m_name);
-    
+
     m_options.insert_or_assign(configuration::AdapterIdentity, m_identity);
     m_feedbackId = "XmlTransformFeedback:" + m_identity;
 

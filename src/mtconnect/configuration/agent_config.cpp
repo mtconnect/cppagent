@@ -880,11 +880,11 @@ namespace mtconnect::configuration {
       logPaths(LOG_LEVEL(fatal), m_configPaths);
 
       throw FatalException(((string) "Please make sure the configuration "
-                                    "file probe.xml or Devices.xml is in the current "
-                                    "directory or specify the correct file "
-                                    "in the configuration file " +
-                           m_configFile.string() + " using Devices = <file>")
-                              .c_str());
+                                     "file probe.xml or Devices.xml is in the current "
+                                     "directory or specify the correct file "
+                                     "in the configuration file " +
+                            m_configFile.string() + " using Devices = <file>")
+                               .c_str());
     }
 
     m_name = get<string>(options[configuration::ServiceName]);
@@ -1252,4 +1252,3 @@ namespace mtconnect::configuration {
     return false;
   }
 }  // namespace mtconnect::configuration
-

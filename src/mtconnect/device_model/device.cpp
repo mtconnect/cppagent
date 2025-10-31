@@ -62,7 +62,7 @@ namespace mtconnect {
       {
         stringstream msg;
         msg << "Device " << getName() << ": Duplicatie data item id  '" << di->getId()
-                   << "', Exiting";
+            << "', Exiting";
         LOG(fatal) << msg.str();
         throw FatalException(msg.str());
       }
@@ -97,7 +97,7 @@ namespace mtconnect {
       {
         stringstream msg;
         msg << "Device " << getName() << ": DataItem '" << di->getId()
-                   << " could not be added, exiting";
+            << " could not be added, exiting";
         LOG(fatal) << msg.str();
         throw FatalException(msg.str());
       }

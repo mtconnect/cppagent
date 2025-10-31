@@ -73,26 +73,26 @@ namespace mtconnect {
   namespace net = boost::asio;
   namespace fs = boost::filesystem;
   namespace config = mtconnect::configuration;
-  
+
   static const string g_unavailable("UNAVAILABLE");
   static const string g_available("AVAILABLE");
-  
+
   // Agent public methods
   Agent::Agent(config::AsyncContext &context, const string &deviceXmlPath,
                const ConfigOptions &options)
-  : m_options(options),
-  m_context(context),
-  m_strand(m_context),
-  m_xmlParser(make_unique<parser::XmlParser>()),
-  m_schemaVersion(GetOption<string>(options, config::SchemaVersion)),
-  m_deviceXmlPath(deviceXmlPath),
-  m_circularBuffer(GetOption<int>(options, config::BufferSize).value_or(17),
-                   GetOption<int>(options, config::CheckpointFrequency).value_or(1000)),
-  m_pretty(IsOptionSet(options, mtconnect::configuration::Pretty)),
-  m_validation(IsOptionSet(options, mtconnect::configuration::Validation))
+    : m_options(options),
+      m_context(context),
+      m_strand(m_context),
+      m_xmlParser(make_unique<parser::XmlParser>()),
+      m_schemaVersion(GetOption<string>(options, config::SchemaVersion)),
+      m_deviceXmlPath(deviceXmlPath),
+      m_circularBuffer(GetOption<int>(options, config::BufferSize).value_or(17),
+                       GetOption<int>(options, config::CheckpointFrequency).value_or(1000)),
+      m_pretty(IsOptionSet(options, mtconnect::configuration::Pretty)),
+      m_validation(IsOptionSet(options, mtconnect::configuration::Validation))
   {
     using namespace asset;
-    
+
     CuttingToolArchetype::registerAsset();
     CuttingTool::registerAsset();
     FileArchetypeAsset::registerAsset();
@@ -102,26 +102,26 @@ namespace mtconnect {
     ComponentConfigurationParameters::registerAsset();
     Pallet::registerAsset();
     Fixture::registerAsset();
-    
+
     m_assetStorage = make_unique<AssetBuffer>(
-                                              GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024));
+        GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024));
     m_versionDeviceXml = IsOptionSet(options, mtconnect::configuration::VersionDeviceXml);
     m_createUniqueIds = IsOptionSet(options, config::CreateUniqueIds);
-    
+
     auto jsonVersion =
-    uint32_t(GetOption<int>(options, mtconnect::configuration::JsonVersion).value_or(2));
-    
+        uint32_t(GetOption<int>(options, mtconnect::configuration::JsonVersion).value_or(2));
+
     // Create the Printers
     m_printers["xml"] = make_unique<printer::XmlPrinter>(m_pretty, m_validation);
     m_printers["json"] = make_unique<printer::JsonPrinter>(jsonVersion, m_pretty, m_validation);
-    
+
     if (m_schemaVersion)
     {
       m_intSchemaVersion = IntSchemaVersion(*m_schemaVersion);
       for (auto &[k, pr] : m_printers)
         pr->setSchemaVersion(*m_schemaVersion);
     }
-    
+
     auto sender = GetOption<string>(options, config::Sender);
     if (sender)
     {
@@ -129,51 +129,51 @@ namespace mtconnect {
         pr->setSenderName(*sender);
     }
   }
-  
+
   void Agent::initialize(pipeline::PipelineContextPtr context)
   {
     NAMED_SCOPE("Agent::initialize");
-    
+
     m_beforeInitializeHooks.exec(*this);
-    
+
     m_pipelineContext = context;
     m_loopback =
-    std::make_shared<source::LoopbackSource>("AgentSource", m_strand, context, m_options);
-    
+        std::make_shared<source::LoopbackSource>("AgentSource", m_strand, context, m_options);
+
     auto devices = loadXMLDeviceFile(m_deviceXmlPath);
     if (!m_schemaVersion)
     {
       m_schemaVersion.emplace(StrDefaultSchemaVersion());
     }
-    
+
     m_intSchemaVersion = IntSchemaVersion(*m_schemaVersion);
     for (auto &[k, pr] : m_printers)
       pr->setSchemaVersion(*m_schemaVersion);
-    
+
     auto disableAgentDevice = GetOption<bool>(m_options, config::DisableAgentDevice);
     if (!(disableAgentDevice && *disableAgentDevice) && m_intSchemaVersion >= SCHEMA_VERSION(1, 7))
     {
       createAgentDevice();
     }
-    
+
     // For the DeviceAdded event for each device
     for (auto device : devices)
       addDevice(device);
-    
+
     if (m_versionDeviceXml && m_createUniqueIds)
       versionDeviceXml();
-    
+
     loadCachedProbe();
-    
+
     m_initialized = true;
-    
+
     m_afterInitializeHooks.exec(*this);
   }
-  
+
   void Agent::initialDataItemObservations()
   {
     NAMED_SCOPE("Agent::initialDataItemObservations");
-    
+
     if (!m_observationsInitialized)
     {
       if (m_intSchemaVersion < SCHEMA_VERSION(2, 5) &&
@@ -183,17 +183,17 @@ namespace mtconnect {
         for (auto &printer : m_printers)
           printer.second->setValidation(false);
       }
-      
+
       for (auto device : m_deviceIndex)
         initializeDataItems(device);
-      
+
       if (m_agentDevice)
       {
         for (auto device : m_deviceIndex)
         {
           auto d = m_agentDevice->getDeviceDataItem("device_added");
           string uuid = *device->getUuid();
-          
+
           entity::Properties props {{"VALUE", uuid}};
           if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
           {
@@ -201,15 +201,15 @@ namespace mtconnect {
             if (ValueType(hash.index()) != ValueType::EMPTY)
               props.insert_or_assign("hash", hash);
           }
-          
+
           m_loopback->receive(d, props);
         }
       }
-      
+
       m_observationsInitialized = true;
     }
   }
-  
+
   Agent::~Agent()
   {
     m_xmlParser.reset();
@@ -217,36 +217,36 @@ namespace mtconnect {
     m_sources.clear();
     m_agentDevice = nullptr;
   }
-  
+
   void Agent::start()
   {
     NAMED_SCOPE("Agent::start");
-    
+
     if (m_started)
     {
       LOG(warning) << "Agent already started.";
       return;
     }
-    
+
     try
     {
       m_beforeStartHooks.exec(*this);
-      
+
       for (auto sink : m_sinks)
         sink->start();
-      
+
       initialDataItemObservations();
-      
+
       if (m_agentDevice)
       {
         auto d = m_agentDevice->getDeviceDataItem("agent_avail");
         m_loopback->receive(d, "AVAILABLE"s);
       }
-      
+
       // Start all the sources
       for (auto source : m_sources)
         source->start();
-      
+
       m_afterStartHooks.exec(*this);
     }
     catch (std::runtime_error &e)
@@ -254,27 +254,27 @@ namespace mtconnect {
       LOG(fatal) << "Cannot start server: " << e.what();
       throw FatalException(e.what());
     }
-    
+
     m_started = true;
   }
-  
+
   void Agent::stop()
   {
     NAMED_SCOPE("Agent::stop");
-    
+
     if (!m_started)
     {
       LOG(warning) << "Agent already stopped.";
       return;
     }
-    
+
     m_beforeStopHooks.exec(*this);
-    
+
     // Stop all adapter threads...
     LOG(info) << "Shutting down sources";
     for (auto source : m_sources)
       source->stop();
-    
+
     // Signal all observers
     LOG(info) << "Signaling observers to close sessions";
     for (auto di : m_dataItemMap)
@@ -283,16 +283,16 @@ namespace mtconnect {
       if (ldi)
         ldi->signalObservers(0);
     }
-    
+
     LOG(info) << "Shutting down sinks";
     for (auto sink : m_sinks)
       sink->stop();
-    
+
     LOG(info) << "Shutting down completed";
-    
+
     m_started = false;
   }
-  
+
   // ---------------------------------------
   // Pipeline methods
   // ---------------------------------------
@@ -307,7 +307,7 @@ namespace mtconnect {
       {
         if (item.expired())
           continue;
-        
+
         auto di = item.lock();
         if (di->hasInitialValue())
         {
@@ -315,7 +315,7 @@ namespace mtconnect {
         }
       }
     }
-    
+
     std::lock_guard<buffer::CircularBuffer> lock(m_circularBuffer);
     if (m_circularBuffer.addToBuffer(observation) != 0)
     {
@@ -323,7 +323,7 @@ namespace mtconnect {
         sink->publish(observation);
     }
   }
-  
+
   void Agent::receiveAsset(asset::AssetPtr asset)
   {
     DevicePtr device;
@@ -332,14 +332,14 @@ namespace mtconnect {
       device = findDeviceByUUIDorName(*uuid);
     else
       device = getDefaultDevice();
-    
+
     if (device && device->getAssetChanged() && device->getAssetRemoved())
     {
       if (asset->getDeviceUuid() && *asset->getDeviceUuid() != *device->getUuid())
       {
         asset->setProperty("deviceUuid", *device->getUuid());
       }
-      
+
       string aid = asset->getAssetId();
       if (aid[0] == '@')
       {
@@ -353,16 +353,16 @@ namespace mtconnect {
         asset->setAssetId(aid);
       }
     }
-    
+
     // Add hash to asset
     if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
       asset->addHash();
-    
+
     auto old = m_assetStorage->addAsset(asset);
-    
+
     for (auto &sink : m_sinks)
       sink->publish(asset);
-    
+
     if (device)
     {
       DataItemPtr di;
@@ -388,7 +388,7 @@ namespace mtconnect {
       if (di)
       {
         entity::Properties props {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}};
-        
+
         if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
         {
           const auto &hash = asset->getProperty("hash");
@@ -397,22 +397,22 @@ namespace mtconnect {
             props.insert_or_assign("hash", hash);
           }
         }
-        
+
         m_loopback->receive(di, props);
       }
-      
+
       updateAssetCounts(device, asset->getType());
     }
   }
-  
+
   bool Agent::reloadDevices(const std::string &deviceFile)
   {
     try
     {
       // Load the configuration for the Agent
       auto devices = m_xmlParser->parseFile(
-                                            deviceFile, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
-      
+          deviceFile, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
+
       if (m_xmlParser->getSchemaVersion() &&
           IntSchemaVersion(*m_xmlParser->getSchemaVersion()) != m_intSchemaVersion)
       {
@@ -420,7 +420,7 @@ namespace mtconnect {
         LOG(warning) << "Schema version does not match agent schema version, restarting the agent";
         return false;
       }
-      
+
       bool changed = false;
       for (auto device : devices)
       {
@@ -428,7 +428,7 @@ namespace mtconnect {
       }
       if (changed)
         loadCachedProbe();
-      
+
       return true;
     }
     catch (runtime_error &e)
@@ -446,7 +446,7 @@ namespace mtconnect {
       throw FatalException(f.what());
     }
   }
-  
+
   void Agent::loadDeviceXml(const string &deviceXml, const optional<string> source)
   {
     try
@@ -468,7 +468,7 @@ namespace mtconnect {
       cerr << f.what() << endl;
     }
   }
-  
+
   void Agent::loadDevices(list<DevicePtr> devices, const optional<string> source, bool force)
   {
     if (!force && !IsOptionSet(m_options, config::EnableSourceDeviceModels))
@@ -476,7 +476,7 @@ namespace mtconnect {
       LOG(warning) << "Device updates are disabled, skipping update";
       return;
     }
-    
+
     auto callback = [=, this](config::AsyncContext &context) {
       try
       {
@@ -490,10 +490,10 @@ namespace mtconnect {
           {
             oldUuid = *oldDev->getUuid();
           }
-          
+
           auto uuid = *device->getUuid();
           auto name = *device->getComponentName();
-          
+
           changed = receiveDevice(device, true) || changed;
           if (changed)
           {
@@ -505,7 +505,7 @@ namespace mtconnect {
                 s->setOptions({{config::Device, uuid}});
               }
             }
-            
+
             for (auto src : m_sources)
             {
               auto adapter = std::dynamic_pointer_cast<source::adapter::Adapter>(src);
@@ -521,7 +521,7 @@ namespace mtconnect {
             }
           }
         }
-        
+
         if (changed)
           loadCachedProbe();
       }
@@ -548,7 +548,7 @@ namespace mtconnect {
         cerr << f.what() << endl;
       }
     };
-    
+
     // Gets around a race condition in the loading of adapaters and setting of
     // UUID.
     if (m_context.isRunning() && !m_context.isPauased())
@@ -556,11 +556,11 @@ namespace mtconnect {
     else
       callback(m_context);
   }
-  
+
   bool Agent::receiveDevice(device_model::DevicePtr device, bool version)
   {
     NAMED_SCOPE("Agent::receiveDevice");
-    
+
     // diff the device against the current device with the same uuid
     auto uuid = device->getUuid();
     if (!uuid)
@@ -568,7 +568,7 @@ namespace mtconnect {
       LOG(error) << "Device does not have a uuid: " << device->getName();
       return false;
     }
-    
+
     DevicePtr oldDev = findDeviceByUUIDorName(*uuid);
     if (!oldDev)
     {
@@ -578,10 +578,10 @@ namespace mtconnect {
         LOG(error) << "Device does not have a name" << *uuid;
         return false;
       }
-      
+
       oldDev = findDeviceByUUIDorName(*name);
     }
-    
+
     // If this is a new device
     if (!oldDev)
     {
@@ -589,10 +589,10 @@ namespace mtconnect {
       addDevice(device);
       if (version)
         versionDeviceXml();
-      
+
       for (auto &sink : m_sinks)
         sink->publish(device);
-      
+
       return true;
     }
     else
@@ -603,15 +603,15 @@ namespace mtconnect {
         LOG(error) << "Device does not have a name: " << *device->getUuid();
         return false;
       }
-      
+
       verifyDevice(device);
       createUniqueIds(device);
-      
+
       LOG(info) << "Checking if device " << *uuid << " has changed";
       if (device->different(*oldDev))
       {
         LOG(info) << "Device " << *uuid << " changed, updating model";
-        
+
         // Remove the old data items
         set<string> skip;
         for (auto &di : oldDev->getDeviceDataItems())
@@ -622,7 +622,7 @@ namespace mtconnect {
             skip.insert(di.lock()->getId());
           }
         }
-        
+
         // Replace device in device maps
         auto it = find(m_deviceIndex.begin(), m_deviceIndex.end(), oldDev);
         if (it != m_deviceIndex.end())
@@ -632,18 +632,18 @@ namespace mtconnect {
           LOG(error) << "Cannot find Device " << *uuid << " in devices";
           return false;
         }
-        
+
         initializeDataItems(device, skip);
-        
+
         LOG(info) << "Device " << *uuid << " updating circular buffer";
         m_circularBuffer.updateDataItems(m_dataItemMap);
-        
+
         if (m_intSchemaVersion > SCHEMA_VERSION(2, 2))
           device->addHash();
-        
+
         if (version)
           versionDeviceXml();
-        
+
         if (m_agentDevice)
         {
           entity::Properties props {{"VALUE", *uuid}};
@@ -653,14 +653,14 @@ namespace mtconnect {
             if (ValueType(hash.index()) != ValueType::EMPTY)
               props.insert_or_assign("hash", hash);
           }
-          
+
           auto d = m_agentDevice->getDeviceDataItem("device_changed");
           m_loopback->receive(d, props);
         }
-        
+
         for (auto &sink : m_sinks)
           sink->publish(device);
-        
+
         return true;
       }
       else
@@ -668,29 +668,29 @@ namespace mtconnect {
         LOG(info) << "Device " << *uuid << " did not change, ignoring new device";
       }
     }
-    
+
     return false;
   }
-  
+
   void Agent::versionDeviceXml()
   {
     NAMED_SCOPE("Agent::versionDeviceXml");
-    
+
     using namespace std::chrono;
-    
+
     if (m_versionDeviceXml)
     {
       m_beforeDeviceXmlUpdateHooks.exec(*this);
-      
+
       // update with a new version of the device.xml, saving the old one
       // with a date time stamp
       auto ext =
-      date::format(".%Y-%m-%dT%H+%M+%SZ", date::floor<milliseconds>(system_clock::now()));
+          date::format(".%Y-%m-%dT%H+%M+%SZ", date::floor<milliseconds>(system_clock::now()));
       fs::path file(m_deviceXmlPath);
       fs::path backup(m_deviceXmlPath + ext);
       if (!fs::exists(backup))
         fs::rename(file, backup);
-      
+
       auto printer = getPrinter("xml");
       if (printer != nullptr)
       {
@@ -698,11 +698,11 @@ namespace mtconnect {
         copy_if(m_deviceIndex.begin(), m_deviceIndex.end(), back_inserter(list),
                 [](DevicePtr d) { return dynamic_cast<AgentDevice *>(d.get()) == nullptr; });
         auto probe = printer->printProbe(0, 0, 0, 0, 0, list, nullptr, true, true);
-        
+
         ofstream devices(file.string());
         devices << probe;
         devices.close();
-        
+
         m_afterDeviceXmlUpdateHooks.exec(*this);
       }
       else
@@ -711,7 +711,7 @@ namespace mtconnect {
       }
     }
   }
-  
+
   bool Agent::removeAsset(DevicePtr device, const std::string &id,
                           const std::optional<Timestamp> time)
   {
@@ -720,10 +720,10 @@ namespace mtconnect {
     {
       for (auto &sink : m_sinks)
         sink->publish(asset);
-      
+
       notifyAssetRemoved(device, asset);
       updateAssetCounts(device, asset->getType());
-      
+
       return true;
     }
     else
@@ -731,7 +731,7 @@ namespace mtconnect {
       return false;
     }
   }
-  
+
   bool Agent::removeAllAssets(const std::optional<std::string> device,
                               const std::optional<std::string> type,
                               const std::optional<Timestamp> time, asset::AssetList &list)
@@ -746,13 +746,13 @@ namespace mtconnect {
       else
         uuid = device;
     }
-    
+
     auto count = m_assetStorage->removeAll(list, uuid, type, time);
     for (auto &asset : list)
     {
       notifyAssetRemoved(nullptr, asset);
     }
-    
+
     if (dev)
     {
       updateAssetCounts(dev, type);
@@ -762,10 +762,10 @@ namespace mtconnect {
       for (auto d : m_deviceIndex)
         updateAssetCounts(d, type);
     }
-    
+
     return count > 0;
   }
-  
+
   void Agent::notifyAssetRemoved(DevicePtr device, const asset::AssetPtr &asset)
   {
     if (device || asset->getDeviceUuid())
@@ -791,7 +791,7 @@ namespace mtconnect {
                                 {{"assetType", asset->getName()}, {"VALUE", g_unavailable}});
           }
         }
-        
+
         auto added = dev->getAssetAdded();
         if (added)
         {
@@ -804,34 +804,34 @@ namespace mtconnect {
       }
     }
   }
-  
+
   // ---------------------------------------
   // Agent Device
   // ---------------------------------------
-  
+
   void Agent::createAgentDevice()
   {
     NAMED_SCOPE("Agent::createAgentDevice");
-    
+
     using namespace boost;
-    
+
     auto address = GetBestHostAddress(m_context);
-    
+
     auto port = GetOption<int>(m_options, mtconnect::configuration::Port).value_or(5000);
     auto service = boost::lexical_cast<string>(port);
     address.append(":").append(service);
-    
+
     uuids::name_generator_latest gen(uuids::ns::dns());
     auto uuid = GetOption<string>(m_options, mtconnect::configuration::AgentDeviceUUID)
-      .value_or(uuids::to_string(gen(address)));
+                    .value_or(uuids::to_string(gen(address)));
     auto id = "agent_"s + uuid.substr(0, uuid.find_first_of('-'));
-    
+
     // Create the Agent Device
     ErrorList errors;
     Properties ps {
-      {"uuid", uuid}, {"id", id}, {"name", "Agent"s}, {"mtconnectVersion", *m_schemaVersion}};
+        {"uuid", uuid}, {"id", id}, {"name", "Agent"s}, {"mtconnectVersion", *m_schemaVersion}};
     m_agentDevice =
-    dynamic_pointer_cast<AgentDevice>(AgentDevice::getFactory()->make("Agent", ps, errors));
+        dynamic_pointer_cast<AgentDevice>(AgentDevice::getFactory()->make("Agent", ps, errors));
     if (!errors.empty())
     {
       for (auto &e : errors)
@@ -840,21 +840,21 @@ namespace mtconnect {
     }
     addDevice(m_agentDevice);
   }
-  
+
   // ----------------------------------------------
   // Device management and Initialization
   // ----------------------------------------------
-  
+
   std::list<device_model::DevicePtr> Agent::loadXMLDeviceFile(const std::string &configXmlPath)
   {
     NAMED_SCOPE("Agent::loadXMLDeviceFile");
-    
+
     try
     {
       // Load the configuration for the Agent
       auto devices = m_xmlParser->parseFile(
-                                            configXmlPath, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
-      
+          configXmlPath, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
+
       if (!m_schemaVersion && m_xmlParser->getSchemaVersion() &&
           !m_xmlParser->getSchemaVersion()->empty())
       {
@@ -866,7 +866,7 @@ namespace mtconnect {
         m_schemaVersion = StrDefaultSchemaVersion();
         m_intSchemaVersion = IntSchemaVersion(*m_schemaVersion);
       }
-      
+
       return devices;
     }
     catch (runtime_error &e)
@@ -883,14 +883,14 @@ namespace mtconnect {
       cerr << f.what() << endl;
       throw FatalException(f.what());
     }
-    
+
     return {};
   }
-  
+
   void Agent::verifyDevice(DevicePtr device)
   {
     NAMED_SCOPE("Agent::verifyDevice");
-    
+
     // Add the devices to the device map and create availability and
     // asset changed events if they don't exist
     // Make sure we have two device level data items:
@@ -901,79 +901,79 @@ namespace mtconnect {
       // Create availability data item and add it to the device.
       entity::ErrorList errors;
       auto di = DataItem::make(
-                               {{"type", "AVAILABILITY"s}, {"id", device->getId() + "_avail"}, {"category", "EVENT"s}},
-                               errors);
+          {{"type", "AVAILABILITY"s}, {"id", device->getId() + "_avail"}, {"category", "EVENT"s}},
+          errors);
       device->addDataItem(di, errors);
     }
-    
+
     if (!device->getAssetChanged() && m_intSchemaVersion >= SCHEMA_VERSION(1, 2))
     {
       entity::ErrorList errors;
       // Create asset change data item and add it to the device.
       auto di = DataItem::make({{"type", "ASSET_CHANGED"s},
-        {"id", device->getId() + "_asset_chg"},
-        {"category", "EVENT"s}},
+                                {"id", device->getId() + "_asset_chg"},
+                                {"category", "EVENT"s}},
                                errors);
       device->addDataItem(di, errors);
     }
-    
+
     if (device->getAssetChanged() && m_intSchemaVersion >= SCHEMA_VERSION(1, 5))
     {
       auto di = device->getAssetChanged();
       if (!di->isDiscrete())
         di->makeDiscrete();
     }
-    
+
     if (!device->getAssetRemoved() && m_intSchemaVersion >= SCHEMA_VERSION(1, 3))
     {
       // Create asset removed data item and add it to the device.
       entity::ErrorList errors;
       auto di = DataItem::make({{"type", "ASSET_REMOVED"s},
-        {"id", device->getId() + "_asset_rem"},
-        {"category", "EVENT"s}},
+                                {"id", device->getId() + "_asset_rem"},
+                                {"category", "EVENT"s}},
                                errors);
       device->addDataItem(di, errors);
     }
-    
+
     if (!device->getAssetAdded() && m_intSchemaVersion >= SCHEMA_VERSION(2, 6))
     {
       // Create asset removed data item and add it to the device.
       entity::ErrorList errors;
       auto di = DataItem::make({{"type", "ASSET_ADDED"s},
-        {"id", device->getId() + "_asset_add"},
-        {"discrete", true},
-        {"category", "EVENT"s}},
+                                {"id", device->getId() + "_asset_add"},
+                                {"discrete", true},
+                                {"category", "EVENT"s}},
                                errors);
       device->addDataItem(di, errors);
     }
-    
+
     if (!device->getAssetCount() && m_intSchemaVersion >= SCHEMA_VERSION(2, 0))
     {
       entity::ErrorList errors;
       auto di = DataItem::make({{"type", "ASSET_COUNT"s},
-        {"id", device->getId() + "_asset_count"},
-        {"category", "EVENT"s},
-        {"representation", "DATA_SET"s}},
+                                {"id", device->getId() + "_asset_count"},
+                                {"category", "EVENT"s},
+                                {"representation", "DATA_SET"s}},
                                errors);
       device->addDataItem(di, errors);
     }
-    
+
     if (IsOptionSet(m_options, mtconnect::configuration::PreserveUUID))
     {
       device->setPreserveUuid(*GetOption<bool>(m_options, mtconnect::configuration::PreserveUUID));
     }
   }
-  
+
   void Agent::initializeDataItems(DevicePtr device, std::optional<std::set<std::string>> skip)
   {
     NAMED_SCOPE("Agent::initializeDataItems");
-    
+
     // Initialize the id mapping for the devices and set all data items to UNAVAILABLE
     for (auto item : device->getDeviceDataItems())
     {
       if (item.expired())
         continue;
-      
+
       auto d = item.lock();
       if ((!skip || skip->count(d->getId()) > 0) && m_dataItemMap.count(d->getId()) > 0)
       {
@@ -981,10 +981,10 @@ namespace mtconnect {
         if (di && di != d)
         {
           stringstream msg;
-          
+
           msg << "Duplicate DataItem id " << d->getId()
-          << " for device: " << *device->getComponentName() <<
-          ". Try using configuration option CreateUniqueIds to resolve.";
+              << " for device: " << *device->getComponentName()
+              << ". Try using configuration option CreateUniqueIds to resolve.";
           LOG(fatal) << msg.str();
           throw FatalException(msg.str());
         }
@@ -997,18 +997,18 @@ namespace mtconnect {
           value = &g_unavailable;
         else if (d->getConstantValue())
           value = &d->getConstantValue().value();
-        
+
         m_loopback->receive(d, *value);
         m_dataItemMap[d->getId()] = d;
       }
     }
   }
-  
+
   // Add the a device from a configuration file
   void Agent::addDevice(DevicePtr device)
   {
     NAMED_SCOPE("Agent::addDevice");
-    
+
     // Check if device already exists
     string uuid = *device->getUuid();
     auto &idx = m_deviceIndex.get<ByUuid>();
@@ -1018,22 +1018,22 @@ namespace mtconnect {
       // Update existing device
       stringstream msg;
       msg << "Device " << *device->getUuid() << " already exists. "
-      << " Update not supported yet";
+          << " Update not supported yet";
       throw msg;
     }
     else
     {
       m_deviceIndex.push_back(device);
-      
+
       // TODO: Redo Resolve Reference  with entity
       // device->resolveReferences();
       verifyDevice(device);
       createUniqueIds(device);
-      
+
       if (m_observationsInitialized)
       {
         initializeDataItems(device);
-        
+
         // Check for single valued constrained data items.
         if (m_agentDevice && device != m_agentDevice)
         {
@@ -1044,24 +1044,24 @@ namespace mtconnect {
             if (ValueType(hash.index()) != ValueType::EMPTY)
               props.insert_or_assign("hash", hash);
           }
-          
+
           auto d = m_agentDevice->getDeviceDataItem("device_added");
           m_loopback->receive(d, props);
         }
       }
     }
-    
+
     if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
       device->addHash();
-    
+
     for (auto &printer : m_printers)
       printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
   }
-  
+
   void Agent::deviceChanged(DevicePtr device, const std::string &uuid)
   {
     NAMED_SCOPE("Agent::deviceChanged");
-    
+
     bool changed = false;
     string oldUuid = *device->getUuid();
     if (uuid != oldUuid)
@@ -1074,28 +1074,28 @@ namespace mtconnect {
           m_loopback->receive(d, oldUuid);
       }
     }
-    
+
     if (changed)
     {
       // Create a new device
       auto xmlPrinter = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
       auto newDevice = m_xmlParser->parseDevice(xmlPrinter->printDevice(device), xmlPrinter);
-      
+
       newDevice->setUuid(uuid);
-      
+
       m_loopback->receive(newDevice);
     }
   }
-  
+
   void Agent::createUniqueIds(DevicePtr device)
   {
     if (m_createUniqueIds && !dynamic_pointer_cast<AgentDevice>(device))
     {
       std::unordered_map<std::string, std::string> idMap;
-      
+
       device->createUniqueIds(idMap);
       device->updateReferences(idMap);
-      
+
       // Update the data item map.
       for (auto &id : idMap)
       {
@@ -1108,83 +1108,83 @@ namespace mtconnect {
       }
     }
   }
-  
+
   void Agent::loadCachedProbe()
   {
     NAMED_SCOPE("Agent::loadCachedProbe");
-    
+
     // Reload the document for path resolution
     auto xmlPrinter = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
     m_xmlParser->loadDocument(xmlPrinter->printProbe(0, 0, 0, 0, 0, getDevices()));
-    
+
     for (auto &printer : m_printers)
       printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
   }
-  
+
   // ----------------------------------------------------
   // Helper Methods
   // ----------------------------------------------------
-  
+
   DevicePtr Agent::getDeviceByName(const std::string &name) const
   {
     if (name.empty())
       return getDefaultDevice();
-    
+
     auto &idx = m_deviceIndex.get<ByName>();
     auto devPos = idx.find(name);
     if (devPos != idx.end())
       return *devPos;
-    
+
     return nullptr;
   }
-  
+
   DevicePtr Agent::getDeviceByName(const std::string &name)
   {
     if (name.empty())
       return getDefaultDevice();
-    
+
     auto &idx = m_deviceIndex.get<ByName>();
     auto devPos = idx.find(name);
     if (devPos != idx.end())
       return *devPos;
-    
+
     return nullptr;
   }
-  
+
   DevicePtr Agent::findDeviceByUUIDorName(const std::string &idOrName) const
   {
     if (idOrName.empty())
       return getDefaultDevice();
-    
+
     DevicePtr res;
     if (auto d = m_deviceIndex.get<ByUuid>().find(idOrName); d != m_deviceIndex.get<ByUuid>().end())
       res = *d;
     else if (auto d = m_deviceIndex.get<ByName>().find(idOrName);
              d != m_deviceIndex.get<ByName>().end())
       res = *d;
-    
+
     return res;
   }
-  
+
   // ----------------------------------------------------
   // Adapter Methods
   // ----------------------------------------------------
-  
+
   void Agent::addSource(source::SourcePtr source, bool start)
   {
     m_sources.emplace_back(source);
-    
+
     if (start)
       source->start();
-    
+
     auto adapter = dynamic_pointer_cast<source::adapter::Adapter>(source);
     if (m_agentDevice && adapter)
     {
       m_agentDevice->addAdapter(adapter);
-      
+
       if (m_observationsInitialized)
         initializeDataItems(m_agentDevice);
-      
+
       // Reload the document for path resolution
       if (m_initialized)
       {
@@ -1192,15 +1192,15 @@ namespace mtconnect {
       }
     }
   }
-  
+
   void Agent::addSink(sink::SinkPtr sink, bool start)
   {
     m_sinks.emplace_back(sink);
-    
+
     if (start)
       sink->start();
   }
-  
+
   void AgentPipelineContract::deliverConnectStatus(entity::EntityPtr entity,
                                                    const StringList &devices, bool autoAvailable)
   {
@@ -1222,15 +1222,15 @@ namespace mtconnect {
       LOG(error) << "Unexpected connection status received: " << value;
     }
   }
-  
+
   void AgentPipelineContract::deliverCommand(entity::EntityPtr entity)
   {
     auto command = entity->get<string>("command");
     auto value = entity->getValue<string>();
-    
+
     auto device = entity->maybeGet<string>("device");
     auto source = entity->maybeGet<string>("source");
-    
+
     if ((command != "devicemodel" && !device) || !source)
     {
       LOG(error) << "Invalid command: " << command << ", device or source not specified";
@@ -1243,7 +1243,7 @@ namespace mtconnect {
       m_agent->receiveCommand(*device, command, value, *source);
     }
   }
-  
+
   void Agent::connecting(const std::string &adapter)
   {
     if (m_agentDevice)
@@ -1253,30 +1253,30 @@ namespace mtconnect {
         m_loopback->receive(di, "LISTEN");
     }
   }
-  
+
   // Add values for related data items UNAVAILABLE
   void Agent::disconnected(const std::string &adapter, const StringList &devices,
                            bool autoAvailable)
   {
     LOG(debug) << "Disconnected from adapter, setting all values to UNAVAILABLE";
-    
+
     if (m_agentDevice)
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
       if (di)
         m_loopback->receive(di, "CLOSED");
     }
-    
+
     for (auto &name : devices)
     {
       DevicePtr device = findDeviceByUUIDorName(name);
       if (device == nullptr)
       {
         LOG(warning) << "Cannot find device " << name << " when adapter " << adapter
-        << "disconnected";
+                     << "disconnected";
         continue;
       }
-      
+
       for (auto di : device->getDeviceDataItems())
       {
         auto dataItem = di.lock();
@@ -1285,7 +1285,7 @@ namespace mtconnect {
                           dataItem->getType() == "AVAILABILITY")))
         {
           auto ptr = getLatest(dataItem->getId());
-          
+
           if (ptr)
           {
             const string *value = nullptr;
@@ -1293,7 +1293,7 @@ namespace mtconnect {
               value = &dataItem->getConstantValue().value();
             else if (!ptr->isUnavailable())
               value = &g_unavailable;
-            
+
             if (value)
               m_loopback->receive(dataItem, *value);
           }
@@ -1303,7 +1303,7 @@ namespace mtconnect {
       }
     }
   }
-  
+
   void Agent::connected(const std::string &adapter, const StringList &devices, bool autoAvailable)
   {
     if (m_agentDevice)
@@ -1312,10 +1312,10 @@ namespace mtconnect {
       if (di)
         m_loopback->receive(di, "ESTABLISHED");
     }
-    
+
     if (!autoAvailable)
       return;
-    
+
     for (auto &name : devices)
     {
       DevicePtr device = findDeviceByUUIDorName(name);
@@ -1325,7 +1325,7 @@ namespace mtconnect {
         continue;
       }
       LOG(debug) << "Connected to adapter, setting all Availability data items to AVAILABLE";
-      
+
       if (auto avail = device->getAvailability())
       {
         LOG(debug) << "Adding availabilty event for " << device->getAvailability()->getId();
@@ -1335,7 +1335,7 @@ namespace mtconnect {
         LOG(debug) << "Cannot find availability for " << *device->getComponentName();
     }
   }
-  
+
   void Agent::sourceFailed(const std::string &identity)
   {
     auto source = findSource(identity);
@@ -1343,7 +1343,7 @@ namespace mtconnect {
     {
       source->stop();
       m_sources.remove(source);
-      
+
       bool ext = false;
       for (auto &s : m_sources)
       {
@@ -1353,7 +1353,7 @@ namespace mtconnect {
           break;
         }
       }
-      
+
       if (!ext)
       {
         LOG(fatal) << "Source " << source->getName() << " failed";
@@ -1371,16 +1371,16 @@ namespace mtconnect {
       LOG(error) << "Cannot find failed source: " << source->getName();
     }
   }
-  
+
   // -----------------------------------------------
   // Validation methods
   // -----------------------------------------------
-  
+
   string Agent::devicesAndPath(const std::optional<string> &path, const DevicePtr device,
                                const std::optional<std::string> &deviceType) const
   {
     string dataPath;
-    
+
     if (device || deviceType)
     {
       string prefix;
@@ -1390,16 +1390,16 @@ namespace mtconnect {
         prefix = "//Devices/Device[@uuid=\"" + *device->getUuid() + "\"]";
       else if (deviceType)
         prefix = "//Devices/Device";
-      
+
       if (path)
       {
         stringstream parse(*path);
         string token;
-        
+
         // Prefix path (i.e. "path1|path2" => "{prefix}path1|{prefix}path2")
         while (getline(parse, token, '|'))
           dataPath += prefix + token + "|";
-        
+
         dataPath.erase(dataPath.length() - 1);
       }
       else
@@ -1414,10 +1414,10 @@ namespace mtconnect {
       else
         dataPath = "//Devices/Device|//Devices/Agent";
     }
-    
+
     return dataPath;
   }
-  
+
   void AgentPipelineContract::deliverAssetCommand(entity::EntityPtr command)
   {
     const std::string &cmd = command->getValue<string>();
@@ -1442,33 +1442,33 @@ namespace mtconnect {
       LOG(error) << "Invalid assent command: " << cmd;
     }
   }
-  
+
   void Agent::updateAssetCounts(const DevicePtr &device, const std::optional<std::string> type)
   {
     if (!device)
       return;
-    
+
     auto dc = device->getAssetCount();
     if (dc)
     {
       if (type)
       {
         auto count = m_assetStorage->getCountForDeviceAndType(*device->getUuid(), *type);
-        
+
         DataSet set;
         if (count > 0)
           set.emplace(*type, int64_t(count));
         else
           set.emplace(*type, DataSetValue(), true);
-        
+
         m_loopback->receive(dc, {{"VALUE", set}});
       }
       else
       {
         auto counts = m_assetStorage->getCountsByTypeForDevice(*device->getUuid());
-        
+
         DataSet set;
-        
+
         for (auto &[t, count] : counts)
         {
           if (count > 0)
@@ -1476,67 +1476,67 @@ namespace mtconnect {
           else
             set.emplace(t, DataSetValue(), true);
         }
-        
+
         m_loopback->receive(dc, {{"resetTriggered", "RESET_COUNTS"s}, {"VALUE", set}});
       }
     }
   }
-  
+
   void Agent::receiveCommand(const std::string &deviceName, const std::string &command,
                              const std::string &value, const std::string &source)
   {
     DevicePtr device {nullptr};
     device = findDeviceByUUIDorName(deviceName);
-    
+
     if (!device)
     {
       LOG(warning) << source << ": Cannot find device for name " << deviceName;
     }
-    
+
     static std::unordered_map<string, function<void(DevicePtr, const string &value)>>
-    deviceCommands {
-      {"manufacturer", mem_fn(&Device::setManufacturer)},
-      {"station", mem_fn(&Device::setStation)},
-      {"serialnumber", mem_fn(&Device::setSerialNumber)},
-      {"description", mem_fn(&Device::setDescriptionValue)},
-      {"nativename",
-        [](DevicePtr device, const string &name) { device->setProperty("nativeName", name); }},
-      {"calibration", [](DevicePtr device, const string &value) {
-        istringstream line(value);
-        
-        // Look for name|factor|offset triples
-        string name, factor, offset;
-        while (getline(line, name, '|') && getline(line, factor, '|') &&
-               getline(line, offset, '|'))
-        {
-          // Convert to a floating point number
-          auto di = device->getDeviceDataItem(name);
-          if (!di)
-            LOG(warning) << "Cannot find data item to calibrate for " << name;
-          else
-          {
-            try
-            {
-              double fact_value = stod(factor);
-              double off_value = stod(offset);
-              
-              device_model::data_item::UnitConversion conv(fact_value, off_value);
-              di->setConverter(conv);
-            }
-            catch (std::exception e)
-            {
-              LOG(error) << "Cannot convert factor " << factor << " or " << offset
-              << " to double: " << e.what();
-            }
-          }
-        }
-      }}};
-    
+        deviceCommands {
+            {"manufacturer", mem_fn(&Device::setManufacturer)},
+            {"station", mem_fn(&Device::setStation)},
+            {"serialnumber", mem_fn(&Device::setSerialNumber)},
+            {"description", mem_fn(&Device::setDescriptionValue)},
+            {"nativename",
+             [](DevicePtr device, const string &name) { device->setProperty("nativeName", name); }},
+            {"calibration", [](DevicePtr device, const string &value) {
+               istringstream line(value);
+
+               // Look for name|factor|offset triples
+               string name, factor, offset;
+               while (getline(line, name, '|') && getline(line, factor, '|') &&
+                      getline(line, offset, '|'))
+               {
+                 // Convert to a floating point number
+                 auto di = device->getDeviceDataItem(name);
+                 if (!di)
+                   LOG(warning) << "Cannot find data item to calibrate for " << name;
+                 else
+                 {
+                   try
+                   {
+                     double fact_value = stod(factor);
+                     double off_value = stod(offset);
+
+                     device_model::data_item::UnitConversion conv(fact_value, off_value);
+                     di->setConverter(conv);
+                   }
+                   catch (std::exception e)
+                   {
+                     LOG(error) << "Cannot convert factor " << factor << " or " << offset
+                                << " to double: " << e.what();
+                   }
+                 }
+               }
+             }}};
+
     static std::unordered_map<string, string> adapterDataItems {
-      {"adapterversion", "_adapter_software_version"},
-      {"mtconnectversion", "_mtconnect_version"},
+        {"adapterversion", "_adapter_software_version"},
+        {"mtconnectversion", "_mtconnect_version"},
     };
-    
+
     if (command == "devicemodel")
     {
       loadDeviceXml(value, source);
@@ -1578,7 +1578,7 @@ namespace mtconnect {
             else
             {
               LOG(warning) << "Cannot find data item for the Agent device when processing command "
-              << command << " with value " << value << " for adapter " << source;
+                           << command << " with value " << value << " for adapter " << source;
             }
           }
         }
@@ -1592,10 +1592,10 @@ namespace mtconnect {
     else
     {
       LOG(error) << source << ":Received protocol command '" << command << "' for device '"
-      << deviceName << "', but the device could not be found";
+                 << deviceName << "', but the device could not be found";
     }
   }
-  
+
   // -------------------------------------------
   // End
   // -------------------------------------------

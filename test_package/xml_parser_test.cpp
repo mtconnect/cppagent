@@ -87,7 +87,7 @@ TEST_F(XmlParserTest, Constructor)
   std::unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
   m_xmlParser = new parser::XmlParser();
   ASSERT_THROW(m_xmlParser->parseFile(TEST_RESOURCE_DIR "/samples/badPath.xml", printer.get()),
-               std::runtime_error);
+               FatalException);
   delete m_xmlParser;
   m_xmlParser = nullptr;
   m_xmlParser = new parser::XmlParser();

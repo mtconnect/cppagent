@@ -197,7 +197,7 @@ namespace mtconnect {
       {
         stringstream msg;
         msg << "MQTT Adapter requires at least one topic to subscribe to. Provide 'Topics = "
-                      "' or Topics block";
+               "' or Topics block";
         LOG(fatal) << msg.str();
         throw FatalException(msg.str());
       }
