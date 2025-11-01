@@ -182,12 +182,12 @@ namespace mtconnect::configuration {
         buffer << file.rdbuf();
 
         FileFormat fmt = MTCONNECT;
-        if (ends_with(m_configFile.string(), "json"))
+        if (m_configFile.string().ends_with("json"))
         {
           LOG(debug) << "Parsing json configuration";
           fmt = JSON;
         }
-        else if (ends_with(m_configFile.string(), "xml"))
+        else if (m_configFile.string().ends_with("xml"))
         {
           LOG(debug) << "Parsing xml configuration";
           fmt = XML;
@@ -392,7 +392,7 @@ namespace mtconnect::configuration {
     m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
   }
 
-  void AgentConfiguration::start()
+  int AgentConfiguration::start()
   {
     if (m_monitorFiles)
     {
@@ -411,7 +411,7 @@ namespace mtconnect::configuration {
     m_context->setThreadCount(m_workerThreadCount);
     m_beforeStartHooks.exec(*this);
     m_agent->start();
-    m_context->start();
+    return m_context->start();
   }
 
   void AgentConfiguration::stop()
@@ -879,12 +879,12 @@ namespace mtconnect::configuration {
       LOG(fatal) << "Cannot find device configuration file";
       logPaths(LOG_LEVEL(fatal), m_configPaths);
 
-      throw runtime_error(((string) "Please make sure the configuration "
-                                    "file probe.xml or Devices.xml is in the current "
-                                    "directory or specify the correct file "
-                                    "in the configuration file " +
-                           m_configFile.string() + " using Devices = <file>")
-                              .c_str());
+      throw FatalException(((string) "Please make sure the configuration "
+                                     "file probe.xml or Devices.xml is in the current "
+                                     "directory or specify the correct file "
+                                     "in the configuration file " +
+                            m_configFile.string() + " using Devices = <file>")
+                               .c_str());
     }
 
     m_name = get<string>(options[configuration::ServiceName]);
@@ -958,7 +958,7 @@ namespace mtconnect::configuration {
     if (host.empty())
     {
       LOG(fatal) << "Malformed URL in configuration file: '" << url << "', exiting";
-      exit(1);
+      throw FatalException();
     }
     options[configuration::Host] = host;
 
@@ -1252,4 +1252,3 @@ namespace mtconnect::configuration {
     return false;
   }
 }  // namespace mtconnect::configuration
-

@@ -67,6 +67,40 @@ namespace mtconnect {
   // Message for when enumerations do not exist in an array/enumeration
   const int ENUM_MISS = -1;
 
+  /// @brtief Fatal Error Exception
+  /// An exception that get thrown to shut down the application. Only caught by the top level worker
+  /// thread.
+  class FatalException : public std::exception
+  {
+  public:
+    /// @brief Create a fatal exception with a message
+    /// @param str The message
+    FatalException(const std::string &str) : m_what(str) {}
+    /// @brief Create a fatal exception with a message
+    /// @param str The message
+    FatalException(const std::string_view &str) : m_what(str) {}
+    /// @brief Create a fatal exception with a message
+    /// @param str The message
+    FatalException(const char *str) : m_what(str) {}
+    /// @brief Create a default fatal exception
+    /// Has the message `Fatal Exception Occurred`
+    FatalException() : m_what("Fatal Exception Occurred") {}
+    /// @brief Copy construction from an exception
+    /// @param ex the exception
+    FatalException(const std::exception &ex) : m_what(ex.what()) {}
+    /// @brief Defaut construction
+    FatalException(const FatalException &) = default;
+    /// @brief Default destructor
+    ~FatalException() = default;
+
+    /// @brief gets the message
+    /// @returns the message as a string
+    const char *what() const noexcept override { return m_what.c_str(); }
+
+  protected:
+    std::string m_what;
+  };
+
   /// @brief Time formats
   enum TimeFormat
   {
@@ -224,7 +258,7 @@ namespace mtconnect {
 #else
     namespace tzchrono = date;
 #endif
-    
+
     switch (format)
     {
       case HUM_READ:
@@ -330,17 +364,6 @@ namespace mtconnect {
   /// @return the modified path prefixed
   AGENT_LIB_API std::string addNamespace(const std::string aPath, const std::string aPrefix);
 
-  /// @brief determines of a string ends with an ending
-  /// @param[in] value the string to check
-  /// @param[in] ending the ending to verify
-  /// @return `true` if the string ends with ending
-  inline bool ends_with(const std::string &value, const std::string_view &ending)
-  {
-    if (ending.size() > value.size())
-      return false;
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-  }
-
   /// @brief removes white space at the beginning of a string
   /// @param[in,out] s the string
   /// @return string with spaces removed
@@ -378,17 +401,6 @@ namespace mtconnect {
       return {key.substr(c + 1, std::string::npos), key.substr(0, c)};
     else
       return {key, std::nullopt};
-  }
-
-  /// @brief determines of a string starts with a beginning
-  /// @param[in] value the string to check
-  /// @param[in] beginning the beginning to verify
-  /// @return `true` if the string begins with beginning
-  inline bool starts_with(const std::string &value, const std::string_view &beginning)
-  {
-    if (beginning.size() > value.size())
-      return false;
-    return std::equal(beginning.begin(), beginning.end(), value.begin());
   }
 
   /// @brief Case insensitive equals
@@ -772,7 +784,7 @@ namespace mtconnect {
     return ts;
   }
 
-/// @brief Creates a comparable schema version from a major and minor number
+  /// @brief Creates a comparable schema version from a major and minor number
 #define SCHEMA_VERSION(major, minor) (major * 100 + minor)
 
   /// @brief Get the default schema version of the agent as a string
@@ -819,7 +831,8 @@ namespace mtconnect {
   /// @param[in] sha the sha1 namespace to use as context
   /// @param[in] id the id to use transform
   /// @returns Returns the first 16 characters of the  base 64 encoded sha1
-  inline std::string makeUniqueId(const ::boost::uuids::detail::sha1 &contextSha, const std::string &id)
+  inline std::string makeUniqueId(const ::boost::uuids::detail::sha1 &contextSha,
+                                  const std::string &id)
   {
     using namespace std;
     using namespace boost::uuids::detail;
@@ -833,11 +846,11 @@ namespace mtconnect {
     };
 
     sha.process_bytes(id.data(), id.length());
-    sha1::digest_type  digest;
+    sha1::digest_type digest;
     sha.get_digest(digest);
 
-     auto data = (unsigned int *) digest;
-    
+    auto data = (unsigned int *)digest;
+
     string s(32, ' ');
     auto len = boost::beast::detail::base64::encode(s.data(), data, sizeof(digest));
 

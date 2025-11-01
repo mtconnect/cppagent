@@ -473,7 +473,7 @@ namespace mtconnect {
         auto format = request->parameter<string>("format");
         auto printer = getPrinter(request->m_accepts, format);
 
-        if (device && !ends_with(request->m_path, string("probe")) &&
+        if (device && !request->m_path.ends_with("probe"sv) &&
             m_sinkContract->findDeviceByUUIDorName(*device) == nullptr)
           return false;
 
@@ -1473,7 +1473,7 @@ namespace mtconnect {
       {
         for (const auto &p : m_sinkContract->getPrinters())
         {
-          if (ends_with(accept, p.first))
+          if (accept.ends_with(p.first))
             return p.first;
         }
       }
@@ -1616,4 +1616,3 @@ namespace mtconnect {
 
   }  // namespace sink::rest_sink
 }  // namespace mtconnect
-

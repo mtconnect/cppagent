@@ -17,8 +17,9 @@
 
 #pragma once
 
-#include <future>
 #include <boost/asio/dispatch.hpp>
+
+#include <future>
 
 #include "mtconnect/config.hpp"
 #include "pipeline_context.hpp"

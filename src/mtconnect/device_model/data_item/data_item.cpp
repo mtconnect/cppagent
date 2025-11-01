@@ -130,7 +130,7 @@ namespace mtconnect {
       auto &category = get<string>("category");
 
       auto units = maybeGet<string>("units");
-      if (units && ends_with(*units, "3D"))
+      if (units && units->ends_with("3D"))
         m_specialClass = THREE_SPACE_CLS;
 
       if (category == "SAMPLE")

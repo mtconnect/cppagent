@@ -195,9 +195,11 @@ namespace mtconnect {
       }
       else if (!HasOption(options, configuration::Topics))
       {
-        LOG(error) << "MQTT Adapter requires at least one topic to subscribe to. Provide 'Topics = "
-                      "' or Topics block";
-        exit(1);
+        stringstream msg;
+        msg << "MQTT Adapter requires at least one topic to subscribe to. Provide 'Topics = "
+               "' or Topics block";
+        LOG(fatal) << msg.str();
+        throw FatalException(msg.str());
       }
     }
     /// <summary>
