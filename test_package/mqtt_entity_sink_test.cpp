@@ -634,7 +634,7 @@ TEST_F(MqttEntitySinkTest, mqtt_entity_sink_should_handle_unavailable)
                                                         const std::string& payload) {
     
     json j = json::parse(payload);
-    if (j["category"] != "CONDITION")
+    if (j["category"] != "CONDITION" && topic.starts_with("MTConnect/Devices/000/Observations/"))
     {
       if (j["result"] == "UNAVAILABLE")
       {
