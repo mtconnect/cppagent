@@ -224,7 +224,7 @@ namespace mtconnect {
 #else
     namespace tzchrono = date;
 #endif
-    
+
     switch (format)
     {
       case HUM_READ:
@@ -819,7 +819,8 @@ namespace mtconnect {
   /// @param[in] sha the sha1 namespace to use as context
   /// @param[in] id the id to use transform
   /// @returns Returns the first 16 characters of the  base 64 encoded sha1
-  inline std::string makeUniqueId(const ::boost::uuids::detail::sha1 &contextSha, const std::string &id)
+  inline std::string makeUniqueId(const ::boost::uuids::detail::sha1 &contextSha,
+                                  const std::string &id)
   {
     using namespace std;
     using namespace boost::uuids::detail;
@@ -833,11 +834,11 @@ namespace mtconnect {
     };
 
     sha.process_bytes(id.data(), id.length());
-    sha1::digest_type  digest;
+    sha1::digest_type digest;
     sha.get_digest(digest);
 
-     auto data = (unsigned int *) digest;
-    
+    auto data = (unsigned int *)digest;
+
     string s(32, ' ');
     auto len = boost::beast::detail::base64::encode(s.data(), data, sizeof(digest));
 

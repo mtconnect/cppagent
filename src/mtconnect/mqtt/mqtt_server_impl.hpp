@@ -24,9 +24,9 @@
 
 #include <inttypes.h>
 #include <mqtt/async_client.hpp>
+#include <mqtt/broker/topic_filter.hpp>
 #include <mqtt/setup_log.hpp>
 #include <mqtt_server_cpp.hpp>
-#include <mqtt/broker/topic_filter.hpp>
 
 #include "mqtt_server.hpp"
 #include "mtconnect/configuration/config_options.hpp"
@@ -218,7 +218,7 @@ namespace mtconnect {
             LOG(debug) << "Server topic_name: " << topic_name;
             LOG(debug) << "Server contents: " << contents;
 
-            for (const auto& sub : m_subs)
+            for (const auto &sub : m_subs)
             {
               if (mqtt::broker::compare_topic_filter(sub.topic, topic_name))
               {

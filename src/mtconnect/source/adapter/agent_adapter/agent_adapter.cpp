@@ -135,7 +135,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     m_name = m_url.getUrlText(m_sourceDevice);
     m_identity = CreateIdentityHash(m_name);
-    
+
     m_options.insert_or_assign(configuration::AdapterIdentity, m_identity);
     m_feedbackId = "XmlTransformFeedback:" + m_identity;
 

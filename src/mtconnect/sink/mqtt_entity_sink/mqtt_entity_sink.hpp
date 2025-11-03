@@ -117,7 +117,7 @@ namespace mtconnect {
         std::string formatTimestamp(const Timestamp& timestamp);
 
       protected:
-        static constexpr size_t MAX_QUEUE_SIZE = 10000; // Maximum queued observations
+        static constexpr size_t MAX_QUEUE_SIZE = 10000;  // Maximum queued observations
 
         std::string m_observationTopicPrefix;  //! Observation topic prefix
         std::string m_deviceTopicPrefix;       //! Device topic prefix
@@ -134,5 +134,5 @@ namespace mtconnect {
         std::mutex m_queueMutex;
       };
     }  // namespace mqtt_entity_sink
-  }  // namespace sink
+  }    // namespace sink
 }  // namespace mtconnect

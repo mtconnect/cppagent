@@ -125,6 +125,7 @@ public:
   ~AgentTestHelper()
   {
     m_mqttService.reset();
+    m_mqttEntitySink.reset();
     m_restService.reset();
     m_adapter.reset();
     if (m_agent)
@@ -323,8 +324,7 @@ public:
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
   std::shared_ptr<adpt::shdr::ShdrAdapter> m_adapter;
   std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> m_mqttService;
-  std::shared_ptr<mtconnect::sink::mqtt_entity_sink::MqttEntitySink>
-      m_mqttEntitySink;
+  std::shared_ptr<mtconnect::sink::mqtt_entity_sink::MqttEntitySink> m_mqttEntitySink;
   std::shared_ptr<mtconnect::sink::rest_sink::RestService> m_restService;
   std::shared_ptr<mtconnect::source::LoopbackSource> m_loopback;
 

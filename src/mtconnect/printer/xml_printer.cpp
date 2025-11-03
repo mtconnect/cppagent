@@ -24,8 +24,8 @@
 #include <typeinfo>
 #include <utility>
 
-#include <libxml/xmlwriter.h>
 #include <libxml/entities.h>
+#include <libxml/xmlwriter.h>
 
 #include "mtconnect/asset/asset.hpp"
 #include "mtconnect/asset/cutting_tool.hpp"

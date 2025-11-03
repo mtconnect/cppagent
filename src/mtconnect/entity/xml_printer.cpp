@@ -19,8 +19,8 @@
 
 #include <unordered_map>
 
-#include <libxml/xmlwriter.h>
 #include <libxml/entities.h>
+#include <libxml/xmlwriter.h>
 
 #include "mtconnect/logging.hpp"
 #include "mtconnect/printer/xml_printer_helper.hpp"

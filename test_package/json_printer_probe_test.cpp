@@ -362,7 +362,8 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
   auto dir2 = load.at("/Relationships/1"_json_pointer);
   ASSERT_TRUE(dir2.is_object());
   ASSERT_EQ(string("LIMIT"), dir2.at("/SpecificationRelationship/type"_json_pointer).get<string>());
-  ASSERT_EQ(string("spec1"), dir2.at("/SpecificationRelationship/idRef"_json_pointer).get<string>());
+  ASSERT_EQ(string("spec1"),
+            dir2.at("/SpecificationRelationship/idRef"_json_pointer).get<string>());
 
   auto limits = linear.at("/DataItems/5/DataItem"_json_pointer);
   ASSERT_TRUE(load.is_object());
@@ -371,7 +372,8 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
   auto dir3 = limits.at("/Relationships/0"_json_pointer);
   ASSERT_TRUE(dir3.is_object());
   ASSERT_EQ(string("bob"), dir3.at("/DataItemRelationship/name"_json_pointer).get<string>());
-  ASSERT_EQ(string("OBSERVATION"), dir3.at("/DataItemRelationship/type"_json_pointer).get<string>());
+  ASSERT_EQ(string("OBSERVATION"),
+            dir3.at("/DataItemRelationship/type"_json_pointer).get<string>());
   ASSERT_EQ(string("xlc"), dir3.at("/DataItemRelationship/idRef"_json_pointer).get<string>());
 }
 

@@ -1616,4 +1616,3 @@ namespace mtconnect {
 
   }  // namespace sink::rest_sink
 }  // namespace mtconnect
-

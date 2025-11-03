@@ -58,8 +58,8 @@
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/printer/xml_printer.hpp"
-#include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
 #include "mtconnect/sink/mqtt_entity_sink/mqtt_entity_sink.hpp"
+#include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
 #include "mtconnect/sink/rest_sink/rest_service.hpp"
 #include "mtconnect/source/adapter/agent_adapter/agent_adapter.hpp"
 #include "mtconnect/source/adapter/mqtt/mqtt_adapter.hpp"
@@ -1254,4 +1254,3 @@ namespace mtconnect::configuration {
     return false;
   }
 }  // namespace mtconnect::configuration
-
