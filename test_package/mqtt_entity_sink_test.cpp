@@ -277,6 +277,8 @@ TEST_F(MqttEntitySinkTest, mqtt_entity_sink_should_use_flat_topic_structure)
   << "Topic does not match expected format: " << receivedTopic;
   
   client->async_disconnect();
+  
+  stopAgent();
   stopClient();
 }
 
@@ -630,10 +632,15 @@ TEST_F(MqttEntitySinkTest, mqtt_entity_sink_should_handle_unavailable)
   handler->m_receive = [&gotUnavailable, &receivedJson](std::shared_ptr<MqttClient> client,
                                                         const std::string& topic,
                                                         const std::string& payload) {
-    receivedJson = json::parse(payload);
-    if (receivedJson["result"] == "UNAVAILABLE")
+    
+    json j = json::parse(payload);
+    if (j["category"] != "CONDITION")
     {
-      gotUnavailable = true;
+      if (j["result"] == "UNAVAILABLE")
+      {
+        gotUnavailable = true;
+      }
+      receivedJson = j;
     }
   };
   
@@ -648,6 +655,9 @@ TEST_F(MqttEntitySinkTest, mqtt_entity_sink_should_handle_unavailable)
   ASSERT_TRUE(waitFor(10s, [&mqttSink]() { return mqttSink->isConnected(); }));
   
   // Initial observations should include UNAVAILABLE values
+  // The issue is the initial values will be received in a random order and the conditions have a
+  // level instead of a result. If in the interviening time a condition is received, the json may
+  // not be correct.
   ASSERT_TRUE(waitFor(10s, [&gotUnavailable]() { return gotUnavailable; }));
   EXPECT_EQ("UNAVAILABLE", receivedJson["result"].get<std::string>());
   
