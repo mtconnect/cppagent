@@ -577,15 +577,15 @@ namespace mtconnect {
           .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`");
       m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler})
           .document("MTConnect asset request", "Returns up to `count` assets for deivce `device`");
+      m_server->addRouting({boost::beast::http::verb::get, "/asset/{assetIds}", idHandler})
+          .document("MTConnect asset request",
+                    "Returns a set of assets identified by asset ids `asset` separated by "
+                    "semi-colon (;)");
       m_server->addRouting({boost::beast::http::verb::get, "/assets/{assetIds}", idHandler})
           .document(
               "MTConnect assets request",
               "Returns a set assets identified by asset ids `asset` separated by semi-colon (;)")
           .command("assetIds");
-      m_server->addRouting({boost::beast::http::verb::get, "/asset/{assetIds}", idHandler})
-          .document("MTConnect asset request",
-                    "Returns a set of assets identified by asset ids `asset` separated by "
-                    "semi-colon (;)");
 
       if (m_server->arePutsAllowed())
       {

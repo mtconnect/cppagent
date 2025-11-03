@@ -348,6 +348,7 @@ namespace mtconnect::sink::rest_sink {
 
         request->m_verb = beast::http::verb::get;
         request->m_parameters.clear();
+        //LOG(debug) << "WebsocketSession::parseRequest after clear assetIds: " << *request->parameter<string>("assetIds");
 #ifdef GetObject
 #define __GOSave__ GetObject
 #undef GetObject
@@ -382,7 +383,7 @@ namespace mtconnect::sink::rest_sink {
             case rapidjson::kStringType:
               request->m_parameters.emplace(
                   make_pair(it.name.GetString(), ParameterValue(string(it.value.GetString()))));
-              LOG(debug) << "WebsocketSession::parseRequest object value: "<< it.value.GetString();    
+              LOG(debug) << "WebsocketSession::parseRequest name: "<< it.value.GetString()  << ", object value: "<< it.value.GetString();
               break;
             case rapidjson::kNumberType:
               if (it.value.IsInt())
@@ -409,11 +410,13 @@ namespace mtconnect::sink::rest_sink {
       LOG(debug) << "WebsocketSession::parseRequest command: " << *request->parameter<string>("request");
       LOG(debug) << "WebsocketSession::parseRequest assetIds: " << *request->parameter<string>("assetIds");
 
-      // string value = *request->parameter<string>("assetIds");
-      // if (!value.empty() && !(value == "asset")) {
-      //   request->m_parameters["request"] = "assetIds";
-      //   LOG(debug) << "WebsocketSession::parseRequest command: " << *request->parameter<string>("request");
-      // }
+    string value = *request->parameter<string>("assetIds");
+    LOG(debug) << "WebsocketSession::parseRequest assetIds value = " << value;
+
+    if (!(value == "asset")) {
+      request->m_parameters["request"] = "assetIds";
+      LOG(debug) << "WebsocketSession::parseRequest command: " << *request->parameter<string>("request");
+    }
 
       return request;
     }
