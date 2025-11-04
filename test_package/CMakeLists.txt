@@ -297,6 +297,7 @@ add_agent_test(table TRUE observation)
 
 add_agent_test(checkpoint FALSE buffer)
 add_agent_test(circular_buffer FALSE buffer)
+add_agent_test(mqtt_entity_sink FALSE sink/mqtt_entity_sink TRUE)
 
 
 if (WITH_RUBY)

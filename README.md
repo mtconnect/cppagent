@@ -904,6 +904,10 @@ Sinks {
 
     *Default*: All data items
 
+## MQTT Entity Sink Documentation
+
+For detailed configuration, usage, and message format for the MQTT Entity Sink, see: [docs: MTConnect MQTT Entity Sink](src/mtconnect/sink/mqtt_entity_sink/README.md)
+
 ### Adapter Configuration Items ###
 
 * `Adapters` - Contains a list of device blocks. If there are no Adapters

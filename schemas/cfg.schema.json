@@ -314,6 +314,73 @@
 							"enum":["at_least_once", "at_most_once", "exactly_once"]
 						}
 					}
+				},
+				"MqttEntitySink": {
+					"type": "object",
+					"properties": {
+						"MqttHost": {
+							"type": "string",
+							"description": "IP Address or name of the MQTT Broker",
+							"default": "127.0.0.1"
+						},
+						"MqttPort": {
+							"type": "integer",
+							"description": "Port number of MQTT Broker",
+							"default": 1883
+						},
+						"MqttTls": {
+							"type": "boolean",
+							"description": "TLS Certificate for secure connection to the MQTT Broker",
+							"default": false
+						},
+						"MqttUserName": {
+							"type": "string",
+							"description": "Username for MQTT authentication"
+						},
+						"MqttPassword": {
+							"type": "string",
+							"description": "Password for MQTT authentication"
+						},
+						"MqttClientId": {
+							"type": "string",
+							"description": "MQTT client identifier"
+						},
+						"MqttQOS": {
+							"type": "string",
+							"description": "The quality of service level for the MQTT connection. Options are: at_least_once, at_most_once, and exactly_once",
+							"default": "at_least_once",
+							"enum": [
+								"at_least_once",
+								"at_most_once",
+								"exactly_once"
+							]
+						},
+						"MqttRetain": {
+							"type": "boolean",
+							"description": "Retain the last message sent to the broker",
+							"default": false
+						},
+						"ObservationTopicPrefix": {
+							"type": "string",
+							"description": "Prefix for the Observations topic",
+							"default": "MTConnect/Devices/[device]/Observations"
+						},
+						"DeviceTopicPrefix": {
+							"type": "string",
+							"description": "Prefix for the Device topic",
+							"default": "MTConnect/Probe/[device]"
+						},
+						"AssetTopicPrefix": {
+							"type": "string",
+							"description": "Prefix for the Asset topic",
+							"default": "MTConnect/Asset/[device]"
+						},
+						"MqttLastWillTopic": {
+							"type": "string",
+							"description": "The topic used for the last will and testament for an agent",
+							"default": "MTConnect/Probe/[device]/Availability"
+						}
+					}
 				}
 			}
 		},
