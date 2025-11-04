@@ -44,7 +44,7 @@ namespace mtconnect {
       /// @brief stop the srvice
       virtual void stop() = 0;
       /// @brief start the service
-      virtual void start() = 0;
+      virtual int start() = 0;
 
       /// @brief set the name of the service
       /// @param[in] name name of the service

@@ -100,7 +100,7 @@ namespace mtconnect::sink::rest_sink {
     catch (exception &e)
     {
       LOG(fatal) << "Cannot start server: " << e.what();
-      std::exit(1);
+      throw FatalException(e.what());
     }
   }
 

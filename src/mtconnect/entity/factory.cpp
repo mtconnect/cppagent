@@ -188,7 +188,7 @@ namespace mtconnect {
             // If the property is a namespace declaration, then
             // remove it if it is related to mtconnect, otherwise
             // allow it to pass through.
-            if (ba::starts_with(p.first.str(), "xmlns"s))
+            if (p.first.str().starts_with("xmlns"sv))
             {
               if (holds_alternative<string>(p.second) &&
                   ba::contains(get<string>(p.second), "mtconnect"s))

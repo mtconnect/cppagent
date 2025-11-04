@@ -227,7 +227,7 @@ namespace mtconnect::parser {
         xmlXPathFreeContext(xpathCtx);
 
       LOG(fatal) << "Cannot parse XML file: " << e;
-      throw;
+      throw FatalException(e);
     }
     catch (...)
     {
@@ -237,7 +237,7 @@ namespace mtconnect::parser {
       if (xpathCtx)
         xmlXPathFreeContext(xpathCtx);
 
-      throw;
+      throw FatalException();
     }
 
     return deviceList;
@@ -272,7 +272,7 @@ namespace mtconnect::parser {
     catch (string e)
     {
       LOG(fatal) << "Cannot parse XML document: " << e;
-      throw;
+      throw FatalException();
     }
 
     return device;
@@ -312,7 +312,7 @@ namespace mtconnect::parser {
     catch (string e)
     {
       LOG(fatal) << "Cannot parse XML document: " << e;
-      throw;
+      throw FatalException();
     }
   }
 
