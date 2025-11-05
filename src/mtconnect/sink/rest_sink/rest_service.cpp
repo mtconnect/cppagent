@@ -567,14 +567,25 @@ namespace mtconnect {
       string qp(
           "type={string}&removed={bool:false}&"
           "count={integer:100}&device={string}&pretty={bool:false}&format={string}");
-      m_server->addRouting({boost::beast::http::verb::get, "/assets?" + qp, handler})
-          .document("MTConnect assets request", "Returns up to `count` assets");
-      m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler})
-          .document("MTConnect asset request", "Returns up to `count` assets");
-      m_server->addRouting({boost::beast::http::verb::get, "/{device}/assets?" + qp, handler})
-          .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`");
-      m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler})
-          .document("MTConnect asset request", "Returns up to `count` assets for deivce `device`");
+      for (const auto &asset : list<string> {"asset", "assets"})
+      {
+
+        m_server->addRouting({boost::beast::http::verb::get, "/" + asset + "?" + qp, handler})
+            .document("MTConnect assets request", "Returns up to `count` assets");
+        m_server->addRouting({boost::beast::http::verb::get, "/" + asset + "?" + qp, handler})
+            .document("MTConnect assets request", "Returns up to `count` assets")
+            .command(asset);
+        // m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler})
+        //     .document("MTConnect asset request", "Returns up to `count` assets");
+        m_server->addRouting({boost::beast::http::verb::get, "/{device}/" + asset + "?" + qp, handler})
+            .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`");
+        m_server->addRouting({boost::beast::http::verb::get, "/{device}/" + asset + "?" + qp, handler})
+            .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`")
+            .command(asset);
+        // m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler})
+        //     .document("MTConnect asset request", "Returns up to `count` assets for deivce `device`");
+      }
+
       m_server->addRouting({boost::beast::http::verb::get, "/assets/{assetIds}", idHandler})
           .document(
               "MTConnect assets request",
