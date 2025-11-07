@@ -104,7 +104,8 @@ namespace mtconnect {
       /// @brief stops the agent. Used in daemons.
       void stop() override;
       /// @brief starts the agent. Used in daemons.
-      void start() override;
+      /// @return 0 on success
+      int start() override;
       /// @brief initializes the configuration of the agent from the command line parameters
       /// @param[in] options command line parameters
       void initialize(const boost::program_options::variables_map &options) override;
