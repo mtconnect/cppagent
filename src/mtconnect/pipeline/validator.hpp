@@ -37,11 +37,11 @@ namespace mtconnect::pipeline {
   public:
     Validator(const Validator &) = default;
     Validator(PipelineContextPtr context)
-      : Transform("Validator"), m_contract(context->m_contract.get())
+    : Transform("Validator"), m_contract(context->m_contract.get())
     {
       m_guard = TypeGuard<observation::Observation>(RUN) || TypeGuard<entity::Entity>(SKIP);
     }
-
+    
     /// @brief validate the Event
     /// @param entity The Event entity
     /// @returns modified entity with quality and deprecated properties
@@ -50,78 +50,78 @@ namespace mtconnect::pipeline {
       using namespace observation;
       using namespace mtconnect::validation::observations;
       auto obs = std::dynamic_pointer_cast<Observation>(entity);
-
+      auto &value = obs->getValue();
+      
+      bool valid = true;
       auto di = obs->getDataItem();
-      if (obs->isUnavailable() || di->isDataSet())
+      if (!obs->isUnavailable() && !di->isDataSet())
       {
-        obs->setProperty("quality", std::string("VALID"));
-      }
-      else if (auto evt = std::dynamic_pointer_cast<observation::Event>(obs))
-      {
-        auto &value = evt->getValue<std::string>();
-
-        // Optimize
-        auto vocab = ControlledVocabularies.find(evt->getName());
-        if (vocab != ControlledVocabularies.end())
+        if (auto evt = std::dynamic_pointer_cast<observation::Event>(obs))
         {
-          auto &lits = vocab->second;
-          if (lits.size() != 0)
+          auto vocab = ControlledVocabularies.find(evt->getName());
+          if (vocab != ControlledVocabularies.end())
           {
-            auto lit = lits.find(value);
-            if (lit != lits.end())
+            auto sv = std::get_if<std::string>(&value);
+            auto &lits = vocab->second;
+            if (lits.size() != 0 && sv != nullptr)
             {
-              // Check if it has not been introduced yet
-              if (lit->second.first > 0 && m_contract->getSchemaVersion() < lit->second.first)
+              auto lit = lits.find(*sv);
+              if (lit != lits.end())
               {
-                evt->setProperty("quality", std::string("INVALID"));
+                // Check if it has not been introduced yet
+                if (lit->second.first > 0 && m_contract->getSchemaVersion() < lit->second.first)
+                  valid = false;
+                
+                // Check if deprecated
+                if (lit->second.second > 0 && m_contract->getSchemaVersion() >= lit->second.second)
+                {
+                  evt->setProperty("deprecated", true);
+                }
               }
               else
               {
-                evt->setProperty("quality", std::string("VALID"));
-              }
-
-              // Check if deprecated
-              if (lit->second.second > 0 && m_contract->getSchemaVersion() >= lit->second.second)
-              {
-                evt->setProperty("deprecated", true);
+                valid = false;
               }
             }
-            else
+            else if (lits.size() != 0)
             {
-              evt->setProperty("quality", std::string("INVALID"));
-              // Log once
-              auto &id = di->getId();
-              if (m_logOnce.count(id) < 1)
-              {
-                LOG(warning) << "DataItem '" << id << "': Invalid value for '" << evt->getName()
-                             << "': '" << evt->getValue<std::string>() << '\'';
-                m_logOnce.insert(id);
-              }
-              else
-              {
-                LOG(trace) << "DataItem '" << id << "': Invalid value for '" << evt->getName()
-                           << "': '" << evt->getValue<std::string>() << '\'';
-              }
+              valid = false;
             }
           }
           else
           {
-            evt->setProperty("quality", std::string("VALID"));
+            evt->setProperty("quality", std::string("UNVERIFIABLE"));
           }
+        }
+        else if (auto spl = std::dynamic_pointer_cast<observation::Sample>(obs))
+        {
+          if (!(spl->hasProperty("quality") || std::holds_alternative<double>(value) ||
+              std::holds_alternative<int64_t>(value)))
+            valid = false;
+        }
+      }
+    
+      if (!valid)
+      {
+        obs->setProperty("quality", std::string("INVALID"));
+        // Log once
+        auto &id = di->getId();
+        if (m_logOnce.count(id) < 1)
+        {
+          LOG(warning) << "DataItem '" << id << "': Invalid value for '" << obs->getName()
+            << "': '" << value << '\'';
+          m_logOnce.insert(id);
         }
         else
         {
-          evt->setProperty("quality", std::string("UNVERIFIABLE"));
+          LOG(trace) << "DataItem '" << id << "': Invalid value for '" << obs->getName();
         }
       }
-      else if (auto spl = std::dynamic_pointer_cast<observation::Sample>(obs))
-      {
-      }
-      else
+      else if (!obs->hasProperty("quality"))
       {
         obs->setProperty("quality", std::string("VALID"));
       }
-
+      
       return next(std::move(obs));
     }
 

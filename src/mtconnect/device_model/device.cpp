@@ -84,7 +84,7 @@ namespace mtconnect {
       {
         if (auto it = m_dataItems.get<ByName>().find(*name); it != m_dataItems.get<ByName>().end())
         {
-          LOG(warning) << "Device " << getName() << ": Duplicate source '" << *name
+          LOG(warning) << "Device " << getName() << ": Duplicate name '" << *name
                        << "' found in data item '" << di->getId() << "'. Previous data item: '"
                        << it->lock()->getId() << '\'';
           LOG(warning) << "    Name '" << *name
