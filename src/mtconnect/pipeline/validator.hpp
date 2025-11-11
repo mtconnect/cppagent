@@ -108,10 +108,8 @@ namespace mtconnect::pipeline {
         auto &id = di->getId();
         if (m_logOnce.count(id) < 1)
         {
-          Value v = value;
-          ConvertValueToType(v, ValueType::STRING);
           LOG(warning) << "DataItem '" << id << "': Invalid value for '" << obs->getName()
-            << "': '" << std::get<std::string>(value) << '\'';
+            << "': '" << value << '\'';
           m_logOnce.insert(id);
         }
         else
