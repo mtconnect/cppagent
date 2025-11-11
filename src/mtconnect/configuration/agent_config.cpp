@@ -940,6 +940,8 @@ namespace mtconnect::configuration {
 
     loadAdapters(config, options);
 
+    m_afterAgentHooks.exec(*this);
+    
 #ifdef WITH_PYTHON
     configurePython(config, options);
 #endif

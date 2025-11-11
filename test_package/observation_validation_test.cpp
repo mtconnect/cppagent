@@ -246,7 +246,7 @@ TEST_F(ObservationValidationTest, should_be_invalid_if_entry_has_not_been_introd
   ASSERT_FALSE(evt->hasProperty("deprecated"));
 }
 
-TEST_F(ObservationValidationTest, should_validate_data_item_types)
+TEST_F(ObservationValidationTest, should_validate_invalid_sample_value)
 {
   auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
   contract->m_schemaVersion = SCHEMA_VERSION(2, 5);
@@ -283,6 +283,59 @@ TEST_F(ObservationValidationTest, should_validate_data_item_types)
     ASSERT_EQ("INVALID", sample->get<string>("quality"));
   }
 }
+
+TEST_F(ObservationValidationTest, should_validate_sample)
+{
+  auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+  contract->m_schemaVersion = SCHEMA_VERSION(2, 5);
+  
+  shared_ptr<ShdrTokenMapper> mapper;
+  mapper = make_shared<ShdrTokenMapper>(m_context, "", 2);
+  mapper->bind(m_validator);
+  
+  ErrorList errors;
+  m_dataItem = DataItem::make(
+                              {{"id", "pos"s}, {"category", "SAMPLE"s}, {"type", "POSITION"s}, {"units", "MILLIMETER"s}},
+                              errors);
+  
+  auto ts = make_shared<Timestamped>();
+  ts->m_tokens = {{"pos"s, "1.234"s}};
+  ts->m_timestamp = chrono::system_clock::now();
+  ts->setProperty("timestamp", ts->m_timestamp);
+  
+  auto observations = (*mapper)(ts);
+  auto &r = *observations;
+  ASSERT_EQ(typeid(Observations), typeid(r));
+  
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+  
+  auto oi = oblist.begin();
+  
+  {
+    auto sample = dynamic_pointer_cast<Sample>(*oi++);
+    ASSERT_TRUE(sample);
+    ASSERT_EQ(m_dataItem, sample->getDataItem());
+    ASSERT_FALSE(sample->isUnavailable());
+    
+    ASSERT_EQ("VALID", sample->get<string>("quality"));
+  }
+}
+
+TEST_F(ObservationValidationTest, should_validate_sample_with_int64_value)
+{
+  ErrorList errors;
+  m_dataItem = DataItem::make(
+                              {{"id", "pos"s}, {"category", "SAMPLE"s}, {"type", "POSITION"s}, {"units", "MILLIMETER"s}},
+                              errors);
+  
+  auto obs = Observation::make(m_dataItem, {{"VALUE", int64_t(100)}}, m_time, errors);
+  
+  auto evt = (*m_validator)(std::move(obs));
+  auto quality = evt->get<string>("quality");
+  ASSERT_EQ("VALID", quality);
+}
+
 
 TEST_F(ObservationValidationTest, should_not_validate_if_validation_is_off)
 {
@@ -368,4 +421,15 @@ TEST_F(ObservationValidationTest, should_validate_json_data_item_types)
 
     ASSERT_EQ("INVALID", sample->get<string>("quality"));
   }
+}
+
+/// @test Validate a a sample
+TEST_F(ObservationValidationTest, should_validate_sample_double_value)
+{
+  ErrorList errors;
+  auto event = Observation::make(m_dataItem, {{"VALUE", "READY"s}}, m_time, errors);
+  
+  auto evt = (*m_validator)(std::move(event));
+  auto quality = evt->get<string>("quality");
+  ASSERT_EQ("VALID", quality);
 }
