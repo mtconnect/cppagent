@@ -423,7 +423,7 @@ TEST_F(ObservationValidationTest, should_validate_json_data_item_types)
   }
 }
 
-/// @test Validate a a sample
+/// @test Validate a sample
 TEST_F(ObservationValidationTest, should_validate_sample_double_value)
 {
   ErrorList errors;
