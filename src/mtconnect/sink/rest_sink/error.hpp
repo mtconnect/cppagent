@@ -19,7 +19,7 @@
 
 #include <boost/beast/http/status.hpp>
 
-#include <strstream>
+#include <sstream>
 
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/entity/factory.hpp"

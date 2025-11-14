@@ -1411,12 +1411,7 @@ namespace mtconnect {
       Timestamp ts;
       if (time)
       {
-        istringstream in(*time);
-        in >> std::setw(6) >> date::parse("%FT%T", ts);
-        if (!in.good())
-        {
-          ts = chrono::system_clock::now();
-        }
+        ts = parseTimestamp(*time);
       }
       else
       {

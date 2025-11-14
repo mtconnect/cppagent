@@ -29,7 +29,7 @@
 # ---------------------------------------------------------------------
 
 # base image - alpine 3.18
-FROM alpine:3.19 AS os
+FROM alpine:3.22 AS os
 
 # ---------------------------------------------------------------------
 # build
@@ -53,6 +53,7 @@ ENV CONAN_PROFILE="$HOME/agent/cppagent/conan/profiles/docker"
 RUN  apk --update add \
        autoconf \
        automake \
+       bash \
        cmake \
        g++ \
        gcompat \
