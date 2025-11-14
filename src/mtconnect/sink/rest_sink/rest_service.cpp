@@ -567,10 +567,8 @@ namespace mtconnect {
       string qp(
           "type={string}&removed={bool:false}&"
           "count={integer:100}&deviceType={string}&pretty={bool:false}&format={string}");
-      //for (const auto &asset : list<string> {"asset", "assets"})
-      {
 
-        m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler})
+          m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler})
             .document("MTConnect assets request", "Returns up to `count` assets");
         m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler})
             .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`")
@@ -581,13 +579,12 @@ namespace mtconnect {
         m_server->addRouting({boost::beast::http::verb::get, "/{device}/assets?" + qp, handler})
             .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`")
             .command("assets");
-      }
 
       m_server->addRouting({boost::beast::http::verb::get, "/assets/{assetIds}", idHandler})
           .document(
               "MTConnect assets request",
               "Returns a set assets identified by asset ids `asset` separated by semi-colon (;)");
-      m_server->addRouting({boost::beast::http::verb::get, "/asset/{assetIds}", idHandler})
+      m_server->addRouting({boost::beast::http::verb::get,  "/asset/{assetIds}", idHandler})
           .document("MTConnect asset request",
                     "Returns a set of assets identified by asset ids `asset` separated by "
                     "semi-colon (;)")
