@@ -31,7 +31,6 @@
 
 #include <chrono>
 #include <date/date.h>
-#include <date/tz.h>
 #include <filesystem>
 #include <map>
 #include <mtconnect/version.h>
@@ -40,6 +39,7 @@
 #include <string>
 #include <string_view>
 #include <variant>
+#include <format>
 
 #include "mtconnect/config.hpp"
 #include "mtconnect/logging.hpp"
@@ -254,9 +254,7 @@ namespace mtconnect {
     using namespace std::chrono;
     constexpr char ISO_8601_FMT[] = "%Y-%m-%dT%H:%M:%SZ";
 #ifdef _WINDOWS
-    namespace tzchrono = std::chrono;
-#else
-    namespace tzchrono = date;
+
 #endif
 
     switch (format)
@@ -269,9 +267,12 @@ namespace mtconnect {
         return date::format(ISO_8601_FMT, date::floor<microseconds>(timePoint));
       case LOCAL:
       {
-        auto zone = tzchrono::current_zone();
-        auto zt = date::zoned_time(zone, timePoint);
-        return date::format("%Y-%m-%dT%H:%M:%S%z", zt);
+        time_t t = time(nullptr);
+        struct tm local;
+        localtime_r(&t, &local);
+        char buf[64];
+        strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", &local);
+        return string(buf);
       }
     }
 
@@ -776,7 +777,8 @@ namespace mtconnect {
   {
     Timestamp ts;
     std::istringstream in(timestamp);
-    in >> std::setw(6) >> date::parse("%FT%T", ts);
+    in >> std::setw(6);
+    date::from_stream(in, "%FT%T", ts);
     if (!in.good())
     {
       ts = std::chrono::system_clock::now();
