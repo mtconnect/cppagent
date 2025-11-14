@@ -68,7 +68,7 @@ class MTConnectAgentConan(ConanFile):
 
         "openssl*:shared": False,
         
-        "date*:use_system_tz_db": True
+        "date*:header_only": True
         }
 
     exports_sources = "*", "!build", "!test_package/build", "!*~"
@@ -112,14 +112,14 @@ class MTConnectAgentConan(ConanFile):
     def build_requirements(self):
         self.tool_requires_version("cmake", [3, 26, 4])
         if self.options.with_docs:
-            self.tool_requires_version("doxygen", [1, 14, 0])
+            self.tool_requires_version("doxygen", [1, 15, 0])
 
     def requirements(self):
         self.requires("boost/1.88.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("libxml2/2.14.5", headers=True, libs=True, visible=True, transitive_headers=True, transitive_libs=True)
         self.requires("date/3.0.4", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("nlohmann_json/3.12.0", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
-        self.requires("openssl/3.5.4", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
+        self.requires("openssl/3.6.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("rapidjson/cci.20230929", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
         self.requires("mqtt_cpp/13.2.2", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
         self.requires("bzip2/1.0.8", headers=True, libs=True, transitive_headers=True, transitive_libs=True)

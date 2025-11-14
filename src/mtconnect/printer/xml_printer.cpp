@@ -94,7 +94,7 @@ namespace mtconnect::printer {
         xmlFreeTextWriter(m_writer);
         m_writer = nullptr;
       }
-      return string((char *)m_buf->content, m_buf->use);
+      return std::string((char *)xmlBufferContent(m_buf), xmlBufferLength(m_buf));
     }
 
   protected:

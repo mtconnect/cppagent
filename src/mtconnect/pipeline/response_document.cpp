@@ -23,6 +23,7 @@
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
+#include "mtconnect/utilities.hpp"
 #include "mtconnect/asset/asset.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/entity/data_set.hpp"
@@ -278,20 +279,6 @@ namespace mtconnect::pipeline {
       ds.insert(entry);
       return true;
     });
-  }
-
-  inline static Timestamp parseTimestamp(const std::string value)
-  {
-    Timestamp ts;
-    istringstream in(value);
-    in >> std::setw(6) >> date::parse("%FT%T", ts);
-    if (!in.good())
-    {
-      LOG(error) << "Cound not parse XML timestamp: " << value;
-      ts = std::chrono::system_clock::now();
-    }
-
-    return ts;
   }
 
   inline static DataItemPtr findDataItem(const std::string &name, DevicePtr device,
