@@ -28,6 +28,7 @@
 #include "mtconnect/config.hpp"
 #include "mtconnect/pipeline/mtconnect_xml_transform.hpp"
 #include "mtconnect/pipeline/response_document.hpp"
+#include "mtconnect/utilities.hpp"
 #include "session.hpp"
 
 namespace mtconnect::source::adapter::agent_adapter {
@@ -135,6 +136,10 @@ namespace mtconnect::source::adapter::agent_adapter {
       {
         if (m_handler && m_handler->m_processData)
           m_handler->m_processData(data, m_identity);
+      }
+      catch (FatalException &e)
+      {
+        throw e;
       }
       catch (std::system_error &e)
       {

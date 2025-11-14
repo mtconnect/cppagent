@@ -252,8 +252,10 @@ public:
     cout << "spawnRequest: done: false" << endl;
     m_done = false;
     m_count = 0;
-    asio::spawn(m_context, std::bind(&Client::request, this, verb, target, body, close, contentType,
-                                     std::placeholders::_1), boost::asio::detached);
+    asio::spawn(m_context,
+                std::bind(&Client::request, this, verb, target, body, close, contentType,
+                          std::placeholders::_1),
+                boost::asio::detached);
 
     while (!m_done && !m_failed && m_context.run_for(20ms) > 0)
       ;

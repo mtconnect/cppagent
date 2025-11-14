@@ -186,18 +186,18 @@ namespace mtconnect::ruby {
             if (mrb_false_p(res))
             {
               LOG(fatal) << "Error loading file " << *modulePath << ": exiting agent";
-              exit(1);
+              throw FatalException("Fatal error loading module");
             }
           }
           catch (std::exception ex)
           {
             LOG(fatal) << "Failed to load module: " << *modulePath << ": " << ex.what();
-            exit(1);
+            throw FatalException("Fatal error loading module");
           }
           catch (...)
           {
             LOG(fatal) << "Failed to load module: " << *modulePath;
-            exit(1);
+            throw FatalException("Fatal error loading module");
           }
           if (fp != nullptr)
           {

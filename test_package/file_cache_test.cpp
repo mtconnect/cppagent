@@ -107,13 +107,13 @@ TEST_F(FileCacheTest, base_directory_should_redirect)
   ASSERT_TRUE(file);
   ASSERT_EQ("/schemas/none.xsd", file->m_redirect);
   ASSERT_TRUE(m_cache->hasFile("/schemas"));
-  ASSERT_TRUE(boost::starts_with(std::string(file->m_buffer), "<html>"));
+  ASSERT_TRUE(std::string_view(file->m_buffer).starts_with("<html>"));
 
   auto file2 = m_cache->getFile("/schemas");
   ASSERT_TRUE(file);
   ASSERT_EQ("/schemas/none.xsd", file2->m_redirect);
   ASSERT_TRUE(m_cache->hasFile("/schemas"));
-  ASSERT_TRUE(boost::starts_with(std::string(file->m_buffer), "<html>"));
+  ASSERT_TRUE(std::string_view(file->m_buffer).starts_with("<html>"));
 }
 
 TEST_F(FileCacheTest, file_cache_should_compress_file)

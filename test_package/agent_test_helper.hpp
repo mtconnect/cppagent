@@ -29,6 +29,7 @@
 #include "mtconnect/configuration/agent_config.hpp"
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/pipeline/pipeline.hpp"
+#include "mtconnect/sink/mqtt_entity_sink/mqtt_entity_sink.hpp"
 #include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
 #include "mtconnect/sink/rest_sink/response.hpp"
 #include "mtconnect/sink/rest_sink/rest_service.hpp"
@@ -124,6 +125,7 @@ public:
   ~AgentTestHelper()
   {
     m_mqttService.reset();
+    m_mqttEntitySink.reset();
     m_restService.reset();
     m_adapter.reset();
     if (m_agent)
@@ -169,6 +171,13 @@ public:
     return rest;
   }
 
+  std::shared_ptr<mtconnect::sink::mqtt_entity_sink::MqttEntitySink> getMqttEntitySink()
+  {
+    using namespace mtconnect::sink::mqtt_entity_sink;
+    auto sink = m_agent->findSink("MqttEntitySink");
+    return std::dynamic_pointer_cast<MqttEntitySink>(sink);
+  }
+
   std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> getMqttService()
   {
     using namespace mtconnect;
@@ -189,6 +198,7 @@ public:
 
     sink::rest_sink::RestService::registerFactory(m_sinkFactory);
     sink::mqtt_sink::MqttService::registerFactory(m_sinkFactory);
+    sink::mqtt_entity_sink::MqttEntitySink::registerFactory(m_sinkFactory);
     source::adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
 
     ConfigOptions options = ops;
@@ -228,6 +238,17 @@ public:
                                           std::move(mqttContract), options, ptree {});
       m_mqttService = std::dynamic_pointer_cast<sink::mqtt_sink::MqttService>(mqtt2sink);
       m_agent->addSink(m_mqttService);
+    }
+
+    if (HasOption(options, "MqttEntitySink"))
+    {
+      auto mqttEntityContract = m_agent->makeSinkContract();
+      mqttEntityContract->m_pipelineContext = m_context;
+      auto mqttEntitySink = m_sinkFactory.make("MqttEntitySink", "MqttEntitySink", m_ioContext,
+                                               std::move(mqttEntityContract), options, ptree {});
+      m_mqttEntitySink =
+          std::dynamic_pointer_cast<sink::mqtt_entity_sink::MqttEntitySink>(mqttEntitySink);
+      m_agent->addSink(m_mqttEntitySink);
     }
 
     m_agent->initialize(m_context);
@@ -303,6 +324,7 @@ public:
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
   std::shared_ptr<adpt::shdr::ShdrAdapter> m_adapter;
   std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> m_mqttService;
+  std::shared_ptr<mtconnect::sink::mqtt_entity_sink::MqttEntitySink> m_mqttEntitySink;
   std::shared_ptr<mtconnect::sink::rest_sink::RestService> m_restService;
   std::shared_ptr<mtconnect::source::LoopbackSource> m_loopback;
 

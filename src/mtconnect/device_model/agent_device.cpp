@@ -66,6 +66,7 @@ namespace mtconnect {
         {
           LOG(fatal) << "Cannot create AgentDevice: " << e->what();
         }
+        throw FatalException();
       }
     }
 

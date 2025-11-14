@@ -95,7 +95,7 @@ namespace mtconnect {
       std::string m_name;
       boost::asio::io_context::strand m_strand;
     };
-    
+
     /// @brief create a unique identity hash for an XML id starting with an `_` and 10 hex digits
     /// @param text the text to create the hashed id
     /// @returns a string with the hashed result

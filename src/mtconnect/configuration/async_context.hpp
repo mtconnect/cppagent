@@ -22,6 +22,7 @@
 
 #include "mtconnect/config.hpp"
 #include "mtconnect/logging.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect::configuration {
 
@@ -63,46 +64,96 @@ namespace mtconnect::configuration {
     void setThreadCount(int threads) { m_threadCount = threads; }
 
     /// @brief start `m_threadCount` worker threads
-    void start()
+    /// @returns the exit code
+    int start()
     {
-      m_running = true;
-      m_paused = false;
-      do
+      m_exitCode = 0;
+      try
       {
-        for (int i = 0; i < m_threadCount; i++)
+        m_running = true;
+        m_paused = false;
+        do
         {
-          m_workers.emplace_back(boost::thread([this]() { m_context.run(); }));
-        }
-        auto &first = m_workers.front();
-        while (m_running && !m_paused)
-        {
-          if (!first.try_join_for(boost::chrono::seconds(5)) && !m_running)
+          for (int i = 0; i < m_threadCount; i++)
           {
-            if (!first.try_join_for(boost::chrono::seconds(5)))
-              m_context.stop();
+            m_workers.emplace_back(boost::thread([this]() {
+              try
+              {
+                m_context.run();
+              }
+
+              catch (FatalException &e)
+              {
+                LOG(fatal) << "Fatal exception occurred: " << e.what();
+                stop();
+                m_exitCode = 1;
+              }
+              catch (std::exception &e)
+              {
+                LOG(fatal) << "Uncaught exception occurred: " << e.what();
+                stop();
+                m_exitCode = 1;
+              }
+              catch (...)
+              {
+                LOG(fatal) << "Unknown fatal exception occurred";
+                stop();
+                m_exitCode = 1;
+              }
+            }));
           }
-        }
-
-        for (auto &w : m_workers)
-        {
-          w.join();
-        }
-        m_workers.clear();
-
-        if (m_delayedStop.joinable())
-          m_delayedStop.join();
-
-        if (m_syncCallback)
-        {
-          m_syncCallback(*this);
-          if (m_running)
+          auto &first = m_workers.front();
+          while (m_running && !m_paused)
           {
-            m_syncCallback = nullptr;
-            restart();
+            if (!first.try_join_for(boost::chrono::seconds(5)) && !m_running)
+            {
+              if (!first.try_join_for(boost::chrono::seconds(5)))
+                m_context.stop();
+            }
           }
-        }
 
-      } while (m_running);
+          for (auto &w : m_workers)
+          {
+            w.join();
+          }
+          m_workers.clear();
+
+          if (m_delayedStop.joinable())
+            m_delayedStop.join();
+
+          if (m_syncCallback && m_exitCode == 0)
+          {
+            m_syncCallback(*this);
+            if (m_running)
+            {
+              m_syncCallback = nullptr;
+              restart();
+            }
+          }
+
+        } while (m_running);
+      }
+
+      catch (FatalException &e)
+      {
+        LOG(fatal) << "Fatal exception occurred: " << e.what();
+        stop();
+        m_exitCode = 1;
+      }
+      catch (std::exception &e)
+      {
+        LOG(fatal) << "Uncaught exception occurred: " << e.what();
+        stop();
+        m_exitCode = 1;
+      }
+      catch (...)
+      {
+        LOG(fatal) << "Unknown fatal exception occurred";
+        stop();
+        m_exitCode = 1;
+      }
+
+      return m_exitCode;
     }
 
     /// @brief pause the worker threads. Sets a callback when the threads are paused.
@@ -190,6 +241,7 @@ namespace mtconnect::configuration {
     int m_threadCount = 1;
     bool m_running = false;
     bool m_paused = false;
+    int m_exitCode = 0;
   };
 
 }  // namespace mtconnect::configuration

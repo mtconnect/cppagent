@@ -241,8 +241,9 @@ TEST_F(WebsocketsTest, should_make_simple_request)
   start();
   startClient();
 
-  asio::spawn(m_context, std::bind(&Client::request, m_client.get(),
-                                   "{\"id\":\"1\",\"request\":\"probe\"}"s, std::placeholders::_1),
+  asio::spawn(m_context,
+              std::bind(&Client::request, m_client.get(), "{\"id\":\"1\",\"request\":\"probe\"}"s,
+                        std::placeholders::_1),
               boost::asio::detached);
 
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
@@ -270,8 +271,9 @@ TEST_F(WebsocketsTest, should_return_error_when_there_is_no_id)
   start();
   startClient();
 
-  asio::spawn(m_context, std::bind(&Client::request, m_client.get(), "{\"request\":\"probe\"}"s,
-                                   std::placeholders::_1),
+  asio::spawn(m_context,
+              std::bind(&Client::request, m_client.get(), "{\"request\":\"probe\"}"s,
+                        std::placeholders::_1),
               boost::asio::detached);
 
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
@@ -362,8 +364,7 @@ TEST_F(WebsocketsTest, should_return_error_when_bad_json_is_sent)
   start();
   startClient();
 
-  asio::spawn(m_context,
-              std::bind(&Client::request, m_client.get(), "!}}"s, std::placeholders::_1),
+  asio::spawn(m_context, std::bind(&Client::request, m_client.get(), "!}}"s, std::placeholders::_1),
               boost::asio::detached);
 
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
@@ -399,7 +400,7 @@ TEST_F(WebsocketsTest, should_return_multiple_errors_when_parameters_are_invalid
       std::bind(&Client::request, m_client.get(),
                 R"DOC({"id": 3, "request": "sample", "interval": 99999999999,"to": -1 })DOC",
                 std::placeholders::_1),
-              boost::asio::detached);
+      boost::asio::detached);
 
   m_client->waitFor(2s, [this]() { return m_client->m_done; });
 

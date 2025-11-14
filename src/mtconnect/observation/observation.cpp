@@ -66,40 +66,40 @@ namespace mtconnect {
 
         // regex(".+TimeSeries$")
         factory->registerFactory(
-            [](const std::string &name) { return ends_with(name, "TimeSeries"); },
+            [](const std::string &name) { return name.ends_with("TimeSeries"); },
             Timeseries::getFactory());
-        factory->registerFactory([](const std::string &name) { return ends_with(name, "DataSet"); },
+        factory->registerFactory([](const std::string &name) { return name.ends_with("DataSet"); },
                                  DataSetEvent::getFactory());
-        factory->registerFactory([](const std::string &name) { return ends_with(name, "Table"); },
+        factory->registerFactory([](const std::string &name) { return name.ends_with("Table"); },
                                  TableEvent::getFactory());
         factory->registerFactory(
-            [](const std::string &name) { return starts_with(name, "Condition:"); },
+            [](const std::string &name) { return name.starts_with("Condition:"); },
             Condition::getFactory());
         factory->registerFactory(
             [](const std::string &name) {
-              return starts_with(name, "Samples:") && ends_with(name, ":3D");
+              return name.starts_with("Samples:") && name.ends_with(":3D");
             },
             ThreeSpaceSample::getFactory());
         factory->registerFactory(
             [](const std::string &name) {
-              return starts_with(name, "Events:") && ends_with(name, ":3D");
+              return name.starts_with("Events:") && name.ends_with(":3D");
             },
             ThreeSpaceSample::getFactory());
         factory->registerFactory(
-            [](const std::string &name) { return starts_with(name, "Samples:"); },
+            [](const std::string &name) { return name.starts_with("Samples:"); },
             Sample::getFactory());
         factory->registerFactory(
             [](const std::string &name) {
-              return starts_with(name, "Events:") && ends_with(name, ":DOUBLE");
+              return name.starts_with("Events:") && name.ends_with(":DOUBLE");
             },
             DoubleEvent::getFactory());
         factory->registerFactory(
             [](const std::string &name) {
-              return starts_with(name, "Events:") && ends_with(name, ":INT");
+              return name.starts_with("Events:") && name.ends_with(":INT");
             },
             IntEvent::getFactory());
         factory->registerFactory(
-            [](const std::string &name) { return starts_with(name, "Events:"); },
+            [](const std::string &name) { return name.starts_with("Events:"); },
             Event::getFactory());
       }
       return factory;
