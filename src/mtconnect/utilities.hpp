@@ -254,7 +254,7 @@ namespace mtconnect {
     using namespace std::chrono;
     constexpr char ISO_8601_FMT[] = "%Y-%m-%dT%H:%M:%SZ";
 #ifdef _WINDOWS
-
+#define localtime_r(t, tm) localtime_s(tm, t)
 #endif
 
     switch (format)
