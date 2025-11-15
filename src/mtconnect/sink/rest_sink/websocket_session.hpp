@@ -348,7 +348,6 @@ namespace mtconnect::sink::rest_sink {
 
         request->m_verb = beast::http::verb::get;
         request->m_parameters.clear();
-        //LOG(debug) << "WebsocketSession::parseRequest after clear assetIds: " << *request->parameter<string>("assetIds");
 #ifdef GetObject
 #define __GOSave__ GetObject
 #undef GetObject
@@ -358,11 +357,8 @@ namespace mtconnect::sink::rest_sink {
 #ifdef __GOSave__
 #define GetObject __GOSave__
 #endif
-        LOG(debug) << "WebsocketSession::parseRequest parse objects";
         for (auto &it : object)
         {
-          LOG(debug) << "WebsocketSession::parseRequest object name: "<< it.name.GetString();
-          
           switch (it.value.GetType())
           {
             case rapidjson::kNullType:
@@ -383,7 +379,6 @@ namespace mtconnect::sink::rest_sink {
             case rapidjson::kStringType:
               request->m_parameters.emplace(
                   make_pair(it.name.GetString(), ParameterValue(string(it.value.GetString()))));
-              LOG(debug) << "WebsocketSession::parseRequest name: "<< it.value.GetString()  << ", object value: "<< it.value.GetString();
               break;
             case rapidjson::kNumberType:
               if (it.value.IsInt())
@@ -410,14 +405,8 @@ namespace mtconnect::sink::rest_sink {
       //Wickelhaus
       //Added code to change the command from asset or assets to assetsById when the assetIds parameter has values
       string command = *request->parameter<string>("request");
-
-      LOG(debug) << "WebsocketSession::parseRequest command: " << command;
-      LOG(debug) << "WebsocketSession::parseRequest assetIds: " << *request->parameter<string>("assetIds");
-      LOG(debug) << "WebsocketSession::parseRequest interval: " << *request->parameter<string>("interval");
-
       if ( *request->parameter<string>("assetIds") != "" && ( command == "asset" || command == "assets")) {
         request->m_parameters["request"] = "assetsById";
-        LOG(debug) << "WebsocketSession::parseRequest command: " << *request->parameter<string>("request");
       }
 
 
