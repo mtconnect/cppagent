@@ -1019,7 +1019,7 @@ namespace mtconnect {
       stringstream msg;
       msg << "Device " << *device->getUuid() << " already exists. "
           << " Update not supported yet";
-      throw msg;
+      throw msg.str();
     }
     else
     {

@@ -32,6 +32,7 @@
 #include <chrono>
 #include <date/date.h>
 #include <filesystem>
+#include <format>
 #include <map>
 #include <mtconnect/version.h>
 #include <optional>
@@ -39,7 +40,6 @@
 #include <string>
 #include <string_view>
 #include <variant>
-#include <format>
 
 #include "mtconnect/config.hpp"
 #include "mtconnect/logging.hpp"
