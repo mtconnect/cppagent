@@ -90,7 +90,6 @@ protected:
             {MqttCurrentInterval, 200ms},
             {MqttSampleInterval, 100ms},
             {MqttSampleInterval, 100ms},
-            {configuration::DisableAgentDevice, true},
             {configuration::MqttHost, "127.0.0.1"s},
             {configuration::ObservationTopicPrefix, "MTConnect/Devices/[device]/Observations"s},
             {configuration::DeviceTopicPrefix, "MTConnect/Probe/[device]"s},
@@ -221,7 +220,7 @@ TEST_F(MqttEntitySinkTest, mqtt_entity_sink_should_use_flat_topic_structure)
 
   bool subscribed = false;
   client->set_connack_handler(
-      [client, &subscribed](bool sp, mqtt::connect_return_code connack_return_code) {
+      [client](bool sp, mqtt::connect_return_code connack_return_code) {
         if (connack_return_code == mqtt::connect_return_code::accepted)
         {
           auto pid = client->acquire_unique_packet_id();
@@ -260,7 +259,7 @@ TEST_F(MqttEntitySinkTest, mqtt_entity_sink_should_use_flat_topic_structure)
       << "Subscription never completed";
 
   // Create the agent and wait for its MQTT sink to connect.
-  createAgent();
+  createAgent("", {{configuration::DisableAgentDevice, true}});
   auto sink = m_agentTestHelper->getMqttEntitySink();
   ASSERT_TRUE(sink != nullptr);
   ASSERT_TRUE(waitFor(10s, [&sink]() { return sink->isConnected(); }))
