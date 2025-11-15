@@ -93,6 +93,9 @@ namespace mtconnect {
       /// @brief Get the callback manager after the agent is created
       /// @return the callback manager
       auto &afterAgentHooks() { return m_afterAgentHooks; }
+      /// @brief Get the callback manager after the config has completed
+      /// @return the callback manager
+      auto &afterConfigHooks() { return m_afterConfigHooks; }
       /// @brief Get the callback manager after the agent is started
       /// @return the callback manager
       auto &beforeStartHooks() { return m_beforeStartHooks; }
@@ -402,6 +405,7 @@ namespace mtconnect {
 #endif
 
       HookManager<AgentConfiguration> m_afterAgentHooks;
+      HookManager<AgentConfiguration> m_afterConfigHooks;
       HookManager<AgentConfiguration> m_beforeStartHooks;
       HookManager<AgentConfiguration> m_beforeStopHooks;
     };

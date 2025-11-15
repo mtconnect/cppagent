@@ -716,5 +716,77 @@ namespace mtconnect {
 
       return changed;
     }
+    
+    /// @brief variant visitor to output Value to stream
+    struct StreamOutputVisitor
+    {
+      /// @brief constructor
+      /// @param os the output stream
+      StreamOutputVisitor(std::ostream& os) : m_os(os) {}
+      
+      void operator()(const std::monostate&) {
+        m_os << "null";
+      }
+      
+      void operator()(const EntityPtr& entity) {
+        const auto &id = entity->getIdentity();
+        m_os << "Entity(" << entity->getName() << ":";
+        StreamOutputVisitor visitor(m_os);
+        std::visit(visitor, id);
+        m_os << ")";
+      }
+      
+      void operator()(const EntityList& list) {
+        m_os << "EntityList[";
+        for (auto e : list) {
+          StreamOutputVisitor visitor(m_os);
+          visitor(e);
+          m_os << " ";
+        }
+        m_os << "]";
+      }
+      
+      void operator()(const DataSet& dataSet) {
+        m_os << "DataSet(" << dataSet.size() << " items)";
+      }
+      
+      void operator()(const QName& qname) {
+        m_os << qname.str();
+      }
+      
+      void operator()(const Vector& vec) {
+        m_os << "Vector[";
+        for (const auto &v : vec) {
+          m_os << v << " ";
+        }
+        m_os << "]";
+      }
+      
+      template <typename T>
+      void operator()(const T& value) {
+        m_os << value;
+      }
+      
+      std::ostream& m_os;
+    };
+    
+    /// @brief output operator for Value
+    /// @param os the output stream
+    /// @param v the Value to output
+    inline std::ostream& operator<<(std::ostream& os, const Value &v) {
+      StreamOutputVisitor visitor(os);
+      std::visit(visitor, v);
+      return os;
+    }
+    
+    /// @brief output operator for Value
+    /// @param os the output stream
+    /// @param v the Value to output
+    inline std::ostream& operator<<(std::ostream& os, const EntityPtr &v) {
+      StreamOutputVisitor visitor(os);
+      visitor(v);
+      return os;
+    }
+
   }  // namespace entity
 }  // namespace mtconnect
