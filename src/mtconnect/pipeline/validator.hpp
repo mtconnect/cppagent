@@ -37,11 +37,11 @@ namespace mtconnect::pipeline {
   public:
     Validator(const Validator &) = default;
     Validator(PipelineContextPtr context)
-    : Transform("Validator"), m_contract(context->m_contract.get())
+      : Transform("Validator"), m_contract(context->m_contract.get())
     {
       m_guard = TypeGuard<observation::Observation>(RUN) || TypeGuard<entity::Entity>(SKIP);
     }
-    
+
     /// @brief validate the Event
     /// @param entity The Event entity
     /// @returns modified entity with quality and deprecated properties
@@ -51,7 +51,7 @@ namespace mtconnect::pipeline {
       using namespace mtconnect::validation::observations;
       auto obs = std::dynamic_pointer_cast<Observation>(entity);
       auto &value = obs->getValue();
-      
+
       bool valid = true;
       auto di = obs->getDataItem();
       if (!obs->isUnavailable() && !di->isDataSet())
@@ -71,7 +71,7 @@ namespace mtconnect::pipeline {
                 // Check if it has not been introduced yet
                 if (lit->second.first > 0 && m_contract->getSchemaVersion() < lit->second.first)
                   valid = false;
-                
+
                 // Check if deprecated
                 if (lit->second.second > 0 && m_contract->getSchemaVersion() >= lit->second.second)
                 {
@@ -96,11 +96,11 @@ namespace mtconnect::pipeline {
         else if (auto spl = std::dynamic_pointer_cast<observation::Sample>(obs))
         {
           if (!(spl->hasProperty("quality") || std::holds_alternative<double>(value) ||
-              std::holds_alternative<int64_t>(value)))
+                std::holds_alternative<int64_t>(value)))
             valid = false;
         }
       }
-    
+
       if (!valid)
       {
         obs->setProperty("quality", std::string("INVALID"));
@@ -108,8 +108,8 @@ namespace mtconnect::pipeline {
         auto &id = di->getId();
         if (m_logOnce.count(id) < 1)
         {
-          LOG(warning) << "DataItem '" << id << "': Invalid value for '" << obs->getName()
-            << "': '" << value << '\'';
+          LOG(warning) << "DataItem '" << id << "': Invalid value for '" << obs->getName() << "': '"
+                       << value << '\'';
           m_logOnce.insert(id);
         }
         else
@@ -121,7 +121,7 @@ namespace mtconnect::pipeline {
       {
         obs->setProperty("quality", std::string("VALID"));
       }
-      
+
       return next(std::move(obs));
     }
 
