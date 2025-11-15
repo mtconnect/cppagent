@@ -407,6 +407,8 @@ namespace mtconnect::sink::rest_sink {
        }
       }
 
+      //Wickelhaus
+      //Added code to change the command from asset or assets to assetsById when the assetIds parameter has values
       string command = *request->parameter<string>("request");
 
       LOG(debug) << "WebsocketSession::parseRequest command: " << command;

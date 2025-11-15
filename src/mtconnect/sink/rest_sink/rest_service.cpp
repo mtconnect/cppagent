@@ -572,13 +572,13 @@ namespace mtconnect {
             .document("MTConnect assets request", "Returns up to `count` assets");
         m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler})
             .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`")
-            .command("asset");
+            .command("asset");  //Wickelhaus added the asset command for websocket processing.
 
         m_server->addRouting({boost::beast::http::verb::get, "/assets?" + qp, handler})
             .document("MTConnect assets request", "Returns up to `count` assets");
         m_server->addRouting({boost::beast::http::verb::get, "/{device}/assets?" + qp, handler})
             .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`")
-            .command("assets");
+            .command("assets");  //Wickelhaus added the assets command for websocket processing.
 
       m_server->addRouting({boost::beast::http::verb::get, "/assets/{assetIds}", idHandler})
           .document(
@@ -589,6 +589,7 @@ namespace mtconnect {
                     "Returns a set of assets identified by asset ids `asset` separated by "
                     "semi-colon (;)")
           .command("assetsById");
+          //Wickelhaus added assetsById command to process the assetIds values for websocket processing.
 
       if (m_server->arePutsAllowed())
       {
