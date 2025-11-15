@@ -357,7 +357,6 @@ namespace mtconnect::sink::rest_sink {
 #ifdef __GOSave__
 #define GetObject __GOSave__
 #endif
-
         for (auto &it : object)
         {
           switch (it.value.GetType())
@@ -380,7 +379,6 @@ namespace mtconnect::sink::rest_sink {
             case rapidjson::kStringType:
               request->m_parameters.emplace(
                   make_pair(it.name.GetString(), ParameterValue(string(it.value.GetString()))));
-
               break;
             case rapidjson::kNumberType:
               if (it.value.IsInt())
@@ -401,8 +399,16 @@ namespace mtconnect::sink::rest_sink {
 
               break;
           }
-        }
+       }
       }
+
+      //Wickelhaus
+      //Added code to change the command from asset or assets to assetsById when the assetIds parameter has values
+      string command = *request->parameter<string>("request");
+      if ( *request->parameter<string>("assetIds") != "" && ( command == "asset" || command == "assets")) {
+        request->m_parameters["request"] = "assetsById";
+      }
+
 
       return request;
     }
@@ -410,7 +416,15 @@ namespace mtconnect::sink::rest_sink {
     bool dispatchRequest(RequestPtr &&request)
     {
       using namespace std;
+      // LOG(debug) << "WebsocketSession::dispatchRequest command: " << *request->parameter<string>("request");
+      // LOG(debug) << "WebsocketSession::dispatchRequest assetIds: " << *request->parameter<string>("assetIds");
+      // string value = *request->parameter<string>("assetIds");
+      // if (!value.empty() && !(value == "asset")) {
+      //   request->m_parameters.emplace("request", "assetIds");
+      //   LOG(debug) << "WebsocketSession::dispatchRequest command: " << *request->parameter<string>("request");
+      // }
 
+      
       if (request->m_parameters.count("id") > 0)
       {
         auto &v = request->m_parameters["id"];
@@ -493,6 +507,8 @@ namespace mtconnect::sink::rest_sink {
       try
       {
         auto request = parseRequest(buffer);
+        //auto command = request->m_parameters["request"];
+        LOG(debug) << "WebsocketSession::onRead parsed request: " << *request->m_command;
         if (!request || !dispatchRequest(std::move(request)))
         {
           std::stringstream txt;

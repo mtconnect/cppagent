@@ -531,8 +531,8 @@ namespace mtconnect {
         request->m_request = "MTConnectAssets";
 
         respond(session,
-                assetRequest(printer, count, removed, request->parameter<string>("type"),
-                             request->parameter<string>("device"), pretty, request->m_requestId),
+                assetRequest(printer,  count, removed, request->parameter<string>("type"),
+                          request->parameter<string>("device"),  pretty, request->m_requestId),
                 request->m_requestId);
         return true;
       };
@@ -566,23 +566,30 @@ namespace mtconnect {
 
       string qp(
           "type={string}&removed={bool:false}&"
-          "count={integer:100}&device={string}&pretty={bool:false}&format={string}");
-      m_server->addRouting({boost::beast::http::verb::get, "/assets?" + qp, handler})
-          .document("MTConnect assets request", "Returns up to `count` assets");
-      m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler})
-          .document("MTConnect asset request", "Returns up to `count` assets");
-      m_server->addRouting({boost::beast::http::verb::get, "/{device}/assets?" + qp, handler})
-          .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`");
-      m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler})
-          .document("MTConnect asset request", "Returns up to `count` assets for deivce `device`");
+          "count={integer:100}&deviceType={string}&pretty={bool:false}&format={string}");
+
+          m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler})
+            .document("MTConnect assets request", "Returns up to `count` assets");
+        m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler})
+            .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`")
+            .command("asset");  //Wickelhaus added the asset command for websocket processing.
+
+        m_server->addRouting({boost::beast::http::verb::get, "/assets?" + qp, handler})
+            .document("MTConnect assets request", "Returns up to `count` assets");
+        m_server->addRouting({boost::beast::http::verb::get, "/{device}/assets?" + qp, handler})
+            .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`")
+            .command("assets");  //Wickelhaus added the assets command for websocket processing.
+
       m_server->addRouting({boost::beast::http::verb::get, "/assets/{assetIds}", idHandler})
           .document(
               "MTConnect assets request",
               "Returns a set assets identified by asset ids `asset` separated by semi-colon (;)");
-      m_server->addRouting({boost::beast::http::verb::get, "/asset/{assetIds}", idHandler})
+      m_server->addRouting({boost::beast::http::verb::get,  "/asset/{assetIds}", idHandler})
           .document("MTConnect asset request",
                     "Returns a set of assets identified by asset ids `asset` separated by "
-                    "semi-colon (;)");
+                    "semi-colon (;)")
+          .command("assetsById");
+          //Wickelhaus added assetsById command to process the assetIds values for websocket processing.
 
       if (m_server->arePutsAllowed())
       {
@@ -780,7 +787,8 @@ namespace mtconnect {
 
       string qp(
           "path={string}&from={unsigned_integer}&"
-          "interval={integer}&count={integer:100}&"
+          //"interval={integer}&count={integer:100}&"
+          "count={integer:100}&"
           "heartbeat={integer:10000}&to={unsigned_integer}&"
           "pretty={bool:false}&"
           "deviceType={string}&format={string}");
