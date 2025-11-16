@@ -267,7 +267,7 @@ TEST_F(MqttEntitySinkTest, mqtt_entity_sink_should_use_flat_topic_structure)
   auto device = m_agentTestHelper->m_agent->getDefaultDevice();
   size_t diCount = device->getDeviceDataItems().size();
 
-  // Add deterministic check to make sure we have recieved all the initial messages
+  // Add deterministic check to make sure we have received all the initial messages
   ASSERT_TRUE(waitFor(5s, [&messageCount, &diCount]() { return messageCount >= diCount; }));
 
   gotMessage = false;
