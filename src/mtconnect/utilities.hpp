@@ -238,11 +238,17 @@ namespace mtconnect {
     return true;
   }
 
-  /// @brief Gets the local time
-  /// @param[in] time the time
-  /// @param[out] buf struct tm
-  AGENT_LIB_API void mt_localtime(const time_t *time, struct tm *buf);
-
+  /// @brief Thread safe localtime function that uses localtime_s or localtime_r based on platform
+  /// @param[in] timer pointer to time_t
+  /// @param[out] buf pointer to tm struct to fill
+  inline auto safe_localtime(const std::time_t* timer, std::tm* buf) {
+#ifdef _WINDOWS
+    return localtime_s(buf, timer);
+#else
+    return localtime_r(timer, buf);
+#endif
+  }
+  
   /// @brief Formats the timePoint as  string given the format
   /// @param[in] timePoint the time
   /// @param[in] format the format
@@ -253,9 +259,6 @@ namespace mtconnect {
     using namespace std;
     using namespace std::chrono;
     constexpr char ISO_8601_FMT[] = "%Y-%m-%dT%H:%M:%SZ";
-#ifdef _WINDOWS
-#define localtime_r(t, tm) localtime_s(tm, t)
-#endif
 
     switch (format)
     {
@@ -269,7 +272,7 @@ namespace mtconnect {
       {
         time_t t = std::chrono::system_clock::to_time_t(timePoint);
         struct tm local;
-        localtime_r(&t, &local);
+        safe_localtime(&t, &local);
         char buf[64];
         strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S%z", &local);
         return string(buf);

@@ -43,8 +43,6 @@
 #define _WINSOCKAPI_
 #include <windows.h>
 #include <winsock2.h>
-#define localtime_r(t, tm) localtime_s(tm, t)
-#define gmtime_r(t, tm) gmtime_s(tm, t)
 
 #define DELTA_EPOCH_IN_MICROSECS 11644473600000000ull
 #endif
@@ -76,8 +74,6 @@ BOOST_FUSION_ADAPT_STRUCT(mtconnect::url::Url,
                                                                                       m_fragment))
 
 namespace mtconnect {
-  AGENT_LIB_API void mt_localtime(const time_t *time, struct tm *buf) { localtime_r(time, buf); }
-
   inline string::size_type insertPrefix(string &aPath, string::size_type &aPos,
                                         const string aPrefix)
   {
