@@ -241,11 +241,11 @@ namespace mtconnect {
   /// @brief Thread safe localtime function that uses localtime_s or localtime_r based on platform
   /// @param[in] timer pointer to time_t
   /// @param[out] buf pointer to tm struct to fill
-  inline auto safe_localtime(const std::time_t* timer, std::tm* buf) {
+  inline void safe_localtime(const std::time_t* timer, std::tm* buf) {
 #ifdef _WINDOWS
-    return localtime_s(buf, timer);
+    localtime_s(buf, timer);
 #else
-    return localtime_r(timer, buf);
+    localtime_r(timer, buf);
 #endif
   }
   
