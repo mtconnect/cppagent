@@ -267,7 +267,7 @@ namespace mtconnect {
         return date::format(ISO_8601_FMT, date::floor<microseconds>(timePoint));
       case LOCAL:
       {
-        time_t t = time(nullptr);
+        time_t t = std::chrono::system_clock::to_time_t(timePoint);
         struct tm local;
         localtime_r(&t, &local);
         char buf[64];
