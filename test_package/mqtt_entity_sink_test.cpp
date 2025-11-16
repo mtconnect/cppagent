@@ -89,7 +89,6 @@ protected:
             {configuration::MqttPort, m_port},
             {MqttCurrentInterval, 200ms},
             {MqttSampleInterval, 100ms},
-            {MqttSampleInterval, 100ms},
             {configuration::MqttHost, "127.0.0.1"s},
             {configuration::ObservationTopicPrefix, "MTConnect/Devices/[device]/Observations"s},
             {configuration::DeviceTopicPrefix, "MTConnect/Probe/[device]"s},
