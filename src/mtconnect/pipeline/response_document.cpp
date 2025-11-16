@@ -29,6 +29,7 @@
 #include "mtconnect/entity/xml_parser.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
+#include "mtconnect/utilities.hpp"
 
 using namespace std;
 
@@ -278,20 +279,6 @@ namespace mtconnect::pipeline {
       ds.insert(entry);
       return true;
     });
-  }
-
-  inline static Timestamp parseTimestamp(const std::string value)
-  {
-    Timestamp ts;
-    istringstream in(value);
-    in >> std::setw(6) >> date::parse("%FT%T", ts);
-    if (!in.good())
-    {
-      LOG(error) << "Cound not parse XML timestamp: " << value;
-      ts = std::chrono::system_clock::now();
-    }
-
-    return ts;
   }
 
   inline static DataItemPtr findDataItem(const std::string &name, DevicePtr device,

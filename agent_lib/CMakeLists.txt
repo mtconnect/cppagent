@@ -393,7 +393,7 @@ target_include_directories(
 target_link_libraries(
   agent_lib
   PUBLIC
-  boost::boost LibXml2::LibXml2 date::date-tz openssl::openssl
+  boost::boost LibXml2::LibXml2 date::date openssl::openssl
   nlohmann_json::nlohmann_json mqtt_cpp::mqtt_cpp 
   rapidjson BZip2::BZip2
   
