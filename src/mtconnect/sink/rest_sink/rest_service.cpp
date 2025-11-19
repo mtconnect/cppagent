@@ -547,7 +547,7 @@ namespace mtconnect {
         }
         return true;
       };
-      
+
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
         if (request->parameter<string>("assetIds"))
         {
@@ -559,9 +559,9 @@ namespace mtconnect {
         auto pretty = request->parameter<bool>("pretty").value_or(false);
         auto format = request->parameter<string>("format");
         auto printer = getPrinter(request->m_accepts, format);
-        
+
         request->m_request = "MTConnectAssets";
-        
+
         respond(session,
                 assetRequest(printer, count, removed, request->parameter<string>("type"),
                              request->parameter<string>("device"), pretty, request->m_requestId),
