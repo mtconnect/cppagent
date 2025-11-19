@@ -383,10 +383,12 @@ namespace mtconnect::sink::rest_sink {
 
               break;
             case rapidjson::kNumberType:
-              if (it.value.IsInt())
+              if (it.value.IsInt()){
                 request->m_parameters.emplace(
                     make_pair(it.name.GetString(), ParameterValue(it.value.GetInt())));
-              else if (it.value.IsUint())
+                    LOG(debug) << "int - " << it.name.GetString() << " value: " << it.value.GetInt();
+                  }
+              else if (it.value.IsUint()) 
                 request->m_parameters.emplace(
                     make_pair(it.name.GetString(), ParameterValue(uint64_t(it.value.GetUint()))));
               else if (it.value.IsInt64())
@@ -402,6 +404,19 @@ namespace mtconnect::sink::rest_sink {
               break;
           }
         }
+      }
+
+      int count = *request->parameter<int32_t>("count");
+
+      if ( !request->parameter<int32_t>("count") && *request->parameter<string>("request") == "sample") 
+        request->m_parameters["count"] = 100;
+
+      LOG(debug) << "request: " << *request->parameter<string>("request") << "| count: " << *request->parameter<int>("count");
+
+      auto asset = request->parameter<string>("assetIds");
+      if (asset)
+      {
+          request->m_parameters["request"] = "assetsById";
       }
 
       return request;
