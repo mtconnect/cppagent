@@ -218,16 +218,15 @@ TEST_F(MqttEntitySinkTest, mqtt_entity_sink_should_use_flat_topic_structure)
   client->set_keep_alive_sec(30);
 
   bool subscribed = false;
-  client->set_connack_handler(
-      [client](bool sp, mqtt::connect_return_code connack_return_code) {
-        if (connack_return_code == mqtt::connect_return_code::accepted)
-        {
-          auto pid = client->acquire_unique_packet_id();
-          client->async_subscribe(pid, "MTConnect/#", MQTT_NS::qos::at_least_once,
-                                  [](MQTT_NS::error_code ec) { EXPECT_FALSE(ec); });
-        }
-        return true;
-      });
+  client->set_connack_handler([client](bool sp, mqtt::connect_return_code connack_return_code) {
+    if (connack_return_code == mqtt::connect_return_code::accepted)
+    {
+      auto pid = client->acquire_unique_packet_id();
+      client->async_subscribe(pid, "MTConnect/#", MQTT_NS::qos::at_least_once,
+                              [](MQTT_NS::error_code ec) { EXPECT_FALSE(ec); });
+    }
+    return true;
+  });
 
   client->set_suback_handler(
       [&subscribed](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {

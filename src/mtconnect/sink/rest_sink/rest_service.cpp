@@ -521,22 +521,6 @@ namespace mtconnect {
     void RestService::createAssetRoutings()
     {
       using namespace rest_sink;
-      auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-        auto removed = *request->parameter<bool>("removed");
-        auto count = *request->parameter<int32_t>("count");
-        auto pretty = request->parameter<bool>("pretty").value_or(false);
-        auto format = request->parameter<string>("format");
-        auto printer = getPrinter(request->m_accepts, format);
-
-        request->m_request = "MTConnectAssets";
-
-        respond(session,
-                assetRequest(printer,  count, removed, request->parameter<string>("type"),
-                          request->parameter<string>("device"),  pretty, request->m_requestId),
-                request->m_requestId);
-        return true;
-      };
-
       auto idHandler = [&](SessionPtr session, RequestPtr request) -> bool {
         auto asset = request->parameter<string>("assetIds");
         request->m_request = "MTConnectAssets";
@@ -563,33 +547,55 @@ namespace mtconnect {
         }
         return true;
       };
+      
+      auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
+        if (request->parameter<string>("assetIds"))
+        {
+          return idHandler(session, request);
+        }
+
+        auto removed = *request->parameter<bool>("removed");
+        auto count = *request->parameter<int32_t>("count");
+        auto pretty = request->parameter<bool>("pretty").value_or(false);
+        auto format = request->parameter<string>("format");
+        auto printer = getPrinter(request->m_accepts, format);
+        
+        request->m_request = "MTConnectAssets";
+        
+        respond(session,
+                assetRequest(printer, count, removed, request->parameter<string>("type"),
+                             request->parameter<string>("device"), pretty, request->m_requestId),
+                request->m_requestId);
+        return true;
+      };
 
       string qp(
           "type={string}&removed={bool:false}&"
           "count={integer:100}&deviceType={string}&pretty={bool:false}&format={string}");
 
-          m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler})
-            .document("MTConnect assets request", "Returns up to `count` assets");
-        m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler})
-            .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`")
-            .command("asset");  //Wickelhaus added the asset command for websocket processing.
+      m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler})
+          .document("MTConnect assets request", "Returns up to `count` assets");
+      m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler})
+          .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`")
+          .command("asset");  // Wickelhaus added the asset command for websocket processing.
 
-        m_server->addRouting({boost::beast::http::verb::get, "/assets?" + qp, handler})
-            .document("MTConnect assets request", "Returns up to `count` assets");
-        m_server->addRouting({boost::beast::http::verb::get, "/{device}/assets?" + qp, handler})
-            .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`")
-            .command("assets");  //Wickelhaus added the assets command for websocket processing.
+      m_server->addRouting({boost::beast::http::verb::get, "/assets?" + qp, handler})
+          .document("MTConnect assets request", "Returns up to `count` assets");
+      m_server->addRouting({boost::beast::http::verb::get, "/{device}/assets?" + qp, handler})
+          .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`")
+          .command("assets");  // Wickelhaus added the assets command for websocket processing.
 
       m_server->addRouting({boost::beast::http::verb::get, "/assets/{assetIds}", idHandler})
           .document(
               "MTConnect assets request",
               "Returns a set assets identified by asset ids `asset` separated by semi-colon (;)");
-      m_server->addRouting({boost::beast::http::verb::get,  "/asset/{assetIds}", idHandler})
+      m_server->addRouting({boost::beast::http::verb::get, "/asset/{assetIds}", idHandler})
           .document("MTConnect asset request",
                     "Returns a set of assets identified by asset ids `asset` separated by "
                     "semi-colon (;)")
           .command("assetsById");
-          //Wickelhaus added assetsById command to process the assetIds values for websocket processing.
+      // Wickelhaus added assetsById command to process the assetIds values for websocket
+      // processing.
 
       if (m_server->arePutsAllowed())
       {
@@ -633,28 +639,29 @@ namespace mtconnect {
 
         for (const auto &asset : list<string> {"asset", "assets"})
         {
-          for (const auto &t : list<boost::beast::http::verb> {boost::beast::http::verb::put,
-                                                               boost::beast::http::verb::post})
+          for (const auto &verb : list<boost::beast::http::verb> {boost::beast::http::verb::put,
+                                                                  boost::beast::http::verb::post})
           {
             m_server
                 ->addRouting(
-                    {t, "/" + asset + "/{assetId}?device={string}&type={string}&format={string}",
+                    {verb, "/" + asset + "/{assetId}?device={string}&type={string}&format={string}",
                      putHandler})
                 .document("Upload an asset by identified by `assetId`",
                           "Updates or adds an asset with the asset XML in the body");
             m_server
-                ->addRouting(
-                    {t, "/" + asset + "?device={string}&type={string}&format={string}", putHandler})
+                ->addRouting({verb, "/" + asset + "?device={string}&type={string}&format={string}",
+                              putHandler})
                 .document("Upload an asset by identified by `assetId`",
                           "Updates or adds an asset with the asset XML in the body");
             m_server
-                ->addRouting({t, "/{device}/" + asset + "/{assetId}?type={string}&format={string}",
+                ->addRouting({verb,
+                              "/{device}/" + asset + "/{assetId}?type={string}&format={string}",
                               putHandler})
                 .document("Upload an asset by identified by `assetId`",
                           "Updates or adds an asset with the asset XML in the body");
             m_server
                 ->addRouting(
-                    {t, "/{device}/" + asset + "?type={string}&format={string}", putHandler})
+                    {verb, "/{device}/" + asset + "?type={string}&format={string}", putHandler})
                 .document("Upload an asset by identified by `assetId`",
                           "Updates or adds an asset with the asset XML in the body");
           }
@@ -1278,7 +1285,7 @@ namespace mtconnect {
       optional<string> uuid;
       if (device)
       {
-        auto d = m_sinkContract->findDeviceByUUIDorName(*device);
+        auto d = checkDevice(printer, *device);
         if (d)
           uuid = d->getUuid();
       }
