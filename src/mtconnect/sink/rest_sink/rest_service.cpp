@@ -571,7 +571,7 @@ namespace mtconnect {
 
       string qp(
           "type={string}&removed={bool:false}&"
-          "count={integer:100}&deviceType={string}&pretty={bool:false}&format={string}");
+          "count={integer:100}&device={string}&pretty={bool:false}&format={string}");
 
       m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler})
           .document("MTConnect assets request", "Returns up to `count` assets");
@@ -794,8 +794,7 @@ namespace mtconnect {
 
       string qp(
           "path={string}&from={unsigned_integer}&"
-          //"interval={integer}&count={integer:100}&"
-          "count={integer:100}&"
+          "interval={integer}&count={integer:100}&"
           "heartbeat={integer:10000}&to={unsigned_integer}&"
           "pretty={bool:false}&"
           "deviceType={string}&format={string}");
