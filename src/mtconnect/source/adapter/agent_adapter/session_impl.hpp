@@ -84,6 +84,11 @@ namespace mtconnect::source::adapter::agent_adapter {
         LOG(error) << "Agent Adapter Target: " << m_request->getTarget(m_url);
       LOG(error) << "Agent Adapter " << what << ": " << ec.message() << "\n";
       m_request.reset();
+
+      // Clear cached DNS resolution so hostname is re-resolved on reconnect.
+      // This handles DHCP environments where IP addresses may change.
+      m_resolution.reset();
+
       if (m_failed)
         m_failed(ec);
     }

@@ -145,7 +145,21 @@ namespace mtconnect::source::adapter::shdr {
       if (ec != boost::asio::error::operation_aborted)
       {
         LOG(info) << "reconnect: retrying connection";
-        asio::dispatch(m_strand, boost::bind(&Connector::connect, this));
+        // Re-resolve hostname to handle DHCP/dynamic IP environments.
+        // If the server is a hostname (not a static IP), re-resolve to get
+        // the current IP address in case it has changed.
+        boost::system::error_code parseEc;
+        asio::ip::address::from_string(m_server, parseEc);
+        if (parseEc)
+        {
+          // m_server is a hostname, re-resolve it
+          asio::dispatch(m_strand, boost::bind(&Connector::resolve, this));
+        }
+        else
+        {
+          // m_server is a static IP address, just reconnect
+          asio::dispatch(m_strand, boost::bind(&Connector::connect, this));
+        }
       }
     });
   }
