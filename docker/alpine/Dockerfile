@@ -28,8 +28,8 @@
 # os
 # ---------------------------------------------------------------------
 
-# base image - alpine 3.18
-FROM alpine:3.22 AS os
+# base image - alpine 3.23
+FROM alpine:3.23 AS os
 
 # ---------------------------------------------------------------------
 # build
@@ -86,7 +86,7 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
   && . /python/conan/bin/activate \
   && conan profile detect \
   && conan create cppagent \
-       --build=missing \
+       --build="*" \
        -c "tools.build:jobs=$CONAN_CPU_COUNT" \
        -o agent_prefix=mtc \
        -o cpack=True \
