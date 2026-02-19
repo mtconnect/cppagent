@@ -9,7 +9,7 @@ import re
 
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
-    version = "2.6"
+    version = "2.7"
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type"
@@ -93,14 +93,13 @@ class MTConnectAgentConan(ConanFile):
         buf = io.StringIO()
         command = f"{package} --version"
         res = self.run(command, shell=True, stdout=buf)
+        self.output.info(f"Command: '{command}' returned {res}")
         ver = [0, 0, 0]
         if res == 0:
             text = buf.getvalue()
             self.output.debug(f"{command} returned:\n{text}")
             ver = [int(d) for d in re.search(r"\d+\.\d+\.\d+", text).group(0).split('.')]
             self.output.info(f"Version of {package} is {ver}")
-        else:
-            self.output.info(f"Command: '{command}' returned {res}")
         
         if ver < version:
             ver_text = '.'.join([str(x) for x in version])
@@ -112,7 +111,7 @@ class MTConnectAgentConan(ConanFile):
     def build_requirements(self):
         self.tool_requires_version("cmake", [3, 26, 4])
         if self.options.with_docs:
-            self.tool_requires_version("doxygen", [1, 15, 0])
+            self.tool_requires_version("doxygen", [1, 16, 0])
 
     def requirements(self):
         self.requires("boost/1.88.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
@@ -125,7 +124,7 @@ class MTConnectAgentConan(ConanFile):
         self.requires("bzip2/1.0.8", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         
         if self.options.with_ruby:
-            self.requires("mruby/3.2.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
+            self.requires("mruby/3.4.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
 
         self.requires("gtest/1.17.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True, test=True)
         
