@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<MTConnectDevices xmlns:mt="urn:mtconnect.org:MTConnectDevices:2.0"
+<MTConnectDevices xmlns:mt="urn:mtconnect.org:MTConnectDevices:2.7"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns="urn:mtconnect.org:MTConnectDevices:2.0"
-  xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:2.0 https://schemas.mtconnect.org/schemas/MTConnectDevices_2.0.xsd">
+  xmlns="urn:mtconnect.org:MTConnectDevices:2.7"
+  xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:2.7 ./schemas/MTConnectDevices_2.7.xsd">
   <Header deviceModelChangeTime="2022-06-17T16:33:21.188094Z" creationTime="2013-04-02T03:40:04Z"
     assetBufferSize="1024" sender="localhost" assetCount="0" version="2.0" instanceId="1"
     bufferSize="131072"/>
@@ -133,8 +133,8 @@
                 <Motion actuation="DIRECT" coordinateSystemIdRef="machine" id="x1motion"
                   type="PRISMATIC">
                   <Transformation>
-                    <Rotation>0 0 0</Rotation>
                     <Translation>0 0 0</Translation>
+                    <Rotation>0 0 0</Rotation>
                   </Transformation>
                   <Axis>0.5 0 0</Axis>
                 </Motion>
@@ -182,8 +182,8 @@
                 <Motion actuation="DIRECT" coordinateSystemIdRef="machine" id="yi1motion"
                   type="PRISMATIC">
                   <Transformation>
-                    <Rotation>0 0 0</Rotation>
                     <Translation>0 0 0</Translation>
+                    <Rotation>0 0 0</Rotation>
                   </Transformation>
                   <Axis>0 1 0</Axis>
                 </Motion>
@@ -231,8 +231,8 @@
                 <Motion actuation="DIRECT" coordinateSystemIdRef="machine" id="z1motion"
                   type="PRISMATIC">
                   <Transformation>
-                    <Rotation>0 0 0</Rotation>
                     <Translation>0 0 0</Translation>
+                    <Rotation>0 0 0</Rotation>
                   </Transformation>
                   <Axis>0 0 1</Axis>
                 </Motion>
@@ -280,8 +280,8 @@
                 <Motion actuation="DIRECT" coordinateSystemIdRef="machine" id="bmotion"
                   type="REVOLUTE">
                   <Transformation>
-                    <Rotation>0 0 0</Rotation>
                     <Translation>-623.423 1027.32 -993.652</Translation>
+                    <Rotation>0 0 0</Rotation>
                   </Transformation>
                   <Axis>0 1 0</Axis>
                 </Motion>
@@ -311,8 +311,8 @@
                 <Motion actuation="DIRECT" coordinateSystemIdRef="machine" id="cmotion"
                   type="CONTINUOUS">
                   <Transformation>
-                    <Rotation>0 0 0</Rotation>
                     <Translation>0 0 0</Translation>
+                    <Rotation>0 0 0</Rotation>
                   </Transformation>
                   <Axis>0 0 1</Axis>
                 </Motion>
@@ -335,7 +335,7 @@
                   </Constraints>
                 </DataItem>
                 <DataItem type="CHUCK_STATE" category="EVENT" id="LS1ChuckState" name="S1ChuckState"/>
-                <DataItem type="e:SURFACE_SPEED" subType="x:PATH_1" category="SAMPLE"
+                <DataItem type="CUTTING_SPEED" subType="x:PATH_1" category="SAMPLE"
                   id="LS1SurfaceSpeedA" name="S1SurfaceSpeedA" units="MILLIMETER/SECOND"/>
               </DataItems>
             </Rotary>
@@ -348,8 +348,8 @@
                 <Motion actuation="DIRECT" coordinateSystemIdRef="machine_r" id="z4motion"
                   type="PRISMATIC">
                   <Transformation>
-                    <Rotation>0 0 0</Rotation>
                     <Translation>0 0 0</Translation>
+                    <Rotation>0 0 0</Rotation>
                   </Transformation>
                   <Axis>0 0 1</Axis>
                 </Motion>
@@ -396,8 +396,8 @@
                 <Motion actuation="DIRECT" coordinateSystemIdRef="machine_r" id="c2motion"
                   type="REVOLUTE">
                   <Transformation>
-                    <Rotation>0 0 0</Rotation>
                     <Translation>0 0 0</Translation>
+                    <Rotation>0 0 0</Rotation>
                   </Transformation>
                   <Axis>0 0 1</Axis>
                 </Motion>
@@ -419,7 +419,7 @@
                   </Constraints>
                 </DataItem>
                 <DataItem type="CHUCK_STATE" category="EVENT" id="LS2ChuckState" name="S2ChuckState"/>
-                <DataItem type="e:SURFACE_SPEED" subType="x:PATH_1" category="SAMPLE"
+                <DataItem type="CUTTING_SPEED" subType="x:PATH_1" category="SAMPLE"
                   id="LS2SurfaceSpeedA" name="S2SurfaceSpeedA" units="MILLIMETER/SECOND"/>
               </DataItems>
             </Rotary>
@@ -430,8 +430,8 @@
                 <Motion actuation="DIRECT" coordinateSystemIdRef="machine" id="c3motion"
                   type="REVOLUTE">
                   <Transformation>
-                    <Rotation>0 0 0</Rotation>
                     <Translation>0 0 0</Translation>
+                    <Rotation>0 0 0</Rotation>
                   </Transformation>
                   <Axis>0 0 1</Axis>
                 </Motion>
@@ -513,38 +513,8 @@
             <!--(.*)|UNAVAILABLE-->
             <!-- Any combination of n:value and/or n:Infinity/n:INFINITY-->
             <!-- Sample: 1:-1.123 2:Infinity 3:INFINITY 4:3.123 5:+123 ....-->
-            <DataItem type="e:VARIABLES" subType="x:COMMON" category="EVENT" id="Lp1CommonVariable"
-              name="p1CommonVariable"/>
-            <!--(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01]) [0-2][0-9]:[0-5][0-9]:[0-5][0-9] .*|UNAVAILABLE-->
-            <!-- Sample: 2014/12/31 23:59:59 ONE-TOUCH WINDOW CLOSE:RUN DISP-->
-            <DataItem type="e:MACMAN" subType="x:PANEL_HISTORY" category="EVENT"
-              id="Lp1MacManPanelHistory" name="p1MacManPanelHistory"/>
-            <DataItem type="e:OUTPUT_SIGNAL" subType="x:DRY_RUN" category="EVENT"
-              id="Lp1MachineOperationPanelOutputDryRun" name="p1MachineOperationPanelOutputDryRun"/>
-            <DataItem type="e:OUTPUT_SIGNAL" subType="x:MACHINE_LOCK" category="EVENT"
-              id="Lp1MachineOperationPanelOutputMachineLock"
-              name="p1MachineOperationPanelOutputMachineLock"/>
-            <DataItem type="e:INPUT_OUTPUT_SIGNAL" subType="x:PLC_MONITOR_IO_1" category="EVENT"
-              id="LPlcMonitorIO_1" name="PlcMonitorIO_1"/>
-            <DataItem type="e:INPUT_OUTPUT_SIGNAL" subType="x:PLC_MONITOR_IO_2" category="EVENT"
-              id="LPlcMonitorIO_2" name="PlcMonitorIO_2"/>
-            <DataItem type="e:INPUT_OUTPUT_SIGNAL" subType="x:PLC_MONITOR_IO_3" category="EVENT"
-              id="LPlcMonitorIO_3" name="PlcMonitorIO_3"/>
-            <DataItem type="e:INPUT_OUTPUT_SIGNAL" subType="x:PLC_MONITOR_IO_4" category="EVENT"
-              id="LPlcMonitorIO_4" name="PlcMonitorIO_4"/>
-            <DataItem type="e:INPUT_OUTPUT_SIGNAL" subType="x:PLC_MONITOR_IO_5" category="EVENT"
-              id="LPlcMonitorIO_5" name="PlcMonitorIO_5"/>
-            <DataItem type="e:INPUT_OUTPUT_SIGNAL" subType="x:PLC_MONITOR_IO_6" category="EVENT"
-              id="LPlcMonitorIO_6" name="PlcMonitorIO_6"/>
-            <DataItem type="e:INPUT_OUTPUT_SIGNAL" subType="x:PLC_MONITOR_IO_7" category="EVENT"
-              id="LPlcMonitorIO_7" name="PlcMonitorIO_7"/>
-            <DataItem type="e:INPUT_OUTPUT_SIGNAL" subType="x:PLC_MONITOR_IO_8" category="EVENT"
-              id="LPlcMonitorIO_8" name="PlcMonitorIO_8"/>
-            <DataItem type="e:INPUT_OUTPUT_SIGNAL" subType="x:PLC_MONITOR_IO_9" category="EVENT"
-              id="LPlcMonitorIO_9" name="PlcMonitorIO_9"/>
-            <DataItem type="e:INPUT_OUTPUT_SIGNAL" subType="x:PLC_MONITOR_IO_10" category="EVENT"
-              id="LPlcMonitorIO_10" name="PlcMonitorIO_10"/>
-            <!-- OKUMA CUSTOM TAG - END-->
+            <DataItem type="VARIABLE" subType="x:COMMON" category="EVENT" id="Lp1CommonVariable"
+              name="p1CommonVariable" representation="DATA_SET"/>
             <DataItem type="PROGRAM_HEADER" name="p1ProgramHeader" category="EVENT"
               id="Lp1ProgramHeader"/>
             <DataItem type="PALLET_ID" name="p1PalletID" category="EVENT" id="Lp1PalletID"/>
@@ -579,11 +549,11 @@
                 <DataItem type="TOOL_ASSET_ID" name="p1ToolAssetId" category="EVENT"
                   id="Lp1ToolAssetId"/>
                 <!-- OKUMA CUSTOM TAG - START-->
-                <DataItem type="e:BLOCK_NUMBER" category="EVENT" id="Lp1BlockNumber"
+                <DataItem type="LINE_NUMBER" category="EVENT" id="Lp1BlockNumber"
                   name="p1BlockNumber"/>
-                <DataItem type="e:PATH_FEEDRATE_PER_REV" subType="ACTUAL" name="p1Fract"
+                <DataItem type="PATH_FEEDRATE_PER_REVOLUTION" subType="ACTUAL" name="p1Fract"
                   category="SAMPLE" id="Lp1Fract"/>
-                <DataItem type="e:PATH_FEEDRATE_PER_REV" subType="PROGRAMMED" name="p1Frcmd"
+                <DataItem type="PATH_FEEDRATE_PER_REVOLUTION" subType="PROGRAMMED" name="p1Frcmd"
                   category="SAMPLE" id="Lp1Frcmd"/>
                 <!-- OKUMA CUSTOM TAG - END-->
                 <DataItem type="CUTTING_SPEED" subType="ACTUAL" category="SAMPLE"
@@ -1102,13 +1072,11 @@
 								<DataItem category="EVENT" id="Sovr" type="ROTARY_VELOCITY_OVERRIDE"/>
 								<DataItem type="PROGRAM" id="program" category="EVENT" subType="MAIN"/>
 								<DataItem type="PROGRAM" subType="ACTIVE" id="activeprog" category="EVENT"/>
-								<DataItem type="x:UNIT" id="unitNum" category="EVENT"/>
-								<DataItem type="x:SEQUENCE_NUMBER" id="sequenceNum" category="EVENT"/>
 								<DataItem type="PART_COUNT" id="PartCountAct" category="EVENT"/>
 								<DataItem type="PATH_FEEDRATE" id="Fact" category="SAMPLE" units="MILLIMETER/SECOND" subType="ACTUAL" coordinateSystem="WORK"/>
 								<DataItem type="TOOL_NUMBER" id="Tool_number" category="EVENT"/>
 								<DataItem type="TOOL_GROUP" id="Tool_group" category="EVENT"/>
-								<DataItem type="x:TOOL_SUFFIX" id="Tool_suffix" category="EVENT"/>
+								<DataItem type="TOOL_NUMBER" id="Tool_suffix" subType="x:SUFFIX" category="EVENT"/>
 								<DataItem type="EXECUTION" id="execution" category="EVENT"/>
 								<DataItem id="waitstate" type="WAIT_STATE" category="EVENT"/>
 								<DataItem type="CONTROLLER_MODE" id="mode" category="EVENT"/>
@@ -1140,9 +1108,7 @@
 						<PartOccurrence id="partocc">
 							<DataItems>
 								<DataItem id="part_uuid" type="PART_UNIQUE_ID" category="EVENT" />
-								<DataItem id="part_geo" type="x:PART_GEOMETRY" category="EVENT" representation="DATA_SET"/>
-								<DataItem id="fixture_uuid" type="x:FIXTURE_UNIQUE_ID" category="EVENT" />
-								<DataItem id="fixture_geo" type="x:FIXTURE_GEOMETRY" category="EVENT" representation="DATA_SET"/>
+							  <DataItem id="fixture_uuid" type="FIXTURE_ASSET_ID" category="EVENT" />
 							</DataItems>
 						</PartOccurrence>
 					</Components>
@@ -1178,7 +1144,7 @@
 						<Lubrication id="lubrication" name="lubrication">
 							<DataItems>
 								<DataItem type="SYSTEM" category="CONDITION" id="lubrication_cond"/>
-								<DataItem id="lubelevel" type="LEVEL" category="EVENT" units="PERCENT"/>
+								<DataItem id="lubelevel" type="FILL_LEVEL" category="SAMPLE" units="PERCENT"/>
 							</DataItems>
 						</Lubrication>
 					</Components>

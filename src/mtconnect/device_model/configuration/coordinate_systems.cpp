@@ -33,6 +33,7 @@ namespace mtconnect {
                             Requirement("Rotation", ValueType::VECTOR, 3, false),
                             Requirement("TranslationDataSet", ValueType::DATA_SET, false),
                             Requirement("RotationDataSet", ValueType::DATA_SET, false)});
+          transformation->setOrder({"Translation", "TranslationDataSet", "Rotation", "RotationDataSet"});
 
           auto coordinateSystem = make_shared<Factory>(Requirements {
               Requirement("id", true), Requirement("name", false), Requirement("nativeName", false),

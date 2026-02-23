@@ -30,6 +30,7 @@ namespace mtconnect {
                           Requirement("Rotation", ValueType::VECTOR, 3, false),
                           Requirement("TranslationDataSet", ValueType::DATA_SET, false),
                           Requirement("RotationDataSet", ValueType::DATA_SET, false)});
+        transformation->setOrder({"Translation", "TranslationDataSet", "Rotation", "RotationDataSet"});
 
         static auto motion = make_shared<Factory>(Requirements {
             Requirement("id", true), Requirement("parentIdRef", false),
@@ -43,7 +44,7 @@ namespace mtconnect {
             Requirement("OriginDataSet", ValueType::DATA_SET, false),
             Requirement("Transformation", ValueType::ENTITY, transformation, false)});
         motion->setOrder(
-            {"Description", "Axis", "AxisDataSet", "Origin", "OriginDataSet", "Transformation"});
+            {"Description", "Origin", "OriginDataSet", "Transformation", "Axis", "AxisDataSet"});
 
         return motion;
       }
