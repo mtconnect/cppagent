@@ -465,10 +465,13 @@ target_clangtidy_setup(agent_lib)
 
 include(../cmake/document.cmake)
 if (AGENT_WITH_DOCS AND DOXYGEN_FOUND)
+  message(WARNING ": Setting up to create documentation")
   file(GLOB _tests ${CMAKE_CURRENT_SOURCE_DIR}/../test_package/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/../test_package/*.cpp)
   doxygen_add_docs(docs README.md ${AGENT_SOURCES} ${_tests}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/.." )
-  install(DIRECTORY "${PROJECT_BINARY_DIR}/Documentation/" DESTINATION "Documentation")  
+  install(DIRECTORY "${PROJECT_BINARY_DIR}/Documentation/" DESTINATION "Documentation")
+else()
+    message(WARNING ": Documentation will not be created")
 endif()
 
 target_sources(agent_lib PUBLIC FILE_SET headers

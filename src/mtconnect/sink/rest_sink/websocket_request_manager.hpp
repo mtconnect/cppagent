@@ -25,7 +25,7 @@
 #include <optional>
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
-#include <strstream>
+#include <sstream>
 
 #include "session.hpp"
 
@@ -185,7 +185,7 @@ namespace mtconnect::sink::rest_sink {
             case rapidjson::kArrayType:
             {
               const auto &array = it.value.GetArray();
-              std::strstream buf;
+              std::stringstream buf;
               for (const auto &s : array)
                 buf << s.GetString() << ";";
               string str = buf.str();
