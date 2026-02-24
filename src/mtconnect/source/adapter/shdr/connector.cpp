@@ -136,6 +136,8 @@ namespace mtconnect::source::adapter::shdr {
     return true;
   }
 
+  /// @brief Attempt to reconnect after a delay. If the server is a hostname, re-resolve it to get the current IP
+  /// address in case it has changed. If the server is a static IP address, just reconnect.
   inline void Connector::asyncTryConnect()
   {
     NAMED_SCOPE("Connector::asyncTryConnect");
@@ -148,9 +150,9 @@ namespace mtconnect::source::adapter::shdr {
         // Re-resolve hostname to handle DHCP/dynamic IP environments.
         // If the server is a hostname (not a static IP), re-resolve to get
         // the current IP address in case it has changed.
-        boost::system::error_code parseEc;
-        asio::ip::address::from_string(m_server, parseEc);
-        if (parseEc)
+        boost::system::error_code addrEc;
+        ip::make_address(m_server, addrEc);
+        if (addrEc)
         {
           // m_server is a hostname, re-resolve it
           asio::dispatch(m_strand, boost::bind(&Connector::resolve, this));
