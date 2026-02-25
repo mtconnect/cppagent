@@ -62,7 +62,7 @@ RUN  apt clean && apt update \
        rake \
        ruby \
   && rm -rf /var/lib/apt/lists/* \
-  && pip install conan
+  && pip install --break-system-packages --root-user-action ignore conan 
 
 # make an agent directory and cd into it
 WORKDIR /root/agent
@@ -108,8 +108,8 @@ LABEL author='mtconnect' description='MTConnect C++ Agent'
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
 # --create-home creates a home folder, ie /home/<username>
-ARG UID=1000
-ARG GID=1000
+ARG UID=1001
+ARG GID=1001
 
 RUN  groupadd \
      --gid $GID \
