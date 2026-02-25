@@ -28,7 +28,7 @@
 
 # base image - ubuntu has amd64, arm64 etc.
 # 22.04 is the current long term support release, maintained until 2025-04.
-FROM ubuntu:22.04 AS os
+FROM ubuntu:24.04 AS os
 
 # tzinfo hangs without this
 ARG DEBIAN_FRONTEND='noninteractive'
