@@ -199,7 +199,16 @@ namespace mtconnect::source::adapter::shdr {
     }
     else
     {
-      LOG(info) << "Connected with: " << m_socket.remote_endpoint();
+      boost::system::error_code rec;
+      auto remote = m_socket.remote_endpoint(rec);
+      if (rec)
+      {
+        LOG(error) << "Failed to get remote endpoint: " << rec.message();
+      }
+      else
+      {
+        LOG(info) << "Connected with: " << remote;
+      }
       m_timer.cancel();
 
       m_socket.set_option(asio::ip::tcp::no_delay(true));

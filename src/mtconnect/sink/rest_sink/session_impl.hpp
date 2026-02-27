@@ -131,7 +131,13 @@ namespace mtconnect {
         : SessionImpl<HttpSession>(std::move(buffer), list, dispatch, error),
           m_stream(std::move(stream))
       {
-        m_remote = m_stream.socket().remote_endpoint();
+        NAMED_SCOPE("HttpSession::HttpSession");
+        boost::system::error_code ec;
+        m_remote = m_stream.socket().remote_endpoint(ec);
+        if (ec)
+        {
+          LOG(error) << "Failed to get remote endpoint: " << ec.message();
+        }
       }
       /// @brief Get a pointer cast as an HTTP Session
       /// @return shared pointer to an http session

@@ -197,7 +197,7 @@ namespace mtconnect::sink::rest_sink {
     }
 
     auto &msg = m_parser->get();
-    const auto &remote = beast::get_lowest_layer(derived().stream()).socket().remote_endpoint();
+    const auto &remote = m_remote;
 
     // Check for put, post, or delete
     if (msg.method() != http::verb::get)
@@ -495,7 +495,13 @@ namespace mtconnect::sink::rest_sink {
       : SessionImpl<HttpsSession>(std::move(buffer), list, dispatch, error),
         m_stream(std::move(socket), context)
     {
-      m_remote = beast::get_lowest_layer(m_stream).socket().remote_endpoint();
+      NAMED_SCOPE("HttpsSession::HttpsSession");
+      boost::system::error_code ec;
+      m_remote = beast::get_lowest_layer(m_stream).socket().remote_endpoint(ec);
+      if (ec)
+      {
+        LOG(error) << "Failed to get remote endpoint for https session: " << ec.message();
+      }
     }
     /// @brief get a shared pointer to the https session
     /// @return shared pointer

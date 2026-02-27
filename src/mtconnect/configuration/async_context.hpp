@@ -85,19 +85,19 @@ namespace mtconnect::configuration {
               catch (FatalException &e)
               {
                 LOG(fatal) << "Fatal exception occurred: " << e.what();
-                stop();
+                stop(false);
                 m_exitCode = 1;
               }
               catch (std::exception &e)
               {
                 LOG(fatal) << "Uncaught exception occurred: " << e.what();
-                stop();
+                stop(false);
                 m_exitCode = 1;
               }
               catch (...)
               {
                 LOG(fatal) << "Unknown fatal exception occurred";
-                stop();
+                stop(false);
                 m_exitCode = 1;
               }
             }));
@@ -137,19 +137,19 @@ namespace mtconnect::configuration {
       catch (FatalException &e)
       {
         LOG(fatal) << "Fatal exception occurred: " << e.what();
-        stop();
+        stop(false);
         m_exitCode = 1;
       }
       catch (std::exception &e)
       {
         LOG(fatal) << "Uncaught exception occurred: " << e.what();
-        stop();
+        stop(false);
         m_exitCode = 1;
       }
       catch (...)
       {
         LOG(fatal) << "Unknown fatal exception occurred";
-        stop();
+        stop(false);
         m_exitCode = 1;
       }
 
