@@ -198,7 +198,7 @@ namespace mtconnect {
   /// @brief Convert text to upper case
   /// @param[in,out] text text
   /// @return upper-case of text as string
-  constexpr std::string &toUpperCase(std::string &text)
+  inline std::string &toUpperCase(std::string &text)
   {
     std::transform(text.begin(), text.end(), text.begin(),
                    [](unsigned char c) { return std::toupper(c); });
@@ -209,7 +209,7 @@ namespace mtconnect {
   /// @brief Simple check if a number as a string is negative
   /// @param s the numbeer
   /// @return `true` if positive
-  constexpr bool isNonNegativeInteger(const std::string &s)
+  inline bool isNonNegativeInteger(const std::string &s)
   {
     for (const char c : s)
     {
@@ -223,7 +223,7 @@ namespace mtconnect {
   /// @brief Checks if a string is a valid integer
   /// @param s the string
   /// @return `true` if is `[+-]\d+`
-  constexpr bool isInteger(const std::string &s)
+  inline bool isInteger(const std::string &s)
   {
     auto iter = s.cbegin();
     if (*iter == '-' || *iter == '+')

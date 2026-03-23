@@ -136,6 +136,8 @@ namespace mtconnect::source::adapter::shdr {
     return true;
   }
 
+  /// @brief Attempt to reconnect after a delay. If the server is a hostname, re-resolve it to get the current IP
+  /// address in case it has changed. If the server is a static IP address, just reconnect.
   inline void Connector::asyncTryConnect()
   {
     NAMED_SCOPE("Connector::asyncTryConnect");
@@ -145,7 +147,21 @@ namespace mtconnect::source::adapter::shdr {
       if (ec != boost::asio::error::operation_aborted)
       {
         LOG(info) << "reconnect: retrying connection";
-        asio::dispatch(m_strand, boost::bind(&Connector::connect, this));
+        // Re-resolve hostname to handle DHCP/dynamic IP environments.
+        // If the server is a hostname (not a static IP), re-resolve to get
+        // the current IP address in case it has changed.
+        boost::system::error_code addrEc;
+        ip::make_address(m_server, addrEc);
+        if (addrEc)
+        {
+          // m_server is a hostname, re-resolve it
+          asio::dispatch(m_strand, boost::bind(&Connector::resolve, this));
+        }
+        else
+        {
+          // m_server is a static IP address, just reconnect
+          asio::dispatch(m_strand, boost::bind(&Connector::connect, this));
+        }
       }
     });
   }
@@ -183,7 +199,16 @@ namespace mtconnect::source::adapter::shdr {
     }
     else
     {
-      LOG(info) << "Connected with: " << m_socket.remote_endpoint();
+      boost::system::error_code rec;
+      auto remote = m_socket.remote_endpoint(rec);
+      if (rec)
+      {
+        LOG(error) << "Failed to get remote endpoint: " << rec.message();
+      }
+      else
+      {
+        LOG(info) << "Connected with: " << remote;
+      }
       m_timer.cancel();
 
       m_socket.set_option(asio::ip::tcp::no_delay(true));
