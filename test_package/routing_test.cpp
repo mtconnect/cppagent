@@ -304,3 +304,60 @@ TEST_F(RoutingTest, simple_put_with_trailing_slash)
   ASSERT_TRUE(r.matches(0, request));
   ASSERT_EQ("ADevice", get<string>(request->m_parameters["device"]));
 }
+
+TEST_F(RoutingTest, matchesPath_matches_simple_path)
+{
+  Routing r(verb::get, "/probe", m_func);
+
+  EXPECT_TRUE(r.matchesPath("/probe"));
+  EXPECT_TRUE(r.matchesPath("/probe/"));
+  EXPECT_FALSE(r.matchesPath("/sample"));
+  EXPECT_FALSE(r.matchesPath("/probe/extra"));
+}
+
+TEST_F(RoutingTest, matchesPath_matches_path_with_parameter)
+{
+  Routing r(verb::get, "/{device}/probe", m_func);
+
+  EXPECT_TRUE(r.matchesPath("/ABC123/probe"));
+  EXPECT_TRUE(r.matchesPath("/mydevice/probe"));
+  EXPECT_FALSE(r.matchesPath("/probe"));
+  EXPECT_FALSE(r.matchesPath("/dev/probe/extra"));
+}
+
+TEST_F(RoutingTest, matchesPath_ignores_verb)
+{
+  Routing getRoute(verb::get, "/asset/{id}", m_func);
+  Routing putRoute(verb::put, "/asset/{id}", m_func);
+  Routing deleteRoute(verb::delete_, "/asset/{id}", m_func);
+
+  // matchesPath should match regardless of the routing's verb
+  EXPECT_TRUE(getRoute.matchesPath("/asset/A1"));
+  EXPECT_TRUE(putRoute.matchesPath("/asset/A1"));
+  EXPECT_TRUE(deleteRoute.matchesPath("/asset/A1"));
+
+  // Different paths should not match
+  EXPECT_FALSE(getRoute.matchesPath("/probe"));
+  EXPECT_FALSE(putRoute.matchesPath("/probe"));
+  EXPECT_FALSE(deleteRoute.matchesPath("/probe"));
+}
+
+TEST_F(RoutingTest, matchesPath_works_with_regex_routing)
+{
+  Routing r(verb::get, regex("/.+"), m_func);
+
+  EXPECT_TRUE(r.matchesPath("/anything"));
+  EXPECT_TRUE(r.matchesPath("/some/deep/path"));
+  EXPECT_FALSE(r.matchesPath("/"));
+}
+
+TEST_F(RoutingTest, matchesPath_with_query_parameters_in_pattern)
+{
+  Routing r(verb::get, "/{device}/sample?from={unsigned_integer}&count={integer:100}", m_func);
+
+  // matchesPath only checks the path component, query params in the pattern don't affect it
+  EXPECT_TRUE(r.matchesPath("/ABC123/sample"));
+  EXPECT_TRUE(r.matchesPath("/device1/sample/"));
+  EXPECT_FALSE(r.matchesPath("/sample"));
+}
+

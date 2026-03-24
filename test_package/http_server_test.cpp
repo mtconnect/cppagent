@@ -683,6 +683,145 @@ TEST_F(HttpServerTest, additional_header_fields)
   ASSERT_EQ("https://foo.example", f2->second);
 }
 
+TEST_F(HttpServerTest, options_returns_allowed_methods_for_get_only_path)
+{
+  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok, "Done");
+    session->writeResponse(std::move(resp));
+    return true;
+  };
+
+  m_server->addRouting({http::verb::get, "/probe", handler});
+
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::options, "/probe");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(int(http::status::no_content), m_client->m_status);
+
+  auto allow = m_client->m_fields.find("Allow");
+  ASSERT_NE(m_client->m_fields.end(), allow);
+  EXPECT_NE(string::npos, allow->second.find("GET"));
+  EXPECT_NE(string::npos, allow->second.find("OPTIONS"));
+  EXPECT_EQ(string::npos, allow->second.find("PUT"));
+  EXPECT_EQ(string::npos, allow->second.find("POST"));
+  EXPECT_EQ(string::npos, allow->second.find("DELETE"));
+
+  auto acam = m_client->m_fields.find("Access-Control-Allow-Methods");
+  ASSERT_NE(m_client->m_fields.end(), acam);
+  EXPECT_EQ(allow->second, acam->second);
+
+  auto acah = m_client->m_fields.find("Access-Control-Allow-Headers");
+  ASSERT_NE(m_client->m_fields.end(), acah);
+
+  auto acma = m_client->m_fields.find("Access-Control-Max-Age");
+  ASSERT_NE(m_client->m_fields.end(), acma);
+  EXPECT_EQ("86400", acma->second);
+}
+
+TEST_F(HttpServerTest, options_returns_get_put_and_delete_when_registered)
+{
+  auto getHandler = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok, "Done");
+    session->writeResponse(std::move(resp));
+    return true;
+  };
+  auto putHandler = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok, "Put ok");
+    session->writeResponse(std::move(resp));
+    return true;
+  };
+  auto deleteHandler = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok, "Deleted");
+    session->writeResponse(std::move(resp));
+    return true;
+  };
+
+  m_server->addRouting({http::verb::get, "/asset/{id}", getHandler});
+  m_server->addRouting({http::verb::put, "/asset/{id}", putHandler});
+  m_server->addRouting({http::verb::delete_, "/asset/{id}", deleteHandler});
+  m_server->allowPuts();
+
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::options, "/asset/123");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(int(http::status::no_content), m_client->m_status);
+
+  auto allow = m_client->m_fields.find("Allow");
+  ASSERT_NE(m_client->m_fields.end(), allow);
+  EXPECT_NE(string::npos, allow->second.find("GET"));
+  EXPECT_NE(string::npos, allow->second.find("OPTIONS"));
+  EXPECT_NE(string::npos, allow->second.find("PUT"));
+  EXPECT_EQ(string::npos, allow->second.find("POST"));
+  EXPECT_NE(string::npos, allow->second.find("DELETE"));
+}
+
+TEST_F(HttpServerTest, options_allowed_even_when_puts_disabled)
+{
+  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok, "Done");
+    session->writeResponse(std::move(resp));
+    return true;
+  };
+
+  m_server->addRouting({http::verb::get, "/probe", handler});
+  // Note: puts are NOT enabled
+
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::options, "/probe");
+  ASSERT_TRUE(m_client->m_done);
+
+  // OPTIONS should succeed even though puts are disabled
+  EXPECT_EQ(int(http::status::no_content), m_client->m_status);
+
+  auto allow = m_client->m_fields.find("Allow");
+  ASSERT_NE(m_client->m_fields.end(), allow);
+  EXPECT_NE(string::npos, allow->second.find("GET"));
+  EXPECT_NE(string::npos, allow->second.find("OPTIONS"));
+  EXPECT_EQ(string::npos, allow->second.find("PUT"));
+  EXPECT_EQ(string::npos, allow->second.find("POST"));
+  EXPECT_EQ(string::npos, allow->second.find("DELETE"));
+}
+
+TEST_F(HttpServerTest, options_includes_configured_cors_origin_header)
+{
+  m_server->setHttpHeaders({"Access-Control-Allow-Origin:*"});
+
+  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok, "Done");
+    session->writeResponse(std::move(resp));
+    return true;
+  };
+
+  m_server->addRouting({http::verb::get, "/probe", handler});
+
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::options, "/probe");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(int(http::status::no_content), m_client->m_status);
+
+  // Access-Control-Allow-Origin comes from the configured HttpHeaders
+  auto acao = m_client->m_fields.find("Access-Control-Allow-Origin");
+  ASSERT_NE(m_client->m_fields.end(), acao);
+  ASSERT_EQ("*", acao->second);
+
+  // Access-Control-Allow-Methods comes from the OPTIONS handler
+  auto acam = m_client->m_fields.find("Access-Control-Allow-Methods");
+  ASSERT_NE(m_client->m_fields.end(), acam);
+  EXPECT_NE(string::npos, acam->second.find("GET"));
+  EXPECT_NE(string::npos, acam->second.find("OPTIONS"));
+  EXPECT_EQ(string::npos, acam->second.find("PUT"));
+  EXPECT_EQ(string::npos, acam->second.find("POST"));
+  EXPECT_EQ(string::npos, acam->second.find("DELETE"));
+}
+
 const string CertFile(TEST_RESOURCE_DIR "/user.crt");
 const string KeyFile {TEST_RESOURCE_DIR "/user.key"};
 const string DhFile {TEST_RESOURCE_DIR "/dh2048.pem"};
