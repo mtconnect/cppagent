@@ -295,6 +295,15 @@ namespace mtconnect::sink::rest_sink {
       return true;
     }
 
+    /// @brief check if the routing's path pattern matches a given path (ignoring verb)
+    /// @param[in] path the request path to test
+    /// @return `true` if the path matches this routing's pattern
+    bool matchesPath(const std::string &path) const
+    {
+      std::smatch m;
+      return std::regex_match(path, m, m_pattern);
+    }
+
     /// @brief check if this is related to a swagger API
     /// @returns `true` if related to swagger
     auto isSwagger() const { return m_swagger; }

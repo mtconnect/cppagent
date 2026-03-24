@@ -199,8 +199,8 @@ namespace mtconnect::sink::rest_sink {
     auto &msg = m_parser->get();
     const auto &remote = m_remote;
 
-    // Check for put, post, or delete
-    if (msg.method() != http::verb::get)
+    // Check for put, post, or delete (allow OPTIONS for CORS preflight)
+    if (msg.method() != http::verb::get && msg.method() != http::verb::options)
     {
       if (!m_allowPuts)
       {
@@ -375,6 +375,10 @@ namespace mtconnect::sink::rest_sink {
     if (response.m_location)
     {
       res->set(http::field::location, *response.m_location);
+    }
+    for (const auto &f : response.m_fields)
+    {
+      res->set(f.first, f.second);
     }
   }
 

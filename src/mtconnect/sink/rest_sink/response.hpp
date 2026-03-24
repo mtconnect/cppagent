@@ -21,6 +21,7 @@
 #include <boost/beast/http/status.hpp>
 
 #include <filesystem>
+#include <list>
 #include <unordered_map>
 
 #include "cached_file.hpp"
@@ -64,6 +65,9 @@ namespace mtconnect {
       std::optional<std::string> m_requestId;  ///< Request id from websocket sub
 
       CachedFilePtr m_file;  ///< Cached file if a file is being returned
+
+      /// @brief Additional per-response header fields (e.g. for CORS preflight)
+      std::list<std::pair<std::string, std::string>> m_fields;
     };
 
     using ResponsePtr = std::unique_ptr<Response>;

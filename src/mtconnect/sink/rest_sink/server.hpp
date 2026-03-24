@@ -85,6 +85,7 @@ namespace mtconnect::sink::rest_sink {
       loadTlsCertificate();
 
       addSwaggerRoutings();
+      addOptionsRouting();
     }
 
     /// @brief Start the http server
@@ -289,6 +290,13 @@ namespace mtconnect::sink::rest_sink {
     ///
     /// @brief Add swagger routings to the Agent
     void addSwaggerRoutings();
+    /// @}
+
+    /// @name CORS Support
+    /// @{
+    ///
+    /// @brief Add OPTIONS routing for CORS preflight requests
+    void addOptionsRouting();
     /// @brief generate swagger API from routings
     /// @param[in] format The mime format of the response ("json" or "yaml")
     ///
