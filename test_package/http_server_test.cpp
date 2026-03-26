@@ -759,6 +759,85 @@ TEST_F(HttpServerTest, options_returns_get_put_and_delete_when_registered)
   EXPECT_NE(string::npos, allow->second.find("DELETE"));
 }
 
+TEST_F(HttpServerTest, options_returns_get_when_a_specific_and_wildcard_route_are_given)
+{
+  auto getHandler = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok, "Done");
+    session->writeResponse(std::move(resp));
+    return true;
+  };
+  auto putHandler = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok, "Put ok");
+    session->writeResponse(std::move(resp));
+    return true;
+  };
+  auto deleteHandler = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok, "Deleted");
+    session->writeResponse(std::move(resp));
+    return true;
+  };
+  
+  m_server->addRouting({http::verb::get, "/current", getHandler});
+  m_server->addRouting({http::verb::put, "/{device}?timestamp={timestamp}", putHandler});
+  m_server->addRouting({http::verb::delete_, "/{device}?timestamp={timestamp}", deleteHandler});
+  m_server->allowPuts();
+  
+  start();
+  startClient();
+  
+  m_client->spawnRequest(http::verb::options, "/current");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(int(http::status::no_content), m_client->m_status);
+  
+  auto allow = m_client->m_fields.find("Allow");
+  ASSERT_NE(m_client->m_fields.end(), allow);
+  EXPECT_NE(string::npos, allow->second.find("GET"));
+  EXPECT_NE(string::npos, allow->second.find("OPTIONS"));
+  EXPECT_EQ(string::npos, allow->second.find("PUT"));
+  EXPECT_EQ(string::npos, allow->second.find("POST"));
+  EXPECT_EQ(string::npos, allow->second.find("DELETE"));
+}
+
+TEST_F(HttpServerTest, options_returns_get_when_complex_path_route_are_given)
+{
+  auto getHandler = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok, "Done");
+    session->writeResponse(std::move(resp));
+    return true;
+  };
+  auto putHandler = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok, "Put ok");
+    session->writeResponse(std::move(resp));
+    return true;
+  };
+  auto deleteHandler = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok, "Deleted");
+    session->writeResponse(std::move(resp));
+    return true;
+  };
+  
+  m_server->addRouting({http::verb::get, "/{device}/current", getHandler});
+  m_server->addRouting({http::verb::put, "/{device}/{command}?timestamp={timestamp}", putHandler});
+  m_server->addRouting({http::verb::delete_, "/{device}/{command}?timestamp={timestamp}", deleteHandler});
+  m_server->allowPuts();
+  
+  start();
+  startClient();
+  
+  m_client->spawnRequest(http::verb::options, "/mydevice/current");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(int(http::status::no_content), m_client->m_status);
+  
+  auto allow = m_client->m_fields.find("Allow");
+  ASSERT_NE(m_client->m_fields.end(), allow);
+  EXPECT_NE(string::npos, allow->second.find("GET"));
+  EXPECT_NE(string::npos, allow->second.find("OPTIONS"));
+  EXPECT_EQ(string::npos, allow->second.find("PUT"));
+  EXPECT_EQ(string::npos, allow->second.find("POST"));
+  EXPECT_EQ(string::npos, allow->second.find("DELETE"));
+}
+
+
 TEST_F(HttpServerTest, options_allowed_even_when_puts_disabled)
 {
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {

@@ -420,13 +420,24 @@ namespace mtconnect::sink::rest_sink {
     using namespace boost;
     using namespace adaptors;
     auto handler = [this](SessionPtr session, const RequestPtr request) -> bool {
-      // Collect the set of HTTP verbs supported at this path
-      set<http::verb> verbs;
+      // Collect the set of HTTP verbs supported at this path, preferring
+      // specific routes over catch-all ones (routes where every segment is
+      // a parameter, e.g. /{device}).
+      set<http::verb> specificVerbs;
+      set<http::verb> catchAllVerbs;
       for (const auto &r : m_routings)
       {
         if (!r.isSwagger() && r.matchesPath(request->m_path))
-          verbs.insert(r.getVerb());
+        {
+          if (r.isCatchAll())
+            catchAllVerbs.insert(r.getVerb());
+          else
+            specificVerbs.insert(r.getVerb());
+        }
       }
+
+      // If any specific route matched, use only those; otherwise fall back to catch-alls
+      auto &verbs = specificVerbs.empty() ? catchAllVerbs : specificVerbs;
 
       // OPTIONS is always allowed
       verbs.insert(http::verb::options);

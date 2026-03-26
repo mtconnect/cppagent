@@ -200,7 +200,8 @@ namespace mtconnect::sink::rest_sink {
     const auto &remote = m_remote;
 
     // Check for put, post, or delete (allow OPTIONS for CORS preflight)
-    if (msg.method() != http::verb::get && msg.method() != http::verb::options)
+    if (msg.method() == http::verb::put || msg.method() == http::verb::post ||
+        msg.method() == http::verb::delete_)
     {
       if (!m_allowPuts)
       {
