@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <boost/beast/http/verb.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/beast/http/verb.hpp>
 
-
+#include <iostream>
 #include <list>
 #include <optional>
 #include <regex>
@@ -28,7 +28,6 @@
 #include <sstream>
 #include <string>
 #include <variant>
-#include <iostream>
 
 #include "mtconnect/config.hpp"
 #include "mtconnect/logging.hpp"
@@ -39,14 +38,14 @@
 namespace mtconnect::sink::rest_sink {
   class Session;
   using SessionPtr = std::shared_ptr<Session>;
-  
+
   /// @brief A REST routing that parses a URI pattern and associates a lambda when it is matched
   /// against a request
   class AGENT_LIB_API Routing
   {
   public:
     using Function = std::function<bool(SessionPtr, RequestPtr)>;
-    
+
     Routing(const Routing &r) = default;
     /// @brief Create a routing with a string
     ///
@@ -57,23 +56,23 @@ namespace mtconnect::sink::rest_sink {
     /// @param[in] swagger `true` if swagger related
     Routing(boost::beast::http::verb verb, const std::string &pattern, const Function function,
             bool swagger = false, std::optional<std::string> request = std::nullopt)
-    : m_verb(verb), m_command(request), m_function(function), m_swagger(swagger)
+      : m_verb(verb), m_command(request), m_function(function), m_swagger(swagger)
     {
       std::string s(pattern);
-      
+
       auto qp = s.find_first_of('?');
       if (qp != std::string::npos)
       {
         auto query = s.substr(qp + 1);
         s.erase(qp);
-        
+
         queryParameters(query);
       }
-      
+
       m_path.emplace(s);
       pathParameters(s);
     }
-    
+
     /// @brief Create a routing with a regular expression
     ///
     /// Creates a routing from the regular expression to match against the path
@@ -83,13 +82,13 @@ namespace mtconnect::sink::rest_sink {
     /// @param[in] swagger `true` if swagger related
     Routing(boost::beast::http::verb verb, const std::regex &pattern, const Function function,
             bool swagger = false, std::optional<std::string> request = std::nullopt)
-    : m_verb(verb),
-    m_pattern(pattern),
-    m_command(request),
-    m_function(function),
-    m_swagger(swagger)
+      : m_verb(verb),
+        m_pattern(pattern),
+        m_command(request),
+        m_function(function),
+        m_swagger(swagger)
     {}
-    
+
     /// @brief Added summary and description to the routing
     /// @param[in] summary optional summary
     /// @param[in] description optional description of the routing
@@ -100,7 +99,7 @@ namespace mtconnect::sink::rest_sink {
       m_description = description;
       return *this;
     }
-    
+
     /// @brief Added summary and description to the routing
     /// @param[in] summary optional summary
     /// @param[in] description optional description of the routing
@@ -130,13 +129,13 @@ namespace mtconnect::sink::rest_sink {
           }
         }
       }
-      
+
       if (param != nullptr)
         param->m_description = description;
-      
+
       return *this;
     }
-    
+
     /// @brief Document using common parameter documentation
     /// @param[in] docs common documentation for parameters
     Routing &documentParameters(const ParameterDocList &docs)
@@ -147,20 +146,20 @@ namespace mtconnect::sink::rest_sink {
       }
       return *this;
     }
-    
+
     /// @brief Get the description of the REST call for Swagger
     /// @returns optional string if description is givem
     const auto &getDescription() const { return m_description; }
     /// @brief Get the brief summary fo the REST call for Swagger
     /// @returns optional string if summary is givem
     const auto &getSummary() const { return m_summary; }
-    
+
     /// @brief Get the list of path position in order
     /// @return the parameter list
     const ParameterList &getPathParameters() const { return m_pathParameters; }
     /// @brief get the unordered set of query parameters
     const QuerySet &getQueryParameters() const { return m_queryParameters; }
-    
+
     /// @brief run the session's request if this routing matches
     ///
     /// Call the associated lambda when matched
@@ -175,7 +174,7 @@ namespace mtconnect::sink::rest_sink {
       else
         return false;
     }
-    
+
     /// @brief check if the routing matches the request
     ///
     /// @param[in] session the session making the request to pass to the Routing if matched
@@ -205,7 +204,7 @@ namespace mtconnect::sink::rest_sink {
               s++;
             }
           }
-          
+
           entity::EntityList errors;
           for (auto &p : m_queryParameters)
           {
@@ -220,7 +219,7 @@ namespace mtconnect::sink::rest_sink {
               catch (ParameterError &e)
               {
                 std::string msg = std::string("query parameter '") + p.m_name + "': " + e.what();
-                
+
                 LOG(warning) << "Parameter error: " << msg;
                 auto error = InvalidParameterValue::make(p.m_name, q->second, p.getTypeName(),
                                                          p.getTypeFormat(), msg);
@@ -232,10 +231,10 @@ namespace mtconnect::sink::rest_sink {
               request->m_parameters.emplace(make_pair(p.m_name, p.m_default));
             }
           }
-          
+
           if (!errors.empty())
             throw RestError(errors, request->m_accepts);
-          
+
           return true;
         }
         else
@@ -244,7 +243,7 @@ namespace mtconnect::sink::rest_sink {
         }
       }
     }
-    
+
     /// @brief Validate the request parameters without matching the path
     /// @param[in] session the session making the request to pass to the Routing if matched
     /// @param[in,out] request the incoming request with a verb and a path
@@ -262,7 +261,7 @@ namespace mtconnect::sink::rest_sink {
           if (!validateValueType(p.m_type, it->second))
           {
             std::string msg = std::string("path parameter '") + p.m_name +
-            "': invalid type, expected " + p.getTypeFormat();
+                              "': invalid type, expected " + p.getTypeFormat();
             LOG(warning) << "Parameter error: " << msg;
             auto error = InvalidParameterValue::make(p.m_name, Parameter::toString(it->second),
                                                      p.getTypeName(), p.getTypeFormat(), msg);
@@ -270,7 +269,7 @@ namespace mtconnect::sink::rest_sink {
           }
         }
       }
-      
+
       for (auto &p : m_queryParameters)
       {
         auto it = request->m_parameters.find(p.m_name);
@@ -279,7 +278,7 @@ namespace mtconnect::sink::rest_sink {
           if (!validateValueType(p.m_type, it->second))
           {
             std::string msg = std::string("query parameter '") + p.m_name +
-            "': invalid type, expected " + p.getTypeFormat();
+                              "': invalid type, expected " + p.getTypeFormat();
             LOG(warning) << "Parameter error: " << msg;
             auto error = InvalidParameterValue::make(p.m_name, Parameter::toString(it->second),
                                                      p.getTypeName(), p.getTypeFormat(), msg);
@@ -291,13 +290,13 @@ namespace mtconnect::sink::rest_sink {
           request->m_parameters.emplace(make_pair(p.m_name, p.m_default));
         }
       }
-      
+
       if (!errors.empty())
         throw RestError(errors, request->m_accepts);
-      
+
       return true;
     }
-    
+
     /// @brief check if the routing's path pattern matches a given path (ignoring verb)
     /// @param[in] path the request path to test
     /// @return `true` if the path matches this routing's pattern
@@ -306,24 +305,24 @@ namespace mtconnect::sink::rest_sink {
       std::smatch m;
       return std::regex_match(path, m, m_pattern);
     }
-    
+
     /// @brief check if this is related to a swagger API
     /// @returns `true` if related to swagger
     auto isSwagger() const { return m_swagger; }
-    
+
     /// @brief Get the path component of the routing pattern
     const auto &getPath() const { return m_path; }
     /// @brief Get the routing `verb`
     const auto &getVerb() const { return m_verb; }
-    
+
     /// @brief Check if the route is a catch-all (every path segment is a parameter)
     /// @returns `true` if all path segments are parameters (e.g. `/{device}`)
     auto isCatchAll() const { return m_catchAll; }
-    
+
     /// @brief Get the optional command associated with the routing
     /// @returns optional routing
     const auto &getCommand() const { return m_command; }
-    
+
     /// @brief Sets the command associated with this routing for use with websockets
     /// @param command the command
     auto &command(const std::string &command)
@@ -331,15 +330,15 @@ namespace mtconnect::sink::rest_sink {
       m_command = command;
       return *this;
     }
-    
+
   protected:
     void pathParameters(std::string s)
     {
       std::stringstream pat;
-      
+
       using namespace boost::algorithm;
       using SplitList = std::list<boost::iterator_range<std::string::iterator>>;
-      
+
       SplitList parts;
       auto pos = s.find_first_not_of('/');
       if (pos != std::string::npos)
@@ -347,17 +346,17 @@ namespace mtconnect::sink::rest_sink {
         auto range = boost::make_iterator_range(s.begin() + pos, s.end());
         split(parts, range, [](char c) { return c == '/'; });
       }
-      
+
       bool hasLiteral = false;
       for (auto &p : parts)
       {
         auto start = p.begin();
         auto end = p.end();
-        
+
         pat << "/";
         if (*start == '{' && *(end - 1) == '}')
         {
-          std::string_view param(start + 1, end  - 1);
+          std::string_view param(start + 1, end - 1);
           pat << "([^/]+)";
           m_pathParameters.emplace_back(param);
         }
@@ -368,31 +367,31 @@ namespace mtconnect::sink::rest_sink {
         }
       }
       pat << "/?";
-      
+
       m_patternText = pat.str();
       m_pattern = std::regex(m_patternText);
-      
+
       // A route is catch-all if it has parameters but no literal path segments
       m_catchAll = !m_pathParameters.empty() && !hasLiteral;
     }
-    
+
     void queryParameters(std::string s)
     {
       std::regex reg("([^=]+)=\\{([^}]+)\\}&?");
       std::smatch match;
-      
+
       while (regex_search(s, match, reg))
       {
         Parameter qp(match[1]);
         qp.m_part = QUERY;
-        
+
         getTypeAndDefault(match[2], qp);
-        
+
         m_queryParameters.emplace(qp);
         s = match.suffix().str();
       }
     }
-    
+
     void getTypeAndDefault(const std::string &type, Parameter &par)
     {
       std::string t(type);
@@ -403,7 +402,7 @@ namespace mtconnect::sink::rest_sink {
         def = t.substr(dp + 1);
         t.erase(dp);
       }
-      
+
       if (t == "string")
       {
         par.m_type = STRING;
@@ -424,23 +423,23 @@ namespace mtconnect::sink::rest_sink {
       {
         par.m_type = BOOL;
       }
-      
+
       if (!def.empty())
       {
         par.m_default = convertValue(def, par.m_type);
       }
     }
-    
+
     ParameterValue convertValue(const std::string &s, ParameterType t) const
     {
       switch (t)
       {
         case STRING:
           return s;
-          
+
         case NONE:
           throw ParameterError("Cannot convert to NONE");
-          
+
         case DOUBLE:
         {
           char *ep = nullptr;
@@ -450,7 +449,7 @@ namespace mtconnect::sink::rest_sink {
             throw ParameterError("cannot convert string '" + s + "' to double");
           return r;
         }
-          
+
         case INTEGER:
         {
           char *ep = nullptr;
@@ -458,10 +457,10 @@ namespace mtconnect::sink::rest_sink {
           int32_t r = int32_t(strtoll(sp, &ep, 10));
           if (ep == sp)
             throw ParameterError("cannot convert string '" + s + "' to integer");
-          
+
           return r;
         }
-          
+
         case UNSIGNED_INTEGER:
         {
           char *ep = nullptr;
@@ -469,39 +468,39 @@ namespace mtconnect::sink::rest_sink {
           uint64_t r = strtoull(sp, &ep, 10);
           if (ep == sp)
             throw ParameterError("cannot convert string '" + s + "' to unsigned integer");
-          
+
           return r;
         }
-          
+
         case BOOL:
         {
           return bool(s == "true" || s == "yes");
         }
       }
-      
+
       throw ParameterError("Unknown type for conversion: " + std::to_string(int(t)));
-      
+
       return ParameterValue();
     }
-    
+
     bool validateValueType(ParameterType t, ParameterValue &value)
     {
       switch (t)
       {
         case STRING:
           return std::holds_alternative<std::string>(value);
-          
+
         case NONE:
           return std::holds_alternative<std::monostate>(value);
-          
+
         case DOUBLE:
           if (std::holds_alternative<int32_t>(value))
             value = double(std::get<int32_t>(value));
           else if (std::holds_alternative<uint64_t>(value))
             value = double(std::get<uint64_t>(value));
-          
+
           return std::holds_alternative<double>(value);
-          
+
         case INTEGER:
           if (std::holds_alternative<uint64_t>(value))
           {
@@ -517,7 +516,7 @@ namespace mtconnect::sink::rest_sink {
               value = int32_t(v);
           }
           return std::holds_alternative<int32_t>(value);
-          
+
         case UNSIGNED_INTEGER:
           if (std::holds_alternative<int32_t>(value))
           {
@@ -532,13 +531,13 @@ namespace mtconnect::sink::rest_sink {
               value = uint64_t(v);
           }
           return std::holds_alternative<uint64_t>(value);
-          
+
         case BOOL:
           return std::holds_alternative<bool>(value);
       }
       return false;
     }
-    
+
   protected:
     boost::beast::http::verb m_verb;
     std::regex m_pattern;
@@ -548,10 +547,10 @@ namespace mtconnect::sink::rest_sink {
     QuerySet m_queryParameters;
     std::optional<std::string> m_command;
     Function m_function;
-    
+
     std::optional<std::string> m_summary;
     std::optional<std::string> m_description;
-    
+
     bool m_swagger = false;
     bool m_catchAll = false;
   };

@@ -1248,7 +1248,8 @@ namespace mtconnect::configuration {
       }
       catch (exception &e)
       {
-        LOG(info) << "Cannot load plugin " << name << " from " << path << " Reason: " << e.what();
+        LOG(debug) << "Plugin " << name << " from " << path << " not found, Reason: " << e.what()
+                   << ", trying next path if available.";
       }
     }
 

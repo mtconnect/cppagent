@@ -65,7 +65,7 @@ namespace mtconnect::sink::rest_sink {
       : m_name(n), m_type(t), m_part(p)
     {}
     Parameter(const std::string_view &n, ParameterType t = STRING, UrlPart p = PATH)
-    : m_name(n), m_type(t), m_part(p)
+      : m_name(n), m_type(t), m_part(p)
     {}
     Parameter(const Parameter &o) = default;
 

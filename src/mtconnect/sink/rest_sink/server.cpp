@@ -19,6 +19,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/coroutine.hpp>
 #include <boost/beast.hpp>
@@ -26,9 +27,8 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
-#include <boost/tokenizer.hpp>
 #include <boost/range/adaptor/transformed.hpp>
-#include <boost/algorithm/string/join.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <thread>
 

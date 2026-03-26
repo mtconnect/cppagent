@@ -360,4 +360,3 @@ TEST_F(RoutingTest, matchesPath_with_query_parameters_in_pattern)
   EXPECT_TRUE(r.matchesPath("/device1/sample/"));
   EXPECT_FALSE(r.matchesPath("/sample"));
 }
-
