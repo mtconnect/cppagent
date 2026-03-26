@@ -85,7 +85,6 @@ namespace mtconnect::sink::rest_sink {
       loadTlsCertificate();
 
       addSwaggerRoutings();
-      addOptionsRouting();
     }
 
     /// @brief Start the http server
@@ -173,6 +172,10 @@ namespace mtconnect::sink::rest_sink {
             success = route->second->run(session, request);
           else
             message = "Command failed: " + *request->m_command;
+        }
+        else if (request->m_verb == boost::beast::http::verb::options)
+        {
+          success = handleOptionsRequest(session, request);
         }
         else
         {
@@ -290,13 +293,6 @@ namespace mtconnect::sink::rest_sink {
     ///
     /// @brief Add swagger routings to the Agent
     void addSwaggerRoutings();
-    /// @}
-
-    /// @name CORS Support
-    /// @{
-    ///
-    /// @brief Add OPTIONS routing for CORS preflight requests
-    void addOptionsRouting();
     /// @brief generate swagger API from routings
     /// @param[in] format The mime format of the response ("json" or "yaml")
     ///
@@ -304,6 +300,16 @@ namespace mtconnect::sink::rest_sink {
     /// routing is added.
     template <typename T>
     const void renderSwaggerResponse(T &format);
+    /// @}
+
+    /// @name CORS Support
+    /// @{
+    ///
+    /// @brief Handle OPTIONS request for CORS preflight requests
+    /// @param[in] session the client session
+    /// @param[in] request the incoming request
+    /// @return `true` if the request was handled, otherwise `false` and a 404 will be returned
+    bool handleOptionsRequest(SessionPtr session, const RequestPtr request);
     /// @}
 
   protected:

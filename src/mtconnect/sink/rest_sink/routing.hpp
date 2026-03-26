@@ -86,7 +86,8 @@ namespace mtconnect::sink::rest_sink {
         m_pattern(pattern),
         m_command(request),
         m_function(function),
-        m_swagger(swagger)
+        m_swagger(swagger),
+        m_catchAll(true)
     {}
 
     /// @brief Added summary and description to the routing
@@ -352,12 +353,27 @@ namespace mtconnect::sink::rest_sink {
       {
         auto start = p.begin();
         auto end = p.end();
+        
+        auto openBrace = std::find(start, end, '{');
+        decltype(openBrace) closeBrace { end };
+        if (openBrace != end && std::distance(openBrace, end) > 2)
+          closeBrace = std::find(openBrace + 1, end, '}');
 
         pat << "/";
-        if (*start == '{' && *(end - 1) == '}')
+        if (openBrace != end && closeBrace != end)
         {
-          std::string_view param(start + 1, end - 1);
+          if (openBrace > start)
+          {
+            pat << std::string_view(start, openBrace);
+            hasLiteral = true;
+          }
+          std::string_view param(openBrace + 1, closeBrace);
           pat << "([^/]+)";
+          if (closeBrace + 1 < end)
+          {
+            pat << std::string_view(closeBrace + 1, end);
+            hasLiteral = true;
+          }
           m_pathParameters.emplace_back(param);
         }
         else

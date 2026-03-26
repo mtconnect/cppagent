@@ -415,50 +415,44 @@ namespace mtconnect::sink::rest_sink {
     // addRouting({boost::beast::http::verb::get, "/swagger.yaml", handler, true});
   }
 
-  void Server::addOptionsRouting()
+  bool Server::handleOptionsRequest(SessionPtr session, const RequestPtr request)
   {
     using namespace boost;
     using namespace adaptors;
-    auto handler = [this](SessionPtr session, const RequestPtr request) -> bool {
-      // Collect the set of HTTP verbs supported at this path, preferring
-      // specific routes over catch-all ones (routes where every segment is
-      // a parameter, e.g. /{device}).
-      set<http::verb> specificVerbs;
-      set<http::verb> catchAllVerbs;
-      for (const auto &r : m_routings)
+    set<http::verb> specificVerbs;
+    set<http::verb> catchAllVerbs;
+    for (const auto &r : m_routings)
+    {
+      if (!r.isSwagger() && r.matchesPath(request->m_path))
       {
-        if (!r.isSwagger() && r.matchesPath(request->m_path))
-        {
-          if (r.isCatchAll())
-            catchAllVerbs.insert(r.getVerb());
-          else
-            specificVerbs.insert(r.getVerb());
-        }
+        if (r.isCatchAll())
+          catchAllVerbs.insert(r.getVerb());
+        else
+          specificVerbs.insert(r.getVerb());
       }
+    }
 
-      // If any specific route matched, use only those; otherwise fall back to catch-alls
-      auto &verbs = specificVerbs.empty() ? catchAllVerbs : specificVerbs;
+    // If any specific route matched, use only those; otherwise fall back to catch-alls
+    auto &verbs = specificVerbs.empty() ? catchAllVerbs : specificVerbs;
 
-      // OPTIONS is always allowed
-      verbs.insert(http::verb::options);
+    // OPTIONS is always allowed
+    verbs.insert(http::verb::options);
 
-      // Build the Allow / Access-Control-Allow-Methods header value
-      string methods = algorithm::join(
-          verbs | transformed([](http::verb v) { return string(http::to_string(v)); }), ", ");
+    // Build the Allow / Access-Control-Allow-Methods header value
+    string methods = algorithm::join(
+        verbs | transformed([](http::verb v) { return string(http::to_string(v)); }), ", ");
 
-      auto response = std::make_unique<Response>(status::no_content, "", "text/plain");
-      response->m_close = false;
-      response->m_fields.emplace_back("Allow", methods);
-      response->m_fields.emplace_back("Access-Control-Allow-Methods", methods);
-      response->m_fields.emplace_back("Access-Control-Allow-Headers",
-                                      "Content-Type, Accept, Accept-Encoding");
-      response->m_fields.emplace_back("Access-Control-Max-Age", "86400");
+    auto response = std::make_unique<Response>(status::no_content, "", "text/plain");
+    response->m_close = false;
+    response->m_fields.emplace_back("Allow", methods);
+    response->m_fields.emplace_back("Access-Control-Allow-Methods", methods);
+    response->m_fields.emplace_back("Access-Control-Allow-Headers",
+                                    "Content-Type, Accept, Accept-Encoding");
+    response->m_fields.emplace_back("Access-Control-Max-Age", "86400");
 
-      session->writeResponse(std::move(response));
-      return true;
-    };
-
-    addRouting({boost::beast::http::verb::options, std::regex("/.*"), handler, true});
+    session->writeResponse(std::move(response));
+    
+    return true;
   }
 
 }  // namespace mtconnect::sink::rest_sink
