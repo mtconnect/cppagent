@@ -61,7 +61,7 @@ namespace mtconnect {
 )"
 #else
           R"(       install        Install the agent as a service.
-       remove            Removes the agent service.
+       remove         Removes the agent service.
 )"
 #endif
           R"(       debug          Runs the agent on the command line with verbose logging
