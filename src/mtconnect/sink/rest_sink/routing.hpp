@@ -353,9 +353,9 @@ namespace mtconnect::sink::rest_sink {
       {
         auto start = p.begin();
         auto end = p.end();
-        
+
         auto openBrace = std::find(start, end, '{');
-        decltype(openBrace) closeBrace { end };
+        decltype(openBrace) closeBrace {end};
         if (openBrace != end && std::distance(openBrace, end) > 2)
           closeBrace = std::find(openBrace + 1, end, '}');
 

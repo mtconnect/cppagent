@@ -100,8 +100,8 @@ namespace mtconnect::source::adapter::shdr {
     {
       LOG(warning) << "Cannot resolve address: " << m_server << ":" << m_port;
       LOG(warning) << ec.message();
-      LOG(warning) << "Will retry resolution of " << m_server << " in " << m_reconnectInterval.count()
-                 << " milliseconds";
+      LOG(warning) << "Will retry resolution of " << m_server << " in "
+                   << m_reconnectInterval.count() << " milliseconds";
 
       m_timer.expires_after(m_reconnectInterval);
       m_timer.async_wait([this](boost::system::error_code ec) {
@@ -294,8 +294,8 @@ namespace mtconnect::source::adapter::shdr {
       if (!ec)
       {
         LOG(warning) << "(Port:" << m_localPort << ")"
-                   << " connect: Did not receive data for over: " << m_receiveTimeLimit.count()
-                   << " ms";
+                     << " connect: Did not receive data for over: " << m_receiveTimeLimit.count()
+                     << " ms";
         asio::dispatch(m_strand, boost::bind(&Connector::reconnect, this));
       }
       else if (ec != boost::asio::error::operation_aborted)

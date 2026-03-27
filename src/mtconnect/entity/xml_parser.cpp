@@ -287,7 +287,7 @@ namespace mtconnect::entity {
               }
               else
               {
-                LOG(warning) << "Unexpected element: " << nodeQName(child);
+                // LOG(warning) << "Unexpected element: " << nodeQName(child);
                 errors.emplace_back(
                     new EntityError("Invalid element '" + nodeQName(child) + "'", qname));
               }

@@ -451,7 +451,7 @@ namespace mtconnect::sink::rest_sink {
     response->m_fields.emplace_back("Access-Control-Max-Age", "86400");
 
     session->writeResponse(std::move(response));
-    
+
     return true;
   }
 

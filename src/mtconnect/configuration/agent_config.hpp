@@ -295,7 +295,7 @@ namespace mtconnect {
           else
           {
             LOG(debug) << "Cannot find file '" << file << "' "
-                       << " in path " << path;
+                       << " in path " << path << ", continuing...";
           }
         }
 
@@ -312,7 +312,7 @@ namespace mtconnect {
         if (!ec)
           paths.emplace_back(con);
         else
-          LOG(debug) << "Cannot file path: " << path << ", " << ec.message();
+          LOG(debug) << "Cannot find path: " << path << ", " << ec.message() << ", skipping...";
       }
 
       void addPathFront(std::list<std::filesystem::path> &paths, std::filesystem::path path)

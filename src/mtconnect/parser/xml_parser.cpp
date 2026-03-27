@@ -202,13 +202,27 @@ namespace mtconnect::parser {
         {
           auto device =
               entity::XmlParser::parseXmlNode(Device::getRoot(), nodeset->nodeTab[i], errors);
+
           if (device)
+          {
             deviceList.emplace_back(dynamic_pointer_cast<Device>(device));
+          }
+          else
+          {
+            LOG(error) << "Failed to parse device, skipping";
+          }
 
           if (!errors.empty())
           {
             for (auto &e : errors)
-              LOG(warning) << "Error parsing device: " << e->what();
+            {
+              if (device)
+                LOG(warning) << "When loading device " << device->get<string>("name")
+                             << ", A problem was skipped: "
+                             << e->what();
+              else
+                LOG(error) << "Failed to load device: " << e->what();
+            }
           }
         }
       }

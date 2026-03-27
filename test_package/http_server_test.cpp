@@ -908,18 +908,18 @@ TEST_F(HttpServerTest, options_returns_correctly_for_path_with_parameter_value)
     session->writeResponse(std::move(resp));
     return true;
   };
-  
+
   m_server->addRouting({boost::beast::http::verb::get, "/cancel/id={string}", handler})
-    .document("MTConnect WebServices Cancel Stream", "Cancels a streaming sample request")
-    .command("cancel");
+      .document("MTConnect WebServices Cancel Stream", "Cancels a streaming sample request")
+      .command("cancel");
 
   start();
   startClient();
-  
+
   m_client->spawnRequest(http::verb::options, "/cancel/id=12345");
   ASSERT_TRUE(m_client->m_done);
   EXPECT_EQ(int(http::status::no_content), m_client->m_status);
-  
+
   auto allow = m_client->m_fields.find("Allow");
   ASSERT_NE(m_client->m_fields.end(), allow);
   EXPECT_NE(string::npos, allow->second.find("GET"));
@@ -927,14 +927,14 @@ TEST_F(HttpServerTest, options_returns_correctly_for_path_with_parameter_value)
   EXPECT_EQ(string::npos, allow->second.find("PUT"));
   EXPECT_EQ(string::npos, allow->second.find("POST"));
   EXPECT_EQ(string::npos, allow->second.find("DELETE"));
-  
+
   auto acam = m_client->m_fields.find("Access-Control-Allow-Methods");
   ASSERT_NE(m_client->m_fields.end(), acam);
   EXPECT_EQ(allow->second, acam->second);
-  
+
   auto acah = m_client->m_fields.find("Access-Control-Allow-Headers");
   ASSERT_NE(m_client->m_fields.end(), acah);
-  
+
   auto acma = m_client->m_fields.find("Access-Control-Max-Age");
   ASSERT_NE(m_client->m_fields.end(), acma);
   EXPECT_EQ("86400", acma->second);
@@ -947,17 +947,17 @@ TEST_F(HttpServerTest, should_handle_routings_with_just_a_regex)
     session->writeResponse(std::move(resp));
     return true;
   };
-  
+
   m_server->addRouting({boost::beast::http::verb::get, regex("/.+"), handler});
   m_server->addRouting({http::verb::put, "/{device}?timestamp={timestamp}", handler});
 
   start();
   startClient();
-  
+
   m_client->spawnRequest(http::verb::options, "/file.xsd");
   ASSERT_TRUE(m_client->m_done);
   EXPECT_EQ(int(http::status::no_content), m_client->m_status);
-  
+
   auto allow = m_client->m_fields.find("Allow");
   ASSERT_NE(m_client->m_fields.end(), allow);
   EXPECT_NE(string::npos, allow->second.find("GET"));
@@ -965,14 +965,14 @@ TEST_F(HttpServerTest, should_handle_routings_with_just_a_regex)
   EXPECT_NE(string::npos, allow->second.find("PUT"));
   EXPECT_EQ(string::npos, allow->second.find("POST"));
   EXPECT_EQ(string::npos, allow->second.find("DELETE"));
-  
+
   auto acam = m_client->m_fields.find("Access-Control-Allow-Methods");
   ASSERT_NE(m_client->m_fields.end(), acam);
   EXPECT_EQ(allow->second, acam->second);
-  
+
   auto acah = m_client->m_fields.find("Access-Control-Allow-Headers");
   ASSERT_NE(m_client->m_fields.end(), acah);
-  
+
   auto acma = m_client->m_fields.find("Access-Control-Max-Age");
   ASSERT_NE(m_client->m_fields.end(), acma);
   EXPECT_EQ("86400", acma->second);
