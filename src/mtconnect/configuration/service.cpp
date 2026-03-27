@@ -46,9 +46,11 @@ namespace mtconnect {
     {
       printf(
 #ifndef _WINDOWS
-          "Usage: agent [help|daemonize|debug|run] [config-file]"
+          R"(Usage: agent [help|daemonize|debug|run] [config-file]
+)"
 #else
-          "Usage: agent [help|install|remove|debug|run] [config-file]"
+          R"(Usage: agent [help|install|remove|debug|run] [config-file]
+)"
 #endif
           R"(       help           Prints this message and exits
        version        Prints the agent version and exits
