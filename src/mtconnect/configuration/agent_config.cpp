@@ -660,7 +660,6 @@ namespace mtconnect::configuration {
     logFileName = logFileName.lexically_normal();
     fs::create_directories(logFileName.parent_path());
 
-
     // Create a text file sink
     auto sink = boost::make_shared<text_sink>(
         kw::file_name = logFileName.string(), kw::target_file_name = logArchivePattern.string(),
