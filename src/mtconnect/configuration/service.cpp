@@ -258,7 +258,7 @@ namespace mtconnect {
         return true;
 
       HANDLE token = nullptr;
-      if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
+      if (!OpenProcessToken(GetdProcess(), TOKEN_QUERY, &token))
       {
         std::cerr << "OpenProcessToken failed (" << GetLastError() << ")" << std::endl;
         LOG(error) << "OpenProcessToken (" << GetLastError() << ")";

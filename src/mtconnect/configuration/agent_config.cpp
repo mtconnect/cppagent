@@ -176,8 +176,9 @@ namespace mtconnect::configuration {
         cerr << "Loading configuration from:" << *path << endl;
 
         m_configFile = fs::canonical(*path);
-        addPathFront(m_configPaths, m_configFile.parent_path());
-        addPathBack(m_dataPaths, m_configFile.parent_path());
+        m_configPath = m_configFile.parent_path();
+        addPathFront(m_configPaths, m_configPath);
+        addPathBack(m_dataPaths, m_configPath);
 
         ifstream file(m_configFile.c_str());
         std::stringstream buffer;
@@ -617,7 +618,12 @@ namespace mtconnect::configuration {
     // Get file names and patterns from the options.
     auto file_name = *GetOption<string>(options, "file_name");
     auto archive_pattern = *GetOption<string>(options, "archive_pattern");
-
+    
+    logDirectory = m_configPath;
+    logFileName = fs::path(file_name);
+    if (logFileName.is_absolute())
+      logDirectory = logFileName.parent_path();
+    
     logArchivePattern = fs::path(archive_pattern);
     if (!logArchivePattern.has_filename())
     {
@@ -625,18 +631,14 @@ namespace mtconnect::configuration {
     }
 
     if (logArchivePattern.is_relative())
-      logArchivePattern = fs::current_path() / logArchivePattern;
-
-    // Get the log directory from the archive path.
-    logDirectory = logArchivePattern.parent_path();
+      logArchivePattern = logDirectory / logArchivePattern;
+    else
+      logDirectory = logArchivePattern.parent_path();
 
     // If the file name does not specify a log directory, use the
     // archive directory
-    logFileName = fs::path(file_name);
-    if (!logFileName.has_parent_path())
+    if (!logFileName.has_parent_path() || logFileName.is_relative())
       logFileName = logDirectory / logFileName;
-    else if (logFileName.is_relative())
-      logFileName = fs::current_path() / logFileName;
 
     // Create a text file sink
     auto sink = boost::make_shared<text_sink>(
