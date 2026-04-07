@@ -374,6 +374,7 @@ namespace mtconnect {
       std::string m_devicesFile;
       std::filesystem::path m_exePath;
       std::filesystem::path m_working;
+      std::filesystem::path m_configPath;
 
       std::list<std::filesystem::path> m_configPaths;
       std::list<std::filesystem::path> m_dataPaths;
