@@ -619,30 +619,51 @@ namespace mtconnect::configuration {
     auto file_name = *GetOption<string>(options, "file_name");
     auto archive_pattern = *GetOption<string>(options, "archive_pattern");
     
+    // Default the log directory to the configuration file path.
     logDirectory = m_configPath;
     logFileName = fs::path(file_name);
+    logArchivePattern = fs::path(archive_pattern);
+
+    // Determine the log directory based on the provided file name and archive pattern
     if (logFileName.is_absolute())
       logDirectory = logFileName.parent_path();
+    else if (logArchivePattern.is_absolute())
+      logDirectory = logArchivePattern.parent_path();
     
-    logArchivePattern = fs::path(archive_pattern);
-    if (!logArchivePattern.has_filename())
+    // If the log file name is relative and has a parent path, use it to determine the log directory
+    if (logFileName.is_relative() && logFileName.has_parent_path())
     {
-      logArchivePattern = logArchivePattern / archiveFileName(get<string>(options["file_name"]));
+      logDirectory = logDirectory / logFileName.parent_path();
+      logFileName = logFileName.filename();
     }
+    else if (logArchivePattern.is_relative() && logArchivePattern.has_parent_path())
+    {
+      logDirectory = logDirectory / logArchivePattern.parent_path();
+      logArchivePattern = logArchivePattern.filename();
+    }
+
+    // Make sure the log archive pattern includes a file name, use the default file name as the base.
+    if (!logArchivePattern.has_filename())
+      logArchivePattern = logArchivePattern / archiveFileName(get<string>(options["file_name"]));
+
+    // Make the logArchivePattern and logFileName absolute paths
+    logDirectory = logDirectory.lexically_normal();
 
     if (logArchivePattern.is_relative())
       logArchivePattern = logDirectory / logArchivePattern;
-    else
-      logDirectory = logArchivePattern.parent_path();
+    logArchivePattern = logArchivePattern.lexically_normal();
+    auto archiveDir = logArchivePattern.parent_path();
+    fs::create_directories(logArchivePattern.parent_path());
 
-    // If the file name does not specify a log directory, use the
-    // archive directory
-    if (!logFileName.has_parent_path() || logFileName.is_relative())
+    if (logFileName.is_relative())
       logFileName = logDirectory / logFileName;
+    logFileName = logFileName.lexically_normal();
+    fs::create_directories(logFileName.parent_path());
+
 
     // Create a text file sink
     auto sink = boost::make_shared<text_sink>(
-        kw::file_name = logFileName, kw::target_file_name = logArchivePattern.filename(),
+        kw::file_name = logFileName.string(), kw::target_file_name = logArchivePattern.string(),
         kw::auto_flush = true, kw::rotation_size = logRotationSize,
         kw::open_mode = ios_base::out | ios_base::app, kw::format = formatter);
 
@@ -651,7 +672,8 @@ namespace mtconnect::configuration {
 
     // Set up where the rotated files will be stored
     sink->locked_backend()->set_file_collector(logr::sinks::file::make_collector(
-        kw::target = logDirectory, kw::max_size = maxLogFileSize, kw::max_files = max_index));
+        kw::target = archiveDir.string(), kw::max_size = maxLogFileSize,
+        kw::max_files = max_index));
 
     if (rotationLogInterval > 0)
     {
