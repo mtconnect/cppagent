@@ -180,18 +180,18 @@ namespace mtconnect::source::adapter::agent_adapter {
       return false;
     }
 
-    m_session->m_handler = m_handler.get();
-    m_session->m_identity = m_identity;
-    m_session->m_closeConnectionAfterResponse = m_closeConnectionAfterResponse;
-    m_session->m_updateAssets = [this]() { updateAssets(); };
+    m_session->setHandler(m_handler.get());
+    m_session->setIdentity(m_identity);
+    m_session->setCloseConnectionAfterResponse(m_closeConnectionAfterResponse);
+    m_session->setUpdateAssets([this]() { updateAssets(); });
 
-    m_assetSession->m_handler = m_handler.get();
-    m_assetSession->m_identity = m_identity;
-    m_assetSession->m_closeConnectionAfterResponse = m_closeConnectionAfterResponse;
+    m_assetSession->setHandler(m_handler.get());
+    m_assetSession->setIdentity(m_identity);
+    m_assetSession->setCloseConnectionAfterResponse(m_closeConnectionAfterResponse);
 
     using namespace std::placeholders;
-    m_assetSession->m_failed = std::bind(&AgentAdapter::assetsFailed, this, _1);
-    m_session->m_failed = std::bind(&AgentAdapter::streamsFailed, this, _1);
+    m_assetSession->setFailed(std::bind(&AgentAdapter::assetsFailed, this, _1));
+    m_session->setFailed(std::bind(&AgentAdapter::streamsFailed, this, _1));
 
     run();
 
@@ -227,15 +227,16 @@ namespace mtconnect::source::adapter::agent_adapter {
     }
 
     m_reconnectTimer.expires_after(m_reconnectInterval);
-    m_reconnectTimer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
-      if (!ec)
-      {
-        if (canRecover() && m_streamRequest)
-          m_session->makeRequest(*m_streamRequest);
-        else
-          run();
-      }
-    }));
+    m_reconnectTimer.async_wait(asio::bind_executor(
+        m_strand, [weak = std::weak_ptr(getptr())](boost::system::error_code ec) {
+          if (auto self = weak.lock(); self && !ec)
+          {
+            if (self->canRecover() && self->m_streamRequest)
+              self->m_session->makeRequest(*self->m_streamRequest);
+            else
+              self->run();
+          }
+        }));
   }
 
   void AgentAdapter::recoverAssetRequest()
@@ -243,11 +244,11 @@ namespace mtconnect::source::adapter::agent_adapter {
     if (m_assetRequest)
     {
       m_assetRetryTimer.expires_after(m_reconnectInterval);
-      m_assetRetryTimer.async_wait(
-          asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
-            if (!ec && m_assetRequest)
+      m_assetRetryTimer.async_wait(asio::bind_executor(
+          m_strand, [weak = std::weak_ptr(getptr())](boost::system::error_code ec) {
+            if (auto self = weak.lock(); self && !ec && self->m_assetRequest)
             {
-              m_assetSession->makeRequest(*m_assetRequest);
+              self->m_assetSession->makeRequest(*self->m_assetRequest);
             }
           }));
     }
@@ -406,11 +407,11 @@ namespace mtconnect::source::adapter::agent_adapter {
                       {"count", lexical_cast<string>(m_count)}});
       m_streamRequest.emplace(m_sourceDevice, "sample", query, false, [this]() {
         m_pollingTimer.expires_after(m_pollingInterval);
-        m_pollingTimer.async_wait(
-            asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
-              if (!ec && m_streamRequest)
+        m_pollingTimer.async_wait(asio::bind_executor(
+            m_strand, [weak = std::weak_ptr(getptr())](boost::system::error_code ec) {
+              if (auto self = weak.lock(); self && !ec && self->m_streamRequest)
               {
-                sample();
+                self->sample();
               }
             }));
         return true;

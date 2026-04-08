@@ -56,7 +56,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     /// @return const lowest protocol layer
     const auto &lowestLayer() const { return beast::get_lowest_layer(m_stream); }
 
-    shared_ptr<HttpsSession> getptr()
+    std::shared_ptr<HttpsSession> getptr()
     {
       return std::static_pointer_cast<HttpsSession>(shared_from_this());
     }
@@ -88,7 +88,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       if (!m_request)
       {
         lowestLayer().close();
-        LOG(error) << "Connected and no reqiest";
+        LOG(error) << "Connected and no request";
         return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "connect");
       }
 
@@ -160,6 +160,6 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   protected:
     beast::ssl_stream<beast::tcp_stream> m_stream;
-    optional<ssl::context> m_sslContext;
+    std::optional<ssl::context> m_sslContext;
   };
 }  // namespace mtconnect::source::adapter::agent_adapter
