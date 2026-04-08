@@ -15,11 +15,11 @@ on:
   # Enable automated build once verified
   pull_request:
     paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
-    branches: [ "main", "main-dev" ]
+    branches: [ "main" ]
 
   push:
     paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
-    branches: [ "main", "main-dev" ]
+    branches: [ "main" ]
     tags:
       - "v*.*.*"
 
@@ -98,6 +98,12 @@ jobs:
         set CTEST_OUTPUT_ON_FAILURE=TRUE
         conan create . --build=missing -pr conan/profiles/${{ matrix.profile }} -o "&:with_docs=False" -o "&:cpack=True" -o "&:cpack_destination=${{ env.ZIP_DIR }}" -o "&:shared=${{ matrix.shared }}"
 
+    - name: Clean conan cache
+      continue-on-error: true
+      run: |
+        conan remove mtconnect_agent -c
+        conan cache clean "*" --source --build --download
+
     - name: Release
       uses: softprops/action-gh-release@v2
       if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.shared == 'False' }}
@@ -152,7 +158,14 @@ jobs:
         export CTEST_OUTPUT_ON_FAILURE=TRUE
         conan create . --build=missing -pr conan/profiles/gcc  -o '&:shared=${{ matrix.shared }}' -o '&:with_docs=False' -o '&:cpack=True' -o '&:cpack_name=dist' -o '&:cpack_destination=${{ github.workspace }}'
 
+    - name: Clean conan cache
+      continue-on-error: true
+      run: |
+        conan remove mtconnect_agent -c
+        conan cache clean "*" --source --build --download
+
     - name: Cleanse package version
+      if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.shared == 'False' }}
       run: |
         PACKAGE_VERSION=${{ github.ref_name  }}
         if [[ $PACKAGE_VERSION == v*.*.*.* ]]; then
@@ -162,7 +175,9 @@ jobs:
         else
           echo "PACKAGE_VERSION=0.0.0.0" >> $GITHUB_ENV
         fi
+    
     - name: Prepare Debian Package
+      if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.shared == 'False' }}
       shell: bash
       working-directory: ${{ github.workspace }}
       run: |
@@ -170,7 +185,9 @@ jobs:
         ls -lah pkgroot
         tar -xzf dist.tar.gz -C pkgroot/
         mv pkgroot/dist pkgroot/usr
+    
     - name: Create Debian Package
+      if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.shared == 'False' }}
       id: create_debian_package
       uses: jiro4989/build-deb-action@v3
       with:
@@ -180,9 +197,10 @@ jobs:
         arch: amd64
         desc: "MTConnect Agent for Ununtu"
         maintainer: Datanomix <support@datanomix.io>
+    
     - name: Release
-      uses: softprops/action-gh-release@v2
       if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.shared == 'False' }}
+      uses: softprops/action-gh-release@v2
       with:
         name: Version ${{ github.ref_name }}
         draft: true
@@ -228,4 +246,9 @@ jobs:
       run: |
         export CTEST_OUTPUT_ON_FAILURE=TRUE
         conan create . --build=missing -pr conan/profiles/macos  -o '&:shared=${{ matrix.shared }}' -o '&:with_docs=False'
-        
+    
+    - name: Clean conan cache
+      continue-on-error: true
+      run: |
+        conan remove mtconnect_agent -c
+        conan cache clean "*" --source --build --download
