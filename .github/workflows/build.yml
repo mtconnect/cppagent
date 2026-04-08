@@ -216,6 +216,9 @@ jobs:
         shared: ["True", "False"]
             
     steps:
+    - name: Set macOS deployment target
+      run: echo "MACOSX_DEPLOYMENT_TARGET=15.0" >> $GITHUB_ENV
+
     - name: Checkout Agent
       uses: actions/checkout@v4
 
