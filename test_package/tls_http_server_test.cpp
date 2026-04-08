@@ -179,7 +179,7 @@ public:
       m_bodyParser->on_chunk_header(m_headerHandler);
 
       auto body = [this](std::uint64_t remain, boost::string_view body,
-                         boost::system::error_code& ev) -> unsigned long {
+                         boost::system::error_code& ev) -> std::size_t {
         // cout << "Reading body" << endl;
         m_count++;
         m_ec = ev;

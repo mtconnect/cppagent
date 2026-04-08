@@ -164,7 +164,7 @@ jobs:
         conan remove mtconnect_agent -c
         conan cache clean "*" --source --build --download
 
-    - name: Cleanse package version
+    - name: Derive Package Version
       if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.shared == 'False' }}
       run: |
         PACKAGE_VERSION=${{ github.ref_name  }}
