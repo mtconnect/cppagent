@@ -135,7 +135,7 @@ protected:
   std::map<string, DevicePtr> m_devices;
 };
 
-inline DataSetEntry operator"" _E(const char *c, std::size_t) { return DataSetEntry(c); }
+inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
 using namespace date::literals;
 
 /// @test verify the json mapper can map an object with a timestamp and a series of observations

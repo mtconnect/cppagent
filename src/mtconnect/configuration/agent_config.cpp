@@ -529,8 +529,8 @@ namespace mtconnect::configuration {
 
     ConfigOptions options;
     AddDefaultedOptions(logger, options,
-                        {{"max_size", "10mb"s},
-                         {"rotation_size", "2mb"s},
+                        {{"max_size", "2mb"s},
+                         {"max_archive_size", "10mb"s},
                          {"max_index", 9},
                          {"file_name", defaultFileName},
                          {"archive_pattern", defaultArchivePattern}});
@@ -594,7 +594,7 @@ namespace mtconnect::configuration {
       }
     }
 
-    auto &maxLogFileSize = logChannel.m_maxLogFileSize;
+    auto &maxLogArchiveSize = logChannel.m_maxLogArchiveSize;
     auto &logRotationSize = logChannel.m_logRotationSize;
     auto &rotationLogInterval = logChannel.m_rotationLogInterval;
     auto &logArchivePattern = logChannel.m_logArchivePattern;
@@ -602,8 +602,8 @@ namespace mtconnect::configuration {
     auto &archiveLogDirectory = logChannel.m_archiveLogDirectory;
     auto &logFileName = logChannel.m_logFileName;
 
-    maxLogFileSize = ConvertFileSize(options, "max_size", maxLogFileSize);
-    logRotationSize = ConvertFileSize(options, "rotation_size", logRotationSize);
+    maxLogArchiveSize = ConvertFileSize(options, "max_archive_size", maxLogArchiveSize);
+    logRotationSize = ConvertFileSize(options, "max_size", logRotationSize);
     int max_index = *GetOption<int>(options, "max_index");
 
     if (auto sched = GetOption<string>(options, "schedule"))
@@ -673,7 +673,7 @@ namespace mtconnect::configuration {
 
     // Set up where the rotated files will be stored
     sink->locked_backend()->set_file_collector(logr::sinks::file::make_collector(
-        kw::target = archiveLogDirectory.string(), kw::max_size = maxLogFileSize,
+        kw::target = archiveLogDirectory.string(), kw::max_size = maxLogArchiveSize,
         kw::max_files = max_index));
 
     if (rotationLogInterval > 0)

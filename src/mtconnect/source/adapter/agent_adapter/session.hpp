@@ -101,13 +101,24 @@ namespace mtconnect::source::adapter::agent_adapter {
     virtual bool makeRequest(const Request &request) = 0;
     ///@}
 
-    Handler *m_handler = nullptr;
-    std::string m_identity;
-    Failure m_failed;
-    UpdateAssets m_updateAssets;
-    bool m_closeConnectionAfterResponse = false;
-    std::chrono::milliseconds m_timeout = std::chrono::milliseconds(30000);
-    bool m_closeOnRead = false;
+    /// @name Setters for session configuration
+    ///@{
+    void setHandler(Handler *handler) { m_handler = handler; }
+    void setIdentity(const std::string &identity) { m_identity = identity; }
+    void setFailed(Failure failed) { m_failed = std::move(failed); }
+    void setUpdateAssets(UpdateAssets updateAssets) { m_updateAssets = std::move(updateAssets); }
+    void setCloseConnectionAfterResponse(bool close) { m_closeConnectionAfterResponse = close; }
+    void setTimeout(std::chrono::milliseconds timeout) { m_timeout = timeout; }
+    ///@}
+
+  protected:
+    Handler *m_handler = nullptr;                   ///< Pipeline handler for processing data
+    std::string m_identity;                         ///< Unique identity hash for this session
+    Failure m_failed;                               ///< Callback invoked on connection failure
+    UpdateAssets m_updateAssets;                     ///< Callback to trigger asset updates
+    bool m_closeConnectionAfterResponse = false;    ///< Close connection after each response
+    std::chrono::milliseconds m_timeout = std::chrono::milliseconds(30000);  ///< I/O timeout
+    bool m_closeOnRead = false;                     ///< Close after read (HTTP 1.0 or Connection: close)
   };
 
 }  // namespace mtconnect::source::adapter::agent_adapter

@@ -77,7 +77,7 @@ using namespace std::literals;
 using namespace chrono_literals;
 using namespace date::literals;
 
-inline DataSetEntry operator"" _E(const char *c, std::size_t) { return DataSetEntry(c); }
+inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
 
 TEST_F(DataSetTest, DataItem)
 {

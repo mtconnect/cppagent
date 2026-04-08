@@ -36,7 +36,7 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
 
-inline DataSetEntry operator"" _E(const char *c, std::size_t) { return DataSetEntry(c); }
+inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
 
 // main
 int main(int argc, char *argv[])
