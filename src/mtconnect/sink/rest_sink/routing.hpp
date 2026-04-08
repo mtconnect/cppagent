@@ -17,8 +17,10 @@
 
 #pragma once
 
+#include <boost/algorithm/string.hpp>
 #include <boost/beast/http/verb.hpp>
 
+#include <iostream>
 #include <list>
 #include <optional>
 #include <regex>
@@ -84,7 +86,8 @@ namespace mtconnect::sink::rest_sink {
         m_pattern(pattern),
         m_command(request),
         m_function(function),
-        m_swagger(swagger)
+        m_swagger(swagger),
+        m_catchAll(true)
     {}
 
     /// @brief Added summary and description to the routing
@@ -295,6 +298,15 @@ namespace mtconnect::sink::rest_sink {
       return true;
     }
 
+    /// @brief check if the routing's path pattern matches a given path (ignoring verb)
+    /// @param[in] path the request path to test
+    /// @return `true` if the path matches this routing's pattern
+    bool matchesPath(const std::string &path) const
+    {
+      std::smatch m;
+      return std::regex_match(path, m, m_pattern);
+    }
+
     /// @brief check if this is related to a swagger API
     /// @returns `true` if related to swagger
     auto isSwagger() const { return m_swagger; }
@@ -303,6 +315,10 @@ namespace mtconnect::sink::rest_sink {
     const auto &getPath() const { return m_path; }
     /// @brief Get the routing `verb`
     const auto &getVerb() const { return m_verb; }
+
+    /// @brief Check if the route is a catch-all (every path segment is a parameter)
+    /// @returns `true` if all path segments are parameters (e.g. `/{device}`)
+    auto isCatchAll() const { return m_catchAll; }
 
     /// @brief Get the optional command associated with the routing
     /// @returns optional routing
@@ -319,21 +335,60 @@ namespace mtconnect::sink::rest_sink {
   protected:
     void pathParameters(std::string s)
     {
-      std::regex reg("\\{([^}]+)\\}");
-      std::smatch match;
       std::stringstream pat;
 
-      while (regex_search(s, match, reg))
+      using namespace boost::algorithm;
+      using SplitList = std::list<boost::iterator_range<std::string::iterator>>;
+
+      SplitList parts;
+      auto pos = s.find_first_not_of('/');
+      if (pos != std::string::npos)
       {
-        pat << match.prefix() << "([^/]+)";
-        m_pathParameters.emplace_back(match[1]);
-        s = match.suffix().str();
+        auto range = boost::make_iterator_range(s.begin() + pos, s.end());
+        split(parts, range, [](char c) { return c == '/'; });
       }
-      pat << s;
+
+      bool hasLiteral = false;
+      for (auto &p : parts)
+      {
+        auto start = p.begin();
+        auto end = p.end();
+
+        auto openBrace = std::find(start, end, '{');
+        decltype(openBrace) closeBrace {end};
+        if (openBrace != end && std::distance(openBrace, end) > 2)
+          closeBrace = std::find(openBrace + 1, end, '}');
+
+        pat << "/";
+        if (openBrace != end && closeBrace != end)
+        {
+          if (openBrace > start)
+          {
+            pat << std::string_view(start, openBrace);
+            hasLiteral = true;
+          }
+          std::string_view param(openBrace + 1, closeBrace);
+          pat << "([^/]+)";
+          if (closeBrace + 1 < end)
+          {
+            pat << std::string_view(closeBrace + 1, end);
+            hasLiteral = true;
+          }
+          m_pathParameters.emplace_back(param);
+        }
+        else
+        {
+          pat << std::string_view(start, end);
+          hasLiteral = true;
+        }
+      }
       pat << "/?";
 
       m_patternText = pat.str();
       m_pattern = std::regex(m_patternText);
+
+      // A route is catch-all if it has parameters but no literal path segments
+      m_catchAll = !m_pathParameters.empty() && !hasLiteral;
     }
 
     void queryParameters(std::string s)
@@ -513,5 +568,6 @@ namespace mtconnect::sink::rest_sink {
     std::optional<std::string> m_description;
 
     bool m_swagger = false;
+    bool m_catchAll = false;
   };
 }  // namespace mtconnect::sink::rest_sink

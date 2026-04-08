@@ -524,7 +524,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     void createChunkBodyHandler()
     {
       m_chunkHandler = [this](std::uint64_t remain, boost::string_view body,
-                              boost::system::error_code &ev) -> unsigned long {
+                              boost::system::error_code &ev) -> std::size_t {
         if (!m_request)
         {
           derived().lowestLayer().close();
@@ -607,7 +607,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     asio::io_context::strand m_strand;
     url::Url m_url;
 
-    std::function<std::uint64_t(std::uint64_t, boost::string_view, boost::system::error_code &)>
+    std::function<std::size_t(std::uint64_t, boost::string_view, boost::system::error_code &)>
         m_chunkHandler;
     std::function<void(std::uint64_t, boost::string_view, boost::system::error_code &)>
         m_chunkHeaderHandler;

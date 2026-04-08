@@ -166,8 +166,8 @@ namespace mtconnect {
         }
         catch (entity::PropertyError &e)
         {
-          LOG(warning) << "Cannot convert value for data item id '" << dataItem->getId()
-                       << "': " << *token << " - " << e.what();
+          LOG(debug) << "Cannot convert value for data item id '" << dataItem->getId()
+                     << "': " << *token << " - " << e.what();
           if (schemaVersion >= SCHEMA_VERSION(2, 5) && validation)
           {
             props.insert_or_assign("quality", "INVALID"s);

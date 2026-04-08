@@ -19,6 +19,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/coroutine.hpp>
 #include <boost/beast.hpp>
@@ -26,6 +27,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
+#include <boost/range/adaptor/transformed.hpp>
 #include <boost/tokenizer.hpp>
 
 #include <thread>
@@ -411,6 +413,46 @@ namespace mtconnect::sink::rest_sink {
 
     addRouting({boost::beast::http::verb::get, "/swagger?pretty={bool:false}", handler, true});
     // addRouting({boost::beast::http::verb::get, "/swagger.yaml", handler, true});
+  }
+
+  bool Server::handleOptionsRequest(SessionPtr session, const RequestPtr request)
+  {
+    using namespace boost;
+    using namespace adaptors;
+    set<http::verb> specificVerbs;
+    set<http::verb> catchAllVerbs;
+    for (const auto &r : m_routings)
+    {
+      if (!r.isSwagger() && r.matchesPath(request->m_path))
+      {
+        if (r.isCatchAll())
+          catchAllVerbs.insert(r.getVerb());
+        else
+          specificVerbs.insert(r.getVerb());
+      }
+    }
+
+    // If any specific route matched, use only those; otherwise fall back to catch-alls
+    auto &verbs = specificVerbs.empty() ? catchAllVerbs : specificVerbs;
+
+    // OPTIONS is always allowed
+    verbs.insert(http::verb::options);
+
+    // Build the Allow / Access-Control-Allow-Methods header value
+    string methods = algorithm::join(
+        verbs | transformed([](http::verb v) { return string(http::to_string(v)); }), ", ");
+
+    auto response = std::make_unique<Response>(status::no_content, "", "text/plain");
+    response->m_close = false;
+    response->m_fields.emplace_back("Allow", methods);
+    response->m_fields.emplace_back("Access-Control-Allow-Methods", methods);
+    response->m_fields.emplace_back("Access-Control-Allow-Headers",
+                                    "Content-Type, Accept, Accept-Encoding");
+    response->m_fields.emplace_back("Access-Control-Max-Age", "86400");
+
+    session->writeResponse(std::move(response));
+
+    return true;
   }
 
 }  // namespace mtconnect::sink::rest_sink

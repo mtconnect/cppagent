@@ -173,6 +173,10 @@ namespace mtconnect::sink::rest_sink {
           else
             message = "Command failed: " + *request->m_command;
         }
+        else if (request->m_verb == boost::beast::http::verb::options)
+        {
+          success = handleOptionsRequest(session, request);
+        }
         else
         {
           for (auto &r : m_routings)
@@ -296,6 +300,16 @@ namespace mtconnect::sink::rest_sink {
     /// routing is added.
     template <typename T>
     const void renderSwaggerResponse(T &format);
+    /// @}
+
+    /// @name CORS Support
+    /// @{
+    ///
+    /// @brief Handle OPTIONS request for CORS preflight requests
+    /// @param[in] session the client session
+    /// @param[in] request the incoming request
+    /// @return `true` if the request was handled, otherwise `false` and a 404 will be returned
+    bool handleOptionsRequest(SessionPtr session, const RequestPtr request);
     /// @}
 
   protected:

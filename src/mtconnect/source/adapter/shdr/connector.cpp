@@ -98,10 +98,10 @@ namespace mtconnect::source::adapter::shdr {
 
     if (ec)
     {
-      LOG(error) << "Cannot resolve address: " << m_server << ":" << m_port;
-      LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
-      LOG(error) << "Will retry resolution of " << m_server << " in " << m_reconnectInterval.count()
-                 << " milliseconds";
+      LOG(warning) << "Cannot resolve address: " << m_server << ":" << m_port;
+      LOG(warning) << ec.message();
+      LOG(warning) << "Will retry resolution of " << m_server << " in "
+                   << m_reconnectInterval.count() << " milliseconds";
 
       m_timer.expires_after(m_reconnectInterval);
       m_timer.async_wait([this](boost::system::error_code ec) {
@@ -136,8 +136,9 @@ namespace mtconnect::source::adapter::shdr {
     return true;
   }
 
-  /// @brief Attempt to reconnect after a delay. If the server is a hostname, re-resolve it to get the current IP
-  /// address in case it has changed. If the server is a static IP address, just reconnect.
+  /// @brief Attempt to reconnect after a delay. If the server is a hostname, re-resolve it to get
+  /// the current IP address in case it has changed. If the server is a static IP address, just
+  /// reconnect.
   inline void Connector::asyncTryConnect()
   {
     NAMED_SCOPE("Connector::asyncTryConnect");
@@ -203,7 +204,7 @@ namespace mtconnect::source::adapter::shdr {
       auto remote = m_socket.remote_endpoint(rec);
       if (rec)
       {
-        LOG(error) << "Failed to get remote endpoint: " << rec.message();
+        LOG(warning) << "Failed to get remote endpoint: " << rec.message();
       }
       else
       {
@@ -233,7 +234,7 @@ namespace mtconnect::source::adapter::shdr {
 
     if (ec)
     {
-      LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
+      LOG(error) << ec.message();
       reconnect();
     }
     else
@@ -271,7 +272,7 @@ namespace mtconnect::source::adapter::shdr {
 
     if (ec)
     {
-      LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
+      LOG(error) << ec.message();
       reconnect();
     }
   }
@@ -292,15 +293,14 @@ namespace mtconnect::source::adapter::shdr {
     m_receiveTimeout.async_wait([this](sys::error_code ec) {
       if (!ec)
       {
-        LOG(error) << "(Port:" << m_localPort << ")"
-                   << " connect: Did not receive data for over: " << m_receiveTimeLimit.count()
-                   << " ms";
+        LOG(warning) << "(Port:" << m_localPort << ")"
+                     << " connect: Did not receive data for over: " << m_receiveTimeLimit.count()
+                     << " ms";
         asio::dispatch(m_strand, boost::bind(&Connector::reconnect, this));
       }
       else if (ec != boost::asio::error::operation_aborted)
       {
-        LOG(error) << "Receive timeout: " << ec.category().message(ec.value()) << ": "
-                   << ec.message();
+        LOG(error) << "Receive timeout: " << ec.message();
       }
     });
   }
@@ -413,7 +413,7 @@ namespace mtconnect::source::adapter::shdr {
     }
     else if (ec != boost::asio::error::operation_aborted)
     {
-      LOG(error) << "heartbeat: " << ec.category().message(ec.value()) << ": " << ec.message();
+      LOG(error) << "heartbeat: " << ec.message();
     }
   }
 

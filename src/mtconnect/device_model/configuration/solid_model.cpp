@@ -29,11 +29,12 @@ namespace mtconnect {
         if (!solidModel)
         {
           static auto transformation = make_shared<Factory>(
-                                                            Requirements {Requirement("Translation", ValueType::VECTOR, 3, false),
-                                                              Requirement("Rotation", ValueType::VECTOR, 3, false),
-                                                              Requirement("TranslationDataSet", ValueType::DATA_SET, false),
-                                                              Requirement("RotationDataSet", ValueType::DATA_SET, false)});
-          transformation->setOrder({"Translation", "TranslationDataSet", "Rotation", "RotationDataSet"});
+              Requirements {Requirement("Translation", ValueType::VECTOR, 3, false),
+                            Requirement("Rotation", ValueType::VECTOR, 3, false),
+                            Requirement("TranslationDataSet", ValueType::DATA_SET, false),
+                            Requirement("RotationDataSet", ValueType::DATA_SET, false)});
+          transformation->setOrder(
+              {"Translation", "TranslationDataSet", "Rotation", "RotationDataSet"});
 
           solidModel = make_shared<Factory>(
               Requirements {{"id", true},
