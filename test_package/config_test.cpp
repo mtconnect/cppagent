@@ -779,13 +779,15 @@ MaxCachedFileSize = 2g
 
   TEST_F(ConfigTest, log_output_should_set_archive_file_pattern)
   {
+    auto root {createTempDirectory("log_1")};
+    m_config->setConfigPath(root);
     m_config->setDebug(false);
 
-    string str(R"(
+    string str = "Devices = " TEST_RESOURCE_DIR "/samples/min_config.xml" R"(
 logger_config {
   output = file agent.log
 }
-)");
+)";
 
     m_config->loadConfig(str);
 
@@ -794,18 +796,20 @@ logger_config {
 
     EXPECT_EQ("agent_%Y-%m-%d_%H-%M-%S_%N.log", m_config->getLogArchivePattern().filename());
     EXPECT_EQ("agent.log", m_config->getLogFileName().filename());
-    EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
+    EXPECT_PATH_EQ(root, m_config->getLogDirectory());
   }
 
   TEST_F(ConfigTest, log_output_should_configure_file_name)
   {
+    auto root {createTempDirectory("log_2")};
+    m_config->setConfigPath(root);
     m_config->setDebug(false);
-
-    string str(R"(
+    
+    string str = "Devices = " TEST_RESOURCE_DIR "/samples/min_config.xml" R"(
 logger_config {
   output = file logging.log logging_%N.log
 }
-)");
+)";
 
     m_config->loadConfig(str);
 
@@ -814,19 +818,21 @@ logger_config {
 
     EXPECT_EQ("logging_%N.log", m_config->getLogArchivePattern().filename());
     EXPECT_EQ("logging.log", m_config->getLogFileName().filename());
-    EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
+    EXPECT_PATH_EQ(root, m_config->getLogDirectory());
   }
 
   TEST_F(ConfigTest, log_should_configure_file_name)
   {
+    auto root {createTempDirectory("log_3")};
+    m_config->setConfigPath(root);
     m_config->setDebug(false);
-
-    string str(R"(
+    
+    string str = "Devices = " TEST_RESOURCE_DIR "/samples/min_config.xml" R"(
 logger_config {
   file_name = logging.log
   archive_pattern = logging_%N.log
 }
-)");
+)";
 
     m_config->loadConfig(str);
 
@@ -835,26 +841,28 @@ logger_config {
 
     EXPECT_EQ("logging_%N.log", m_config->getLogArchivePattern().filename());
     EXPECT_EQ("logging.log", m_config->getLogFileName().filename());
-    EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
+    EXPECT_PATH_EQ(root, m_config->getLogDirectory());
   }
 
   TEST_F(ConfigTest, log_should_specify_relative_directory)
   {
+    auto root {createTempDirectory("log_3")};
+    m_config->setConfigPath(root);
     m_config->setDebug(false);
-
-    string str(R"(
+    
+    string str = "Devices = " TEST_RESOURCE_DIR "/samples/min_config.xml" R"(
 logger_config {
   file_name = logging.log
   archive_pattern = logs/logging_%N.log
 }
-)");
+)";
 
     m_config->loadConfig(str);
 
     auto sink = m_config->getLoggerSink();
     ASSERT_TRUE(sink);
 
-    fs::path path {std::filesystem::canonical(TEST_BIN_ROOT_DIR) / "logs"};
+    fs::path path { root / "logs"};
 
     EXPECT_PATH_EQ(path / "logging_%N.log", m_config->getLogArchivePattern());
     EXPECT_PATH_EQ(path / "logging.log", m_config->getLogFileName());
@@ -863,38 +871,43 @@ logger_config {
 
   TEST_F(ConfigTest, log_should_specify_relative_directory_with_active_in_parent)
   {
+    auto root {createTempDirectory("log_4")};
+    m_config->setConfigPath(root);
     m_config->setDebug(false);
-
-    string str(R"(
+    
+    string str = "Devices = " TEST_RESOURCE_DIR "/samples/min_config.xml" R"(
 logger_config {
   file_name = ./logging.log
   archive_pattern = logs/logging_%N.log
 }
-)");
+)";
 
     m_config->loadConfig(str);
 
     auto sink = m_config->getLoggerSink();
     ASSERT_TRUE(sink);
 
-    fs::path path {std::filesystem::canonical(TEST_BIN_ROOT_DIR)};
+    fs::path path {std::filesystem::canonical(root)};
 
     EXPECT_PATH_EQ(path / "logs" / "logging_%N.log", m_config->getLogArchivePattern());
     EXPECT_PATH_EQ(path / "logging.log", m_config->getLogFileName());
-    EXPECT_PATH_EQ(path / "logs", m_config->getLogDirectory());
+    EXPECT_PATH_EQ(path / "logs", m_config->getArchiveLogDirectory());
   }
 
   TEST_F(ConfigTest, log_should_specify_max_file_and_rotation_size)
   {
-    m_config->setDebug(false);
     using namespace boost::log::trivial;
 
-    string str(R"(
+    auto root {createTempDirectory("log_5")};
+    m_config->setConfigPath(root);
+    m_config->setDebug(false);
+    
+    string str = "Devices = " TEST_RESOURCE_DIR "/samples/min_config.xml" R"(
 logger_config {
   max_size = 1gb
   rotation_size = 20gb
 }
-)");
+)";
 
     m_config->loadConfig(str);
 
@@ -908,15 +921,17 @@ logger_config {
 
   TEST_F(ConfigTest, log_should_configure_logging_level)
   {
-    m_config->setDebug(false);
-
     using namespace boost::log::trivial;
 
-    string str(R"(
+    auto root {createTempDirectory("log_6")};
+    m_config->setConfigPath(root);
+    m_config->setDebug(false);
+    
+    string str = "Devices = " TEST_RESOURCE_DIR "/samples/min_config.xml" R"(
 logger_config {
    level = fatal
 }
-)");
+)";
 
     m_config->loadConfig(str);
 

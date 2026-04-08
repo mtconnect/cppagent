@@ -599,6 +599,7 @@ namespace mtconnect::configuration {
     auto &rotationLogInterval = logChannel.m_rotationLogInterval;
     auto &logArchivePattern = logChannel.m_logArchivePattern;
     auto &logDirectory = logChannel.m_logDirectory;
+    auto &archiveLogDirectory = logChannel.m_archiveLogDirectory;
     auto &logFileName = logChannel.m_logFileName;
 
     maxLogFileSize = ConvertFileSize(options, "max_size", maxLogFileSize);
@@ -652,8 +653,8 @@ namespace mtconnect::configuration {
     if (logArchivePattern.is_relative())
       logArchivePattern = logDirectory / logArchivePattern;
     logArchivePattern = logArchivePattern.lexically_normal();
-    auto archiveDir = logArchivePattern.parent_path();
-    fs::create_directories(logArchivePattern.parent_path());
+    archiveLogDirectory = logArchivePattern.parent_path();
+    fs::create_directories(archiveLogDirectory);
 
     if (logFileName.is_relative())
       logFileName = logDirectory / logFileName;
@@ -671,7 +672,7 @@ namespace mtconnect::configuration {
 
     // Set up where the rotated files will be stored
     sink->locked_backend()->set_file_collector(logr::sinks::file::make_collector(
-        kw::target = archiveDir.string(), kw::max_size = maxLogFileSize,
+        kw::target = archiveLogDirectory.string(), kw::max_size = maxLogFileSize,
         kw::max_files = max_index));
 
     if (rotationLogInterval > 0)

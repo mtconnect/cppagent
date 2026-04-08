@@ -183,6 +183,14 @@ namespace mtconnect {
       {
         return m_logChannels[channelName].m_logArchivePattern;
       }
+
+      /// @brief gets the archive log directory
+      /// @return log directory
+      const auto &getArchiveLogDirectory(const std::string &channelName = "agent")
+      {
+        return m_logChannels[channelName].m_archiveLogDirectory;
+      }
+
       /// @brief Get the maximum size of all the log files
       /// @return the maximum size of all log files
       auto getMaxLogFileSize(const std::string &channelName = "agent")
@@ -259,6 +267,10 @@ namespace mtconnect {
       /// @brief add a path to the plugin paths
       /// @param path the path to add
       void addPluginPath(const std::filesystem::path &path) { addPathBack(m_pluginPaths, path); }
+      
+      ///@brief set the config path for testing
+      ///@param path the path to set for the config file directory
+      void setConfigPath(const std::filesystem::path &path) { m_configPath = path; }
 
     protected:
       DevicePtr getDefaultDevice();
@@ -348,6 +360,7 @@ namespace mtconnect {
       {
         std::string m_channelName;
         std::filesystem::path m_logDirectory;
+        std::filesystem::path m_archiveLogDirectory;
         std::filesystem::path m_logArchivePattern;
         std::filesystem::path m_logFileName;
 
