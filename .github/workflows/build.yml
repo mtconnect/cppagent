@@ -66,7 +66,7 @@ jobs:
     - name: Checkout Agent
       uses: actions/checkout@v4
 
-    - name: Cache conan packages
+    - name: Restore cached conan packages
       id: cache
       uses: actions/cache@v4
       with:
@@ -131,7 +131,7 @@ jobs:
     - name: Checkout Agent
       uses: actions/checkout@v4
 
-    - name: Cache conan packages
+    - name: Restore cached conan packages
       id: cache
       uses: actions/cache@v4
       with:
@@ -219,7 +219,7 @@ jobs:
     - name: Checkout Agent
       uses: actions/checkout@v4
 
-    - name: Cache conan packages
+    - name: Restore cached conan packages
       id: cache
       uses: actions/cache@v4
       with:
