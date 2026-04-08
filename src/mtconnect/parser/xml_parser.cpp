@@ -218,8 +218,7 @@ namespace mtconnect::parser {
             {
               if (device)
                 LOG(warning) << "When loading device " << device->get<string>("name")
-                             << ", A problem was skipped: "
-                             << e->what();
+                             << ", A problem was skipped: " << e->what();
               else
                 LOG(error) << "Failed to load device: " << e->what();
             }

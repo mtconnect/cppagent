@@ -619,7 +619,7 @@ namespace mtconnect::configuration {
     // Get file names and patterns from the options.
     auto file_name = *GetOption<string>(options, "file_name");
     auto archive_pattern = *GetOption<string>(options, "archive_pattern");
-    
+
     // Default the log directory to the configuration file path.
     logDirectory = m_configPath;
     logFileName = fs::path(file_name);
@@ -630,7 +630,7 @@ namespace mtconnect::configuration {
       logDirectory = logFileName.parent_path();
     else if (logArchivePattern.is_absolute())
       logDirectory = logArchivePattern.parent_path();
-    
+
     // If the log file name is relative and has a parent path, use it to determine the log directory
     if (logFileName.is_relative() && logFileName.has_parent_path())
     {
@@ -643,7 +643,8 @@ namespace mtconnect::configuration {
       logArchivePattern = logArchivePattern.filename();
     }
 
-    // Make sure the log archive pattern includes a file name, use the default file name as the base.
+    // Make sure the log archive pattern includes a file name, use the default file name as the
+    // base.
     if (!logArchivePattern.has_filename())
       logArchivePattern = logArchivePattern / archiveFileName(get<string>(options["file_name"]));
 

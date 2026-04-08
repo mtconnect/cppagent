@@ -267,7 +267,7 @@ namespace mtconnect {
       /// @brief add a path to the plugin paths
       /// @param path the path to add
       void addPluginPath(const std::filesystem::path &path) { addPathBack(m_pluginPaths, path); }
-      
+
       ///@brief set the config path for testing
       ///@param path the path to set for the config file directory
       void setConfigPath(const std::filesystem::path &path) { m_configPath = path; }
