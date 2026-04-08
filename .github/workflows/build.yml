@@ -64,11 +64,11 @@ jobs:
         echo $CTEST_OUTPUT_ON_FAILURE
               
     - name: Checkout Agent
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Cache conan packages
       id: cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ${{ env.CONAN_HOME }}
         key: ${{ runner.os }}-build-${{ matrix.profile }}-${{ hashFiles('**/conanfile.py') }}
@@ -129,15 +129,15 @@ jobs:
         sudo apt install -y build-essential cmake gcc-11 g++-11 python3 autoconf automake
       
     - name: Checkout Agent
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Cache conan packages
       id: cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.conan2
         key: ${{ runner.os }}-build-${{ matrix.shared }}-${{ hashFiles('**/conanfile.py') }}
-                      
+
     - name: Install Conan
       uses: turtlebrowser/get-conan@v1.2
       
@@ -217,15 +217,15 @@ jobs:
             
     steps:
     - name: Checkout Agent
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Cache conan packages
       id: cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.conan2
         key: ${{ runner.os }}-build-${{ matrix.shared }}-${{ hashFiles('**/conanfile.py') }}
-                      
+
     - name: Install Conan
       run: |
         brew install conan
