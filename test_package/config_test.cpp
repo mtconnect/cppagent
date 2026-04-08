@@ -918,7 +918,7 @@ logger_config {
                  R"(
 logger_config {
   max_size = 1gb
-  rotation_size = 20gb
+  max_archive_size = 20gb
 }
 )";
 
@@ -928,8 +928,8 @@ logger_config {
     ASSERT_TRUE(sink);
 
     EXPECT_EQ(severity_level::info, m_config->getLogLevel());
-    EXPECT_EQ(1ll * 1024 * 1024 * 1024, m_config->getMaxLogFileSize());
-    EXPECT_EQ(20ll * 1024 * 1024 * 1024, m_config->getLogRotationSize());
+    EXPECT_EQ(1ll * 1024 * 1024 * 1024, m_config->getLogRotationSize());
+    EXPECT_EQ(20ll * 1024 * 1024 * 1024, m_config->getMaxLogArchiveSize());
   }
 
   TEST_F(ConfigTest, log_should_configure_logging_level)
@@ -1011,7 +1011,7 @@ logger_config {
   file_name = ./logging.log
   archive_pattern = logs/logging_%N.log
   # Make if very small
-  rotation_size = 1k
+  max_size = 1k
 }
 )";
 

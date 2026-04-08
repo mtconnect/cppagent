@@ -193,15 +193,15 @@ namespace mtconnect {
 
       /// @brief Get the maximum size of all the log files
       /// @return the maximum size of all log files
-      auto getMaxLogFileSize(const std::string &channelName = "agent")
-      {
-        return m_logChannels[channelName].m_maxLogFileSize;
-      }
-      /// @brief the maximum size of a log file when it triggers rolling over
-      /// @return the maxumum site of a log file
       auto getLogRotationSize(const std::string &channelName = "agent")
       {
         return m_logChannels[channelName].m_logRotationSize;
+      }
+      /// @brief the maximum size of a log file when it triggers rolling over
+      /// @return the maxumum site of a log file
+      auto getMaxLogArchiveSize(const std::string &channelName = "agent")
+      {
+        return m_logChannels[channelName].m_maxLogArchiveSize;
       }
       /// @brief How often to roll over the log file
       ///
@@ -364,7 +364,7 @@ namespace mtconnect {
         std::filesystem::path m_logArchivePattern;
         std::filesystem::path m_logFileName;
 
-        int64_t m_maxLogFileSize {0};
+        int64_t m_maxLogArchiveSize {0};
         int64_t m_logRotationSize {0};
         int64_t m_rotationLogInterval {0};
 
