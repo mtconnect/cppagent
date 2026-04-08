@@ -275,7 +275,7 @@ public:
   map<string, string> m_fields;
   string m_contentType;
 
-  std::function<std::uint64_t(std::uint64_t, boost::string_view, boost::system::error_code&)>
+  std::function<std::size_t(std::uint64_t, boost::string_view, boost::system::error_code&)>
       m_chunkHandler;
   std::function<void(std::uint64_t, boost::string_view, boost::system::error_code&)>
       m_headerHandler;
