@@ -106,8 +106,8 @@ protected:
   std::map<string, DataItemPtr> m_dataItems;
 };
 
-inline DataSetEntry operator"" _E(const char *c, std::size_t) { return DataSetEntry(c); }
-inline TableCell operator"" _C(const char *c, std::size_t) { return TableCell(c); }
+inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
+inline TableCell operator""_C(const char *c, std::size_t) { return TableCell(c); }
 
 TEST_F(DataItemMappingTest, should_map_simple_sample)
 {

@@ -123,14 +123,14 @@ protected:
   std::list<DevicePtr> m_devices;
 };
 
-Properties operator"" _value(unsigned long long value)
+Properties operator""_value(unsigned long long value)
 {
   return Properties {{"VALUE", int64_t(value)}};
 }
 
-Properties operator"" _value(long double value) { return Properties {{"VALUE", double(value)}}; }
+Properties operator""_value(long double value) { return Properties {{"VALUE", double(value)}}; }
 
-Properties operator"" _value(const char *value, size_t s)
+Properties operator""_value(const char *value, size_t s)
 {
   return Properties {{"VALUE", string(value)}};
 }

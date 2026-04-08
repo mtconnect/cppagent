@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
-Properties operator"" _value(const char *value, size_t s)
+Properties operator""_value(const char *value, size_t s)
 {
   return Properties {{"VALUE", string(value)}};
 }

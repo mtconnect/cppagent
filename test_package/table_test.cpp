@@ -80,8 +80,8 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-inline DataSetEntry operator"" _E(const char *c, std::size_t) { return DataSetEntry(c); }
-inline TableCell operator"" _C(const char *c, std::size_t) { return TableCell(c); }
+inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
+inline TableCell operator""_C(const char *c, std::size_t) { return TableCell(c); }
 
 TEST_F(TableTest, DataItem)
 {

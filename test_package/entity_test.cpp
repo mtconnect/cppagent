@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
-static inline int64_t operator"" _i64(unsigned long long int i) { return int64_t(i); }
+static inline int64_t operator""_i64(unsigned long long int i) { return int64_t(i); }
 
 class EntityTest : public testing::Test
 {
