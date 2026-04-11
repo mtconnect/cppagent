@@ -796,12 +796,12 @@ namespace mtconnect::configuration {
     catch (boost::property_tree::json_parser::json_parser_error &e)
     {
       cerr << "json file error: " << e.what() << " on line " << e.line() << endl;
-      throw e;
+      throw;
     }
-    catch (std::exception e)
+    catch (const std::exception &e)
     {
       cerr << "could not load config file: " << e.what() << endl;
-      throw e;
+      throw;
     }
 
     if (m_logChannels.empty())

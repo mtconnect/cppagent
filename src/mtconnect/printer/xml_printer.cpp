@@ -19,6 +19,8 @@
 
 #include <boost/asio/ip/host_name.hpp>
 
+#include <algorithm>
+#include <format>
 #include <set>
 #include <typeindex>
 #include <typeinfo>
@@ -255,6 +257,15 @@ namespace mtconnect::printer {
           xmlTextWriterWriteAttribute(writer, BAD_CAST key, BAD_CAST value.c_str()));
   }
 
+  template <typename T>
+    requires std::integral<T>
+  static inline void addAttribute(xmlTextWriterPtr writer, const char *key, T value)
+  {
+    auto str = std::format("{}", value);
+    THROW_IF_XML2_ERROR(
+        xmlTextWriterWriteAttribute(writer, BAD_CAST key, BAD_CAST str.c_str()));
+  }
+
   void addAttributes(xmlTextWriterPtr writer, const std::map<string, string> &attributes)
   {
     for (const auto &attr : attributes)
@@ -378,7 +389,7 @@ namespace mtconnect::printer {
       // Cleanup
       ret = writer.getContent();
     }
-    catch (string error)
+    catch (const string &error)
     {
       LOG(error) << "printError: " << error;
     }
@@ -416,7 +427,7 @@ namespace mtconnect::printer {
 
       ret = writer.getContent();
     }
-    catch (string error)
+    catch (const string &error)
     {
       LOG(error) << "printProbe: " << error;
     }
@@ -440,7 +451,7 @@ namespace mtconnect::printer {
 
       ret = writer.getContent();
     }
-    catch (string error)
+    catch (const string &error)
     {
       LOG(error) << "printProbe: " << error;
     }
@@ -471,7 +482,7 @@ namespace mtconnect::printer {
       // Sort the vector by category.
       if (observations.size() > 0)
       {
-        observations.sort(ObservationCompare);
+        std::sort(observations.begin(), observations.end(), ObservationCompare);
 
         AutoElement deviceElement(writer);
         {
@@ -522,7 +533,7 @@ namespace mtconnect::printer {
 
       ret = writer.getContent();
     }
-    catch (string error)
+    catch (const string &error)
     {
       LOG(error) << "printSample: " << error;
     }
@@ -557,7 +568,7 @@ namespace mtconnect::printer {
 
       ret = writer.getContent();
     }
-    catch (string error)
+    catch (const string &error)
     {
       LOG(error) << "printAssets: " << error;
     }
@@ -618,15 +629,21 @@ namespace mtconnect::printer {
 
     if (!style.empty())
     {
-      string pi = R"(xml-stylesheet type="text/xsl" href=")" + style + '"';
+      string pi;
+      pi.reserve(42 + style.size());
+      pi.append(R"(xml-stylesheet type="text/xsl" href=")").append(style).append("\"");
       THROW_IF_XML2_ERROR(xmlTextWriterStartPI(writer, BAD_CAST pi.c_str()));
       THROW_IF_XML2_ERROR(xmlTextWriterEndPI(writer));
     }
 
-    string rootName = "MTConnect" + xmlType;
+    string rootName;
+    rootName.reserve(10 + xmlType.size());
+    rootName.append("MTConnect").append(xmlType);
     if (!m_schemaVersion)
       defaultSchemaVersion();
-    string xmlns = "urn:mtconnect.org:" + rootName + ":" + *m_schemaVersion;
+    string xmlns;
+    xmlns.reserve(19 + rootName.size() + m_schemaVersion->size());
+    xmlns.append("urn:mtconnect.org:").append(rootName).append(":").append(*m_schemaVersion);
     string location;
 
     openElement(writer, rootName.c_str());
@@ -646,19 +663,23 @@ namespace mtconnect::printer {
       // Skip the mtconnect ns (always m)
       if (ns.first != "m")
       {
-        string attr = "xmlns:" + ns.first;
+        string attr;
+        attr.reserve(6 + ns.first.size());
+        attr.append("xmlns:").append(ns.first);
         addAttribute(writer, attr.c_str(), ns.second.mUrn);
 
         if (location.empty() && !ns.second.mSchemaLocation.empty())
         {
           // Always take the first location. There should only be one location!
-          location = ns.second.mUrn + " " + ns.second.mSchemaLocation;
+          location.reserve(ns.second.mUrn.size() + 1 + ns.second.mSchemaLocation.size());
+          location.append(ns.second.mUrn).append(" ").append(ns.second.mSchemaLocation);
         }
       }
       else if (!ns.second.mSchemaLocation.empty())
       {
         // This is the mtconnect namespace
-        mtcLocation = xmlns + " " + ns.second.mSchemaLocation;
+        mtcLocation.reserve(xmlns.size() + 1 + ns.second.mSchemaLocation.size());
+        mtcLocation.append(xmlns).append(" ").append(ns.second.mSchemaLocation);
       }
     }
 
@@ -666,8 +687,11 @@ namespace mtconnect::printer {
     if (location.empty() && !mtcLocation.empty())
       location = mtcLocation;
     else if (location.empty())
-      location = xmlns + " http://schemas.mtconnect.org/schemas/" + rootName + "_" +
-                 *m_schemaVersion + ".xsd";
+    {
+      location.reserve(xmlns.size() + 38 + rootName.size() + 1 + m_schemaVersion->size() + 4);
+      location.append(xmlns).append(" http://schemas.mtconnect.org/schemas/")
+              .append(rootName).append("_").append(*m_schemaVersion).append(".xsd");
+    }
 
     addAttribute(writer, "xsi:schemaLocation", location);
 
@@ -677,7 +701,7 @@ namespace mtconnect::printer {
     addAttribute(writer, "creationTime", getCurrentTime(GMT));
 
     addAttribute(writer, "sender", m_senderName);
-    addAttribute(writer, "instanceId", to_string(instanceId));
+    addAttribute(writer, "instanceId", instanceId);
 
     if (m_validation)
       addAttribute(writer, "validation", "true"s);
@@ -699,21 +723,21 @@ namespace mtconnect::printer {
 
     if (aType == eASSETS || aType == eDEVICES)
     {
-      addAttribute(writer, "assetBufferSize", to_string(assetBufferSize));
-      addAttribute(writer, "assetCount", to_string(assetCount));
+      addAttribute(writer, "assetBufferSize", assetBufferSize);
+      addAttribute(writer, "assetCount", assetCount);
     }
 
     if (aType == eDEVICES || aType == eERROR || aType == eSTREAMS)
     {
-      addAttribute(writer, "bufferSize", to_string(bufferSize));
+      addAttribute(writer, "bufferSize", bufferSize);
     }
 
     if (aType == eSTREAMS)
     {
       // Add additional attribtues for streams
-      addAttribute(writer, "nextSequence", to_string(nextSeq));
-      addAttribute(writer, "firstSequence", to_string(firstSeq));
-      addAttribute(writer, "lastSequence", to_string(lastSeq));
+      addAttribute(writer, "nextSequence", nextSeq);
+      addAttribute(writer, "firstSequence", firstSeq);
+      addAttribute(writer, "lastSequence", lastSeq);
     }
 
     if (schemaVersion < SCHEMA_VERSION(2, 0) && aType == eDEVICES && count && !count->empty())

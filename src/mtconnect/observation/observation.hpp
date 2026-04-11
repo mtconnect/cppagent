@@ -36,7 +36,7 @@ namespace mtconnect::observation {
   class Observation;
   using ObservationPtr = std::shared_ptr<Observation>;
   using ConstObservationPtr = std::shared_ptr<const Observation>;
-  using ObservationList = std::list<ObservationPtr>;
+  using ObservationList = std::vector<ObservationPtr>;
 
   /// @brief Abstract observation
   class AGENT_LIB_API Observation : public entity::Entity

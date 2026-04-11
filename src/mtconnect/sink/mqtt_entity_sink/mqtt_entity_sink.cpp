@@ -27,6 +27,9 @@
 #include "mtconnect/mqtt/mqtt_client_impl.hpp"
 #include "mtconnect/observation/observation.hpp"
 
+using namespace std;
+using namespace mtconnect;
+using namespace mtconnect::mqtt_client;
 using ptree = boost::property_tree::ptree;
 using json = nlohmann::json;
 
@@ -211,7 +214,7 @@ namespace mtconnect {
               std::lock_guard<std::mutex> lock(m_queueMutex);
               if (m_queuedObservations.size() >= MAX_QUEUE_SIZE)
               {
-                m_queuedObservations.erase(m_queuedObservations.begin());
+                m_queuedObservations.pop_front();
               }
               m_queuedObservations.push_back(obsCopy);
               obsCount++;
@@ -469,7 +472,7 @@ namespace mtconnect {
             LOG(warning) << "MqttEntitySink::publish: Observation queue full (" << MAX_QUEUE_SIZE
                          << "), dropping oldest observation for "
                          << m_queuedObservations.front()->getDataItem()->getId();
-            m_queuedObservations.erase(m_queuedObservations.begin());
+            m_queuedObservations.pop_front();
           }
           LOG(debug) << "MqttEntitySink::publish: Client not connected, queuing observation for "
                      << dataItem->getId();

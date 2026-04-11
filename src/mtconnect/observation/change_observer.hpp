@@ -21,6 +21,7 @@
 #include <boost/beast/http/status.hpp>
 #include <boost/bind/bind.hpp>
 
+#include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <vector>
@@ -87,6 +88,7 @@ namespace mtconnect::observation {
     /// @return `true` if successful
     bool waitFor(std::chrono::milliseconds duration)
     {
+      std::lock_guard<std::recursive_mutex> lock(m_mutex);
       m_noCancelOnSignal = true;
       m_timer.expires_after(duration);
       using std::placeholders::_1;
@@ -152,7 +154,7 @@ namespace mtconnect::observation {
     boost::asio::steady_timer m_timer;
 
     std::list<ChangeSignaler *> m_signalers;
-    volatile uint64_t m_sequence = UINT64_MAX;
+    std::atomic<uint64_t> m_sequence {UINT64_MAX};
     bool m_noCancelOnSignal {false};
 
   protected:

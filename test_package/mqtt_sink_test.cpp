@@ -40,6 +40,7 @@ using namespace mtconnect::device_model::data_item;
 using namespace mtconnect::sink::mqtt_sink;
 using namespace mtconnect::asset;
 using namespace mtconnect::configuration;
+using namespace mtconnect::mqtt_client;
 
 // main
 int main(int argc, char *argv[])

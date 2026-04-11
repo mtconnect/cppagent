@@ -22,6 +22,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <deque>
+
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/config.hpp"
 #include "mtconnect/configuration/agent_config.hpp"
@@ -30,9 +32,6 @@
 #include "mtconnect/sink/sink.hpp"
 #include "mtconnect/utilities.hpp"
 
-using namespace std;
-using namespace mtconnect;
-using namespace mtconnect::mqtt_client;
 using json = nlohmann::json;
 
 namespace mtconnect {
@@ -81,7 +80,7 @@ namespace mtconnect {
 
         /// @brief Gets the MQTT Client
         /// @return MqttClient
-        std::shared_ptr<MqttClient> getClient() { return m_client; }
+        std::shared_ptr<mqtt_client::MqttClient> getClient() { return m_client; }
 
         /// @brief Check if MQTT Client is Connected
         /// @return `true` when the client is connected
@@ -129,8 +128,8 @@ namespace mtconnect {
 
         ConfigOptions m_options;
 
-        std::shared_ptr<MqttClient> m_client;
-        std::vector<observation::ObservationPtr> m_queuedObservations;
+        std::shared_ptr<mqtt_client::MqttClient> m_client;
+        std::deque<observation::ObservationPtr> m_queuedObservations;
         std::mutex m_queueMutex;
       };
     }  // namespace mqtt_entity_sink

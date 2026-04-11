@@ -27,7 +27,7 @@
 #include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
-#define HEARTBEAT_FREQ 60000
+inline constexpr int HEARTBEAT_FREQ = 60000;
 
 namespace mtconnect::source::adapter::shdr {
   /// @brief Connection to an adapter socket
@@ -154,5 +154,6 @@ namespace mtconnect::source::adapter::shdr {
     std::chrono::milliseconds m_legacyTimeout;
     std::chrono::milliseconds m_reconnectInterval;
     std::chrono::milliseconds m_receiveTimeLimit;
+    std::mutex m_reconnectLock;
   };
 }  // namespace mtconnect::source::adapter::shdr

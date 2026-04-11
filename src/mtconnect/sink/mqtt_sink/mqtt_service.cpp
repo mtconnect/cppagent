@@ -26,6 +26,10 @@
 #include "mtconnect/mqtt/mqtt_client_impl.hpp"
 #include "mtconnect/printer/json_printer.hpp"
 
+using namespace std;
+using namespace mtconnect;
+using namespace mtconnect::entity;
+using namespace mtconnect::mqtt_client;
 using ptree = boost::property_tree::ptree;
 using json = nlohmann::json;
 

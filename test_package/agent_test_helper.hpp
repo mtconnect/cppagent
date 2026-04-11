@@ -498,11 +498,11 @@ public:
   }
 
   template <typename Rep, typename Period>
-  bool waitFor(const chrono::duration<Rep, Period> &time, function<bool()> pred)
+  bool waitFor(const std::chrono::duration<Rep, Period> &time, std::function<bool()> pred)
   {
     std::decay_t<decltype(time)> run = time / 2;
-    if (run > 500ms)
-      run = 500ms;
+    if (run > std::chrono::milliseconds(500))
+      run = std::chrono::milliseconds(500);
 
     boost::asio::steady_timer timer(m_ioContext);
     timer.expires_after(time);
@@ -524,7 +524,7 @@ public:
   }
 
   template <typename Rep, typename Period>
-  bool waitForResponseSent(const chrono::duration<Rep, Period> &time, const std::string &id)
+  bool waitForResponseSent(const std::chrono::duration<Rep, Period> &time, const std::string &id)
   {
     uint32_t initial = m_websocketSession->m_responsesSent[id];
     return waitFor(time, [this, initial, id]() -> bool {

@@ -47,6 +47,7 @@ namespace mtconnect {
   using namespace entity;
   using namespace pipeline;
   using namespace source::adapter;
+  using namespace mqtt_client;
 
   namespace source::adapter::mqtt_adapter {
 

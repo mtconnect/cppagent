@@ -230,7 +230,7 @@ namespace mtconnect::parser {
         xmlXPathFreeObject(devices);
       xmlXPathFreeContext(xpathCtx);
     }
-    catch (string e)
+    catch (const string &e)
     {
       if (devices)
         xmlXPathFreeObject(devices);
@@ -281,7 +281,7 @@ namespace mtconnect::parser {
         device = dynamic_pointer_cast<Device>(entity);
       }
     }
-    catch (string e)
+    catch (const string &e)
     {
       LOG(fatal) << "Cannot parse XML document: " << e;
       throw FatalException();
@@ -320,7 +320,7 @@ namespace mtconnect::parser {
                                                nullptr, XML_PARSE_NOBLANKS));
     }
 
-    catch (string e)
+    catch (const string &e)
     {
       LOG(fatal) << "Cannot parse XML document: " << e;
       throw FatalException();
