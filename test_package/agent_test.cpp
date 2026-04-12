@@ -2627,7 +2627,7 @@ TEST_F(AgentTest, should_initialize_observaton_to_initial_value_when_available)
 TEST_F(AgentTest, should_handle_japanese_characters)
 {
   using namespace nlohmann;
-  
+
   addAdapter({{configuration::FilterDuplicates, true}});
   auto agent = m_agentTestHelper->getAgent();
   auto logic = agent->getDataItemForDevice("LinuxCNC", "lp");

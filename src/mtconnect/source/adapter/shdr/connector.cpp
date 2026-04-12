@@ -71,7 +71,6 @@ namespace mtconnect::source::adapter::shdr {
       m_socket.cancel();
       m_socket.close();
     }
-
   }
 
   bool Connector::start() { return resolve(); }

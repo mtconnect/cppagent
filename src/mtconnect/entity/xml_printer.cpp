@@ -42,40 +42,6 @@ namespace mtconnect {
       return name;
     }
 
-    static inline void addAttributes(xmlTextWriterPtr writer,
-                                     const std::map<string, string> &attributes)
-    {
-      for (const auto &attr : attributes)
-      {
-        if (!attr.second.empty())
-        {
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first.c_str(),
-                                                          BAD_CAST attr.second.c_str()));
-        }
-      }
-    }
-
-    static void addSimpleElement(xmlTextWriterPtr writer, const string &element, const string &body,
-                                 const map<string, string> &attributes = {}, bool raw = false)
-    {
-      AutoElement ele(writer, element);
-
-      if (!attributes.empty())
-        addAttributes(writer, attributes);
-
-      if (!body.empty())
-      {
-        xmlChar *text = nullptr;
-        if (!raw)
-          text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
-        else
-          text = BAD_CAST body.c_str();
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
-        if (!raw)
-          xmlFree(text);
-      }
-    }
-
     void printDataSet(xmlTextWriterPtr writer, const std::string &name, const DataSet &set)
     {
       AutoElement ele(writer);

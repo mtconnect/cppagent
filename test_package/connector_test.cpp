@@ -112,8 +112,8 @@ public:
 class ConnectorTest : public testing::Test
 {
 protected:
-  ConnectorTest() : m_strand(m_context) { }
-  
+  ConnectorTest() : m_strand(m_context) {}
+
   void SetUp() override
   {
     m_connector = std::make_unique<TestConnector>(m_strand, "127.0.0.1", m_port);

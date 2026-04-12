@@ -18,10 +18,9 @@
 #include "mqtt_entity_sink.hpp"
 
 #include <iomanip>
-#include <sstream>
-
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <sstream>
 
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/entity/entity.hpp"

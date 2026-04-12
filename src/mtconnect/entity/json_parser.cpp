@@ -27,8 +27,8 @@ namespace rj = ::rapidjson;
 
 namespace mtconnect {
   namespace entity {
-    static EntityPtr parseJson(FactoryPtr factory, string entity_name,
-                               const rj::Value &jNode, ErrorList& errors)
+    static EntityPtr parseJson(FactoryPtr factory, string entity_name, const rj::Value& jNode,
+                               ErrorList& errors)
     {
       auto ef = factory->factoryFor(entity_name);
 
@@ -37,9 +37,7 @@ namespace mtconnect {
         Properties properties;
         EntityList* l {nullptr};
 
-        auto nodeSize = jNode.IsArray()    ? jNode.Size()
-                       : jNode.IsObject() ? jNode.MemberCount()
-                                          : 0;
+        auto nodeSize = jNode.IsArray() ? jNode.Size() : jNode.IsObject() ? jNode.MemberCount() : 0;
         if (ef->isList() && nodeSize > 0)
         {
           l = &properties["LIST"].emplace<EntityList>();
@@ -50,7 +48,7 @@ namespace mtconnect {
           for (auto it = jNode.MemberBegin(); it != jNode.MemberEnd(); ++it)
           {
             string property_key = it->name.GetString();
-            const auto &value = it->value;
+            const auto& value = it->value;
 
             if (property_key == "value" && !ef->hasRaw())
               property_key = "VALUE";
@@ -90,7 +88,7 @@ namespace mtconnect {
             for (auto it = jNode.MemberBegin(); it != jNode.MemberEnd(); ++it)
             {
               string key(it->name.GetString(), it->name.GetStringLength());
-              const auto &value = it->value;
+              const auto& value = it->value;
 
               if (value.IsObject() || value.IsArray())
               {
@@ -115,7 +113,7 @@ namespace mtconnect {
         {
           for (rj::SizeType i = 0; i < jNode.Size(); ++i)
           {
-            const auto &item = jNode[i];
+            const auto& item = jNode[i];
             if (item.IsObject() && item.MemberCount() > 0)
             {
               auto it = item.MemberBegin();
@@ -131,8 +129,7 @@ namespace mtconnect {
               else
               {
                 LOG(debug) << "Unexpected element: " << key;
-                errors.emplace_back(
-                    new EntityError("Invalid element '" + key + "'", entity_name));
+                errors.emplace_back(new EntityError("Invalid element '" + key + "'", entity_name));
               }
             }
           }
