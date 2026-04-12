@@ -118,8 +118,8 @@ namespace mtconnect::source::adapter::shdr {
     // Name of the server to connect to
     std::string m_server;
 
-    // Connection
-    boost::asio::io_context::strand m_strand;
+    // Connection – reference to the owning Source's strand (not a copy)
+    boost::asio::io_context::strand &m_strand;
     boost::asio::ip::tcp::socket m_socket;
     boost::asio::ip::tcp::endpoint m_endpoint;
     boost::asio::ip::tcp::resolver::results_type m_results;

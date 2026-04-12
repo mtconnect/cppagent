@@ -112,10 +112,11 @@ public:
 class ConnectorTest : public testing::Test
 {
 protected:
+  ConnectorTest() : m_strand(m_context) { }
+  
   void SetUp() override
   {
-    boost::asio::io_context::strand strand(m_context);
-    m_connector = std::make_unique<TestConnector>(strand, "127.0.0.1", m_port);
+    m_connector = std::make_unique<TestConnector>(m_strand, "127.0.0.1", m_port);
     m_connector->m_disconnected = true;
     m_connected = false;
   }
@@ -204,6 +205,7 @@ protected:
   unsigned short m_port {0};
   boost::asio::io_context m_context;
 
+  boost::asio::io_context::strand m_strand;
   std::unique_ptr<asio::ip::tcp::socket> m_server;
   std::unique_ptr<tcp::acceptor> m_acceptor;
   bool m_connected;
