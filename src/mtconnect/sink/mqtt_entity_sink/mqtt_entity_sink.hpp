@@ -20,8 +20,6 @@
 #include "boost/asio/io_context.hpp"
 #include <boost/dll/alias.hpp>
 
-#include <nlohmann/json.hpp>
-
 #include <deque>
 
 #include "mtconnect/buffer/checkpoint.hpp"
@@ -31,8 +29,6 @@
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/sink/sink.hpp"
 #include "mtconnect/utilities.hpp"
-
-using json = nlohmann::json;
 
 namespace mtconnect {
   namespace sink {

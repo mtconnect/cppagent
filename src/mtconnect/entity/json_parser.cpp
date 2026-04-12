@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2025, AMT â€“ The Association For Manufacturing Technology ("AMT")
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,17 +17,18 @@
 
 #include "mtconnect/entity/json_parser.hpp"
 
-#include <nlohmann/json.hpp>
+#include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
 
 #include "mtconnect/logging.hpp"
 
 using namespace std;
-using json = nlohmann::json;
+namespace rj = ::rapidjson;
 
 namespace mtconnect {
   namespace entity {
-    static EntityPtr parseJson(FactoryPtr factory, string entity_name, json jNode,
-                               ErrorList& errors)
+    static EntityPtr parseJson(FactoryPtr factory, string entity_name,
+                               const rj::Value &jNode, ErrorList& errors)
     {
       auto ef = factory->factoryFor(entity_name);
 
@@ -36,68 +37,90 @@ namespace mtconnect {
         Properties properties;
         EntityList* l {nullptr};
 
-        if (ef->isList() && jNode.size() > 0)
+        auto nodeSize = jNode.IsArray()    ? jNode.Size()
+                       : jNode.IsObject() ? jNode.MemberCount()
+                                          : 0;
+        if (ef->isList() && nodeSize > 0)
         {
           l = &properties["LIST"].emplace<EntityList>();
         }
 
-        for (auto& [key, value] : jNode.items())
+        if (jNode.IsObject())
         {
-          string property_key = key;
+          for (auto it = jNode.MemberBegin(); it != jNode.MemberEnd(); ++it)
+          {
+            string property_key = it->name.GetString();
+            const auto &value = it->value;
 
-          if (key == "value" && !ef->hasRaw())
-            property_key = "VALUE";
-          else if (key == "value" && ef->hasRaw())
-            continue;
+            if (property_key == "value" && !ef->hasRaw())
+              property_key = "VALUE";
+            else if (property_key == "value" && ef->hasRaw())
+              continue;
 
-          if (value.is_string())
-          {
-            properties.insert({property_key, string {value}});
-          }
-          else if (value.is_number())
-          {
-            if (jNode[key].get<double>() == jNode[key].get<int64_t>())
-              properties.insert({property_key, int64_t(value)});
-            else
-              properties.insert({property_key, double(value)});
-          }
-          else if (value.is_boolean())
-          {
-            properties.insert({property_key, bool(value)});
-          }
-        }
-
-        if (ef->hasRaw())
-        {
-          properties.insert({"RAW", string {jNode["value"]}});
-        }
-        else
-        {
-          if (jNode.is_object())
-          {
-            for (auto& [key, value] : jNode.items())
+            if (value.IsString())
             {
-              auto ent = parseJson(ef, key, value, errors);
-              if (ent)
+              properties.insert({property_key, string(value.GetString(), value.GetStringLength())});
+            }
+            else if (value.IsNumber())
+            {
+              if (value.IsInt64())
+                properties.insert({property_key, value.GetInt64()});
+              else if (value.IsUint64())
+                properties.insert({property_key, static_cast<int64_t>(value.GetUint64())});
+              else
+                properties.insert({property_key, value.GetDouble()});
+            }
+            else if (value.IsBool())
+            {
+              properties.insert({property_key, value.GetBool()});
+            }
+          }
+
+          if (ef->hasRaw())
+          {
+            auto rawIt = jNode.FindMember("value");
+            if (rawIt != jNode.MemberEnd() && rawIt->value.IsString())
+            {
+              properties.insert(
+                  {"RAW", string(rawIt->value.GetString(), rawIt->value.GetStringLength())});
+            }
+          }
+          else
+          {
+            for (auto it = jNode.MemberBegin(); it != jNode.MemberEnd(); ++it)
+            {
+              string key(it->name.GetString(), it->name.GetStringLength());
+              const auto &value = it->value;
+
+              if (value.IsObject() || value.IsArray())
               {
-                if (ef->isPropertySet(ent->getName()))
+                auto ent = parseJson(ef, key, value, errors);
+                if (ent)
                 {
-                  auto res = properties.try_emplace(ent->getName(), EntityList {});
-                  get<EntityList>(res.first->second).emplace_back(ent);
-                }
-                else
-                {
-                  properties.insert({ent->getName(), ent});
+                  if (ef->isPropertySet(ent->getName()))
+                  {
+                    auto res = properties.try_emplace(ent->getName(), EntityList {});
+                    get<EntityList>(res.first->second).emplace_back(ent);
+                  }
+                  else
+                  {
+                    properties.insert({ent->getName(), ent});
+                  }
                 }
               }
             }
           }
-          else if (jNode.is_array() && jNode.size() > 0)
+        }
+        else if (jNode.IsArray() && jNode.Size() > 0)
+        {
+          for (rj::SizeType i = 0; i < jNode.Size(); ++i)
           {
-            for (auto const& i : jNode)
+            const auto &item = jNode[i];
+            if (item.IsObject() && item.MemberCount() > 0)
             {
-              auto it = i.begin();
-              auto ent = parseJson(ef, it.key(), it.value(), errors);
+              auto it = item.MemberBegin();
+              string key(it->name.GetString(), it->name.GetStringLength());
+              auto ent = parseJson(ef, key, it->value, errors);
               if (ent)
               {
                 if (l != nullptr)
@@ -107,13 +130,14 @@ namespace mtconnect {
               }
               else
               {
-                LOG(debug) << "Unexpected element: " << it.key();
+                LOG(debug) << "Unexpected element: " << key;
                 errors.emplace_back(
-                    new EntityError("Invalid element '" + it.key() + "'", entity_name));
+                    new EntityError("Invalid element '" + key + "'", entity_name));
               }
             }
           }
         }
+
         try
         {
           auto entity = ef->make(entity_name, properties, errors);
@@ -133,17 +157,27 @@ namespace mtconnect {
     {
       NAMED_SCOPE("entity.json_parser");
       EntityPtr entity;
-      auto jsonObj = json::parse(document.c_str());
-      auto entity_name = jsonObj.begin().key();
+      rj::Document jsonDoc;
+      jsonDoc.Parse(document.c_str());
 
-      if (jsonObj.size() == 1)
+      if (jsonDoc.HasParseError())
       {
-        entity = parseJson(factory, entity_name, jsonObj[entity_name], errors);
+        LOG(error) << "JSON parse error: " << rj::GetParseError_En(jsonDoc.GetParseError())
+                   << " at offset " << jsonDoc.GetErrorOffset();
+        errors.emplace_back(new EntityError("Cannot Parse Document."));
+        return nullptr;
       }
-      else
+
+      if (!jsonDoc.IsObject() || jsonDoc.MemberCount() != 1)
       {
         errors.emplace_back(new EntityError("Cannot Parse Document."));
+        return entity;
       }
+
+      auto it = jsonDoc.MemberBegin();
+      string entity_name(it->name.GetString(), it->name.GetStringLength());
+      entity = parseJson(factory, entity_name, it->value, errors);
+
       return entity;
     }
   }  // namespace entity

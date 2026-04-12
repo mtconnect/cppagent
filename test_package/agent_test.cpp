@@ -2626,6 +2626,8 @@ TEST_F(AgentTest, should_initialize_observaton_to_initial_value_when_available)
 
 TEST_F(AgentTest, should_handle_japanese_characters)
 {
+  using namespace nlohmann;
+  
   addAdapter({{configuration::FilterDuplicates, true}});
   auto agent = m_agentTestHelper->getAgent();
   auto logic = agent->getDataItemForDevice("LinuxCNC", "lp");
@@ -2649,7 +2651,7 @@ TEST_F(AgentTest, should_handle_japanese_characters)
     PARSE_JSON_RESPONSE("/current");
     json streams = doc.at("/MTConnectStreams/Streams/DeviceStream/0/ComponentStream"_json_pointer);
     ASSERT_TRUE(streams.is_array());
-    auto controller = std::find_if(streams.begin(), streams.end(), [](const json &comp) {
+    auto controller = std::find_if(streams.begin(), streams.end(), [](const nlohmann::json &comp) {
       return comp.at("/component"_json_pointer).get<string>() == "Controller";
     });
     ASSERT_NE(streams.end(), controller);

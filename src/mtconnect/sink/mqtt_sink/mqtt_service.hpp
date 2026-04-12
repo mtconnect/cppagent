@@ -20,8 +20,6 @@
 #include "boost/asio/io_context.hpp"
 #include <boost/dll/alias.hpp>
 
-#include <nlohmann/json.hpp>
-
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/config.hpp"
 #include "mtconnect/configuration/agent_config.hpp"
@@ -33,8 +31,6 @@
 #include "mtconnect/printer/xml_printer_helper.hpp"
 #include "mtconnect/sink/sink.hpp"
 #include "mtconnect/utilities.hpp"
-
-using json = nlohmann::json;
 
 namespace mtconnect {
   class XmlPrinter;
