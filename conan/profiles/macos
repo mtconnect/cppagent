@@ -3,7 +3,7 @@ include(default)
 [settings]
 compiler=apple-clang
 compiler.cppstd=20
-os.version=13.0
+os.version=15.0
 
 [system_tools]
 cmake/>3.26.0
