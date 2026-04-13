@@ -171,9 +171,11 @@ set(AGENT_SOURCES
 # src/parser HEADER_FILE_ONLY
 
         "${SOURCE_DIR}/parser/xml_parser.hpp"
+        "${SOURCE_DIR}/parser/json_parser.hpp"
 
 # src/parser SOURCE_FILES_ONLY
 
+        "${SOURCE_DIR}/parser/json_parser.cpp"
         "${SOURCE_DIR}/parser/xml_parser.cpp"
 
 # src/pipeline HEADER_FILE_ONLY

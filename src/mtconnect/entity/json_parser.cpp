@@ -28,7 +28,7 @@ namespace rj = ::rapidjson;
 namespace mtconnect {
   namespace entity {
     static EntityPtr parseJson(FactoryPtr factory, string entity_name, const rj::Value& jNode,
-                               ErrorList& errors)
+                               ErrorList& errors, uint32_t version = 1)
     {
       auto ef = factory->factoryFor(entity_name);
 
@@ -83,6 +83,34 @@ namespace mtconnect {
                   {"RAW", string(rawIt->value.GetString(), rawIt->value.GetStringLength())});
             }
           }
+          else if (version == 2 && l != nullptr)
+          {
+            // V2 format: entity lists are objects with type-name keys containing arrays
+            // e.g. {"Electric": [{"id":"e1"}], "Heating": [{"id":"h1"}]}
+            for (auto it = jNode.MemberBegin(); it != jNode.MemberEnd(); ++it)
+            {
+              string key(it->name.GetString(), it->name.GetStringLength());
+              const auto& value = it->value;
+
+              if (value.IsArray())
+              {
+                for (rj::SizeType i = 0; i < value.Size(); ++i)
+                {
+                  auto ent = parseJson(ef, key, value[i], errors, version);
+                  if (ent)
+                  {
+                    l->emplace_back(ent);
+                  }
+                  else
+                  {
+                    LOG(debug) << "Unexpected element: " << key;
+                    errors.emplace_back(
+                        new EntityError("Invalid element '" + key + "'", entity_name));
+                  }
+                }
+              }
+            }
+          }
           else
           {
             for (auto it = jNode.MemberBegin(); it != jNode.MemberEnd(); ++it)
@@ -92,7 +120,7 @@ namespace mtconnect {
 
               if (value.IsObject() || value.IsArray())
               {
-                auto ent = parseJson(ef, key, value, errors);
+                auto ent = parseJson(ef, key, value, errors, version);
                 if (ent)
                 {
                   if (ef->isPropertySet(ent->getName()))
@@ -118,7 +146,7 @@ namespace mtconnect {
             {
               auto it = item.MemberBegin();
               string key(it->name.GetString(), it->name.GetStringLength());
-              auto ent = parseJson(ef, key, it->value, errors);
+              auto ent = parseJson(ef, key, it->value, errors, version);
               if (ent)
               {
                 if (l != nullptr)
@@ -173,7 +201,7 @@ namespace mtconnect {
 
       auto it = jsonDoc.MemberBegin();
       string entity_name(it->name.GetString(), it->name.GetStringLength());
-      entity = parseJson(factory, entity_name, it->value, errors);
+      entity = parseJson(factory, entity_name, it->value, errors, m_version);
 
       return entity;
     }

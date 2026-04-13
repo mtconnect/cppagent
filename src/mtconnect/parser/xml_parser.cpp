@@ -323,7 +323,7 @@ namespace mtconnect::parser {
     catch (const string &e)
     {
       LOG(fatal) << "Cannot parse XML document: " << e;
-      throw FatalException();
+      throw FatalException("Cannot parse XML document: " + e);
     }
   }
 
