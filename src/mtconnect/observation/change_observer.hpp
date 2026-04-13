@@ -153,7 +153,7 @@ namespace mtconnect::observation {
     mutable std::recursive_mutex m_mutex;
     boost::asio::steady_timer m_timer;
 
-    std::list<ChangeSignaler *> m_signalers;
+    std::vector<ChangeSignaler *> m_signalers;
     std::atomic<uint64_t> m_sequence {UINT64_MAX};
     bool m_noCancelOnSignal {false};
 
@@ -187,7 +187,7 @@ namespace mtconnect::observation {
   protected:
     // Observer Lists
     mutable std::recursive_mutex m_observerMutex;
-    std::list<ChangeObserver *> m_observers;
+    std::vector<ChangeObserver *> m_observers;
   };
 
   /// @brief Abstract class for things asynchronouos timers

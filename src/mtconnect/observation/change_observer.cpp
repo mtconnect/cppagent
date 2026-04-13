@@ -35,25 +35,23 @@ namespace mtconnect::observation {
 
   void ChangeObserver::clear()
   {
-    std::unique_lock<std::recursive_mutex> lock(m_mutex);
     m_timer.cancel();
-    m_handler.clear();
     for (const auto signaler : m_signalers)
       signaler->removeObserver(this);
+    std::unique_lock<std::recursive_mutex> lock(m_mutex);
     m_signalers.clear();
   }
 
-  void ChangeObserver::addSignaler(ChangeSignaler *sig) { m_signalers.emplace_back(sig); }
+  void ChangeObserver::addSignaler(ChangeSignaler *sig)
+  {
+    std::unique_lock<std::recursive_mutex> lock(m_mutex);
+    m_signalers.emplace_back(sig);
+  }
 
   bool ChangeObserver::removeSignaler(ChangeSignaler *sig)
   {
-    std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
-    auto newEndPos = std::remove(m_signalers.begin(), m_signalers.end(), sig);
-    if (newEndPos == m_signalers.end())
-      return false;
-
-    m_signalers.erase(newEndPos);
-    return true;
+    std::lock_guard<std::recursive_mutex> lock(m_mutex);
+    return std::erase(m_signalers, sig) > 0;
   }
 
   void ChangeObserver::handler(boost::system::error_code ec)
@@ -82,12 +80,9 @@ namespace mtconnect::observation {
   bool ChangeSignaler::removeObserver(ChangeObserver *observer)
   {
     std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
+    
+    std::erase(m_observers, observer);
 
-    auto newEndPos = std::remove(m_observers.begin(), m_observers.end(), observer);
-    if (newEndPos == m_observers.end())
-      return false;
-
-    m_observers.erase(newEndPos);
     return true;
   }
 

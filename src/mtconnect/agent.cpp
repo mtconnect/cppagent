@@ -325,7 +325,6 @@ namespace mtconnect {
       }
     }
 
-    std::lock_guard<buffer::CircularBuffer> lock(m_circularBuffer);
     if (m_circularBuffer.addToBuffer(observation) != 0)
     {
       for (auto &sink : m_sinks)
