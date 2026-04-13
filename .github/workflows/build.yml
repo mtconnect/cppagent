@@ -245,6 +245,7 @@ jobs:
       shell: bash
       run: |
         export CTEST_OUTPUT_ON_FAILURE=TRUE
+        export MACOSX_DEPLOYMENT_TARGET=13.0
         conan create . --build=missing -pr conan/profiles/macos  -o '&:shared=${{ matrix.shared }}' -o '&:with_docs=False'
     
     - name: Clean conan cache

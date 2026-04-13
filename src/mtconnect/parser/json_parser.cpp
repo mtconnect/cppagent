@@ -18,12 +18,11 @@
 #include "json_parser.hpp"
 
 #include <fstream>
-#include <sstream>
-
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <sstream>
 
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/entity/json_parser.hpp"
@@ -62,8 +61,8 @@ namespace mtconnect::parser {
 
     if (doc.HasParseError())
     {
-      LOG(fatal) << "JSON parse error: " << rj::GetParseError_En(doc.GetParseError()) << " at offset "
-                 << doc.GetErrorOffset();
+      LOG(fatal) << "JSON parse error: " << rj::GetParseError_En(doc.GetParseError())
+                 << " at offset " << doc.GetErrorOffset();
       throw FatalException("Cannot parse JSON document");
     }
 

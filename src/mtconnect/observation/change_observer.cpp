@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2026, AMT – The Association For Manufacturing Technology ("AMT")
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,104 +17,11 @@
 
 #include "change_observer.hpp"
 
-#include <boost/asio/io_context.hpp>
-
-#include <algorithm>
-#include <thread>
-
-#include "mtconnect/sink/sink.hpp"
+#include "mtconnect/buffer/circular_buffer.hpp"
 
 using namespace std;
 
 namespace mtconnect::observation {
-  ChangeObserver::~ChangeObserver()
-  {
-    std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
-    clear();
-  }
-
-  void ChangeObserver::clear()
-  {
-    m_timer.cancel();
-    for (const auto signaler : m_signalers)
-      signaler->removeObserver(this);
-    std::unique_lock<std::recursive_mutex> lock(m_mutex);
-    m_signalers.clear();
-  }
-
-  void ChangeObserver::addSignaler(ChangeSignaler *sig)
-  {
-    std::unique_lock<std::recursive_mutex> lock(m_mutex);
-    m_signalers.emplace_back(sig);
-  }
-
-  bool ChangeObserver::removeSignaler(ChangeSignaler *sig)
-  {
-    std::lock_guard<std::recursive_mutex> lock(m_mutex);
-    return std::erase(m_signalers, sig) > 0;
-  }
-
-  void ChangeObserver::handler(boost::system::error_code ec)
-  {
-    if (m_handler)
-      boost::asio::post(m_strand, boost::bind(m_handler, ec));
-  }
-
-  // Signaler Management
-  ChangeSignaler::~ChangeSignaler()
-  {
-    std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
-
-    for (const auto observer : m_observers)
-      observer->removeSignaler(this);
-  }
-
-  void ChangeSignaler::addObserver(ChangeObserver *observer)
-  {
-    std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
-
-    m_observers.emplace_back(observer);
-    observer->addSignaler(this);
-  }
-
-  bool ChangeSignaler::removeObserver(ChangeObserver *observer)
-  {
-    std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
-    
-    std::erase(m_observers, observer);
-
-    return true;
-  }
-
-  bool ChangeSignaler::hasObserver(ChangeObserver *observer) const
-  {
-    std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
-
-    auto foundPos = std::find(m_observers.begin(), m_observers.end(), observer);
-    return foundPos != m_observers.end();
-  }
-
-  void ChangeSignaler::signalObservers(uint64_t sequence) const
-  {
-    std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
-
-    for (const auto observer : m_observers)
-      observer->signal(sequence);
-  }
-
-  AsyncObserver::AsyncObserver(boost::asio::io_context::strand &strand,
-                               buffer::CircularBuffer &buffer, FilterSet &&filter,
-                               std::chrono::milliseconds interval,
-                               std::chrono::milliseconds heartbeat)
-    : AsyncResponse(interval),
-      m_heartbeat(heartbeat),
-      m_last(std::chrono::system_clock::now()),
-      m_filter(std::move(filter)),
-      m_strand(strand),
-      m_observer(strand),
-      m_buffer(buffer)
-  {}
-
   void AsyncObserver::observe(const std::optional<SequenceNumber_t> &from, Resolver resolver)
   {
     using std::placeholders::_1;
@@ -148,23 +55,6 @@ namespace mtconnect::observation {
       m_sequence = *from;
 
     m_endOfBuffer = from >= next;
-  }
-
-  void AsyncObserver::handlerCompleted()
-  {
-    NAMED_SCOPE("AsyncObserver::handlerCompleted");
-
-    m_last = std::chrono::system_clock::now();
-    if (m_endOfBuffer)
-    {
-      LOG(trace) << "End of buffer";
-      using std::placeholders::_1;
-      m_observer.waitForSignal(m_heartbeat);
-    }
-    else
-    {
-      AsyncObserver::handleSignal(boost::system::error_code {});
-    }
   }
 
   void AsyncObserver::handleSignal(boost::system::error_code ec)
