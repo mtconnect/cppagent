@@ -2660,3 +2660,30 @@ TEST_F(AgentTest, should_handle_japanese_characters)
     ASSERT_EQ("ｽﾄﾛｰｸｴﾝﾄﾞ軸あり", fault.at("/value"_json_pointer).get<string>());
   }
 }
+
+TEST_F(AgentTest, should_have_device_model_change_time_in_the_header_for_v1_7)
+{
+  using namespace nlohmann;
+  
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.7", 4, true);
+  {
+    PARSE_JSON_RESPONSE("/current");
+    json header = doc.at("/MTConnectStreams/Header"_json_pointer);
+    ASSERT_TRUE(header.is_object());
+    ASSERT_TRUE(header.contains("deviceModelChangeTime"));
+    ASSERT_FALSE(header.at("/deviceModelChangeTime"_json_pointer).get<string>().empty());
+  }
+}
+
+TEST_F(AgentTest, should_not_have_device_model_change_time_in_the_header_for_pre_v1_7)
+{
+  using namespace nlohmann;
+  
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.6", 4, true);
+  {
+    PARSE_JSON_RESPONSE("/current");
+    json header = doc.at("/MTConnectStreams/Header"_json_pointer);
+    ASSERT_TRUE(header.is_object());
+    ASSERT_FALSE(header.contains("deviceModelChangeTime"));
+  }
+}
