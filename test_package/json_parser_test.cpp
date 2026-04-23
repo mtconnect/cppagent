@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,7 +81,7 @@ protected:
   }
 };
 
-TEST_F(JsonParserTest, TestParseSimpleDocument)
+TEST_F(JsonParserTest, should_parse_v1_entity_with_properties_and_entity_list)
 {
   auto fileProperty =
       make_shared<Factory>(Requirements({Requirement("name", true), Requirement("VALUE", true)}));
@@ -148,7 +148,7 @@ TEST_F(JsonParserTest, TestParseSimpleDocument)
   ASSERT_EQ("Flat", get<string>((*it)->getProperty("VALUE")));
 }
 
-TEST_F(JsonParserTest, TestRecursiveEntityLists)
+TEST_F(JsonParserTest, should_parse_v1_recursive_entity_lists)
 {
   auto root = components();
 
@@ -199,7 +199,7 @@ TEST_F(JsonParserTest, TestRecursiveEntityLists)
   ASSERT_EQ("h1", get<string>((*sli)->getProperty("id")));
 }
 
-TEST_F(JsonParserTest, TestRecursiveEntityListFailure)
+TEST_F(JsonParserTest, should_fail_v1_when_required_property_missing)
 {
   auto root = components();
 
@@ -227,7 +227,7 @@ TEST_F(JsonParserTest, TestRecursiveEntityListFailure)
             errors.front()->what());
 }
 
-TEST_F(JsonParserTest, TestRecursiveEntityListMissingComponents)
+TEST_F(JsonParserTest, should_error_v1_when_entity_list_is_empty)
 {
   auto root = components();
 
@@ -268,7 +268,233 @@ TEST_F(JsonParserTest, TestRecursiveEntityListMissingComponents)
   ASSERT_FALSE(sl);
 }
 
-TEST_F(JsonParserTest, TestRawContent)
+TEST_F(JsonParserTest, should_parse_v2_entity_with_properties_and_typed_entity_list)
+{
+  auto fileProperty =
+      make_shared<Factory>(Requirements({Requirement("name", true), Requirement("VALUE", true)}));
+
+  auto fileProperties = make_shared<Factory>(Requirements(
+      {Requirement("FileProperty", ValueType::ENTITY, fileProperty, 1, Requirement::Infinite)}));
+  fileProperties->registerMatchers();
+
+  auto fileComment = make_shared<Factory>(
+      Requirements({Requirement("timestamp", true), Requirement("VALUE", true)}));
+
+  auto fileComments = make_shared<Factory>(Requirements(
+      {Requirement("FileComment", ValueType::ENTITY, fileComment, 1, Requirement::Infinite)}));
+  fileComments->registerMatchers();
+
+  auto fileArchetype = make_shared<Factory>(Requirements {
+      Requirement("assetId", true), Requirement("deviceUuid", true), Requirement("timestamp", true),
+      Requirement("removed", false), Requirement("name", true), Requirement("mediaType", true),
+      Requirement("applicationCategory", true), Requirement("applicationType", true),
+      Requirement("FileComments", ValueType::ENTITY_LIST, fileComments, false),
+      Requirement("FileProperties", ValueType::ENTITY_LIST, fileProperties, false)});
+
+  auto root = make_shared<Factory>(
+      Requirements {Requirement("FileArchetype", ValueType::ENTITY, fileArchetype)});
+
+  // V2 format: entity lists are objects with type-name keys containing arrays
+  auto doc = R"(
+    {
+    "FileArchetype" : {
+                        "name":"xxxx", "assetId":"uuid", "deviceUuid":"duid", "timestamp":"2020-12-01T10:00Z",
+                        "mediaType":"json", "applicationCategory":"ASSEMBLY", "applicationType":"DATA",
+                        "FileProperties":{
+                            "FileProperty":[
+                                {"name":"one", "value":"Round"},
+                                {"name":"two", "value":"Flat"}]}
+                        }
+    }
+  )";
+
+  ErrorList errors;
+  entity::JsonParser parser(2);
+
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+
+  ASSERT_EQ("FileArchetype", entity->getName());
+  ASSERT_EQ("xxxx", get<string>(entity->getProperty("name")));
+  ASSERT_EQ("uuid", get<string>(entity->getProperty("assetId")));
+  ASSERT_EQ("2020-12-01T10:00Z", get<string>(entity->getProperty("timestamp")));
+  ASSERT_EQ("json", get<string>(entity->getProperty("mediaType")));
+  ASSERT_EQ("ASSEMBLY", get<string>(entity->getProperty("applicationCategory")));
+  ASSERT_EQ("DATA", get<string>(entity->getProperty("applicationType")));
+
+  auto fps = entity->getList("FileProperties");
+  ASSERT_TRUE(fps);
+  ASSERT_EQ(2, fps->size());
+
+  auto it = fps->begin();
+  ASSERT_EQ("FileProperty", (*it)->getName());
+  ASSERT_EQ("one", get<string>((*it)->getProperty("name")));
+  ASSERT_EQ("Round", get<string>((*it)->getProperty("VALUE")));
+
+  it++;
+  ASSERT_EQ("FileProperty", (*it)->getName());
+  ASSERT_EQ("two", get<string>((*it)->getProperty("name")));
+  ASSERT_EQ("Flat", get<string>((*it)->getProperty("VALUE")));
+}
+
+TEST_F(JsonParserTest, should_parse_v2_recursive_entity_lists_grouped_by_type)
+{
+  auto root = components();
+
+  // V2 format: Components is an object with type-name keys containing arrays
+  auto doc = R"(
+{
+  "Device" : { "id":"d1", "name":"foo", "uuid":"xxx",
+                "Components":{
+                    "Systems":[{"id":"s1",
+                                "Components":{
+                                    "Electric":[{"id":"e1"}],
+                                    "Heating":[{"id":"h1"}]}
+                                }]
+                    }
+            }
+}
+)";
+
+  ErrorList errors;
+  entity::JsonParser parser(2);
+
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+
+  ASSERT_EQ("Device", entity->getName());
+  ASSERT_EQ("d1", get<string>(entity->getProperty("id")));
+  ASSERT_EQ("foo", get<string>(entity->getProperty("name")));
+  ASSERT_EQ("xxx", get<string>(entity->getProperty("uuid")));
+
+  auto l = entity->getList("Components");
+  ASSERT_TRUE(l);
+  ASSERT_EQ(1, l->size());
+
+  auto systems = l->front();
+  ASSERT_EQ("Systems", systems->getName());
+  ASSERT_EQ("s1", get<string>(systems->getProperty("id")));
+
+  auto sl = systems->getList("Components");
+  ASSERT_TRUE(sl);
+  ASSERT_EQ(2, sl->size());
+
+  auto sli = sl->begin();
+
+  ASSERT_EQ("Electric", (*sli)->getName());
+  ASSERT_EQ("e1", get<string>((*sli)->getProperty("id")));
+
+  sli++;
+  ASSERT_EQ("Heating", (*sli)->getName());
+  ASSERT_EQ("h1", get<string>((*sli)->getProperty("id")));
+}
+
+TEST_F(JsonParserTest, should_fail_v2_when_required_property_missing)
+{
+  auto root = components();
+
+  auto doc = R"(
+{
+  "Device" : { "id":"d1", "name":"foo",
+                "Components":{
+                    "Systems":[{"id":"s1",
+                                "Components":{
+                                    "Electric":[{"id":"e1"}],
+                                    "Heating":[{"id":"h1"}]}
+                                }]
+                    }
+            }
+}
+)";
+
+  ErrorList errors;
+  entity::JsonParser parser(2);
+
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(1, errors.size());
+  ASSERT_FALSE(entity);
+  ASSERT_EQ(string("Device(uuid): Property uuid is required and not provided"),
+            errors.front()->what());
+}
+
+TEST_F(JsonParserTest, should_error_v2_when_entity_list_is_empty)
+{
+  auto root = components();
+
+  auto doc = R"(
+{
+  "Device" : { "id":"d1", "name":"foo", "uuid":"xxx",
+                "Components":{
+                    "Systems":[{"id":"s1",
+                                "Components":{}
+                                }]
+                    }
+            }
+}
+)";
+
+  ErrorList errors;
+  entity::JsonParser parser(2);
+
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(1, errors.size());
+  ASSERT_TRUE(entity);
+  ASSERT_EQ(string("Components(Component): Property Component is required and not provided"),
+            errors.front()->what());
+  ASSERT_EQ("Device", entity->getName());
+  ASSERT_EQ("d1", get<string>(entity->getProperty("id")));
+  ASSERT_EQ("foo", get<string>(entity->getProperty("name")));
+  ASSERT_EQ("xxx", get<string>(entity->getProperty("uuid")));
+
+  auto l = entity->getList("Components");
+  ASSERT_TRUE(l);
+  ASSERT_EQ(1, l->size());
+
+  auto systems = l->front();
+  ASSERT_EQ("Systems", systems->getName());
+  ASSERT_EQ("s1", get<string>(systems->getProperty("id")));
+
+  auto sl = systems->getList("Components");
+  ASSERT_FALSE(sl);
+}
+
+TEST_F(JsonParserTest, should_parse_v2_multiple_entities_of_same_type_in_one_array)
+{
+  auto root = components();
+
+  // V2 format with multiple entities of the same type in one array
+  auto doc = R"(
+{
+  "Device" : { "id":"d1", "name":"foo", "uuid":"xxx",
+                "Components":{
+                    "Systems":[
+                        {"id":"s1"},
+                        {"id":"s2"}]
+                    }
+            }
+}
+)";
+
+  ErrorList errors;
+  entity::JsonParser parser(2);
+
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+
+  auto l = entity->getList("Components");
+  ASSERT_TRUE(l);
+  ASSERT_EQ(2, l->size());
+
+  auto it = l->begin();
+  ASSERT_EQ("Systems", (*it)->getName());
+  ASSERT_EQ("s1", get<string>((*it)->getProperty("id")));
+
+  it++;
+  ASSERT_EQ("Systems", (*it)->getName());
+  ASSERT_EQ("s2", get<string>((*it)->getProperty("id")));
+}
+
+TEST_F(JsonParserTest, should_parse_raw_content_without_xml_encoding)
 {
   auto definition =
       make_shared<Factory>(Requirements({Requirement("format", false), Requirement("RAW", true)}));

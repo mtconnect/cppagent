@@ -351,14 +351,14 @@ namespace mtconnect::entity {
         errors.emplace_back(new EntityError("Cannot parse document"));
     }
 
-    catch (EntityError e)
+    catch (const EntityError &e)
     {
       LOG(error) << "Cannot parse XML document: " << e.what();
       errors.emplace_back(e.dup());
       entity.reset();
     }
 
-    catch (XmlError e)
+    catch (const XmlError &e)
     {
       LOG(error) << "Cannot parse XML document: " << e.what();
       errors.emplace_back(new EntityError(e.what()));

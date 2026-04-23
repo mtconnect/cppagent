@@ -171,9 +171,11 @@ set(AGENT_SOURCES
 # src/parser HEADER_FILE_ONLY
 
         "${SOURCE_DIR}/parser/xml_parser.hpp"
+        "${SOURCE_DIR}/parser/json_parser.hpp"
 
 # src/parser SOURCE_FILES_ONLY
 
+        "${SOURCE_DIR}/parser/json_parser.cpp"
         "${SOURCE_DIR}/parser/xml_parser.cpp"
 
 # src/pipeline HEADER_FILE_ONLY
@@ -328,7 +330,6 @@ find_package(Boost REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(date REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(nlohmann_json REQUIRED)
 find_package(mqtt_cpp REQUIRED)
 find_package(RapidJSON REQUIRED)
 
@@ -403,7 +404,7 @@ target_link_libraries(
   agent_lib
   PUBLIC
   boost::boost LibXml2::LibXml2 date::date openssl::openssl
-  nlohmann_json::nlohmann_json mqtt_cpp::mqtt_cpp 
+  mqtt_cpp::mqtt_cpp 
   rapidjson BZip2::BZip2
   
   $<$<PLATFORM_ID:Linux>:pthread>

@@ -20,8 +20,6 @@
 #include "boost/asio/io_context.hpp"
 #include <boost/dll/alias.hpp>
 
-#include <nlohmann/json.hpp>
-
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/config.hpp"
 #include "mtconnect/configuration/agent_config.hpp"
@@ -33,13 +31,6 @@
 #include "mtconnect/printer/xml_printer_helper.hpp"
 #include "mtconnect/sink/sink.hpp"
 #include "mtconnect/utilities.hpp"
-
-using namespace std;
-using namespace mtconnect;
-using namespace mtconnect::entity;
-using namespace mtconnect::mqtt_client;
-
-using json = nlohmann::json;
 
 namespace mtconnect {
   class XmlPrinter;
@@ -107,7 +98,7 @@ namespace mtconnect {
 
         /// @brief gets a Mqtt Client
         /// @return MqttClient
-        std::shared_ptr<MqttClient> getClient() { return m_client; }
+        std::shared_ptr<mqtt_client::MqttClient> getClient() { return m_client; }
 
         /// @brief Mqtt Client is Connected or not
         /// @return `true` when the client was connected
@@ -135,8 +126,8 @@ namespace mtconnect {
         std::string formatTopic(const std::string &topic, const DevicePtr device,
                                 const std::string defaultUuid = "Unknown")
         {
-          string uuid;
-          string formatted {topic};
+          std::string uuid;
+          std::string formatted {topic};
           if (!device)
             uuid = defaultUuid;
           else
@@ -163,7 +154,7 @@ namespace mtconnect {
 
         std::string getTopic(const std::string &option, int maxTopicDepth)
         {
-          auto topic {get<string>(m_options[option])};
+          auto topic {std::get<std::string>(m_options[option])};
           auto depth = std::count(topic.begin(), topic.end(), '/');
 
           if (depth > maxTopicDepth)
@@ -190,10 +181,10 @@ namespace mtconnect {
 
         ConfigOptions m_options;
 
-        std::unique_ptr<JsonEntityPrinter> m_jsonPrinter;
+        std::unique_ptr<entity::JsonEntityPrinter> m_jsonPrinter;
         std::unique_ptr<printer::JsonPrinter> m_printer;
 
-        std::shared_ptr<MqttClient> m_client;
+        std::shared_ptr<mqtt_client::MqttClient> m_client;
         boost::asio::steady_timer m_currentTimer;
         int m_sampleCount;  //! Timer for current requests
 

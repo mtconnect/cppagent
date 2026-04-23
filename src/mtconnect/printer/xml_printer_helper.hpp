@@ -17,6 +17,12 @@
 
 #pragma once
 
+#include <concepts>
+#include <format>
+#include <map>
+#include <string>
+
+#include <libxml/entities.h>
 #include <libxml/xmlwriter.h>
 
 #include "mtconnect/config.hpp"
@@ -156,4 +162,72 @@ namespace mtconnect::printer {
     std::string m_name;
     std::string m_key;
   };
+  /// @brief Add a string attribute to the current element
+  /// @param writer the writer
+  /// @param key the attribute name
+  /// @param value the attribute value (empty strings are skipped)
+  static inline void addAttribute(xmlTextWriterPtr writer, const char *key,
+                                  const std::string &value)
+  {
+    if (!value.empty())
+      THROW_IF_XML2_ERROR(
+          xmlTextWriterWriteAttribute(writer, BAD_CAST key, BAD_CAST value.c_str()));
+  }
+
+  /// @brief Add an integral attribute to the current element
+  /// @param writer the writer
+  /// @param key the attribute name
+  /// @param value the integral value
+  template <typename T>
+  requires std::integral<T> static inline void addAttribute(xmlTextWriterPtr writer,
+                                                            const char *key, T value)
+  {
+    auto str = std::format("{}", value);
+    THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST key, BAD_CAST str.c_str()));
+  }
+
+  /// @brief Add a map of string attributes to the current element
+  /// @param writer the writer
+  /// @param attributes map of key-value attribute pairs
+  static inline void addAttributes(xmlTextWriterPtr writer,
+                                   const std::map<std::string, std::string> &attributes)
+  {
+    for (const auto &attr : attributes)
+    {
+      if (!attr.second.empty())
+      {
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first.c_str(),
+                                                        BAD_CAST attr.second.c_str()));
+      }
+    }
+  }
+
+  /// @brief Write a simple element with optional body text and attributes
+  /// @param writer the writer
+  /// @param element name of the element
+  /// @param body text content of the element
+  /// @param attributes optional map of attributes
+  /// @param raw if true, body is written without XML encoding
+  static inline void addSimpleElement(xmlTextWriterPtr writer, const std::string &element,
+                                      const std::string &body,
+                                      const std::map<std::string, std::string> &attributes = {},
+                                      bool raw = false)
+  {
+    AutoElement ele(writer, element);
+
+    if (!attributes.empty())
+      addAttributes(writer, attributes);
+
+    if (!body.empty())
+    {
+      xmlChar *text = nullptr;
+      if (!raw)
+        text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
+      else
+        text = BAD_CAST body.c_str();
+      THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
+      if (!raw)
+        xmlFree(text);
+    }
+  }
 }  // namespace mtconnect::printer

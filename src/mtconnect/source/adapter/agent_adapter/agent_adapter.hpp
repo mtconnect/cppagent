@@ -30,8 +30,6 @@ namespace boost::asio::ssl {
 
 /// @brief  @brief the agent adapter namespace
 namespace mtconnect::source::adapter::agent_adapter {
-  using namespace mtconnect;
-  using namespace source::adapter;
 
   /// @brief The Agent adapter pipeline
   class AGENT_LIB_API AgentAdapterPipeline : public AdapterPipeline

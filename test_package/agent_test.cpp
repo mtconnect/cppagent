@@ -2626,6 +2626,8 @@ TEST_F(AgentTest, should_initialize_observaton_to_initial_value_when_available)
 
 TEST_F(AgentTest, should_handle_japanese_characters)
 {
+  using namespace nlohmann;
+
   addAdapter({{configuration::FilterDuplicates, true}});
   auto agent = m_agentTestHelper->getAgent();
   auto logic = agent->getDataItemForDevice("LinuxCNC", "lp");
@@ -2649,12 +2651,41 @@ TEST_F(AgentTest, should_handle_japanese_characters)
     PARSE_JSON_RESPONSE("/current");
     json streams = doc.at("/MTConnectStreams/Streams/DeviceStream/0/ComponentStream"_json_pointer);
     ASSERT_TRUE(streams.is_array());
-    auto controller = std::find_if(streams.begin(), streams.end(), [](const json &comp) {
+    auto controller = std::find_if(streams.begin(), streams.end(), [](const nlohmann::json &comp) {
       return comp.at("/component"_json_pointer).get<string>() == "Controller";
     });
     ASSERT_NE(streams.end(), controller);
     json fault = controller->at("/Condition/Fault/0"_json_pointer);
     ASSERT_TRUE(fault.is_object());
     ASSERT_EQ("ｽﾄﾛｰｸｴﾝﾄﾞ軸あり", fault.at("/value"_json_pointer).get<string>());
+  }
+}
+
+TEST_F(AgentTest, should_have_device_model_change_time_in_the_header_for_v1_7)
+{
+  using namespace nlohmann;
+  
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.7", 4, true, true,
+                                 {{configuration::JsonVersion, 2 }});
+  {
+    PARSE_JSON_RESPONSE("/current");
+    json header = doc.at("/MTConnectStreams/Header"_json_pointer);
+    ASSERT_TRUE(header.is_object());
+    ASSERT_TRUE(header.contains("deviceModelChangeTime"));
+    ASSERT_FALSE(header.at("/deviceModelChangeTime"_json_pointer).get<string>().empty());
+  }
+}
+
+TEST_F(AgentTest, should_not_have_device_model_change_time_in_the_header_for_pre_v1_7)
+{
+  using namespace nlohmann;
+  
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.6", 4, true, true,
+                                 {{configuration::JsonVersion, 2 }});
+  {
+    PARSE_JSON_RESPONSE("/current");
+    json header = doc.at("/MTConnectStreams/Header"_json_pointer);
+    ASSERT_TRUE(header.is_object());
+    ASSERT_FALSE(header.contains("deviceModelChangeTime"));
   }
 }

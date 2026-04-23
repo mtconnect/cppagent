@@ -71,9 +71,6 @@ namespace mtconnect::source::adapter::shdr {
       m_socket.cancel();
       m_socket.close();
     }
-
-    if (m_reconnectInterval < 500ms)
-      m_reconnectInterval = 500ms;
   }
 
   bool Connector::start() { return resolve(); }
@@ -171,10 +168,8 @@ namespace mtconnect::source::adapter::shdr {
   {
     NAMED_SCOPE("Connector::reconnect");
 
-    static mutex s_reconnectLock;
-
     {
-      lock_guard<mutex> guard(s_reconnectLock);
+      lock_guard<mutex> guard(m_reconnectLock);
       if (m_disconnecting || !m_connected)
       {
         LOG(warning) << "Already disconnecting. returning";

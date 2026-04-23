@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2026, AMT – The Association For Manufacturing Technology ("AMT")
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,11 +21,14 @@
 #include <boost/beast/http/status.hpp>
 #include <boost/bind/bind.hpp>
 
+#include <algorithm>
+#include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <vector>
 
 #include "mtconnect/config.hpp"
+#include "mtconnect/logging.hpp"
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect::buffer {
@@ -45,19 +48,23 @@ namespace mtconnect::observation {
       : m_strand(strand), m_timer(strand.context())
     {}
 
-    virtual ~ChangeObserver();
+    // Destructor and clear() defined after ChangeSignaler
+    ~ChangeObserver();
 
     /// @brief dispatch handler
     ///
     /// this is only necessary becase of issue with windows DLLs
     ///
     /// @param ec the error code from the callback
-    void handler(boost::system::error_code ec);
+    void handler(boost::system::error_code ec)
+    {
+      if (m_handler)
+        boost::asio::post(m_strand, boost::bind(m_handler, ec));
+    }
 
     /// @brief wait for a signal to occur asynchronously. If it is already signaled, call the
     /// callback immediately.
     /// @param duration the duration to wait
-    /// @param handler the handler to call back
     /// @return `true` if successful
     bool waitForSignal(std::chrono::milliseconds duration)
     {
@@ -81,12 +88,12 @@ namespace mtconnect::observation {
       return true;
     }
 
-    /// @brief wait a period of time where signals will not cancle the timer
+    /// @brief wait a period of time where signals will not cancel the timer
     /// @param duration the duration to wait
-    /// @param handler the handler to call back
     /// @return `true` if successful
     bool waitFor(std::chrono::milliseconds duration)
     {
+      std::lock_guard<std::recursive_mutex> lock(m_mutex);
       m_noCancelOnSignal = true;
       m_timer.expires_after(duration);
       using std::placeholders::_1;
@@ -96,7 +103,7 @@ namespace mtconnect::observation {
       return true;
     }
 
-    /// @brief single all waiting observers if this sequence number is greater than the last
+    /// @brief signal all waiting observers if this sequence number is greater than the last
     ///
     /// also cancel the timer
     /// @param[in] sequence the sequence number of the observation
@@ -143,7 +150,7 @@ namespace mtconnect::observation {
     auto try_lock() { return m_mutex.try_lock(); }
     ///@}
 
-    /// @brief clear the observer information.
+    /// @brief clear the observer information. Defined after ChangeSignaler.
     void clear();
 
   private:
@@ -151,14 +158,22 @@ namespace mtconnect::observation {
     mutable std::recursive_mutex m_mutex;
     boost::asio::steady_timer m_timer;
 
-    std::list<ChangeSignaler *> m_signalers;
-    volatile uint64_t m_sequence = UINT64_MAX;
+    std::vector<ChangeSignaler *> m_signalers;
+    std::atomic<uint64_t> m_sequence {UINT64_MAX};
     bool m_noCancelOnSignal {false};
 
   protected:
     friend class ChangeSignaler;
-    void addSignaler(ChangeSignaler *sig);
-    bool removeSignaler(ChangeSignaler *sig);
+    void addSignaler(ChangeSignaler *sig)
+    {
+      std::unique_lock<std::recursive_mutex> lock(m_mutex);
+      m_signalers.emplace_back(sig);
+    }
+    bool removeSignaler(ChangeSignaler *sig)
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_mutex);
+      return std::erase(m_signalers, sig) > 0;
+    }
   };
 
   /// @brief A signaler of waiting observers
@@ -167,28 +182,75 @@ namespace mtconnect::observation {
   public:
     /// @brief add an observer to the list
     /// @param[in] observer an observer
-    void addObserver(ChangeObserver *observer);
+    void addObserver(ChangeObserver *observer)
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
+      m_observers.emplace_back(observer);
+      observer->addSignaler(this);
+    }
     /// @brief remove an observer
     /// @param[in] observer an observer
     /// @return `true` if the observer was removed
-    bool removeObserver(ChangeObserver *observer);
+    bool removeObserver(ChangeObserver *observer)
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
+      std::erase(m_observers, observer);
+      return true;
+    }
     /// @brief check if an observer is in the list
     /// @param[in] observer an observer
     /// @return `true` if the observer is in the list
-    bool hasObserver(ChangeObserver *observer) const;
-    /// @brief singal observers with a sequence number
+    bool hasObserver(ChangeObserver *observer) const
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
+      auto foundPos = std::find(m_observers.begin(), m_observers.end(), observer);
+      return foundPos != m_observers.end();
+    }
+    /// @brief signal observers with a sequence number
     /// @param[in] sequence the sequence number
-    void signalObservers(uint64_t sequence) const;
+    void signalObservers(uint64_t sequence) const
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
+      for (const auto observer : m_observers)
+        observer->signal(sequence);
+    }
 
-    virtual ~ChangeSignaler();
+    ~ChangeSignaler()
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
+      for (const auto observer : m_observers)
+        observer->removeSignaler(this);
+    }
 
   protected:
     // Observer Lists
     mutable std::recursive_mutex m_observerMutex;
-    std::list<ChangeObserver *> m_observers;
+    std::vector<ChangeObserver *> m_observers;
   };
 
-  /// @brief Abstract class for things asynchronouos timers
+  // -- Deferred ChangeObserver method definitions (need complete ChangeSignaler) --
+
+  inline ChangeObserver::~ChangeObserver()
+  {
+    std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
+    clear();
+  }
+
+  inline void ChangeObserver::clear()
+  {
+    m_timer.cancel();
+    decltype(m_signalers) signalers;
+    {
+      std::unique_lock<std::recursive_mutex> lock(m_mutex);
+      signalers = m_signalers;
+    }
+    for (const auto signaler : signalers)
+      signaler->removeObserver(this);
+    std::unique_lock<std::recursive_mutex> lock(m_mutex);
+    m_signalers.clear();
+  }
+
+  /// @brief Abstract class for asynchronous timers
   class AGENT_LIB_API AsyncResponse : public std::enable_shared_from_this<AsyncResponse>
   {
   public:
@@ -203,7 +265,7 @@ namespace mtconnect::observation {
     /// @brief get the request id for webservices
     const auto &getRequestId() const { return m_requestId; }
 
-    /// @brief sets the optonal request id for webservices.
+    /// @brief sets the optional request id for webservices.
     void setRequestId(const std::optional<std::string> &id) { m_requestId = id; }
 
     /// @brief Get the interval
@@ -211,15 +273,15 @@ namespace mtconnect::observation {
 
   protected:
     std::chrono::milliseconds m_interval {
-        0};  //! the minimum amout of time to wait before calling the handler
+        0};  //! the minimum amount of time to wait before calling the handler
     std::optional<std::string> m_requestId;  //! request id
   };
 
-  /// @brief Asyncronous change context for waiting for changes
+  /// @brief Asynchronous change context for waiting for changes
   ///
   /// This class must be subclassed and provide a fail and isRunning method.
   /// The caller first calls observe to resolve the filter ids to the signalers. This must be done
-  /// before the first handlerComplete is called asyncronously. The observer handles calling the
+  /// before the first handlerComplete is called asynchronously. The observer handles calling the
   /// handler whenever a new observation is available or the heartbeat has timed out keeping track
   /// of the sequence number of the last signaled observation or if the observer is still at the end
   /// of the buffer and nothing is signaled.
@@ -236,17 +298,27 @@ namespace mtconnect::observation {
     using Resolver = std::function<ChangeSignaler *(const std::string &id)>;
 
     /// @brief create async observer to manage data item callbacks
-    /// @param contract the sink contract to use to get the buffer information
     /// @param strand the strand to handle the async actions
+    /// @param buffer the circular buffer
+    /// @param filter the data items to observe
     /// @param interval minimum amount of time to wait for observations
     /// @param heartbeat maximum amount of time to wait before sending a heartbeat
     AsyncObserver(boost::asio::io_context::strand &strand,
                   mtconnect::buffer::CircularBuffer &buffer, FilterSet &&filter,
-                  std::chrono::milliseconds interval, std::chrono::milliseconds heartbeat);
+                  std::chrono::milliseconds interval, std::chrono::milliseconds heartbeat)
+    : AsyncResponse(interval),
+    m_heartbeat(heartbeat),
+    m_last(std::chrono::system_clock::now()),
+    m_filter(std::move(filter)),
+    m_strand(strand),
+    m_observer(strand),
+    m_buffer(buffer)
+    {}
+
     /// @brief default destructor
     virtual ~AsyncObserver() = default;
 
-    /// @brief Get a shared pointed
+    /// @brief Get a shared pointer
     auto getptr() { return std::dynamic_pointer_cast<AsyncObserver>(shared_from_this()); }
 
     /// @brief sets up the `ChangeObserver` using the filter and initializes the references to the
@@ -260,7 +332,22 @@ namespace mtconnect::observation {
     ///
     /// Bound as the completion routine for async writes and actions. Proceeds to the next
     /// handleObservations.
-    void handlerCompleted();
+    void handlerCompleted()
+    {
+      NAMED_SCOPE("AsyncObserver::handlerCompleted");
+      
+      m_last = std::chrono::system_clock::now();
+      if (m_endOfBuffer)
+      {
+        LOG(trace) << "End of buffer";
+        using std::placeholders::_1;
+        m_observer.waitForSignal(m_heartbeat);
+      }
+      else
+      {
+        AsyncObserver::handleSignal(boost::system::error_code {});
+      }
+    }
 
     /// @brief abstract call to failure handler
     virtual void fail(boost::beast::http::status status, const std::string &message) = 0;
@@ -273,9 +360,6 @@ namespace mtconnect::observation {
     }
 
     /// @brief handler callback when an action needs to be taken
-    ///
-    /// @tparam AsyncObserver shared point to this
-    /// @returns the ending sequence number
     Handler m_handler;
 
     ///@{
@@ -302,7 +386,7 @@ namespace mtconnect::observation {
         0};  //! the maximum amount of time to wait before sending a heartbeat
     std::chrono::system_clock::time_point m_last;  //! the last time the handler completed
     FilterSet m_filter;                            //! The data items to be observed
-    boost::asio::io_context::strand m_strand;      //! Strand to use for aync dispatch
+    boost::asio::io_context::strand m_strand;      //! Strand to use for async dispatch
 
     ChangeObserver m_observer;                    //! the change observer
     mtconnect::buffer::CircularBuffer &m_buffer;  //! reference to the circular buffer

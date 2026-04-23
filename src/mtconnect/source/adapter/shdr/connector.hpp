@@ -27,7 +27,7 @@
 #include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
-#define HEARTBEAT_FREQ 60000
+inline constexpr int HEARTBEAT_FREQ = 60000;
 
 namespace mtconnect::source::adapter::shdr {
   /// @brief Connection to an adapter socket
@@ -118,8 +118,8 @@ namespace mtconnect::source::adapter::shdr {
     // Name of the server to connect to
     std::string m_server;
 
-    // Connection
-    boost::asio::io_context::strand m_strand;
+    // Connection – reference to the owning Source's strand (not a copy)
+    boost::asio::io_context::strand &m_strand;
     boost::asio::ip::tcp::socket m_socket;
     boost::asio::ip::tcp::endpoint m_endpoint;
     boost::asio::ip::tcp::resolver::results_type m_results;
@@ -154,5 +154,6 @@ namespace mtconnect::source::adapter::shdr {
     std::chrono::milliseconds m_legacyTimeout;
     std::chrono::milliseconds m_reconnectInterval;
     std::chrono::milliseconds m_receiveTimeLimit;
+    std::mutex m_reconnectLock;
   };
 }  // namespace mtconnect::source::adapter::shdr

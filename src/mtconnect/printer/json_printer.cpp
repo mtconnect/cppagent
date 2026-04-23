@@ -67,7 +67,7 @@ namespace mtconnect::printer {
     obj.AddPairs("version", version, "creationTime", getCurrentTime(GMT), "testIndicator", false,
                  "instanceId", instanceId, "sender", hostname, "schemaVersion", schemaVersion);
 
-    if (schemaVersion >= "1.7")
+    if (IntSchemaVersion(schemaVersion) >= SCHEMA_VERSION(1, 7))
       obj.AddPairs("deviceModelChangeTime", modelChangeTime);
     if (bufferSize > 0)
       obj.AddPairs("bufferSize", bufferSize);

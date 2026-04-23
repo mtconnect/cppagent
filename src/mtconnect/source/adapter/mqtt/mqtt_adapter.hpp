@@ -22,8 +22,6 @@
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
 
-using namespace mtconnect::mqtt_client;
-
 /// @brief  @brief the Mqtt adapter namespace
 namespace mtconnect::source::adapter::mqtt_adapter {
   /// @brief The Mqtt adapter pipeline
@@ -100,6 +98,6 @@ namespace mtconnect::source::adapter::mqtt_adapter {
 
     MqttPipeline m_pipeline;
 
-    std::shared_ptr<MqttClient> m_client;
+    std::shared_ptr<mqtt_client::MqttClient> m_client;
   };
 }  // namespace mtconnect::source::adapter::mqtt_adapter

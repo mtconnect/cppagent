@@ -205,7 +205,7 @@ namespace mtconnect::source::adapter::shdr {
         options[configuration::Device] = value;
       else if (command == "shdrversion")
         options[configuration::ShdrVersion] = stringToInt(value, 1);
-      else if (command == "messsage")
+      else if (command == "message")
       {
         LOG(info) << '[' << getIdentity() << "] Adapter message: " << value;
         return;

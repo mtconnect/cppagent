@@ -112,13 +112,13 @@ namespace mtconnect::source::adapter::agent_adapter {
     ///@}
 
   protected:
-    Handler *m_handler = nullptr;                   ///< Pipeline handler for processing data
-    std::string m_identity;                         ///< Unique identity hash for this session
-    Failure m_failed;                               ///< Callback invoked on connection failure
-    UpdateAssets m_updateAssets;                     ///< Callback to trigger asset updates
-    bool m_closeConnectionAfterResponse = false;    ///< Close connection after each response
+    Handler *m_handler = nullptr;                 ///< Pipeline handler for processing data
+    std::string m_identity;                       ///< Unique identity hash for this session
+    Failure m_failed;                             ///< Callback invoked on connection failure
+    UpdateAssets m_updateAssets;                  ///< Callback to trigger asset updates
+    bool m_closeConnectionAfterResponse = false;  ///< Close connection after each response
     std::chrono::milliseconds m_timeout = std::chrono::milliseconds(30000);  ///< I/O timeout
-    bool m_closeOnRead = false;                     ///< Close after read (HTTP 1.0 or Connection: close)
+    bool m_closeOnRead = false;  ///< Close after read (HTTP 1.0 or Connection: close)
   };
 
 }  // namespace mtconnect::source::adapter::agent_adapter

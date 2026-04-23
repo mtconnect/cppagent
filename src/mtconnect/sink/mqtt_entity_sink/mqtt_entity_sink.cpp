@@ -18,17 +18,20 @@
 #include "mqtt_entity_sink.hpp"
 
 #include <iomanip>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include <sstream>
-
-#include <nlohmann/json.hpp>
 
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/mqtt/mqtt_client_impl.hpp"
 #include "mtconnect/observation/observation.hpp"
 
+using namespace std;
+using namespace mtconnect;
+using namespace mtconnect::mqtt_client;
 using ptree = boost::property_tree::ptree;
-using json = nlohmann::json;
+namespace rj = ::rapidjson;
 
 using namespace std;
 using namespace mtconnect;
@@ -211,7 +214,7 @@ namespace mtconnect {
               std::lock_guard<std::mutex> lock(m_queueMutex);
               if (m_queuedObservations.size() >= MAX_QUEUE_SIZE)
               {
-                m_queuedObservations.erase(m_queuedObservations.begin());
+                m_queuedObservations.pop_front();
               }
               m_queuedObservations.push_back(obsCopy);
               obsCount++;
@@ -270,25 +273,29 @@ namespace mtconnect {
         else if (holds_alternative<entity::DataSet>(value))
         {
           // For DataSet, return as JSON string
-          json j = json::object();
+          rj::StringBuffer buf;
+          rj::Writer<rj::StringBuffer> w(buf);
+          w.StartObject();
           auto& ds = get<entity::DataSet>(value);
           for (auto& entry : ds)
           {
-            // Convert the variant value to appropriate JSON type
+            w.Key(entry.m_key.c_str(), rj::SizeType(entry.m_key.size()));
             if (holds_alternative<string>(entry.m_value))
             {
-              j[entry.m_key] = get<string>(entry.m_value);
+              auto& s = get<string>(entry.m_value);
+              w.String(s.c_str(), rj::SizeType(s.size()));
             }
             else if (holds_alternative<int64_t>(entry.m_value))
             {
-              j[entry.m_key] = get<int64_t>(entry.m_value);
+              w.Int64(get<int64_t>(entry.m_value));
             }
             else if (holds_alternative<double>(entry.m_value))
             {
-              j[entry.m_key] = get<double>(entry.m_value);
+              w.Double(get<double>(entry.m_value));
             }
           }
-          return j.dump();
+          w.EndObject();
+          return buf.GetString();
         }
 
         return "UNAVAILABLE";
@@ -297,8 +304,6 @@ namespace mtconnect {
       std::string MqttEntitySink::formatObservationJson(
           const observation::ObservationPtr& observation)
       {
-        json j;
-
         try
         {
           auto dataItem = observation->getDataItem();
@@ -308,46 +313,58 @@ namespace mtconnect {
             return "{}";
           }
 
-          j["dataItemId"] = dataItem->getId();
+          rj::StringBuffer buf;
+          rj::Writer<rj::StringBuffer> w(buf);
+          w.StartObject();
+
+          w.Key("dataItemId");
+          w.String(dataItem->getId().c_str());
 
           const auto& name = dataItem->getName();
           if (name && !name->empty())
           {
-            j["name"] = *name;
+            w.Key("name");
+            w.String(name->c_str());
           }
 
-          j["type"] = dataItem->getType();
+          w.Key("type");
+          w.String(dataItem->getType().c_str());
 
           auto subType = dataItem->maybeGet<std::string>("subType");
           if (subType && !subType->empty())
           {
-            j["subType"] = *subType;
+            w.Key("subType");
+            w.String(subType->c_str());
           }
 
-          j["timestamp"] = formatTimestamp(observation->getTimestamp());
+          w.Key("timestamp");
+          auto ts = formatTimestamp(observation->getTimestamp());
+          w.String(ts.c_str());
 
           // Get the category
           auto category = dataItem->getCategory();
+          w.Key("category");
           if (category == device_model::data_item::DataItem::SAMPLE)
-          {
-            j["category"] = "SAMPLE";
-          }
+            w.String("SAMPLE");
           else if (category == device_model::data_item::DataItem::EVENT)
-          {
-            j["category"] = "EVENT";
-          }
+            w.String("EVENT");
           else if (category == device_model::data_item::DataItem::CONDITION)
-          {
-            j["category"] = "CONDITION";
-          }
+            w.String("CONDITION");
+          else
+            w.String("UNKNOWN");
 
           // Add the result/value
-          j["result"] = getObservationValue(observation);
+          w.Key("result");
+          auto val = getObservationValue(observation);
+          w.String(val.c_str());
 
           // Add sequence number
-          j["sequence"] = observation->getSequence();
+          w.Key("sequence");
+          w.Int64(observation->getSequence());
 
-          auto result = j.dump();
+          w.EndObject();
+
+          auto result = string(buf.GetString(), buf.GetSize());
           LOG(trace) << "Formatted observation JSON: " << result;
           return result;
         }
@@ -360,72 +377,90 @@ namespace mtconnect {
 
       std::string MqttEntitySink::formatConditionJson(const observation::ConditionPtr& condition)
       {
-        json j;
-
         auto dataItem = condition->getDataItem();
         if (!dataItem)
         {
           return "{}";
         }
 
-        j["dataItemId"] = dataItem->getId();
+        rj::StringBuffer buf;
+        rj::Writer<rj::StringBuffer> w(buf);
+        w.StartObject();
+
+        w.Key("dataItemId");
+        w.String(dataItem->getId().c_str());
 
         const auto& name = dataItem->getName();
         if (name && !name->empty())
         {
-          j["name"] = *name;
+          w.Key("name");
+          w.String(name->c_str());
         }
 
-        j["type"] = dataItem->getType();
+        w.Key("type");
+        w.String(dataItem->getType().c_str());
 
         auto subType = dataItem->maybeGet<std::string>("subType");
         if (subType && !subType->empty())
         {
-          j["subType"] = *subType;
+          w.Key("subType");
+          w.String(subType->c_str());
         }
 
-        j["timestamp"] = formatTimestamp(condition->getTimestamp());
-        j["category"] = "CONDITION";
+        w.Key("timestamp");
+        auto ts = formatTimestamp(condition->getTimestamp());
+        w.String(ts.c_str());
+
+        w.Key("category");
+        w.String("CONDITION");
 
         // Add condition-specific fields
+        w.Key("level");
         switch (condition->getLevel())
         {
           case Condition::NORMAL:
-            j["level"] = "NORMAL";
+            w.String("NORMAL");
             break;
           case Condition::WARNING:
-            j["level"] = "WARNING";
+            w.String("WARNING");
             break;
           case Condition::FAULT:
-            j["level"] = "FAULT";
+            w.String("FAULT");
             break;
           case Condition::UNAVAILABLE:
-            j["level"] = "UNAVAILABLE";
+            w.String("UNAVAILABLE");
             break;
         }
 
         // Add native code if present
         if (condition->hasProperty("nativeCode"))
         {
-          j["nativeCode"] = condition->get<string>("nativeCode");
+          w.Key("nativeCode");
+          auto nc = condition->get<string>("nativeCode");
+          w.String(nc.c_str());
         }
 
         // Add condition ID if present
         if (!condition->getCode().empty())
         {
-          j["conditionId"] = condition->getCode();
+          w.Key("conditionId");
+          w.String(condition->getCode().c_str());
         }
 
         // Add message/value if present
         if (condition->hasValue())
         {
-          j["message"] = getObservationValue(condition);
+          w.Key("message");
+          auto msg = getObservationValue(condition);
+          w.String(msg.c_str());
         }
 
         // Add sequence number
-        j["sequence"] = condition->getSequence();
+        w.Key("sequence");
+        w.Int64(condition->getSequence());
 
-        return j.dump();
+        w.EndObject();
+        return string(buf.GetString(), buf.GetSize());
       }
 
       std::string MqttEntitySink::getObservationTopic(
@@ -469,7 +504,7 @@ namespace mtconnect {
             LOG(warning) << "MqttEntitySink::publish: Observation queue full (" << MAX_QUEUE_SIZE
                          << "), dropping oldest observation for "
                          << m_queuedObservations.front()->getDataItem()->getId();
-            m_queuedObservations.erase(m_queuedObservations.begin());
+            m_queuedObservations.pop_front();
           }
           LOG(debug) << "MqttEntitySink::publish: Client not connected, queuing observation for "
                      << dataItem->getId();

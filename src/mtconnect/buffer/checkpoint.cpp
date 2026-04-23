@@ -154,7 +154,7 @@ namespace mtconnect {
       }
       else
       {
-        m_observations[id] = dynamic_pointer_cast<Observation>(obs->getptr());
+        m_observations[id] = obs;
       }
     }
 
@@ -170,7 +170,7 @@ namespace mtconnect {
       for (const auto &event : checkpoint.m_observations)
       {
         if (!m_filter || m_filter->count(event.first) > 0)
-          m_observations[event.first] = dynamic_pointer_cast<Observation>(event.second->getptr());
+          m_observations[event.first] = event.second;
       }
     }
 

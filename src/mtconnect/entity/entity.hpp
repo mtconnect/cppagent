@@ -44,12 +44,12 @@ namespace mtconnect {
       PropertyKey(const char *s) : QName(s) {}
 
       /// @brief clears marks for this property
-      void clearMark() const { const_cast<PropertyKey *>(this)->m_mark = false; }
+      void clearMark() const { m_mark = false; }
       /// @brief sets the mark for this property
-      void setMark() const { const_cast<PropertyKey *>(this)->m_mark = true; }
+      void setMark() const { m_mark = true; }
 
       /// @brief allows factory to track required properties
-      bool m_mark {false};
+      mutable bool m_mark {false};
     };
 
     /// @brief properties are a map of PropertyKey to Value
@@ -209,7 +209,8 @@ namespace mtconnect {
       /// @return `VALUE` property
       Value &getValue()
       {
-        static Value null;
+        thread_local Value null;
+        null = std::monostate {};
         auto p = m_properties.find("VALUE");
         if (p != m_properties.end())
           return p->second;
@@ -260,7 +261,8 @@ namespace mtconnect {
       /// @returns a reference to the entity list. Returns an empty list if it does not exist.
       EntityList &getListProperty()
       {
-        static EntityList null;
+        thread_local EntityList null;
+        null.clear();
 
         auto p = m_properties.find("LIST");
         if (p != m_properties.end())
@@ -451,7 +453,8 @@ namespace mtconnect {
 
       Value &getProperty_(const std::string &name)
       {
-        static Value noValue {std::monostate()};
+        thread_local Value noValue {std::monostate()};
+        noValue = std::monostate {};
         auto it = m_properties.find(name);
         if (it == m_properties.end())
           return noValue;
@@ -712,6 +715,11 @@ namespace mtconnect {
           removed.push_back(key);
           changed = true;
         }
+      }
+
+      for (auto &key : removed)
+      {
+        m_properties.erase(key);
       }
 
       return changed;

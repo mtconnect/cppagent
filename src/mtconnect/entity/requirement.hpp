@@ -267,21 +267,8 @@ namespace mtconnect::entity {
 
     Requirement() = default;
     Requirement(const Requirement &o) = default;
+    Requirement &operator=(const Requirement &o) = default;
     ~Requirement() = default;
-
-    /// @brief Check if two requires are the same
-    /// @param o another requirement
-    /// @return `true` if they are equal
-    Requirement &operator=(const Requirement &o)
-    {
-      m_type = o.m_type;
-      m_lowerMultiplicity = o.m_lowerMultiplicity;
-      m_upperMultiplicity = o.m_upperMultiplicity;
-      m_factory = o.m_factory;
-      m_matcher = o.m_matcher;
-      m_size = o.m_size;
-      return *this;
-    }
 
     /// @brief gets required state
     /// @return `true` if property is required
@@ -340,7 +327,7 @@ namespace mtconnect::entity {
       catch (PropertyError &e)
       {
         e.setProperty(m_name);
-        throw e;
+        throw;
       }
       return false;
     }
