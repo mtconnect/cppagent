@@ -46,7 +46,7 @@ namespace mtconnect {
       /// @param version the version to parse
       /// @param errors Errors that occurred creating the entities
       /// @return an entity shared pointer if successful
-      EntityPtr parse(FactoryPtr factory, const std::string &document, const std::string &version,
+      EntityPtr parse(FactoryPtr factory, const std::string &document, 
                       ErrorList &errors);
 
     protected:

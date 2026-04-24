@@ -179,7 +179,7 @@ namespace mtconnect::parser {
     {
       entity::ErrorList errors;
       entity::JsonParser parser(version);
-      auto entity = parser.parse(Device::getRoot(), jsonDoc, "2.3", errors);
+      auto entity = parser.parse(Device::getRoot(), jsonDoc, errors);
 
       if (!errors.empty())
       {

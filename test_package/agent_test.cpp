@@ -2664,9 +2664,9 @@ TEST_F(AgentTest, should_handle_japanese_characters)
 TEST_F(AgentTest, should_have_device_model_change_time_in_the_header_for_v1_7)
 {
   using namespace nlohmann;
-  
+
   m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.7", 4, true, true,
-                                 {{configuration::JsonVersion, 2 }});
+                                 {{configuration::JsonVersion, 2}});
   {
     PARSE_JSON_RESPONSE("/current");
     json header = doc.at("/MTConnectStreams/Header"_json_pointer);
@@ -2679,9 +2679,9 @@ TEST_F(AgentTest, should_have_device_model_change_time_in_the_header_for_v1_7)
 TEST_F(AgentTest, should_not_have_device_model_change_time_in_the_header_for_pre_v1_7)
 {
   using namespace nlohmann;
-  
+
   m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.6", 4, true, true,
-                                 {{configuration::JsonVersion, 2 }});
+                                 {{configuration::JsonVersion, 2}});
   {
     PARSE_JSON_RESPONSE("/current");
     json header = doc.at("/MTConnectStreams/Header"_json_pointer);

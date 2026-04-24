@@ -177,8 +177,7 @@ namespace mtconnect {
       return nullptr;
     }
 
-    EntityPtr JsonParser::parse(FactoryPtr factory, const string& document, const string& version,
-                                ErrorList& errors)
+    EntityPtr JsonParser::parse(FactoryPtr factory, const string& document, ErrorList& errors)
     {
       NAMED_SCOPE("entity.json_parser");
       EntityPtr entity;

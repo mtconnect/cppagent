@@ -306,13 +306,13 @@ namespace mtconnect::observation {
     AsyncObserver(boost::asio::io_context::strand &strand,
                   mtconnect::buffer::CircularBuffer &buffer, FilterSet &&filter,
                   std::chrono::milliseconds interval, std::chrono::milliseconds heartbeat)
-    : AsyncResponse(interval),
-    m_heartbeat(heartbeat),
-    m_last(std::chrono::system_clock::now()),
-    m_filter(std::move(filter)),
-    m_strand(strand),
-    m_observer(strand),
-    m_buffer(buffer)
+      : AsyncResponse(interval),
+        m_heartbeat(heartbeat),
+        m_last(std::chrono::system_clock::now()),
+        m_filter(std::move(filter)),
+        m_strand(strand),
+        m_observer(strand),
+        m_buffer(buffer)
     {}
 
     /// @brief default destructor
@@ -335,7 +335,7 @@ namespace mtconnect::observation {
     void handlerCompleted()
     {
       NAMED_SCOPE("AsyncObserver::handlerCompleted");
-      
+
       m_last = std::chrono::system_clock::now();
       if (m_endOfBuffer)
       {
