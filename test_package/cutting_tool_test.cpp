@@ -635,6 +635,107 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
             sdoc);
 }
 
+TEST_F(CuttingToolTest, test_extended_cutting_tool_with_json_v2)
+{
+  const auto doc =
+      R"DOC(<CuttingTool assetId="123456.10" serialNumber="10" toolId="123456">
+  <CuttingToolLifeCycle>
+    <CutterStatus>
+      <Status>AVAILABLE</Status>
+    </CutterStatus>
+    <ProgramToolNumber>10</ProgramToolNumber>
+    <Location negativeOverlap="0" positiveOverlap="0" type="POT">13</Location>
+    <CuttingItems count="12">
+      <CuttingItem indices="1">
+        <ItemLife countDirection="UP" initial="0" limit="0" type="PART_COUNT">0</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="MINUTES">0</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="WEAR">0</ItemLife>
+        <x:ItemCutterStatus xmlns:x="okuma.com:OkumaToolAssets">
+          <Status>AVAILABLE</Status>
+        </x:ItemCutterStatus>
+        <x:ItemProgramToolGroup xmlns:x="okuma.com:OkumaToolAssets">0</x:ItemProgramToolGroup>
+      </CuttingItem>
+    </CuttingItems>
+  </CuttingToolLifeCycle>
+</CuttingTool>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
+  ASSERT_EQ(0, errors.size());
+  
+  auto asset = dynamic_cast<Asset *>(entity.get());
+  ASSERT_NE(nullptr, asset);
+  
+  entity::JsonEntityPrinter jprinter(2, true);
+  auto jdoc = jprinter.print(entity);
+    
+  EXPECT_EQ(R"({
+  "CuttingTool": {
+    "CuttingToolLifeCycle": {
+      "CutterStatus": {
+        "Status": [
+          {
+            "value": "AVAILABLE"
+          }
+        ]
+      },
+      "CuttingItems": {
+        "CuttingItem": [
+          {
+            "ItemLife": [
+              {
+                "value": 0.0,
+                "countDirection": "UP",
+                "initial": 0.0,
+                "limit": 0.0,
+                "type": "PART_COUNT"
+              },
+              {
+                "value": 0.0,
+                "countDirection": "UP",
+                "initial": 0.0,
+                "limit": 0.0,
+                "type": "MINUTES"
+              },
+              {
+                "value": 0.0,
+                "countDirection": "UP",
+                "initial": 0.0,
+                "limit": 0.0,
+                "type": "WEAR"
+              }
+            ],
+            "indices": "1",
+            "x:ItemCutterStatus": {
+              "Status": "AVAILABLE",
+              "xmlns:x": "okuma.com:OkumaToolAssets"
+            },
+            "x:ItemProgramToolGroup": {
+              "value": "0",
+              "xmlns:x": "okuma.com:OkumaToolAssets"
+            }
+          }
+        ],
+        "count": 12
+      },
+      "Location": {
+        "value": "13",
+        "negativeOverlap": 0,
+        "positiveOverlap": 0,
+        "type": "POT"
+      },
+      "ProgramToolNumber": "10"
+    },
+    "assetId": "123456.10",
+    "serialNumber": "10",
+    "toolId": "123456"
+  }
+})", jdoc);
+}
+
 TEST_F(CuttingToolTest, test_xmlns_with_top_element_alias)
 {
   const auto doc =

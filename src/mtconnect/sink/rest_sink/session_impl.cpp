@@ -302,11 +302,15 @@ namespace mtconnect::sink::rest_sink {
     m_complete = complete;
     m_mimeType = mimeType;
     m_streaming = true;
+    
+    auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+    std::string date = std::format("{:%a, %d %b %Y %T} GMT", now);
 
     auto res = make_shared<http::response<empty_body>>(status::ok, 11);
     m_response = res;
     res->chunked(true);
     res->set(field::server, "MTConnectAgent");
+    res->set(field::date, date);
     res->set(field::connection, "close");
     res->set(field::content_type, "multipart/mixed;boundary=" + m_boundary);
     res->set(field::expires, "-1");
@@ -361,6 +365,10 @@ namespace mtconnect::sink::rest_sink {
   void SessionImpl<Derived>::addHeaders(const Response &response, Message &res)
   {
     res->set(http::field::server, "MTConnectAgent");
+    auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+    std::string date = std::format("{:%a, %d %b %Y %T} GMT", now);
+    res->set(http::field::date, date);
+
     if (response.m_close || m_close)
       res->set(http::field::connection, "close");
     if (response.m_expires == 0s)
