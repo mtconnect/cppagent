@@ -5,7 +5,7 @@ compiler=apple-clang
 compiler.cppstd=20
 os.version=15.0
 
-[system_tools]
+[platform_tool_requires]
 cmake/>3.26.0
 
 

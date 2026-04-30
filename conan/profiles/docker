@@ -7,6 +7,6 @@ compiler.cppstd=20
 [options]
 without_ipv6=True
 
-[system_tools]
+[platform_tool_requires]
 cmake/>3.23.0
 
