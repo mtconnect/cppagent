@@ -215,7 +215,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe)
     EXPECT_EQ("MTConnect/Probe/000", topic);
 
     ErrorList list;
-    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
+    auto ptr = parser.parse(device_model::Device::getRoot(), payload, list);
     EXPECT_EQ(0, list.size());
     auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
     EXPECT_TRUE(dev);
@@ -336,7 +336,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe_with_uuid_first)
     EXPECT_EQ("MTConnect/000/Probe", topic);
 
     ErrorList list;
-    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
+    auto ptr = parser.parse(device_model::Device::getRoot(), payload, list);
     EXPECT_EQ(0, list.size());
     auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
     EXPECT_TRUE(dev);
@@ -375,7 +375,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe_no_device_in_format)
     EXPECT_EQ("MTConnect/Probe/000", topic);
 
     ErrorList list;
-    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
+    auto ptr = parser.parse(device_model::Device::getRoot(), payload, list);
     EXPECT_EQ(0, list.size());
     auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
     EXPECT_TRUE(dev);

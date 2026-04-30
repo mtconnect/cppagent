@@ -122,7 +122,7 @@ TEST_F(JsonParserTest, should_parse_v1_entity_with_properties_and_entity_list)
   ErrorList errors;
   entity::JsonParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   ASSERT_EQ("FileArchetype", entity->getName());
@@ -169,7 +169,7 @@ TEST_F(JsonParserTest, should_parse_v1_recursive_entity_lists)
   ErrorList errors;
   entity::JsonParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   ASSERT_EQ("Device", entity->getName());
@@ -220,7 +220,7 @@ TEST_F(JsonParserTest, should_fail_v1_when_required_property_missing)
   ErrorList errors;
   entity::JsonParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(1, errors.size());
   ASSERT_FALSE(entity);
   ASSERT_EQ(string("Device(uuid): Property uuid is required and not provided"),
@@ -246,7 +246,7 @@ TEST_F(JsonParserTest, should_error_v1_when_entity_list_is_empty)
   ErrorList errors;
   entity::JsonParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(1, errors.size());
   ASSERT_TRUE(entity);
   ASSERT_EQ(string("Components(Component): Property Component is required and not provided"),
@@ -311,7 +311,7 @@ TEST_F(JsonParserTest, should_parse_v2_entity_with_properties_and_typed_entity_l
   ErrorList errors;
   entity::JsonParser parser(2);
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   ASSERT_EQ("FileArchetype", entity->getName());
@@ -359,7 +359,7 @@ TEST_F(JsonParserTest, should_parse_v2_recursive_entity_lists_grouped_by_type)
   ErrorList errors;
   entity::JsonParser parser(2);
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   ASSERT_EQ("Device", entity->getName());
@@ -410,7 +410,7 @@ TEST_F(JsonParserTest, should_fail_v2_when_required_property_missing)
   ErrorList errors;
   entity::JsonParser parser(2);
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(1, errors.size());
   ASSERT_FALSE(entity);
   ASSERT_EQ(string("Device(uuid): Property uuid is required and not provided"),
@@ -436,7 +436,7 @@ TEST_F(JsonParserTest, should_error_v2_when_entity_list_is_empty)
   ErrorList errors;
   entity::JsonParser parser(2);
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(1, errors.size());
   ASSERT_TRUE(entity);
   ASSERT_EQ(string("Components(Component): Property Component is required and not provided"),
@@ -478,7 +478,7 @@ TEST_F(JsonParserTest, should_parse_v2_multiple_entities_of_same_type_in_one_arr
   ErrorList errors;
   entity::JsonParser parser(2);
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto l = entity->getList("Components");
@@ -513,7 +513,7 @@ TEST_F(JsonParserTest, should_parse_raw_content_without_xml_encoding)
   ErrorList errors;
   entity::JsonParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
 
   ASSERT_EQ("JSON", get<string>(entity->getProperty("format")));
 

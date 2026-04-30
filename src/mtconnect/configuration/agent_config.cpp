@@ -529,7 +529,8 @@ namespace mtconnect::configuration {
 
     ConfigOptions options;
     AddDefaultedOptions(logger, options,
-                        {{"max_size", "2mb"s},
+                        {{"max_size", ""s},
+                         {"rotation_size", ""s},  // for backward compatibility
                          {"max_archive_size", "10mb"s},
                          {"max_index", 9},
                          {"file_name", defaultFileName},
@@ -602,8 +603,11 @@ namespace mtconnect::configuration {
     auto &archiveLogDirectory = logChannel.m_archiveLogDirectory;
     auto &logFileName = logChannel.m_logFileName;
 
+    logRotationSize = 2 * 1024 * 1024;  // Default to 2MB for log rotation size
     maxLogArchiveSize = ConvertFileSize(options, "max_archive_size", maxLogArchiveSize);
+    logRotationSize = ConvertFileSize(options, "rotation_size", logRotationSize);
     logRotationSize = ConvertFileSize(options, "max_size", logRotationSize);
+
     int max_index = *GetOption<int>(options, "max_index");
 
     if (auto sched = GetOption<string>(options, "schedule"))

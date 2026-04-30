@@ -561,7 +561,7 @@ namespace mtconnect {
     using boost::smatch;
 
     auto value = GetOption<string>(options, name);
-    if (value)
+    if (value && !value->empty())
     {
       static const regex pat("([0-9]+)([GgMmKkBb]*)");
       smatch match;

@@ -400,14 +400,37 @@ namespace mtconnect::sink::rest_sink {
   void Server::addSwaggerRoutings()
   {
     auto handler = [&](SessionPtr session, const RequestPtr request) -> bool {
-      auto pretty = *request->parameter<bool>("pretty");
+      auto json = request->m_accepts.find("json");
+      auto html = request->m_accepts.find("html");
+      if (html == string::npos || (json != string::npos && json < html))
+      {
+        auto pretty = *request->parameter<bool>("pretty");
 
-      StringBuffer output;
-      RenderJson(output, pretty, [this](auto &writer) { renderSwaggerResponse(writer); });
+        StringBuffer output;
+        RenderJson(output, pretty, [this](auto &writer) { renderSwaggerResponse(writer); });
 
-      session->writeResponse(
-          make_unique<Response>(status::ok, string(output.GetString()), "application/json"));
-
+        session->writeResponse(
+            make_unique<Response>(status::ok, string(output.GetString()), "application/json"));
+      }
+      else
+      {
+        string response = R"(<!DOCTYPE html>
+<html>
+  <head>
+    <title>MTConnect API</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+    <script>
+      SwaggerUIBundle({ url: '/swagger', dom_id: '#swagger-ui' });
+    </script>
+  </body>
+</html>
+)";
+        session->writeResponse(make_unique<Response>(status::ok, response, "text/html"));
+      }
       return true;
     };
 

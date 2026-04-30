@@ -719,13 +719,13 @@ TEST_F(JsonPrinterStreamTest, should_have_device_model_change_time_in_header)
   m_xmlPrinter = std::make_unique<printer::XmlPrinter>("2.7");
   m_printer = std::make_unique<printer::JsonPrinter>(2, true);
   m_printer->setModelChangeTime("2026-01-01T00:00:00Z");
-  
+
   ObservationList list;
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
-  
-  auto jdoc = json::parse(doc);
-  
-  auto header = jdoc.at("/MTConnectStreams/Header"_json_pointer);
-  ASSERT_EQ(string("2026-01-01T00:00:00Z"), header.at("/deviceModelChangeTime"_json_pointer).get<string>());
-}
 
+  auto jdoc = json::parse(doc);
+
+  auto header = jdoc.at("/MTConnectStreams/Header"_json_pointer);
+  ASSERT_EQ(string("2026-01-01T00:00:00Z"),
+            header.at("/deviceModelChangeTime"_json_pointer).get<string>());
+}
