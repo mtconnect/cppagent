@@ -91,7 +91,7 @@ protected:
   std::unique_ptr<entity::XmlParser> m_parser;
 };
 
-TEST_F(JsonPrinterAssetTest, AssetHeader)
+TEST_F(JsonPrinterAssetTest, asset_header_contains_instance_id_buffer_size_and_count)
 {
   AssetList asset;
   m_printer->setSenderName("MachineXXX");
@@ -106,7 +106,7 @@ TEST_F(JsonPrinterAssetTest, AssetHeader)
   ASSERT_EQ("MachineXXX", jdoc.at("/MTConnectAssets/Header/sender"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterAssetTest, CuttingTool)
+TEST_F(JsonPrinterAssetTest, cutting_tool_asset_is_printed_with_serial_number_and_tool_id)
 {
   auto xml = getFile("asset1.xml");
   entity::ErrorList errors;
@@ -135,7 +135,7 @@ TEST_F(JsonPrinterAssetTest, CuttingTool)
             cuttingTool.at("/CuttingTool/Description"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterAssetTest, CuttingToolLifeCycle)
+TEST_F(JsonPrinterAssetTest, cutting_tool_life_cycle_contains_status_tool_life_and_speeds)
 {
   auto xml = getFile("asset1.xml");
   entity::ErrorList errors;
@@ -174,7 +174,7 @@ TEST_F(JsonPrinterAssetTest, CuttingToolLifeCycle)
   ASSERT_EQ(222.0, feed.at("/value"_json_pointer).get<double>());
 }
 
-TEST_F(JsonPrinterAssetTest, CuttingMeasurements)
+TEST_F(JsonPrinterAssetTest, cutting_measurements_are_printed_as_array_with_codes_and_values)
 {
   auto xml = getFile("asset1.xml");
   entity::ErrorList errors;
@@ -206,7 +206,7 @@ TEST_F(JsonPrinterAssetTest, CuttingMeasurements)
   ASSERT_EQ(120.65, length.at("/BodyLengthMax/value"_json_pointer).get<double>());
 }
 
-TEST_F(JsonPrinterAssetTest, CuttingItem)
+TEST_F(JsonPrinterAssetTest, cutting_items_are_printed_with_indices_grade_and_measurements)
 {
   auto xml = getFile("asset1.xml");
   entity::ErrorList errors;
@@ -244,7 +244,7 @@ TEST_F(JsonPrinterAssetTest, CuttingItem)
   ASSERT_EQ(0.8, measurements.at("/3/CornerRadius/value"_json_pointer).get<double>());
 }
 
-TEST_F(JsonPrinterAssetTest, CuttingToolArchitype)
+TEST_F(JsonPrinterAssetTest, cutting_tool_archetype_is_printed_with_definition_and_format)
 {
   auto xml = getFile("cutting_tool_archetype.xml");
   entity::ErrorList errors;

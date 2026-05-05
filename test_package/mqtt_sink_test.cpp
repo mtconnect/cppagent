@@ -199,7 +199,7 @@ TEST_F(MqttSinkTest, mqtt_sink_flat_formatt_check)
   ASSERT_TRUE(waitFor(10s, [&service]() { return service->isConnected(); }));
 }
 
-TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe)
+TEST_F(MqttSinkTest, mqtt_sink_publishes_probe_response)
 {
   ConfigOptions options;
   createServer(options);
@@ -238,7 +238,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe)
   ASSERT_TRUE(waitFor(1s, [&gotDevice]() { return gotDevice; }));
 }
 
-TEST_F(MqttSinkTest, mqtt_sink_should_publish_Sample)
+TEST_F(MqttSinkTest, mqtt_sink_publishes_sample_on_data_change)
 {
   ConfigOptions options;
   createServer(options);
@@ -283,7 +283,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Sample)
   ASSERT_TRUE(waitFor(10s, [&gotSample]() { return gotSample; }));
 }
 
-TEST_F(MqttSinkTest, mqtt_sink_should_publish_Current)
+TEST_F(MqttSinkTest, mqtt_sink_publishes_current_on_connection)
 {
   ConfigOptions options;
   createServer(options);
@@ -320,7 +320,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Current)
   ASSERT_TRUE(waitFor(1s, [&gotCurrent]() { return gotCurrent; }));
 }
 
-TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe_with_uuid_first)
+TEST_F(MqttSinkTest, mqtt_sink_publishes_probe_with_uuid_first_in_topic)
 {
   ConfigOptions options;
   createServer(options);
@@ -359,7 +359,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe_with_uuid_first)
   ASSERT_TRUE(waitFor(1s, [&gotDevice]() { return gotDevice; }));
 }
 
-TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe_no_device_in_format)
+TEST_F(MqttSinkTest, mqtt_sink_publishes_probe_without_device_in_topic)
 {
   ConfigOptions options;
   createServer(options);

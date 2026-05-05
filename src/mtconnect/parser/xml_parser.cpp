@@ -258,33 +258,87 @@ namespace mtconnect::parser {
   DevicePtr XmlParser::parseDevice(const std::string &deviceXml, printer::XmlPrinter *aPrinter)
   {
     DevicePtr device;
-
-    using namespace boost::adaptors;
-    using namespace boost::range;
-
     std::unique_lock lock(m_mutex);
 
+    // Parse the device XML unti an in memory doc and then see if we have a root MTConnectDevices
+    // node or a Device node. If devices, then we need to find the first device and then use the
+    // entity parser to parse the device. We then log any errors.
+
+    xmlDocPtr doc = nullptr;
     try
     {
-      entity::ErrorList errors;
-      auto entity = entity::XmlParser::parse(Device::getRoot(), deviceXml, errors);
-      if (errors.size() > 0)
+      xmlInitParser();
+      xmlSetGenericErrorFunc(nullptr, agentXMLErrorFunc);
+
+      doc = xmlReadMemory(deviceXml.c_str(), int32_t(deviceXml.length()), "DeviceStream.xml",
+                          nullptr, XML_PARSE_NOBLANKS);
+      if (!doc)
+        throw runtime_error("Failed to parse device XML");
+
+      auto root = xmlDocGetRootElement(doc);
+      if (!root)
+        throw runtime_error("Device XML has no root element");
+
+      xmlNodePtr deviceNode = nullptr;
+      if (xmlStrcmp(root->name, BAD_CAST "MTConnectDevices") == 0)
       {
-        LOG(warning) << "Errors parsing Device: " << deviceXml;
-        for (auto &e : errors)
+        for (auto child = root->children; child; child = child->next)
         {
-          LOG(warning) << "   " << e->what();
+          if (xmlStrcmp(child->name, BAD_CAST "Devices") == 0)
+          {
+            deviceNode = child->children;
+            break;
+          }
         }
+      }
+      else if (xmlStrcmp(root->name, BAD_CAST "Device") == 0)
+      {
+        deviceNode = root;
       }
       else
       {
-        device = dynamic_pointer_cast<Device>(entity);
+        throw runtime_error("Root element of device XML must be either MTConnectDevices or Device");
       }
+
+      if (!deviceNode)
+        throw runtime_error("No Device node found in device XML");
+
+      entity::ErrorList errors;
+      auto entity = entity::XmlParser::parseXmlNode(Device::getRoot(), deviceNode, errors);
+
+      for (auto &e : errors)
+      {
+        if (entity)
+          LOG(warning) << "When parsing device, a problem was skipped: " << e->what();
+        else
+          LOG(error) << "Failed to parse device: " << e->what();
+      }
+
+      if (entity)
+        device = dynamic_pointer_cast<Device>(entity);
+      else
+        LOG(error) << "Failed to parse device, skipping";
+
+      xmlFreeDoc(doc);
+      doc = nullptr;
+    }
+    catch (const runtime_error &e)
+    {
+      if (doc)
+        xmlFreeDoc(doc);
+      LOG(error) << "Cannot parse device XML: " << e.what();
     }
     catch (const string &e)
     {
-      LOG(fatal) << "Cannot parse XML document: " << e;
-      throw FatalException();
+      if (doc)
+        xmlFreeDoc(doc);
+      LOG(error) << "Cannot parse XML document: " << e;
+    }
+    catch (...)
+    {
+      if (doc)
+        xmlFreeDoc(doc);
+      LOG(error) << "Cannot parse XML document: unknown exception";
     }
 
     return device;

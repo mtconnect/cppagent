@@ -1149,7 +1149,7 @@ TEST_F(JsonMappingTest, should_skip_erroneous_table)
 }
 
 // if the tag "blah" is not found in the device file, none of the other tags get processed
-TEST_F(JsonMappingTest, should_ignore_Invalid_Tag_DataItem)
+TEST_F(JsonMappingTest, should_ignore_invalid_tag_data_item)
 {
   auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
   makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
@@ -1189,7 +1189,7 @@ TEST_F(JsonMappingTest, should_ignore_Invalid_Tag_DataItem)
   ASSERT_EQ("BLAH", obs->getValue<string>());
 }
 
-TEST_F(JsonMappingTest, should_ignore_Invalid_make_DataItem)
+TEST_F(JsonMappingTest, should_ignore_invalid_make_data_item)
 {
   auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
   makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});

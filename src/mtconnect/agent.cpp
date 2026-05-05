@@ -461,7 +461,14 @@ namespace mtconnect {
     {
       auto printer = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
       auto device = m_xmlParser->parseDevice(deviceXml, printer);
-      loadDevices({device}, source);
+      if (device == nullptr)
+      {
+        LOG(error) << "Error loading device: " << deviceXml;
+      }
+      else
+      {
+        loadDevices({device}, source);
+      }
     }
     catch (runtime_error &e)
     {

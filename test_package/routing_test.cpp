@@ -55,7 +55,7 @@ protected:
   const Routing::Function m_func {[](SessionPtr, const RequestPtr) { return true; }};
 };
 
-TEST_F(RoutingTest, TestSimplePattern)
+TEST_F(RoutingTest, matches_simple_path_and_verb_pattern)
 {
   RequestPtr request = make_shared<Request>();
   request->m_verb = verb::get;
@@ -82,7 +82,7 @@ TEST_F(RoutingTest, TestSimplePattern)
   ASSERT_EQ("ABC123", get<string>(request->m_parameters["device"]));
 }
 
-TEST_F(RoutingTest, TestComplexPatterns)
+TEST_F(RoutingTest, matches_complex_path_with_asset_parameter)
 {
   RequestPtr request = make_shared<Request>();
   request->m_verb = verb::get;
@@ -98,7 +98,7 @@ TEST_F(RoutingTest, TestComplexPatterns)
   ASSERT_FALSE(r.matches(0, request));
 }
 
-TEST_F(RoutingTest, TestCurrentAtQueryParameter)
+TEST_F(RoutingTest, parses_current_at_query_parameter)
 {
   Routing r(verb::get, "/{device}/current?at={unsigned_integer}", m_func);
   ASSERT_EQ(1, r.getPathParameters().size());
@@ -115,7 +115,7 @@ TEST_F(RoutingTest, TestCurrentAtQueryParameter)
   EXPECT_TRUE(holds_alternative<monostate>(qp.m_default));
 }
 
-TEST_F(RoutingTest, TestSampleQueryParameters)
+TEST_F(RoutingTest, parses_sample_query_parameters_with_defaults)
 {
   Routing r(verb::get,
             "/{device}/sample?from={unsigned_integer}&"
@@ -156,7 +156,7 @@ TEST_F(RoutingTest, TestSampleQueryParameters)
   EXPECT_TRUE(holds_alternative<monostate>(qp->m_default));
 }
 
-TEST_F(RoutingTest, TestQueryParameterMatch)
+TEST_F(RoutingTest, matches_request_with_query_parameters)
 {
   RequestPtr request = make_shared<Request>();
   request->m_verb = verb::get;
@@ -192,7 +192,7 @@ TEST_F(RoutingTest, TestQueryParameterMatch)
   ASSERT_EQ(request->m_parameters.end(), request->m_parameters.find("dummy"));
 }
 
-TEST_F(RoutingTest, TestQueryParameterError)
+TEST_F(RoutingTest, throws_rest_error_for_invalid_query_parameter_type)
 {
   Routing r(verb::get,
             "/{device}/sample?from={unsigned_integer}&"

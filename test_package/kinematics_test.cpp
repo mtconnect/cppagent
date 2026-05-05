@@ -63,7 +63,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-TEST_F(KinematicsTest, ParseZAxisKinematics)
+TEST_F(KinematicsTest, z_axis_kinematics_motion_attributes_are_parsed_correctly)
 {
   using namespace mtconnect::entity;
   ASSERT_NE(nullptr, m_device);
@@ -97,7 +97,7 @@ TEST_F(KinematicsTest, ParseZAxisKinematics)
   ASSERT_EQ(1.0, axis[2]);
 }
 
-TEST_F(KinematicsTest, ParseCAxisKinematics)
+TEST_F(KinematicsTest, c_axis_rotary_kinematics_motion_is_parsed_with_transformation)
 {
   ASSERT_NE(nullptr, m_device);
 
@@ -135,7 +135,7 @@ TEST_F(KinematicsTest, ParseCAxisKinematics)
 #define ZAXIS_CONFIGURATION_PATH "//m:Linear[@id='z']/m:Configuration"
 #define ZAXIS_MOTION_PATH ZAXIS_CONFIGURATION_PATH "/m:Motion"
 
-TEST_F(KinematicsTest, ZAxisXmlPrinting)
+TEST_F(KinematicsTest, z_axis_kinematics_motion_is_printed_in_xml)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
@@ -155,7 +155,7 @@ TEST_F(KinematicsTest, ZAxisXmlPrinting)
 #define ROTARY_CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
 #define ROTARY_MOTION_PATH ROTARY_CONFIGURATION_PATH "/m:Motion"
 
-TEST_F(KinematicsTest, RotaryXmlPrinting)
+TEST_F(KinematicsTest, rotary_kinematics_motion_with_transformation_is_printed_in_xml)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
@@ -174,7 +174,7 @@ TEST_F(KinematicsTest, RotaryXmlPrinting)
   }
 }
 
-TEST_F(KinematicsTest, ZAxisJsonPrinting)
+TEST_F(KinematicsTest, z_axis_kinematics_motion_is_printed_in_json)
 {
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
@@ -210,7 +210,7 @@ TEST_F(KinematicsTest, ZAxisJsonPrinting)
   }
 }
 
-TEST_F(KinematicsTest, RotaryJsonPrinting)
+TEST_F(KinematicsTest, rotary_kinematics_motion_with_transformation_is_printed_in_json)
 {
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");

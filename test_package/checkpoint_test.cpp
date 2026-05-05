@@ -84,7 +84,7 @@ protected:
   DevicePtr m_device;
 };
 
-TEST_F(CheckpointTest, AddObservations)
+TEST_F(CheckpointTest, adding_observations_updates_refcounts_and_condition_chains)
 {
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -151,7 +151,7 @@ TEST_F(CheckpointTest, AddObservations)
   EXPECT_EQ(1, p5.use_count());
 }
 
-TEST_F(CheckpointTest, Copy)
+TEST_F(CheckpointTest, copying_checkpoint_increments_observation_refcounts)
 {
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -184,7 +184,7 @@ TEST_F(CheckpointTest, Copy)
   ASSERT_EQ(2, p2.use_count());
 }
 
-TEST_F(CheckpointTest, GetObservations)
+TEST_F(CheckpointTest, get_observations_returns_filtered_subset_by_data_item_id)
 {
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -241,7 +241,7 @@ TEST_F(CheckpointTest, GetObservations)
   ASSERT_EQ(2, list2.size());
 }
 
-TEST_F(CheckpointTest, Filter)
+TEST_F(CheckpointTest, filter_removes_observations_not_matching_data_item_ids)
 {
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -294,7 +294,7 @@ TEST_F(CheckpointTest, Filter)
   d1.reset();
 }
 
-TEST_F(CheckpointTest, CopyAndFilter)
+TEST_F(CheckpointTest, copy_with_filter_retains_only_matching_observations)
 {
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -364,7 +364,7 @@ TEST_F(CheckpointTest, CopyAndFilter)
   ASSERT_EQ(3, list.size());
 }
 
-TEST_F(CheckpointTest, ConditionChaining)
+TEST_F(CheckpointTest, condition_observations_are_chained_and_cleared_correctly)
 {
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -487,7 +487,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   ASSERT_EQ(1, (int)list.size());
 }
 
-TEST_F(CheckpointTest, LastConditionNormal)
+TEST_F(CheckpointTest, last_condition_returns_normal_with_empty_code_when_cleared)
 {
   entity::ErrorList errors;
   Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;

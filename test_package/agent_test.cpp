@@ -88,7 +88,7 @@ public:
   std::chrono::milliseconds m_delay {};
 };
 
-TEST_F(AgentTest, Constructor)
+TEST_F(AgentTest, agent_throws_fatal_exception_for_bad_path_and_initializes_with_valid_path)
 {
   using namespace configuration;
   ConfigOptions options {{BufferSize, 17}, {MaxAssets, 8}, {SchemaVersion, "1.7"s}};
@@ -109,7 +109,7 @@ TEST_F(AgentTest, Constructor)
   ASSERT_NO_THROW(agent->initialize(context));
 }
 
-TEST_F(AgentTest, Probe)
+TEST_F(AgentTest, probe_endpoint_returns_device_name_for_multiple_paths)
 {
   {
     PARSE_XML_RESPONSE("/probe");
@@ -132,7 +132,7 @@ TEST_F(AgentTest, Probe)
   }
 }
 
-TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
+TEST_F(AgentTest, agent_throws_fatal_exception_when_devices_have_duplicate_uuid)
 {
   using namespace configuration;
   ConfigOptions options {{BufferSize, 17}, {MaxAssets, 8}, {SchemaVersion, "1.5"s}};
@@ -519,7 +519,7 @@ TEST_F(AgentTest, should_report_2_6_out_of_range_for_current_at)
   }
 }
 
-TEST_F(AgentTest, AddAdapter) { addAdapter(); }
+TEST_F(AgentTest, adapter_can_be_added_to_agent) { addAdapter(); }
 
 TEST_F(AgentTest, should_download_file)
 {
@@ -1271,7 +1271,7 @@ TEST_F(AgentTest, should_ignore_timestamps_if_configured_to_do_so)
   }
 }
 
-TEST_F(AgentTest, InitialTimeSeriesValues)
+TEST_F(AgentTest, time_series_data_item_reports_unavailable_initially)
 {
   addAdapter();
 
@@ -2401,7 +2401,7 @@ TEST_F(AgentTest, put_condition_should_parse_condition_data)
   }
 }
 
-TEST_F(AgentTest, shound_add_asset_count_when_20)
+TEST_F(AgentTest, asset_count_data_item_is_added_to_probe_in_schema_2_0)
 {
   m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "2.0", 25);
 

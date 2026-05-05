@@ -67,7 +67,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
+TEST_F(SpecificationTest, specification_attributes_and_limits_are_parsed_for_component)
 {
   ASSERT_NE(nullptr, m_component);
 
@@ -119,7 +119,7 @@ TEST_F(SpecificationTest, test_1_6_specification_without_id)
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
 #define SPECIFICATIONS_PATH CONFIGURATION_PATH "/m:Specifications"
 
-TEST_F(SpecificationTest, XmlPrinting)
+TEST_F(SpecificationTest, rotary_velocity_specification_with_limits_is_printed_in_xml)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
@@ -152,7 +152,7 @@ TEST_F(SpecificationTest, XmlPrinting)
   }
 }
 
-TEST_F(SpecificationTest, XmlPrintingForLoadSpec)
+TEST_F(SpecificationTest, load_specification_with_all_limit_types_is_printed_in_xml)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
@@ -184,7 +184,7 @@ TEST_F(SpecificationTest, XmlPrintingForLoadSpec)
   }
 }
 
-TEST_F(SpecificationTest, JsonPrinting)
+TEST_F(SpecificationTest, rotary_velocity_specification_with_limits_is_printed_in_json)
 {
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
@@ -213,7 +213,7 @@ TEST_F(SpecificationTest, JsonPrinting)
   }
 }
 
-TEST_F(SpecificationTest, JsonPrintingForLoadSpec)
+TEST_F(SpecificationTest, load_specification_with_all_limit_types_is_printed_in_json)
 {
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
@@ -244,7 +244,7 @@ TEST_F(SpecificationTest, JsonPrintingForLoadSpec)
   }
 }
 
-TEST_F(SpecificationTest, Parse17SpecificationValues)
+TEST_F(SpecificationTest, version_1_7_specification_values_including_limits_and_warnings_are_parsed)
 {
   ASSERT_NE(nullptr, m_component);
 
@@ -278,7 +278,7 @@ TEST_F(SpecificationTest, Parse17SpecificationValues)
   EXPECT_EQ(-200.0, (*si)->get<double>("LowerWarning"));
 }
 
-TEST_F(SpecificationTest, ParseProcessSpecificationValues)
+TEST_F(SpecificationTest, process_specification_with_spec_control_and_alarm_limits_is_parsed)
 {
   ASSERT_NE(nullptr, m_component);
 
@@ -328,7 +328,7 @@ TEST_F(SpecificationTest, ParseProcessSpecificationValues)
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
 #define PROCESS_PATH CONFIGURATION_PATH "/m:Specifications/m:ProcessSpecification"
 
-TEST_F(SpecificationTest, XmlPrintingForProcessSpecification)
+TEST_F(SpecificationTest, process_specification_with_all_limit_groups_is_printed_in_xml)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
@@ -359,7 +359,7 @@ TEST_F(SpecificationTest, XmlPrintingForProcessSpecification)
   }
 }
 
-TEST_F(SpecificationTest, JsonPrintingForProcessSpecification)
+TEST_F(SpecificationTest, process_specification_with_all_limit_groups_is_printed_in_json)
 {
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");

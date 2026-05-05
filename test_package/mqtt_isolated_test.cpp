@@ -364,7 +364,7 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
   ASSERT_TRUE(m_client->isConnected());
 }
 
-TEST_F(MqttIsolatedUnitTest, should_conenct_using_tls_authentication)
+TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_authentication)
 {
   GTEST_SKIP();
 
@@ -400,7 +400,7 @@ TEST_F(MqttIsolatedUnitTest, should_conenct_using_tls_authentication)
   ASSERT_TRUE(m_client->isConnected());
 }
 
-TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
+TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authenticates_with_credentials)
 {
   ConfigOptions options {{ServerIp, "127.0.0.1"s},
                          {MqttPort, 0},

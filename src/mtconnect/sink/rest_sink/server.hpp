@@ -201,6 +201,7 @@ namespace mtconnect::sink::rest_sink {
           RestError re(error, request->m_accepts, status::not_found, std::nullopt,
                        request->m_requestId);
           re.setUri(request->getUri());
+          LOG(warning) << "[" << request->m_foreignHost << "]: " << txt.str();
           m_errorFunction(session, re);
         }
       }

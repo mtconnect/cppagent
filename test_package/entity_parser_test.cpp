@@ -82,7 +82,7 @@ protected:
   }
 };
 
-TEST_F(EntityParserTest, TestParseSimpleDocument)
+TEST_F(EntityParserTest, parses_simple_document_with_entity_list_and_properties)
 {
   auto fileProperty =
       make_shared<Factory>(Requirements({Requirement("name", true), Requirement("VALUE", true)}));
@@ -146,7 +146,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
   ASSERT_EQ("Flat", get<string>((*it)->getProperty("VALUE")));
 }
 
-TEST_F(EntityParserTest, TestRecursiveEntityLists)
+TEST_F(EntityParserTest, parses_recursive_entity_lists_with_nested_components)
 {
   auto root = components();
 
@@ -195,7 +195,7 @@ TEST_F(EntityParserTest, TestRecursiveEntityLists)
   ASSERT_EQ("h1", get<string>((*sli)->getProperty("id")));
 }
 
-TEST_F(EntityParserTest, TestRecursiveEntityListFailure)
+TEST_F(EntityParserTest, fails_when_recursive_entity_list_has_missing_required_property)
 {
   auto root = components();
 
@@ -221,7 +221,7 @@ TEST_F(EntityParserTest, TestRecursiveEntityListFailure)
             errors.front()->what());
 }
 
-TEST_F(EntityParserTest, TestRecursiveEntityListMissingComponents)
+TEST_F(EntityParserTest, reports_error_when_recursive_entity_list_has_empty_components)
 {
   auto root = components();
 
@@ -261,7 +261,7 @@ TEST_F(EntityParserTest, TestRecursiveEntityListMissingComponents)
   ASSERT_FALSE(sl);
 }
 
-TEST_F(EntityParserTest, TestRawContent)
+TEST_F(EntityParserTest, parses_raw_content_element_preserving_inner_xml)
 {
   auto definition =
       make_shared<Factory>(Requirements({Requirement("format", false), Requirement("RAW", true)}));

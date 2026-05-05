@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
-TEST(TimestampExtractorTest, TestTimeExtraction)
+TEST(TimestampExtractorTest, extracts_iso8601_timestamp_from_token_list)
 {
   auto tokens = make_shared<Tokens>("Tokens", Properties());
   tokens->m_tokens = {"2021-01-19T12:00:00.12345Z", "hello"};
@@ -55,7 +55,7 @@ TEST(TimestampExtractorTest, TestTimeExtraction)
   ASSERT_FALSE(timestamped->m_duration);
 }
 
-TEST(TimestampExtractorTest, TestTimeExtractionWithDuration)
+TEST(TimestampExtractorTest, extracts_timestamp_and_duration_when_at_sign_is_present)
 {
   auto tokens = make_shared<Tokens>("Tokens", Properties());
   tokens->m_tokens = {"2021-01-19T12:00:00.12345Z@100.0", "hello"};
@@ -73,7 +73,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionWithDuration)
   ASSERT_EQ(100.0, *timestamped->m_duration);
 }
 
-TEST(TimestampExtractorTest, TestTimeExtractionRelativeTimeOffset)
+TEST(TimestampExtractorTest, computes_absolute_timestamp_from_relative_millisecond_offset)
 {
   auto tokens = make_shared<Tokens>("Tokens", Properties());
   tokens->m_tokens = {"1000.0", "hello"};
@@ -103,7 +103,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTimeOffset)
   ASSERT_EQ("2021-01-19T10:00:01Z", format(timestamped->m_timestamp));
 }
 
-TEST(TimestampExtractorTest, TestTimeExtractionRelativeTime)
+TEST(TimestampExtractorTest, applies_relative_time_offset_to_parsed_iso8601_timestamps)
 {
   auto tokens = make_shared<Tokens>("Tokens", Properties {});
   tokens->m_tokens = {"2021-01-19T10:01:00Z", "hello"};

@@ -57,7 +57,7 @@ protected:
   DevicePtr m_devA, m_devB;
 };
 
-TEST_F(DeviceTest, Getters)
+TEST_F(DeviceTest, device_getters_return_correct_name_id_component_name_and_uuid)
 {
   ASSERT_EQ((string) "Device", string(m_devA->getName()));
   ASSERT_EQ((string) "1", m_devA->getId());
@@ -70,7 +70,7 @@ TEST_F(DeviceTest, Getters)
   ASSERT_EQ((string) "UnivUniqId2", m_devB->getUuid());
 }
 
-TEST_F(DeviceTest, Description)
+TEST_F(DeviceTest, device_description_stores_manufacturer_serial_number_station_and_value)
 {
   ErrorList errors;
   Properties psA {{"manufacturer", "MANUFACTURER"s},
@@ -103,7 +103,7 @@ TEST_F(DeviceTest, Description)
   ASSERT_EQ((string) "Machine 2", descB->getValue<string>());
 }
 
-TEST_F(DeviceTest, DataItems)
+TEST_F(DeviceTest, data_items_are_added_to_device_and_retrievable_in_order)
 {
   ASSERT_FALSE(m_devA->getDataItems());
 
@@ -123,7 +123,7 @@ TEST_F(DeviceTest, DataItems)
   ASSERT_TRUE(data2 == items->back());
 }
 
-TEST_F(DeviceTest, DeviceDataItem)
+TEST_F(DeviceTest, device_data_item_is_looked_up_by_id_and_returns_null_when_absent)
 {
   ASSERT_FALSE(m_devA->getDataItems());
   ASSERT_FALSE(m_devA->getDeviceDataItem("DataItemTest1"));
@@ -145,7 +145,7 @@ TEST_F(DeviceTest, DeviceDataItem)
   ASSERT_TRUE(data2 == m_devA->getDeviceDataItem("DataItemTest2"));
 }
 
-TEST_F(DeviceTest, GetDataItem)
+TEST_F(DeviceTest, get_device_data_item_finds_by_id_name_and_source_name)
 {
   ErrorList errors;
   Properties sp1 {{"VALUE", "by_source"s}};

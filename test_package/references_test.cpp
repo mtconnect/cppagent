@@ -74,7 +74,7 @@ protected:
   ComponentPtr m_component;
 };
 
-TEST_F(ReferencesTest, References)
+TEST_F(ReferencesTest, component_data_item_references_are_parsed_with_name_and_id_ref)
 {
   createAgent({});
   m_component = m_device->getComponentById("bf");

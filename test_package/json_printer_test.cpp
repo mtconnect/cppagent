@@ -161,7 +161,7 @@ protected:
   }
 };
 
-TEST_F(JsonPrinterTest, Header)
+TEST_F(JsonPrinterTest, header_contains_sender_and_asset_buffer_size)
 {
   auto root = createFileArchetypeFactory();
 
@@ -184,7 +184,7 @@ TEST_F(JsonPrinterTest, Header)
   ASSERT_EQ(8096, header.at("/assetBufferSize"_json_pointer).get<int64_t>());
 }
 
-TEST_F(JsonPrinterTest, Devices)
+TEST_F(JsonPrinterTest, devices_array_contains_parsed_device_by_name)
 {
   auto root = createFileArchetypeFactory();
 
@@ -206,7 +206,7 @@ TEST_F(JsonPrinterTest, Devices)
   ASSERT_EQ("foo", devices.at("/0/Device/name"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterTest, Components)
+TEST_F(JsonPrinterTest, components_contain_nested_sub_components_with_description)
 {
   auto root = createFileArchetypeFactory();
 
@@ -237,7 +237,7 @@ TEST_F(JsonPrinterTest, Components)
   ASSERT_EQ("h1", systems.at("/Components/1/Heating/id"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterTest, TopLevelDataItems)
+TEST_F(JsonPrinterTest, top_level_data_items_are_printed_in_json_array)
 {
   auto root = createFileArchetypeFactory();
 
@@ -282,7 +282,7 @@ TEST_F(JsonPrinterTest, data_items_using_version_2)
   ASSERT_EQ("ASSET_REMOVED", dataitems.at("/2/type"_json_pointer).get<string>());
 }
 
-TEST_F(JsonPrinterTest, ElementListWithProperty)
+TEST_F(JsonPrinterTest, entity_list_with_property_is_printed_with_list_and_count)
 {
   auto item = make_shared<Factory>(Requirements {{"itemId", true}});
 

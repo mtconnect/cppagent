@@ -87,7 +87,7 @@ protected:
   std::unique_ptr<printer::XmlWriter> m_writer;
 };
 
-TEST_F(EntityPrinterTest, TestParseSimpleDocument)
+TEST_F(EntityPrinterTest, prints_simple_entity_with_file_properties_back_to_xml)
 {
   auto root = createFileArchetypeFactory();
 
@@ -112,7 +112,7 @@ TEST_F(EntityPrinterTest, TestParseSimpleDocument)
   ASSERT_EQ(doc, m_writer->getContent());
 }
 
-TEST_F(EntityPrinterTest, TestFileArchetypeWithDescription)
+TEST_F(EntityPrinterTest, prints_file_archetype_with_description_element)
 {
   auto root = createFileArchetypeFactory();
 
@@ -138,7 +138,7 @@ TEST_F(EntityPrinterTest, TestFileArchetypeWithDescription)
   ASSERT_EQ(doc, m_writer->getContent());
 }
 
-TEST_F(EntityPrinterTest, TestRecursiveEntityLists)
+TEST_F(EntityPrinterTest, prints_recursive_entity_lists_as_nested_xml)
 {
   auto component = make_shared<Factory>(Requirements {
       Requirement("id", true),
@@ -186,7 +186,7 @@ TEST_F(EntityPrinterTest, TestRecursiveEntityLists)
   ASSERT_EQ(doc, m_writer->getContent());
 }
 
-TEST_F(EntityPrinterTest, TestEntityOrder)
+TEST_F(EntityPrinterTest, prints_entity_children_in_declared_order)
 {
   auto component = make_shared<Factory>(Requirements {
       Requirement("id", true),
@@ -244,7 +244,7 @@ TEST_F(EntityPrinterTest, TestEntityOrder)
   ASSERT_EQ(expected, m_writer->getContent());
 }
 
-TEST_F(EntityPrinterTest, TestRawContent)
+TEST_F(EntityPrinterTest, prints_raw_content_element_without_escaping)
 {
   auto definition =
       make_shared<Factory>(Requirements({Requirement("format", false), Requirement("RAW", true)}));

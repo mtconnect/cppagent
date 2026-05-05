@@ -79,7 +79,7 @@ using namespace date::literals;
 
 inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
 
-TEST_F(DataSetTest, DataItem)
+TEST_F(DataSetTest, data_item_is_identified_as_data_set_representation)
 {
   ASSERT_TRUE(m_dataItem1->isDataSet());
 
@@ -87,7 +87,7 @@ TEST_F(DataSetTest, DataItem)
   ASSERT_EQ("VariableDataSet", m_dataItem1->getObservationName());
 }
 
-TEST_F(DataSetTest, InitialSet)
+TEST_F(DataSetTest, initial_set_parses_key_value_pairs_and_stores_in_checkpoint)
 {
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -201,7 +201,7 @@ TEST_F(DataSetTest, parser_with_partial_number)
   ASSERT_EQ(4.56, get<double>(set.find("d"_E)->m_value));
 }
 
-TEST_F(DataSetTest, UpdateOneElement)
+TEST_F(DataSetTest, checkpoint_merges_single_element_update_into_existing_set)
 {
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -243,7 +243,7 @@ TEST_F(DataSetTest, UpdateOneElement)
   ASSERT_EQ(6, get<int64_t>(map2.find("e"_E)->m_value));
 }
 
-TEST_F(DataSetTest, UpdateMany)
+TEST_F(DataSetTest, checkpoint_merges_multiple_element_updates_into_existing_set)
 {
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -288,7 +288,7 @@ TEST_F(DataSetTest, UpdateMany)
   ASSERT_EQ(9, get<int64_t>(map2.find("f"_E)->m_value));
 }
 
-TEST_F(DataSetTest, Reset)
+TEST_F(DataSetTest, reset_trigger_clears_existing_entries_in_checkpoint)
 {
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -325,7 +325,7 @@ TEST_F(DataSetTest, Reset)
   ASSERT_EQ((string) "hop", get<string>(map2.find("y"_E)->m_value));
 }
 
-TEST_F(DataSetTest, BadData)
+TEST_F(DataSetTest, bad_data_is_accepted_with_best_effort_parsing)
 {
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -351,7 +351,7 @@ TEST_F(DataSetTest, BadData)
 #define ASSERT_DATA_SET_ENTRY(doc, var, key, expected) \
   ASSERT_XML_PATH_EQUAL(doc, "//m:" var "/m:Entry[@key='" key "']", expected)
 
-TEST_F(DataSetTest, Current)
+TEST_F(DataSetTest, current_response_reflects_merged_data_set_state_with_reset_support)
 {
   m_agentTestHelper->addAdapter();
 
@@ -416,7 +416,7 @@ TEST_F(DataSetTest, Current)
   }
 }
 
-TEST_F(DataSetTest, Sample)
+TEST_F(DataSetTest, sample_response_shows_incremental_data_set_changes_including_removals)
 {
   m_agentTestHelper->addAdapter();
 
@@ -475,7 +475,7 @@ TEST_F(DataSetTest, Sample)
   }
 }
 
-TEST_F(DataSetTest, CurrentAt)
+TEST_F(DataSetTest, current_at_sequence_reconstructs_data_set_state_at_given_point)
 {
   using namespace mtconnect::sink::rest_sink;
   m_agentTestHelper->addAdapter();
@@ -558,7 +558,7 @@ TEST_F(DataSetTest, CurrentAt)
   }
 }
 
-TEST_F(DataSetTest, DeleteKey)
+TEST_F(DataSetTest, removed_keys_are_deleted_from_checkpoint_data_set)
 {
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -590,7 +590,7 @@ TEST_F(DataSetTest, DeleteKey)
   ASSERT_TRUE(map1.find("a"_E) == map1.end());
 }
 
-TEST_F(DataSetTest, ResetWithNoItems)
+TEST_F(DataSetTest, reset_with_no_items_produces_empty_data_set_observation)
 {
   m_agentTestHelper->addAdapter();
 
@@ -624,7 +624,7 @@ TEST_F(DataSetTest, ResetWithNoItems)
   }
 }
 
-TEST_F(DataSetTest, DuplicateCompression)
+TEST_F(DataSetTest, duplicate_entries_are_suppressed_while_changes_are_forwarded)
 {
   m_agentTestHelper->addAdapter();
 
@@ -684,7 +684,7 @@ TEST_F(DataSetTest, DuplicateCompression)
   }
 }
 
-TEST_F(DataSetTest, QuoteDelimeter)
+TEST_F(DataSetTest, quoted_delimiters_correctly_group_values_with_spaces_in_data_set)
 {
   m_agentTestHelper->addAdapter();
 
@@ -720,7 +720,7 @@ TEST_F(DataSetTest, QuoteDelimeter)
   }
 }
 
-TEST_F(DataSetTest, Discrete)
+TEST_F(DataSetTest, discrete_data_set_stores_each_update_as_independent_observation)
 {
   m_agentTestHelper->addAdapter();
 
@@ -755,7 +755,7 @@ TEST_F(DataSetTest, Discrete)
   }
 }
 
-TEST_F(DataSetTest, Probe)
+TEST_F(DataSetTest, probe_response_shows_data_set_representation_and_discrete_attributes)
 {
   m_agentTestHelper->addAdapter();
 
@@ -767,7 +767,7 @@ TEST_F(DataSetTest, Probe)
   }
 }
 
-TEST_F(DataSetTest, JsonCurrent)
+TEST_F(DataSetTest, json_current_response_includes_data_set_entries_with_typed_values)
 {
   using namespace rest_sink;
   m_agentTestHelper->addAdapter();

@@ -643,7 +643,7 @@ TEST_F(AgentAssetTest, should_add_asset_changed_and_asset_added_with_discrete_in
   }
 }
 
-TEST_F(AgentAssetTest, AssetPrependId)
+TEST_F(AgentAssetTest, asset_id_is_zero_padded_when_prepend_id_prefix_is_used)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
@@ -957,7 +957,7 @@ TEST_F(AgentAssetTest, should_respond_to_http_push_with_list_of_errors)
   }
 }
 
-TEST_F(AgentAssetTest, update_asset_count_data_item_v2_0)
+TEST_F(AgentAssetTest, asset_count_data_set_is_updated_when_assets_are_added_or_removed)
 {
   m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 10, "2.0", 4, true);
   addAdapter();
@@ -1031,7 +1031,7 @@ TEST_F(AgentAssetTest, update_asset_count_data_item_v2_0)
   }
 }
 
-TEST_F(AgentAssetTest, asset_count_should_not_occur_in_header_post_20)
+TEST_F(AgentAssetTest, asset_count_is_absent_from_probe_header_in_schema_2_0)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
 
@@ -1057,7 +1057,7 @@ TEST_F(AgentAssetTest, asset_count_should_not_occur_in_header_post_20)
   }
 }
 
-TEST_F(AgentAssetTest, asset_count_should_track_asset_additions_by_type)
+TEST_F(AgentAssetTest, asset_count_tracks_additions_and_removals_per_type)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
 
@@ -1115,7 +1115,7 @@ TEST_F(AgentAssetTest, asset_count_should_track_asset_additions_by_type)
   }
 }
 
-TEST_F(AgentAssetTest, asset_should_also_work_using_post_with_assets)
+TEST_F(AgentAssetTest, assets_endpoint_accepts_post_requests_for_asset_storage)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
 

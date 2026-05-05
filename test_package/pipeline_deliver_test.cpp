@@ -64,7 +64,7 @@ protected:
   DevicePtr m_device {nullptr};
 };
 
-TEST_F(PipelineDeliverTest, test_simple_flow)
+TEST_F(PipelineDeliverTest, observation_is_delivered_to_circular_buffer_with_correct_values)
 {
   m_agentTestHelper->addAdapter();
   auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
@@ -78,7 +78,7 @@ TEST_F(PipelineDeliverTest, test_simple_flow)
   ASSERT_EQ("2021-01-22T12:33:45.123Z", format(obs->getTimestamp()));
 }
 
-TEST_F(PipelineDeliverTest, filter_duplicates)
+TEST_F(PipelineDeliverTest, duplicate_filter_suppresses_repeated_values_in_circular_buffer)
 {
   ConfigOptions options {{configuration::FilterDuplicates, true}};
   m_agentTestHelper->addAdapter(options);
@@ -102,7 +102,7 @@ TEST_F(PipelineDeliverTest, filter_duplicates)
 }
 
 // a01c7f30
-TEST_F(PipelineDeliverTest, filter_upcase)
+TEST_F(PipelineDeliverTest, upcase_filter_converts_event_values_to_uppercase)
 {
   ConfigOptions options {{configuration::UpcaseDataItemValue, true}};
   m_agentTestHelper->addAdapter(options);
