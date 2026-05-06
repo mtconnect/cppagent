@@ -121,6 +121,12 @@ namespace mtconnect::sink::rest_sink {
       fail(ec, "Cannot open server socket");
       return;
     }
+    if (m_address.is_v6())
+    {
+      // Enable dual-stack by default. It will allow 0.0.0.0 if ::
+      m_acceptor.set_option(boost::asio::ip::v6_only(false), ec);
+      ec = {};  // not fatal if unsupported
+    }
     m_acceptor.set_option(boost::asio::socket_base::reuse_address(true), ec);
     if (ec)
     {

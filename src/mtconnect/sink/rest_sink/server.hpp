@@ -52,7 +52,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param options configuration options
     /// - Port, defaults to 5000
     /// - AllowPut, defaults to false
-    /// - ServerIp, defaults to 0.0.0.0
+    /// - ServerIp, defaults to ::
     /// - HttpHeaders
     Server(boost::asio::io_context &context, const ConfigOptions &options = {})
       : m_context(context),
@@ -65,7 +65,7 @@ namespace mtconnect::sink::rest_sink {
       auto inter = GetOption<std::string>(options, configuration::ServerIp);
       if (!inter)
       {
-        m_address = boost::asio::ip::make_address("0.0.0.0");
+        m_address = boost::asio::ip::make_address("::");
       }
       else
       {
