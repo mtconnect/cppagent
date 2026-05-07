@@ -45,6 +45,7 @@ namespace mtconnect::sink::rest_sink {
     std::string m_contentType;             ///< The content type for the body
     std::string m_path;                    ///< The URI for the request
     std::string m_foreignIp;               ///< The requestors IP Address
+    std::string m_foreignHost;             ///< The requestors IP Address
     uint16_t m_foreignPort;                ///< The requestors Port
     QueryMap m_query;                      ///< The parsed query parameters
     ParameterMap m_parameters;             ///< The parsed path parameters

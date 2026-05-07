@@ -162,7 +162,7 @@ TEST_F(QIFDocumentTest, minimal_qif_definition)
   ASSERT_EQ("1"s, root->get<string>("Id"));
 }
 
-TEST_F(QIFDocumentTest, test_qif_xml_round_trip)
+TEST_F(QIFDocumentTest, qif_document_is_round_tripped_to_xml)
 {
   using namespace date;
   const auto doc =

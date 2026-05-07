@@ -85,7 +85,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-TEST_F(CuttingToolTest, TestMinmalArchetype)
+TEST_F(CuttingToolTest, minimal_cutting_tool_archetype_is_parsed)
 {
   const auto doc =
       R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
@@ -144,7 +144,7 @@ TEST_F(CuttingToolTest, TestMinmalArchetype)
   ASSERT_EQ(content, doc);
 }
 
-TEST_F(CuttingToolTest, TestMeasurements)
+TEST_F(CuttingToolTest, cutting_tool_archetype_measurements_are_parsed)
 {
   const auto doc =
       R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
@@ -203,7 +203,7 @@ TEST_F(CuttingToolTest, TestMeasurements)
   ASSERT_EQ(content, doc);
 }
 
-TEST_F(CuttingToolTest, TestItems)
+TEST_F(CuttingToolTest, cutting_tool_archetype_cutting_items_are_parsed)
 {
   const auto doc =
       R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
@@ -336,7 +336,7 @@ TEST_F(CuttingToolTest, TestItems)
   ASSERT_EQ(content, doc);
 }
 
-TEST_F(CuttingToolTest, TestMinmalTool)
+TEST_F(CuttingToolTest, minimal_cutting_tool_is_parsed)
 {
   const auto doc =
       R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
@@ -395,7 +395,7 @@ TEST_F(CuttingToolTest, TestMinmalTool)
   ASSERT_EQ(content, doc);
 }
 
-TEST_F(CuttingToolTest, TestMinmalToolError)
+TEST_F(CuttingToolTest, cutting_tool_without_cutter_status_fails_validation)
 {
   const auto doc =
       R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
@@ -418,7 +418,7 @@ TEST_F(CuttingToolTest, TestMinmalToolError)
   ASSERT_EQ("CuttingTool: Invalid element 'CuttingToolLifeCycle'", string(errors.back()->what()));
 }
 
-TEST_F(CuttingToolTest, TestMeasurementsError)
+TEST_F(CuttingToolTest, cutting_tool_measurements_without_value_fails_validation)
 {
   const auto doc =
       R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
@@ -458,7 +458,7 @@ TEST_F(CuttingToolTest, TestMeasurementsError)
   EXPECT_EQ("CuttingToolLifeCycle: Invalid element 'Measurements'", string((*it)->what()));
 }
 
-TEST_F(CuttingToolTest, AssetWithSimpleCuttingItems)
+TEST_F(CuttingToolTest, cutting_tool_with_simple_cutting_items_is_loaded_via_adapter)
 {
   auto printer = dynamic_cast<printer::XmlPrinter *>(m_agentTestHelper->m_agent->getPrinter("xml"));
   ASSERT_TRUE(printer != nullptr);
@@ -659,19 +659,19 @@ TEST_F(CuttingToolTest, test_extended_cutting_tool_with_json_v2)
   </CuttingToolLifeCycle>
 </CuttingTool>
 )DOC";
-  
+
   ErrorList errors;
   entity::XmlParser parser;
-  
+
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
-  
+
   auto asset = dynamic_cast<Asset *>(entity.get());
   ASSERT_NE(nullptr, asset);
-  
+
   entity::JsonEntityPrinter jprinter(2, true);
   auto jdoc = jprinter.print(entity);
-    
+
   EXPECT_EQ(R"({
   "CuttingTool": {
     "CuttingToolLifeCycle": {
@@ -733,7 +733,8 @@ TEST_F(CuttingToolTest, test_extended_cutting_tool_with_json_v2)
     "serialNumber": "10",
     "toolId": "123456"
   }
-})", jdoc);
+})",
+            jdoc);
 }
 
 TEST_F(CuttingToolTest, test_xmlns_with_top_element_alias)

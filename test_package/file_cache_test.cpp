@@ -57,7 +57,7 @@ protected:
   unique_ptr<FileCache> m_cache;
 };
 
-TEST_F(FileCacheTest, FindFiles)
+TEST_F(FileCacheTest, finds_registered_files_by_uri)
 {
   string uri("/schemas");
 
@@ -70,7 +70,7 @@ TEST_F(FileCacheTest, FindFiles)
   EXPECT_EQ("text/xml", file->m_mimeType);
 }
 
-TEST_F(FileCacheTest, IconMimeType)
+TEST_F(FileCacheTest, returns_icon_mime_type_for_ico_extension)
 {
   // Register a file with the agent.
   auto list = m_cache->registerDirectory("/styles", TEST_RESOURCE_DIR "/styles", "1.7");

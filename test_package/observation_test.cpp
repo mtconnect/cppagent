@@ -129,7 +129,7 @@ inline ConditionPtr Cond(ObservationPtr ptr) { return dynamic_pointer_cast<Condi
 #define TEST_VALUE(attributes, units, nativeUnits, expected, value) \
   testValueHelper(attributes, units, nativeUnits, expected, value, __FILE__, __LINE__)
 
-TEST_F(ObservationTest, GetAttributes)
+TEST_F(ObservationTest, has_correct_attributes_after_construction)
 {
   ASSERT_EQ("1", m_compEventA->get<string>("dataItemId"));
   ASSERT_EQ(m_time, m_compEventA->get<Timestamp>("timestamp"));
@@ -146,7 +146,7 @@ TEST_F(ObservationTest, GetAttributes)
   ASSERT_EQ(4, m_compEventB->get<int64_t>("sequence"));
 }
 
-TEST_F(ObservationTest, Getters)
+TEST_F(ObservationTest, returns_data_item_and_value_via_getters)
 {
   ASSERT_TRUE(m_dataItem1 == m_compEventA->getDataItem());
   ASSERT_TRUE(m_dataItem2 == m_compEventB->getDataItem());
@@ -155,7 +155,7 @@ TEST_F(ObservationTest, Getters)
   ASSERT_EQ(1.1231, m_compEventB->getValue<double>());
 }
 
-TEST_F(ObservationTest, ConvertValue)
+TEST_F(ObservationTest, converts_value_between_different_unit_systems)
 {
   std::map<string, string> attributes;
   attributes["id"] = "1";
@@ -174,7 +174,7 @@ TEST_F(ObservationTest, ConvertValue)
              (2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), 2.0);
 }
 
-TEST_F(ObservationTest, ConvertSimpleUnits)
+TEST_F(ObservationTest, converts_simple_units_across_all_supported_unit_types)
 {
   std::map<string, string> attributes;
   attributes["id"] = "1";
@@ -197,7 +197,7 @@ TEST_F(ObservationTest, ConvertSimpleUnits)
   TEST_VALUE(attributes, "PERCENT", "PERCENT", 2.0f, 2.0);
 }
 
-TEST_F(ObservationTest, ConditionEventChaining)
+TEST_F(ObservationTest, conditions_are_chained_in_linked_list_order)
 {
   ErrorList errors;
   auto dataItem =
@@ -246,7 +246,7 @@ TEST_F(ObservationTest, subType_prefix_should_be_passed_through)
   ASSERT_EQ("x:AUTO", event->get<string>("subType"));
 }
 
-TEST_F(ObservationTest, shoud_handle_asset_type)
+TEST_F(ObservationTest, asset_changed_event_stores_asset_type_attribute_and_handles_unavailable)
 {
   ErrorList errors;
   auto dataItem =

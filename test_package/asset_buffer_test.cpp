@@ -116,7 +116,7 @@ public:
   std::unique_ptr<AssetBuffer> m_assetBuffer;
 };
 
-TEST_F(AssetBufferTest, AddAsset)
+TEST_F(AssetBufferTest, asset_is_added_to_buffer)
 {
   ErrorList errors;
   auto asset = makeAsset("Asset", "A1", "D1", "2020-12-01T12:00:00Z", errors);
@@ -128,7 +128,7 @@ TEST_F(AssetBufferTest, AddAsset)
   ASSERT_EQ(1, m_assetBuffer->getCountForDevice("D1"));
 }
 
-TEST_F(AssetBufferTest, ReplaceAsset)
+TEST_F(AssetBufferTest, existing_asset_is_replaced_in_buffer)
 {
   ErrorList errors;
   auto asset1 = makeAsset("Asset", "A1", "D1", "2020-12-01T12:00:00Z", errors);
@@ -147,7 +147,7 @@ TEST_F(AssetBufferTest, ReplaceAsset)
   ASSERT_EQ(1, m_assetBuffer->getCountForDevice("D2"));
 }
 
-TEST_F(AssetBufferTest, TestOverflow)
+TEST_F(AssetBufferTest, oldest_asset_is_evicted_when_buffer_overflows)
 {
   ErrorList errors;
   for (int i = 0; i < 10; i++)
@@ -175,7 +175,7 @@ TEST_F(AssetBufferTest, TestOverflow)
   ASSERT_EQ(1, m_assetBuffer->getCountForDevice("D3"));
 }
 
-TEST_F(AssetBufferTest, RemovedAsset)
+TEST_F(AssetBufferTest, removed_asset_decrements_count_and_is_evicted_on_overflow)
 {
   ErrorList errors;
   for (int i = 0; i < 10; i++)

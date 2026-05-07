@@ -60,7 +60,7 @@ protected:
   std::unique_ptr<printer::XmlWriter> m_writer;
 };
 
-TEST_F(AssetTest, TestExtendedAsset)
+TEST_F(AssetTest, extended_asset_with_arbitrary_content_is_parsed_and_printed)
 {
   auto doc =
       R"DOC(<ExtendedAsset assetId="EXT1" deviceUuid="local" timestamp="2020-12-20T12:00:00Z">

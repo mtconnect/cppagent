@@ -88,7 +88,7 @@ protected:
   DataItemPtr m_dataItemC;
 };
 
-TEST_F(DataItemTest, Getters)
+TEST_F(DataItemTest, data_item_getters_return_correct_id_name_type_and_units)
 {
   ASSERT_EQ("1", m_dataItemA->getId());
   ASSERT_EQ("DataItemTest1", m_dataItemA->getName());
@@ -107,7 +107,7 @@ TEST_F(DataItemTest, Getters)
   ASSERT_EQ(1.0, m_dataItemB->get<double>("nativeScale"));
 }
 
-TEST_F(DataItemTest, HasNameAndSource)
+TEST_F(DataItemTest, has_name_matches_source_value_when_source_is_set)
 {
   namespace di = mtconnect::device_model::data_item;
 
@@ -140,13 +140,13 @@ TEST_F(DataItemTest, HasNameAndSource)
   ASSERT_EQ("DataItemTest2Source", dataItem->getPreferredName());
 }
 
-TEST_F(DataItemTest, IsSample)
+TEST_F(DataItemTest, is_sample_returns_true_for_sample_category_and_false_for_condition)
 {
   ASSERT_TRUE(m_dataItemA->isSample());
   ASSERT_FALSE(m_dataItemC->isSample());
 }
 
-TEST_F(DataItemTest, GetCamel)
+TEST_F(DataItemTest, pascalize_converts_screaming_snake_case_to_pascal_case)
 {
   std::optional<string> prefix;
   ASSERT_TRUE(pascalize("", prefix).empty());
@@ -173,9 +173,9 @@ TEST_F(DataItemTest, GetCamel)
   ASSERT_EQ((string) "y", *prefix);
 }
 
-TEST_F(DataItemTest, Condition) { ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory()); }
+TEST_F(DataItemTest, condition_category_data_item_has_condition_category) { ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory()); }
 
-TEST_F(DataItemTest, TimeSeries)
+TEST_F(DataItemTest, time_series_representation_appends_time_series_to_observation_name)
 {
   {
     Properties props {{"id", "1"s},
@@ -208,7 +208,7 @@ TEST_F(DataItemTest, TimeSeries)
   }
 }
 
-TEST_F(DataItemTest, Statistic)
+TEST_F(DataItemTest, statistic_attribute_is_stored_on_data_item)
 {
   Properties props {{"id", "1"s},
                     {"name", "DataItemTest1"s},
@@ -224,7 +224,7 @@ TEST_F(DataItemTest, Statistic)
   ASSERT_EQ("AVERAGE", d->get<string>("statistic"));
 }
 
-TEST_F(DataItemTest, SampleRate)
+TEST_F(DataItemTest, sample_rate_attribute_is_stored_on_data_item)
 {
   Properties props {{"id", "1"s},
                     {"name", "DataItemTest1"s},

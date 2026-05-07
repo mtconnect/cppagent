@@ -63,7 +63,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-TEST_F(SensorConfigurationTest, ParseSensorConfiguration)
+TEST_F(SensorConfigurationTest, sensor_configuration_channels_are_parsed_with_name)
 {
   ASSERT_NE(nullptr, m_device);
 

@@ -65,7 +65,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
+TEST_F(CompositionTest, composition_attributes_description_and_specifications_are_parsed)
 {
   using namespace mtconnect::entity;
   ASSERT_NE(nullptr, m_component);
@@ -114,7 +114,7 @@ TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
 #define CONFIGURATION_PATH COMPOSITION_PATH "/m:Configuration"
 #define SPECIFICATIONS_PATH CONFIGURATION_PATH "/m:Specifications"
 
-TEST_F(CompositionTest, XmlPrinting)
+TEST_F(CompositionTest, composition_with_specifications_is_printed_in_xml)
 {
   {
     PARSE_XML_RESPONSE("/probe");
@@ -135,7 +135,7 @@ TEST_F(CompositionTest, XmlPrinting)
   }
 }
 
-TEST_F(CompositionTest, JsonPrinting)
+TEST_F(CompositionTest, composition_with_specifications_is_printed_in_json)
 {
   {
     PARSE_JSON_RESPONSE("/probe");

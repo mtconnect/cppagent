@@ -130,7 +130,7 @@ namespace {
     std::filesystem::path m_cwd;
   };
 
-  TEST_F(ConfigTest, BlankConfig)
+  TEST_F(ConfigTest, blank_config_loads_default_agent_with_one_device)
   {
     m_config->loadConfig("");
 
@@ -140,7 +140,7 @@ namespace {
     ASSERT_EQ("1.1", *agent->getSchemaVersion());
   }
 
-  TEST_F(ConfigTest, BufferSize)
+  TEST_F(ConfigTest, buffer_size_is_rounded_up_to_next_power_of_two)
   {
     m_config->loadConfig("BufferSize = 4\n");
 
@@ -151,7 +151,7 @@ namespace {
     ASSERT_EQ(16U, circ.getBufferSize());
   }
 
-  TEST_F(ConfigTest, Device)
+  TEST_F(ConfigTest, device_is_created_from_config_with_adapter_options)
   {
     string str("Devices = " TEST_RESOURCE_DIR "/samples/test_config.xml\n");
     m_config->loadConfig(str);
@@ -173,7 +173,7 @@ namespace {
     ASSERT_TRUE(device->preserveUuid());
   }
 
-  TEST_F(ConfigTest, Adapter)
+  TEST_F(ConfigTest, adapter_config_sets_host_port_and_options)
   {
     using namespace std::chrono_literals;
 
@@ -207,7 +207,7 @@ namespace {
     // ASSERT_TRUE(device->m_preserveUuid);
   }
 
-  TEST_F(ConfigTest, DefaultPreserveUUID)
+  TEST_F(ConfigTest, default_preserve_uuid_is_applied_to_all_devices)
   {
     string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
@@ -221,7 +221,7 @@ namespace {
     ASSERT_TRUE(device->preserveUuid());
   }
 
-  TEST_F(ConfigTest, DefaultPreserveOverride)
+  TEST_F(ConfigTest, adapter_preserve_uuid_overrides_global_default)
   {
     string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
@@ -238,7 +238,7 @@ namespace {
     ASSERT_FALSE(device->preserveUuid());
   }
 
-  TEST_F(ConfigTest, DisablePut)
+  TEST_F(ConfigTest, allow_put_enables_put_requests_on_rest_service)
   {
     string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
@@ -254,7 +254,7 @@ namespace {
     ASSERT_TRUE(rest->getServer()->arePutsAllowed());
   }
 
-  TEST_F(ConfigTest, LimitPut)
+  TEST_F(ConfigTest, allow_put_from_localhost_restricts_puts_to_loopback_address)
   {
     string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
@@ -272,7 +272,7 @@ namespace {
     ASSERT_TRUE(rest->getServer()->allowPutFrom(std::string("127.0.0.1")));
   }
 
-  TEST_F(ConfigTest, LimitPutFromHosts)
+  TEST_F(ConfigTest, allow_put_from_multiple_hosts_permits_puts_from_each)
   {
     string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
@@ -291,7 +291,7 @@ namespace {
     ASSERT_TRUE(rest->getServer()->allowPutFrom(std::string("192.168.0.1")));
   }
 
-  TEST_F(ConfigTest, Namespaces)
+  TEST_F(ConfigTest, custom_namespaces_are_registered_for_streams_devices_assets_and_errors)
   {
     string streams(
         "StreamsNamespaces {\n"
@@ -363,7 +363,7 @@ namespace {
     ASSERT_EQ(std::string("urn:example.com:ExampleErrors:1.2"), path);
   }
 
-  TEST_F(ConfigTest, LegacyTimeout)
+  TEST_F(ConfigTest, legacy_timeout_is_applied_to_adapter_from_global_config)
   {
     using namespace std::chrono_literals;
 
@@ -379,7 +379,7 @@ namespace {
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
   }
 
-  TEST_F(ConfigTest, IgnoreTimestamps)
+  TEST_F(ConfigTest, ignore_timestamps_option_is_propagated_to_adapter)
   {
     string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
@@ -393,7 +393,7 @@ namespace {
     ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
 
-  TEST_F(ConfigTest, IgnoreTimestampsOverride)
+  TEST_F(ConfigTest, adapter_ignore_timestamps_overrides_global_setting)
   {
     string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
@@ -411,7 +411,7 @@ namespace {
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
 
-  TEST_F(ConfigTest, SpecifyMTCNamespace)
+  TEST_F(ConfigTest, mtc_namespace_location_is_set_without_urn_when_using_m_prefix)
   {
     string streams(
         "StreamsNamespaces {\n"
@@ -435,7 +435,7 @@ namespace {
     printer->clearStreamsNamespaces();
   }
 
-  TEST_F(ConfigTest, SetSchemaVersion)
+  TEST_F(ConfigTest, schema_version_is_set_on_xml_printer_from_config)
   {
     string streams("SchemaVersion = 1.4\n");
 
@@ -451,7 +451,7 @@ namespace {
     printer->setSchemaVersion("1.3");
   }
 
-  TEST_F(ConfigTest, SchemaDirectory)
+  TEST_F(ConfigTest, schema_directory_registers_all_namespace_urns_and_locations)
   {
     string schemas(
         "SchemaVersion = 1.3\n"

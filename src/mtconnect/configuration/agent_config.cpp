@@ -522,7 +522,8 @@ namespace mtconnect::configuration {
     }
 
     ptree empty;
-    auto logger = config.get_child_optional("logger_config").value_or(empty);
+    auto logger = config.get_child_optional("logger_config")
+                      .value_or(config.get_child_optional("logging").value_or(empty));
 
     const string defaultFileName = channelName + ".log";
     const string defaultArchivePattern = channelName + "_%Y-%m-%d_%H-%M-%S_%N.log";

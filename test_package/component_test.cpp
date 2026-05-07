@@ -67,7 +67,7 @@ protected:
   ComponentPtr m_compB;
 };
 
-TEST_F(ComponentTest, Getters)
+TEST_F(ComponentTest, component_getters_return_correct_id_name_uuid_and_native_name)
 {
   ASSERT_EQ((string) "Axes", string(m_compA->getName()));
   ASSERT_EQ((string) "1", m_compA->getId());
@@ -83,7 +83,7 @@ TEST_F(ComponentTest, Getters)
 }
 
 // Workning our way through
-TEST_F(ComponentTest, Description)
+TEST_F(ComponentTest, component_description_stores_manufacturer_serial_number_and_value)
 {
   map<string, string> attributes;
   attributes["manufacturer"] = "MANUFACTURER";
@@ -111,7 +111,7 @@ TEST_F(ComponentTest, Description)
   ASSERT_FALSE(d2->hasValue());
 }
 
-TEST_F(ComponentTest, Relationships)
+TEST_F(ComponentTest, component_parent_and_device_relationships_are_set_correctly)
 {
   // Test get/set parents
   ErrorList errors;
@@ -142,7 +142,7 @@ TEST_F(ComponentTest, Relationships)
   ASSERT_EQ(2, m_compA.use_count());
 }
 
-TEST_F(ComponentTest, DataItems)
+TEST_F(ComponentTest, data_items_are_added_and_retrieved_from_component)
 {
   ASSERT_FALSE(m_compA->getDataItems());
 
@@ -166,7 +166,7 @@ TEST_F(ComponentTest, DataItems)
 
 // Not relevant right now. Tested as references in other places
 #if 0
-TEST_F(ComponentTest, References)
+TEST_F(ComponentTest, component_references_are_stored_with_name_and_id)
 {
   
   

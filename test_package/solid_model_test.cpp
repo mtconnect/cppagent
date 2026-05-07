@@ -63,7 +63,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-TEST_F(SolidModelTest, ParseDeviceSolidModel)
+TEST_F(SolidModelTest, device_solid_model_attributes_and_scale_are_parsed)
 {
   ASSERT_NE(nullptr, m_device);
 
@@ -85,7 +85,7 @@ TEST_F(SolidModelTest, ParseDeviceSolidModel)
   ASSERT_EQ(4.0, scale[2]);
 }
 
-TEST_F(SolidModelTest, ParseRotarySolidModel)
+TEST_F(SolidModelTest, rotary_solid_model_with_transformation_and_references_is_parsed)
 {
   ASSERT_NE(nullptr, m_device);
 
@@ -121,7 +121,7 @@ TEST_F(SolidModelTest, ParseRotarySolidModel)
 #define DEVICE_CONFIGURATION_PATH "//m:Device/m:Configuration"
 #define DEVICE_SOLID_MODEL_PATH DEVICE_CONFIGURATION_PATH "/m:SolidModel"
 
-TEST_F(SolidModelTest, DeviceXmlPrinting)
+TEST_F(SolidModelTest, device_solid_model_is_printed_in_xml)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
@@ -139,7 +139,7 @@ TEST_F(SolidModelTest, DeviceXmlPrinting)
 #define ROTARY_CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
 #define ROTARY_SOLID_MODEL_PATH ROTARY_CONFIGURATION_PATH "/m:SolidModel"
 
-TEST_F(SolidModelTest, RotaryXmlPrinting)
+TEST_F(SolidModelTest, rotary_solid_model_with_transformation_is_printed_in_xml)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
@@ -158,7 +158,7 @@ TEST_F(SolidModelTest, RotaryXmlPrinting)
   }
 }
 
-TEST_F(SolidModelTest, DeviceJsonPrinting)
+TEST_F(SolidModelTest, device_solid_model_is_printed_in_json)
 {
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
@@ -184,7 +184,7 @@ TEST_F(SolidModelTest, DeviceJsonPrinting)
   }
 }
 
-TEST_F(SolidModelTest, RotaryJsonPrinting)
+TEST_F(SolidModelTest, rotary_solid_model_with_transformation_is_printed_in_json)
 {
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");

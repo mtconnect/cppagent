@@ -239,11 +239,17 @@ namespace mtconnect::sink::rest_sink {
     }
 
     m_request->m_foreignIp = remote.address().to_string();
+    if (auto a = msg.find(http::field::forwarded); a != msg.end())
+      m_request->m_foreignHost = string(a->value());
+    else if (auto a = msg.find(http::field::host); a != msg.end())
+      m_request->m_foreignHost = string(a->value());
+    else
+      m_request->m_foreignHost = m_request->m_foreignIp;
     m_request->m_foreignPort = remote.port();
     if (auto a = msg.find(http::field::connection); a != msg.end())
       m_close = a->value() == "close";
 
-    LOG(info) << "ReST Request: From [" << m_request->m_foreignIp << ':' << remote.port()
+    LOG(info) << "ReST Request: From [" << m_request->m_foreignHost << ':' << remote.port()
               << "]: " << msg.method() << " " << msg.target();
 
     // Check if this is a websocket upgrade request. If so, begin a websocket session.
@@ -302,7 +308,7 @@ namespace mtconnect::sink::rest_sink {
     m_complete = complete;
     m_mimeType = mimeType;
     m_streaming = true;
-    
+
     auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
     std::string date = std::format("{:%a, %d %b %Y %T} GMT", now);
 

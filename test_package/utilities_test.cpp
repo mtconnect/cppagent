@@ -62,7 +62,7 @@ TEST(UtilitiesTest, should_uppercase_string)
   ASSERT_EQ((string) "QWERTY.ASDF|", toUpperCase(lower));
 }
 
-TEST(UtilitiesTest, IsNonNegativeInteger)
+TEST(UtilitiesTest, non_negative_integer_strings_are_validated_correctly)
 {
   ASSERT_TRUE(isNonNegativeInteger("12345"));
   ASSERT_TRUE(isNonNegativeInteger("123456789012345678901234567890"));
@@ -72,7 +72,7 @@ TEST(UtilitiesTest, IsNonNegativeInteger)
   ASSERT_TRUE(!isNonNegativeInteger("123.45"));
 }
 
-TEST(UtilitiesTest, Time)
+TEST(UtilitiesTest, current_time_is_returned_in_utc_and_advances_over_time)
 {
   auto time1 = getCurrentTime(GMT);
   auto time2 = getCurrentTime(GMT);
@@ -99,7 +99,7 @@ TEST(UtilitiesTest, Time)
   ASSERT_TRUE(time7 < time9);
 }
 
-TEST(UtilitiesTest, IllegalCharacters)
+TEST(UtilitiesTest, illegal_xml_characters_are_replaced_with_entities)
 {
   string before1("Don't Change Me"), after1("Don't Change Me");
   replaceIllegalCharacters(before1);
@@ -114,7 +114,7 @@ TEST(UtilitiesTest, IllegalCharacters)
   ASSERT_EQ(before3, after3);
 }
 
-TEST(UtilitiesTest, GetCurrentTime)
+TEST(UtilitiesTest, get_current_time_returns_parseable_formatted_strings)
 {
   auto gmt = getCurrentTime(GMT);
   auto time = parseTimeMicro(gmt);
@@ -140,7 +140,7 @@ TEST(UtilitiesTest, GetCurrentTime)
   ASSERT_EQ(8, n);
 }
 
-TEST(UtilitiesTest, GetCurrentTime2)
+TEST(UtilitiesTest, get_current_time_formats_known_time_point_correctly)
 {
   // Build a known system time point
   auto knownTimePoint = std::chrono::system_clock::from_time_t(0);  // 1 Jan 1970 00:00:00
@@ -173,14 +173,14 @@ TEST(UtilitiesTest, GetCurrentTime2)
   ASSERT_EQ(string("Thu, 01 Jan 1970 00:00:10 GMT"), humRead);
 }
 
-TEST(UtilitiesTest, ParseTimeMicro)
+TEST(UtilitiesTest, parse_time_micro_converts_iso_timestamp_to_microseconds)
 {
   // This time is 123456 microseconds after the epoch
   auto v = parseTimeMicro("1970-01-01T00:00:00.123456Z");
   ASSERT_EQ(uint64_t {123456}, v);
 }
 
-TEST(UtilitiesTest, AddNamespace)
+TEST(UtilitiesTest, add_namespace_prepends_prefix_to_xpath_elements)
 {
   auto result = addNamespace("//Device//Foo", "m");
   ASSERT_EQ(string("//m:Device//m:Foo"), result);
@@ -201,7 +201,7 @@ TEST(UtilitiesTest, AddNamespace)
   ASSERT_EQ(string("//m:Device/m:DataItems/"), result);
 }
 
-TEST(UtilitiesTest, ParseTimeMilli)
+TEST(UtilitiesTest, parse_time_micro_handles_millisecond_and_microsecond_timestamps)
 {
   string v = "2012-11-20T12:33:22.123456";
 
@@ -213,4 +213,4 @@ TEST(UtilitiesTest, ParseTimeMilli)
   ASSERT_TRUE(1353414802123000LL == time);
 }
 
-TEST(UtilitiesTest, Int64ToString) { ASSERT_EQ((string) "8805345009", to_string(8805345009ULL)); }
+TEST(UtilitiesTest, int64_to_string_converts_large_unsigned_integer) { ASSERT_EQ((string) "8805345009", to_string(8805345009ULL)); }

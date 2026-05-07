@@ -53,7 +53,7 @@ protected:
   void TearDown() override {}
 };
 
-TEST_F(EntityTest, TestSimpleFactory)
+TEST_F(EntityTest, simple_factory_creates_entity_with_required_and_optional_properties)
 {
   FactoryPtr root = make_shared<Factory>();
   FactoryPtr simpleFact =
@@ -72,7 +72,7 @@ TEST_F(EntityTest, TestSimpleFactory)
   ASSERT_EQ(10, get<int64_t>(entity->getProperty("size")));
 }
 
-TEST_F(EntityTest, TestSimpleTwoLevelFactory)
+TEST_F(EntityTest, two_level_factory_creates_nested_entity_with_sub_entity)
 {
   auto root = make_shared<Factory>();
 
@@ -115,7 +115,7 @@ TEST_F(EntityTest, TestSimpleTwoLevelFactory)
   ASSERT_EQ("arf", get<std::string>(v->getProperty("VALUE")));
 }
 
-TEST_F(EntityTest, TestSimpleEntityList)
+TEST_F(EntityTest, entity_list_factory_creates_entity_with_list_of_sub_entities)
 {
   auto root = make_shared<Factory>();
 
@@ -190,7 +190,7 @@ TEST_F(EntityTest, TestSimpleEntityList)
   ASSERT_EQ("meow", get<std::string>((*it)->getProperty("VALUE")));
 }
 
-TEST_F(EntityTest, MissingProperty)
+TEST_F(EntityTest, fails_when_required_property_is_missing)
 {
   FactoryPtr root = make_shared<Factory>();
   FactoryPtr simpleFact =
@@ -209,7 +209,7 @@ TEST_F(EntityTest, MissingProperty)
             string(errors.front()->what()));
 }
 
-TEST_F(EntityTest, MissingOptionalProperty)
+TEST_F(EntityTest, succeeds_when_optional_property_is_missing)
 {
   FactoryPtr root = make_shared<Factory>();
   FactoryPtr simpleFact =
@@ -230,7 +230,7 @@ TEST_F(EntityTest, MissingOptionalProperty)
   ASSERT_EQ(0, errors.size());
 }
 
-TEST_F(EntityTest, UnexpectedProperty)
+TEST_F(EntityTest, fails_when_unexpected_property_is_present)
 {
   FactoryPtr root = make_shared<Factory>();
   FactoryPtr simpleFact =
@@ -249,7 +249,7 @@ TEST_F(EntityTest, UnexpectedProperty)
             string(errors.front()->what()));
 }
 
-TEST_F(EntityTest, EntityListAnyEntities)
+TEST_F(EntityTest, entity_list_accepts_any_entity_matched_by_regex)
 {
   auto root = make_shared<Factory>();
 
@@ -328,7 +328,7 @@ TEST_F(EntityTest, EntityListAnyEntities)
   ASSERT_EQ("meow", get<std::string>((*it)->getProperty("VALUE")));
 }
 
-TEST_F(EntityTest, TestRequirementIntegerConversions)
+TEST_F(EntityTest, requirement_converts_values_to_integer_type)
 {
   Value v("123"s);
   ASSERT_TRUE(holds_alternative<string>(v));
@@ -374,7 +374,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
   ASSERT_THROW(r1.convertType(v), PropertyError);
 }
 
-TEST_F(EntityTest, TestRequirementStringConversion)
+TEST_F(EntityTest, requirement_converts_values_to_string_type)
 {
   Value v(1234567890_i64);
   Requirement r1("string", ValueType::STRING);
@@ -398,7 +398,7 @@ TEST_F(EntityTest, TestRequirementStringConversion)
   ASSERT_FALSE(r1.convertType(v));
 }
 
-TEST_F(EntityTest, TestRequirementDoubleConversions)
+TEST_F(EntityTest, requirement_converts_values_to_double_type)
 {
   Value v("123.24"s);
   ASSERT_TRUE(holds_alternative<string>(v));
@@ -435,7 +435,7 @@ TEST_F(EntityTest, TestRequirementDoubleConversions)
   ASSERT_EQ(123.24, get<Vector>(v)[0]);
 }
 
-TEST_F(EntityTest, TestRequirementVectorConversions)
+TEST_F(EntityTest, requirement_converts_values_to_vector_type)
 {
   Value v("1.234 3.456 6.7889"s);
   ASSERT_TRUE(holds_alternative<string>(v));
@@ -471,7 +471,7 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
   EXPECT_THROW(r6.convertType(v), PropertyError);
 }
 
-TEST_F(EntityTest, TestRequirementUpperCaseStringConversion)
+TEST_F(EntityTest, requirement_converts_string_to_uppercase)
 {
   Value v("hello kitty"s);
   ASSERT_TRUE(holds_alternative<string>(v));
@@ -480,7 +480,7 @@ TEST_F(EntityTest, TestRequirementUpperCaseStringConversion)
   ASSERT_EQ("HELLO KITTY", get<string>(v));
 }
 
-TEST_F(EntityTest, TestControlledVocabulary)
+TEST_F(EntityTest, controlled_vocabulary_rejects_values_not_in_allowed_set)
 {
   FactoryPtr root = make_shared<Factory>();
   FactoryPtr simpleFact = make_shared<Factory>(

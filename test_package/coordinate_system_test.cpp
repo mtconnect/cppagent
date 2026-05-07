@@ -63,7 +63,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
+TEST_F(CoordinateSystemTest, coordinate_systems_with_origin_and_transformation_are_parsed)
 {
   ASSERT_NE(nullptr, m_device);
 
@@ -111,7 +111,7 @@ TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
 #define CONFIGURATION_PATH "//m:Device/m:Configuration"
 #define COORDINATE_SYSTEMS_PATH CONFIGURATION_PATH "/m:CoordinateSystems"
 
-TEST_F(CoordinateSystemTest, XmlPrinting)
+TEST_F(CoordinateSystemTest, coordinate_systems_are_printed_with_correct_attributes_in_xml)
 {
   {
     PARSE_XML_RESPONSE("/probe");
@@ -149,7 +149,7 @@ TEST_F(CoordinateSystemTest, XmlPrinting)
   }
 }
 
-TEST_F(CoordinateSystemTest, JsonPrinting)
+TEST_F(CoordinateSystemTest, coordinate_systems_are_printed_with_correct_fields_in_json)
 {
   {
     PARSE_JSON_RESPONSE("/probe");

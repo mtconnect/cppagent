@@ -76,7 +76,7 @@ protected:
   std::list<DevicePtr> m_devices;
 };
 
-TEST_F(XmlParserTest, Constructor)
+TEST_F(XmlParserTest, parse_file_throws_fatal_on_missing_file)
 {
   if (m_xmlParser)
   {
@@ -95,7 +95,7 @@ TEST_F(XmlParserTest, Constructor)
       m_xmlParser->parseFile(TEST_RESOURCE_DIR "/samples/test_config.xml", printer.get()));
 }
 
-TEST_F(XmlParserTest, GetDevices)
+TEST_F(XmlParserTest, parse_file_returns_devices_with_description_and_data_items)
 {
   ASSERT_EQ((size_t)1, m_devices.size());
 
@@ -127,7 +127,7 @@ TEST_F(XmlParserTest, GetDevices)
   ASSERT_TRUE(hasZcom);
 }
 
-TEST_F(XmlParserTest, Condition)
+TEST_F(XmlParserTest, data_item_with_condition_category_is_parsed)
 {
   ASSERT_EQ((size_t)1, m_devices.size());
 
@@ -140,7 +140,7 @@ TEST_F(XmlParserTest, Condition)
   ASSERT_TRUE(item->isCondition());
 }
 
-TEST_F(XmlParserTest, GetDataItems)
+TEST_F(XmlParserTest, get_data_items_filters_nodes_by_xpath_expressions)
 {
   std::set<string> filter;
 
@@ -173,7 +173,7 @@ TEST_F(XmlParserTest, GetDataItems)
   ASSERT_EQ(5, (int)filter.size());
 }
 
-TEST_F(XmlParserTest, GetDataItemsExt)
+TEST_F(XmlParserTest, get_data_items_supports_extended_namespace_prefixes)
 {
   std::set<string> filter;
 
@@ -205,7 +205,7 @@ TEST_F(XmlParserTest, GetDataItemsExt)
   ASSERT_EQ(1, (int)filter.size());
 }
 
-TEST_F(XmlParserTest, ExtendedSchema)
+TEST_F(XmlParserTest, parse_file_with_extended_schema_loads_namespaced_components)
 {
   if (m_xmlParser)
   {
@@ -245,7 +245,7 @@ TEST_F(XmlParserTest, ExtendedSchema)
   ASSERT_EQ((string) "x", item->getObservationName().getNs());
 }
 
-TEST_F(XmlParserTest, TimeSeries)
+TEST_F(XmlParserTest, data_item_time_series_representation_is_parsed)
 {
   const auto dev = m_devices.front();
   ASSERT_TRUE(dev);
@@ -262,7 +262,7 @@ TEST_F(XmlParserTest, TimeSeries)
   ASSERT_EQ((string) "TIME_SERIES", item->get<string>("representation"));
 }
 
-TEST_F(XmlParserTest, Configuration)
+TEST_F(XmlParserTest, component_configuration_property_is_present)
 {
   const auto dev = m_devices.front();
   ASSERT_TRUE(dev);
@@ -280,7 +280,7 @@ TEST_F(XmlParserTest, Configuration)
   ASSERT_TRUE(power->hasProperty("Configuration"));
 }
 
-TEST_F(XmlParserTest, NoNamespace)
+TEST_F(XmlParserTest, parse_file_without_namespace_declaration_succeeds)
 {
   if (m_xmlParser)
   {
@@ -294,7 +294,7 @@ TEST_F(XmlParserTest, NoNamespace)
       m_xmlParser->parseFile(TEST_RESOURCE_DIR "/samples/NoNamespace.xml", printer.get()));
 }
 
-TEST_F(XmlParserTest, FilteredDataItem13)
+TEST_F(XmlParserTest, data_item_minimum_delta_filter_is_parsed_from_1_3_schema)
 {
   delete m_xmlParser;
   m_xmlParser = nullptr;
@@ -318,7 +318,7 @@ TEST_F(XmlParserTest, FilteredDataItem13)
   ASSERT_EQ(5.0, *di->getMinimumDelta());
 }
 
-TEST_F(XmlParserTest, FilteredDataItem)
+TEST_F(XmlParserTest, data_item_minimum_delta_and_period_filters_are_parsed)
 {
   if (m_xmlParser)
   {
@@ -349,7 +349,7 @@ TEST_F(XmlParserTest, FilteredDataItem)
   ASSERT_EQ(10.0, di->getMinimumPeriod());
 }
 
-TEST_F(XmlParserTest, References)
+TEST_F(XmlParserTest, component_data_item_and_component_references_are_resolved)
 {
   using namespace device_model;
 
@@ -414,7 +414,7 @@ TEST_F(XmlParserTest, References)
   ASSERT_EQ((size_t)1, filter.count("eps"));
 }
 
-TEST_F(XmlParserTest, SourceReferences)
+TEST_F(XmlParserTest, data_item_source_has_data_item_id_and_component_id)
 {
   if (m_xmlParser)
   {
@@ -446,7 +446,7 @@ TEST_F(XmlParserTest, SourceReferences)
   ASSERT_EQ("xxx", (*source)->get<string>("compositionId"));
 }
 
-TEST_F(XmlParserTest, DataItemRelationships)
+TEST_F(XmlParserTest, data_item_relationships_contain_type_and_id_ref)
 {
   if (m_xmlParser)
   {
@@ -496,10 +496,68 @@ TEST_F(XmlParserTest, DataItemRelationships)
   ASSERT_EQ(string("xlc"), (*rel2)->get<string>("idRef"));
 }
 
-TEST_F(XmlParserTest, ParseDeviceMTConnectVersion)
+TEST_F(XmlParserTest, device_has_mtconnect_version_attribute)
 {
   const auto dev = m_devices.front();
   ASSERT_TRUE(dev);
 
   ASSERT_EQ(string("1.7"), dev->get<string>("mtconnectVersion"));
+}
+
+TEST_F(XmlParserTest, parse_device_with_bare_device_root_returns_device)
+{
+  const string deviceXml = R"(
+    <Device uuid="test-001" name="TestDevice" id="d1" mtconnectVersion="1.7">
+      <DataItems>
+        <DataItem type="AVAILABILITY" category="EVENT" id="avail1" name="avail"/>
+      </DataItems>
+    </Device>
+  )";
+
+  auto device = m_xmlParser->parseDevice(deviceXml, nullptr);
+  ASSERT_TRUE(device);
+  ASSERT_EQ(string("TestDevice"), device->get<string>("name"));
+  ASSERT_EQ(string("test-001"), device->get<string>("uuid"));
+}
+
+TEST_F(XmlParserTest, parse_device_with_mtconnect_devices_wrapper_returns_first_device)
+{
+  const string deviceXml = R"(
+    <MTConnectDevices xmlns="urn:mtconnect.org:MTConnectDevices:1.7">
+      <Header creationTime="2024-01-01T00:00:00Z" sender="localhost" instanceId="1"
+              bufferSize="131072" version="1.7"/>
+      <Devices>
+        <Device uuid="test-002" name="WrappedDevice" id="d2" mtconnectVersion="1.7">
+          <DataItems>
+            <DataItem type="AVAILABILITY" category="EVENT" id="avail2" name="avail"/>
+          </DataItems>
+        </Device>
+      </Devices>
+    </MTConnectDevices>
+  )";
+
+  auto device = m_xmlParser->parseDevice(deviceXml, nullptr);
+  ASSERT_TRUE(device);
+  ASSERT_EQ(string("WrappedDevice"), device->get<string>("name"));
+  ASSERT_EQ(string("test-002"), device->get<string>("uuid"));
+}
+
+TEST_F(XmlParserTest, parse_device_with_invalid_xml_returns_null)
+{
+  auto device = m_xmlParser->parseDevice("not valid xml <><>", nullptr);
+  ASSERT_FALSE(device);
+}
+
+TEST_F(XmlParserTest, parse_device_with_empty_devices_node_returns_null)
+{
+  const string deviceXml = R"(
+    <MTConnectDevices xmlns="urn:mtconnect.org:MTConnectDevices:1.7">
+      <Header creationTime="2024-01-01T00:00:00Z" sender="localhost" instanceId="1"
+              bufferSize="131072" version="1.7"/>
+      <Devices/>
+    </MTConnectDevices>
+  )";
+
+  auto device = m_xmlParser->parseDevice(deviceXml, nullptr);
+  ASSERT_FALSE(device);
 }

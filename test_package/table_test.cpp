@@ -83,7 +83,7 @@ protected:
 inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
 inline TableCell operator""_C(const char *c, std::size_t) { return TableCell(c); }
 
-TEST_F(TableTest, DataItem)
+TEST_F(TableTest, data_item_is_identified_as_table_and_data_set_representation)
 {
   ASSERT_TRUE(m_dataItem1->isTable());
   ASSERT_TRUE(m_dataItem1->isDataSet());
@@ -218,7 +218,7 @@ TEST_F(TableTest, test_non_table_entry_should_fail)
   ASSERT_EQ(1, set.size());
 }
 
-TEST_F(TableTest, InitialSet)
+TEST_F(TableTest, initial_table_set_parses_rows_with_multiple_cells)
 {
   string value(
       "G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
@@ -255,7 +255,7 @@ TEST_F(TableTest, InitialSet)
   ASSERT_XML_PATH_EQUAL(doc, "//m:" var "/m:Entry[@key='" key "']/m:Cell[@key='" cell "']", \
                         expected)
 
-TEST_F(TableTest, Current)
+TEST_F(TableTest, current_response_shows_merged_table_rows_with_cell_values)
 {
   m_agentTestHelper->addAdapter();
 
@@ -314,7 +314,7 @@ TEST_F(TableTest, Current)
   }
 }
 
-TEST_F(TableTest, JsonCurrent)
+TEST_F(TableTest, json_current_response_includes_table_rows_with_nested_cell_values)
 {
   m_agentTestHelper->addAdapter();
 
@@ -371,7 +371,7 @@ TEST_F(TableTest, JsonCurrent)
   }
 }
 
-TEST_F(TableTest, JsonCurrentText)
+TEST_F(TableTest, json_current_response_handles_string_values_with_spaces_in_cells)
 {
   m_agentTestHelper->addAdapter();
   m_agentTestHelper->m_adapter->processData(
@@ -419,7 +419,7 @@ TEST_F(TableTest, JsonCurrentText)
   }
 }
 
-TEST_F(TableTest, XmlCellDefinitions)
+TEST_F(TableTest, xml_probe_includes_cell_and_entry_definitions_with_types_and_units)
 {
   m_agentTestHelper->addAdapter();
 
@@ -496,7 +496,7 @@ TEST_F(TableTest, XmlCellDefinitions)
   }
 }
 
-TEST_F(TableTest, JsonDefinitionTest)
+TEST_F(TableTest, json_probe_includes_cell_and_entry_definitions_with_types_and_units)
 {
   m_agentTestHelper->addAdapter();
 
@@ -595,7 +595,7 @@ TEST_F(TableTest, JsonDefinitionTest)
   }
 }
 
-TEST_F(TableTest, shoud_correctly_parse_data_with_colon)
+TEST_F(TableTest, correctly_parses_table_data_with_colon_in_values)
 {
   m_agentTestHelper->addAdapter();
 
@@ -724,7 +724,7 @@ TEST_F(TableTest, shoud_correctly_parse_data_with_colon)
   }
 }
 
-TEST_F(TableTest, shoud_parse_keys_with_hypens)
+TEST_F(TableTest, correctly_parses_table_keys_containing_hyphens_and_slashes)
 {
   m_agentTestHelper->addAdapter();
 
@@ -752,7 +752,7 @@ TEST_F(TableTest, shoud_parse_keys_with_hypens)
   }
 }
 
-TEST_F(TableTest, shoud_parse_table_with_no_space)
+TEST_F(TableTest, correctly_parses_table_entries_with_no_space_between_rows)
 {
   m_agentTestHelper->addAdapter();
 
@@ -779,7 +779,7 @@ TEST_F(TableTest, shoud_parse_table_with_no_space)
   }
 }
 
-TEST_F(TableTest, shoud_handle_complex_sequences)
+TEST_F(TableTest, current_at_sequence_correctly_reconstructs_table_state_with_removals)
 {
   m_agentTestHelper->addAdapter();
 
