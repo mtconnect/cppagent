@@ -19,10 +19,87 @@
 
 #include <libxml/xmlwriter.h>
 
+#include <optional>
+#include <string>
+
 #include "mtconnect/config.hpp"
 #include "mtconnect/printer/xml_helper.hpp"
 
 namespace mtconnect::printer {
+  // The write* helpers below are intentionally header-inline (no AGENT_LIB_API):
+  // each translation unit that uses them gets its own copy, which avoids the
+  // ODR/MSVC-export complications of mixing `inline` with dllexport.
+
+  /// @brief Scan for XML-1.0-illegal C0 control bytes and, if any are found,
+  /// return a sanitized copy with each replaced by a space.
+  ///
+  /// XML 1.0 permits only 0x09 (TAB), 0x0A (LF), and 0x0D (CR) below 0x20;
+  /// any other byte below 0x20 is rejected by strict parsers (e.g. Python's
+  /// lxml: "PCDATA invalid Char value N"). libxml2's writer escapes &<>"'
+  /// but does not validate against the XML Char production, so the caller
+  /// must do it.
+  ///
+  /// Replacement (rather than deletion) preserves token boundaries, e.g.
+  /// `"1.25 \x16 3"` becomes `"1.25   3"` — not `"1.253"`. Multi-byte UTF-8
+  /// continuation bytes are >=0x80 and pass through untouched.
+  ///
+  /// Returns std::nullopt when the input is already clean — the caller can
+  /// then use the original buffer and skip the allocation.
+  ///
+  /// Note: iteration stops at the first NUL byte because callers pass NUL-
+  /// terminated C strings to libxml2 via xmlTextWriterWriteString, which
+  /// itself truncates at NUL. Embedded NULs would be lost regardless.
+  inline std::optional<std::string> sanitizeXmlChars(const char *s)
+  {
+    auto isInvalid = [](unsigned char c) {
+      return c < 0x20 && c != 0x09 && c != 0x0A && c != 0x0D;
+    };
+
+    if (s == nullptr)
+      return std::nullopt;
+
+    const char *p = s;
+    while (*p != '\0' && !isInvalid(static_cast<unsigned char>(*p)))
+      ++p;
+    if (*p == '\0')
+      return std::nullopt;
+
+    std::string out;
+    out.append(s, p);
+    for (; *p != '\0'; ++p)
+    {
+      const unsigned char c = static_cast<unsigned char>(*p);
+      out.push_back(isInvalid(c) ? ' ' : *p);
+    }
+    return out;
+  }
+
+  /// @brief Write element text, replacing XML-illegal control bytes first.
+  inline int writeXmlString(xmlTextWriterPtr writer, const char *s)
+  {
+    if (auto clean = sanitizeXmlChars(s))
+      return xmlTextWriterWriteString(writer, BAD_CAST clean->c_str());
+    return xmlTextWriterWriteString(writer, BAD_CAST s);
+  }
+
+  /// @brief Write an attribute, replacing XML-illegal control bytes first.
+  inline int writeXmlAttribute(xmlTextWriterPtr writer, const char *name, const char *value)
+  {
+    if (auto clean = sanitizeXmlChars(value))
+      return xmlTextWriterWriteAttribute(writer, BAD_CAST name, BAD_CAST clean->c_str());
+    return xmlTextWriterWriteAttribute(writer, BAD_CAST name, BAD_CAST value);
+  }
+
+  /// @brief Write a raw (already entity-encoded) XML fragment, replacing
+  /// XML-illegal control bytes first. C0 controls remain illegal regardless
+  /// of how entities are escaped, so RAW outputs must be sanitized too.
+  inline int writeXmlRaw(xmlTextWriterPtr writer, const char *s)
+  {
+    if (auto clean = sanitizeXmlChars(s))
+      return xmlTextWriterWriteRaw(writer, BAD_CAST clean->c_str());
+    return xmlTextWriterWriteRaw(writer, BAD_CAST s);
+  }
+
   /// @brief Helper class for XML document generation. Wraps some common libxml2 functions
   class AGENT_LIB_API XmlWriter
   {
