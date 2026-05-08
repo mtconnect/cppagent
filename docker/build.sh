@@ -42,21 +42,13 @@ mkdir -p "${CACHE_DIR}"
 # The default command runs the same `conan create` invocation as CI. The
 # LDFLAGS match the workflow so the produced binaries are statically linked
 # against libgcc/libstdc++.
-#
-# The repo's conan/profiles/gcc still uses the old [system_tools] section
-# name; conan 2.x renamed it to [platform_tool_requires]. The semantics are
-# identical, so we copy the profile to a tmp file with the section renamed
-# rather than touching the in-tree file.
-# TODO: rename the section in conan/profiles/gcc itself and drop this sed.
 readonly CI_BUILD_CMD='set -euo pipefail
 export CTEST_OUTPUT_ON_FAILURE=TRUE
 export LDFLAGS="-static-libgcc -static-libstdc++"
-profile=$(mktemp)
-sed "s/^\[system_tools\]/[platform_tool_requires]/" conan/profiles/gcc > "$profile"
 conan profile detect -f
 conan create . \
     --build=missing \
-    -pr "$profile" \
+    -pr conan/profiles/gcc \
     -o shared=False \
     -o development=True \
     -o cpack=True \

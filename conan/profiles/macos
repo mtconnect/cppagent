@@ -4,7 +4,7 @@ include(default)
 compiler=apple-clang
 compiler.cppstd=gnu17
 
-[system_tools]
+[platform_tool_requires]
 cmake/>3.26.0
 
 

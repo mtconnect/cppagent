@@ -6,6 +6,6 @@ compiler.libcxx=libstdc++11
 [options]
 without_ipv6=True
 
-[system_tools]
+[platform_tool_requires]
 cmake/>3.23.0
 
