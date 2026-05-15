@@ -18,3 +18,9 @@ ACCESS_TOKEN
 .DS_Store
 .vscode
 CMakeUserPresets.json
+
+# Local build artifacts produced by docker/build.sh (matches CI behavior).
+*.deb
+_CPack_Packages/
+pkgroot/DEBIAN/control
+pkgroot/home/

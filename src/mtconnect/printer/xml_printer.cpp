@@ -32,21 +32,10 @@
 #include "mtconnect/device_model/configuration/configuration.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/logging.hpp"
+#include "mtconnect/printer/xml_printer_helper.hpp"
 #include "mtconnect/sink/rest_sink/error.hpp"
 #include "mtconnect/version.h"
 #include "xml_printer.hpp"
-
-#define strfy(line) #line
-#define THROW_IF_XML2_ERROR(expr)                                           \
-  if ((expr) < 0)                                                           \
-  {                                                                         \
-    throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
-  }
-#define THROW_IF_XML2_NULL(expr)                                            \
-  if (!(expr))                                                              \
-  {                                                                         \
-    throw string("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
-  }
 
 using namespace std;
 
@@ -54,52 +43,6 @@ namespace mtconnect::printer {
   using namespace observation;
   using namespace asset;
   using namespace device_model::configuration;
-
-  class AGENT_LIB_API XmlWriter
-  {
-  public:
-    XmlWriter(bool pretty) : m_writer(nullptr), m_buf(nullptr)
-    {
-      THROW_IF_XML2_NULL(m_buf = xmlBufferCreate());
-      THROW_IF_XML2_NULL(m_writer = xmlNewTextWriterMemory(m_buf, 0));
-      if (pretty)
-      {
-        THROW_IF_XML2_ERROR(xmlTextWriterSetIndent(m_writer, 1));
-        THROW_IF_XML2_ERROR(xmlTextWriterSetIndentString(m_writer, BAD_CAST "  "));
-      }
-    }
-
-    ~XmlWriter()
-    {
-      if (m_writer != nullptr)
-      {
-        xmlFreeTextWriter(m_writer);
-        m_writer = nullptr;
-      }
-      if (m_buf != nullptr)
-      {
-        xmlBufferFree(m_buf);
-        m_buf = nullptr;
-      }
-    }
-
-    operator xmlTextWriterPtr() { return m_writer; }
-
-    string getContent()
-    {
-      if (m_writer != nullptr)
-      {
-        THROW_IF_XML2_ERROR(xmlTextWriterEndDocument(m_writer));
-        xmlFreeTextWriter(m_writer);
-        m_writer = nullptr;
-      }
-      return string((char *)m_buf->content, m_buf->use);
-    }
-
-  protected:
-    xmlTextWriterPtr m_writer;
-    xmlBufferPtr m_buf;
-  };
 
   XmlPrinter::XmlPrinter(bool pretty, bool validation) : Printer(pretty, validation)
   {
@@ -250,8 +193,7 @@ namespace mtconnect::printer {
                                   const std::string &value)
   {
     if (!value.empty())
-      THROW_IF_XML2_ERROR(
-          xmlTextWriterWriteAttribute(writer, BAD_CAST key, BAD_CAST value.c_str()));
+      THROW_IF_XML2_ERROR(writeXmlAttribute(writer, key, value.c_str()));
   }
 
   void addAttributes(xmlTextWriterPtr writer, const std::map<string, string> &attributes)
@@ -260,67 +202,11 @@ namespace mtconnect::printer {
     {
       if (!attr.second.empty())
       {
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first.c_str(),
-                                                        BAD_CAST attr.second.c_str()));
+        THROW_IF_XML2_ERROR(
+            writeXmlAttribute(writer, attr.first.c_str(), attr.second.c_str()));
       }
     }
   }
-
-  static inline void openElement(xmlTextWriterPtr writer, const char *name)
-  {
-    THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST name));
-  }
-
-  static inline void closeElement(xmlTextWriterPtr writer)
-  {
-    THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
-  }
-
-  class AGENT_LIB_API AutoElement
-  {
-  public:
-    AutoElement(xmlTextWriterPtr writer) : m_writer(writer) {}
-    AutoElement(xmlTextWriterPtr writer, const char *name, string key = "")
-      : m_writer(writer), m_name(name), m_key(std::move(key))
-    {
-      openElement(writer, name);
-    }
-    AutoElement(xmlTextWriterPtr writer, const string &name, string key = "")
-      : m_writer(writer), m_name(name), m_key(std::move(key))
-    {
-      openElement(writer, name.c_str());
-    }
-    bool reset(const string &name, const string &key = "")
-    {
-      if (name != m_name || m_key != key)
-      {
-        if (!m_name.empty())
-          closeElement(m_writer);
-        if (!name.empty())
-          openElement(m_writer, name.c_str());
-        m_name = name;
-        m_key = key;
-        return true;
-      }
-      else
-      {
-        return false;
-      }
-    }
-    ~AutoElement()
-    {
-      if (!m_name.empty())
-        xmlTextWriterEndElement(m_writer);
-    }
-
-    const string &key() const { return m_key; }
-    const string &name() const { return m_name; }
-
-  protected:
-    xmlTextWriterPtr m_writer;
-    string m_name;
-    string m_key;
-  };
 
   void addSimpleElement(xmlTextWriterPtr writer, const string &element, const string &body,
                         const map<string, string> &attributes = {}, bool raw = false)
@@ -332,14 +218,16 @@ namespace mtconnect::printer {
 
     if (!body.empty())
     {
-      xmlChar *text = nullptr;
       if (!raw)
-        text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
-      else
-        text = BAD_CAST body.c_str();
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
-      if (!raw)
+      {
+        xmlChar *text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
+        THROW_IF_XML2_ERROR(writeXmlRaw(writer, reinterpret_cast<const char *>(text)));
         xmlFree(text);
+      }
+      else
+      {
+        THROW_IF_XML2_ERROR(writeXmlRaw(writer, body.c_str()));
+      }
     }
   }
 

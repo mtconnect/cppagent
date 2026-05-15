@@ -1,0 +1,37 @@
+# Mirrors the environment used by .github/workflows/build-ubuntu-22.04.yml.
+# Used by docker/build.sh to run the cppagent build/tests locally inside a
+# container that matches CI. Source is expected to be bind-mounted at /work,
+# and HOME is overridden at run time to a named volume so the conan cache
+# persists across invocations.
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+        software-properties-common \
+        ca-certificates \
+        gnupg \
+ && add-apt-repository ppa:ubuntu-toolchain-r/test -y \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends \
+        build-essential \
+        cmake \
+        gcc-13 \
+        g++-13 \
+        python3 \
+        python3-pip \
+        autoconf \
+        automake \
+        rake \
+        ruby \
+        git \
+        sudo \
+ && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 \
+ && update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100 \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install --no-cache-dir "conan>=2.0,<3.0"
+
+WORKDIR /work

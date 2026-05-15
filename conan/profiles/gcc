@@ -3,5 +3,5 @@ include(default)
 [settings]
 compiler.libcxx=libstdc++11
 
-[system_tools]
+[platform_tool_requires]
 cmake/>3.23.0

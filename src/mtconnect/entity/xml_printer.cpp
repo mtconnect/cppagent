@@ -48,8 +48,8 @@ namespace mtconnect {
       {
         if (!attr.second.empty())
         {
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first.c_str(),
-                                                          BAD_CAST attr.second.c_str()));
+          THROW_IF_XML2_ERROR(
+              writeXmlAttribute(writer, attr.first.c_str(), attr.second.c_str()));
         }
       }
     }
@@ -64,14 +64,16 @@ namespace mtconnect {
 
       if (!body.empty())
       {
-        xmlChar *text = nullptr;
         if (!raw)
-          text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
-        else
-          text = BAD_CAST body.c_str();
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
-        if (!raw)
+        {
+          xmlChar *text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
+          THROW_IF_XML2_ERROR(writeXmlRaw(writer, reinterpret_cast<const char *>(text)));
           xmlFree(text);
+        }
+        else
+        {
+          THROW_IF_XML2_ERROR(writeXmlRaw(writer, body.c_str()));
+        }
       }
     }
 
@@ -160,12 +162,12 @@ namespace mtconnect {
       {
         // The value is the content for a simple element
         if (*s != '\0')
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
+          THROW_IF_XML2_ERROR(writeXmlString(writer, s));
       }
       else if (p.first == "RAW")
       {
         if (*s != '\0')
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST s));
+          THROW_IF_XML2_ERROR(writeXmlRaw(writer, s));
       }
       else
       {
@@ -173,7 +175,7 @@ namespace mtconnect {
         string qname = stripUndeclaredNamespace(name, namespaces);
         AutoElement element(writer, qname);
         if (*s != '\0')
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
+          THROW_IF_XML2_ERROR(writeXmlString(writer, s));
       }
     }
 
@@ -246,8 +248,8 @@ namespace mtconnect {
         bool isNsDecl = name.hasNs() && name.getNs() == "xmlns";
         if (!isNsDecl || namespaces.count(string(name.getName())) == 0)
         {
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST a.first.c_str(),
-                                                          BAD_CAST toCharPtr(a.second, t)));
+          THROW_IF_XML2_ERROR(
+              writeXmlAttribute(writer, a.first.c_str(), toCharPtr(a.second, t)));
         }
       }
 

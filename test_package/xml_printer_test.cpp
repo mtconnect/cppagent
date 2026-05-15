@@ -706,6 +706,28 @@ TEST_F(XmlPrinterTest, EscapedXMLCharacters)
                         "A duck > a foul & < cat '");
 }
 
+TEST_F(XmlPrinterTest, IllegalControlCharactersAreSanitized)
+{
+  // XML 1.0 forbids C0 control bytes other than 0x09, 0x0A, 0x0D. If they
+  // leak through to lxml or other strict parsers, parsing fails with
+  // "PCDATA invalid Char value N". Verify they are replaced with spaces in
+  // both element values and attribute values.
+  ObservationList events;
+  ObservationPtr ptr = newEvent(
+      "zlc", 10843512,
+      Properties {{{"level", "fault"s},
+                   {"nativeCode", "5\x16""00"s},
+                   {"VALUE", "(CHAMFER M10 X 1.25 \x16 3 HOLE)"s}}});
+
+  events.push_back(ptr);
+  PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@name='Z']/m:Condition//*[1]",
+                        "(CHAMFER M10 X 1.25   3 HOLE)");
+  ASSERT_XML_PATH_EQUAL(
+      doc, "//m:DeviceStream//m:ComponentStream[@name='Z']/m:Condition//*[1]@nativeCode",
+      "5 00");
+}
+
 TEST_F(XmlPrinterTest, PrintAssetProbe)
 {
   // Add the xml to the agent...

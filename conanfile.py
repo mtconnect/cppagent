@@ -56,6 +56,11 @@ class MTConnectAgentConan(ConanFile):
         "boost*:without_serialization": True,
         "boost*:without_wave": True,
         "boost*:without_graph_parallel": True,
+        # libboost_stacktrace_from_exception interposes on
+        # __cxa_allocate_exception, which collides with libstdc++.a under
+        # full static linking. The agent does not use boost::stacktrace,
+        # so build boost without it.
+        "boost*:without_stacktrace": True,
 
         "libxml2*:shared": False,
         "libxml2*:include_utils": False,
