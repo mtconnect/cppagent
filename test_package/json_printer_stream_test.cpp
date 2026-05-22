@@ -729,3 +729,52 @@ TEST_F(JsonPrinterStreamTest, should_have_device_model_change_time_in_header)
   ASSERT_EQ(string("2026-01-01T00:00:00Z"),
             header.at("/deviceModelChangeTime"_json_pointer).get<string>());
 }
+
+TEST_F(JsonPrinterStreamTest, event_with_count_or_number_types)
+{
+  m_printer = std::make_unique<printer::JsonPrinter>(2, true);
+  
+  ObservationList list;
+  Timestamp now = chrono::system_clock::now();
+  
+  addObservationToList(list, "d2e9e4a0", 10254805, Properties {{"VALUE", "10"}},
+                       now);  // Part Count
+  addObservationToList(list, "bbafe675", 10254806, Properties {{"VALUE", "11"}},
+                       now);  // Line Number
+  addObservationToList(list, "bbafe670", 10254807, Properties {{"VALUE", "12"}},
+                       now);  // Line
+  addObservationToList(list, "a01c7f35", 10254807, Properties {{"VALUE", "13.5"}},
+                       now);  // PathFeedrateOverride
+  auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
+  auto jdoc = json::parse(doc);
+  
+  auto stream = jdoc.at("/MTConnectStreams/Streams/DeviceStream/0/ComponentStream/0"_json_pointer);
+  ASSERT_TRUE(stream.is_object());
+  
+  ASSERT_EQ(string("a4a7bdf0"), stream.at("/componentId"_json_pointer).get<string>());
+  
+  auto partCount = stream.at("/Events/PartCount/0"_json_pointer);
+  ASSERT_TRUE(partCount.is_object());
+  
+  ASSERT_EQ(10, partCount.at("/value"_json_pointer).get<int64_t>());
+  ASSERT_EQ(string("d2e9e4a0"), partCount.at("/dataItemId"_json_pointer).get<string>());
+  
+  auto lineNumber = stream.at("/Events/LineNumber/0"_json_pointer);
+  ASSERT_TRUE(lineNumber.is_object());
+
+  ASSERT_EQ(11, lineNumber.at("/value"_json_pointer).get<int64_t>());
+  ASSERT_EQ(string("bbafe675"), lineNumber.at("/dataItemId"_json_pointer).get<string>());
+  
+  auto line = stream.at("/Events/Line/0"_json_pointer);
+  ASSERT_TRUE(line.is_object());
+
+  ASSERT_EQ("12"s, line.at("/value"_json_pointer).get<string>());
+  ASSERT_EQ(string("bbafe670"), line.at("/dataItemId"_json_pointer).get<string>());
+
+  auto pathFeedrateOverride = stream.at("/Events/PathFeedrateOverride/0"_json_pointer);
+  ASSERT_TRUE(pathFeedrateOverride.is_object());
+  
+  ASSERT_EQ(13.5, pathFeedrateOverride.at("/value"_json_pointer).get<double>());
+  ASSERT_EQ(string("a01c7f35"), pathFeedrateOverride.at("/dataItemId"_json_pointer).get<string>());
+
+}

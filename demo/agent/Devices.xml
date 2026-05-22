@@ -61,7 +61,7 @@
           type="OPERATING_SYSTEM"/>
         <DataItem category="EVENT" id="OSInst" name="OperatingSystemInstallDate"
           subType="INSTALL_DATE" type="OPERATING_SYSTEM"/>
-        <DataItem category="EVENT" id="App" name="Application" type="APPLICATION"/>
+        <DataItem category="EVENT" id="App" name="Application" type="x:APPLICATION"/>
         <DataItem category="EVENT" id="AppMan" name="ApplicationManufacture" subType="MANUFACTURER"
           type="APPLICATION"/>
         <DataItem category="EVENT" id="AppVer" name="ApplicationVersion" subType="VERSION"
@@ -1067,8 +1067,8 @@
 								<DataItem id="peditmode" type="PROGRAM_EDIT" category="EVENT"/>
 								<DataItem id="peditname" type="PROGRAM_EDIT_NAME" category="EVENT"/>
 								<DataItem id="hd1chuckstate" type="CHUCK_STATE" category="EVENT"/>
-								<DataItem category="EVENT" id="Frapidovr" subType="RAPID" type="PATH_FEEDRATE_OVERRIDE"/>
-								<DataItem category="EVENT" id="Fovr" subType="PROGRAMMED" type="PATH_FEEDRATE_OVERRIDE"/>
+								<DataItem category="EVENT" id="Frapidovr" subType="RAPID" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+								<DataItem category="EVENT" id="Fovr" subType="PROGRAMMED" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
 								<DataItem category="EVENT" id="Sovr" type="ROTARY_VELOCITY_OVERRIDE"/>
 								<DataItem type="PROGRAM" id="program" category="EVENT" subType="MAIN"/>
 								<DataItem type="PROGRAM" subType="ACTIVE" id="activeprog" category="EVENT"/>
