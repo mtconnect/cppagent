@@ -733,6 +733,7 @@ TEST_F(JsonPrinterStreamTest, should_have_device_model_change_time_in_header)
 TEST_F(JsonPrinterStreamTest, event_with_count_or_number_types)
 {
   m_printer = std::make_unique<printer::JsonPrinter>(2, true);
+  m_printer->setStreamsSchema("/scheams/MTConnectStreams-2.7.schema.json");
   
   ObservationList list;
   Timestamp now = chrono::system_clock::now();

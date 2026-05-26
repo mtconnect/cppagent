@@ -131,6 +131,9 @@ namespace mtconnect::printer {
 
       AutoJsonObject obj(writer);
       {
+        if (m_errorsSchema)
+          obj.AddPairs("$schema", *m_errorsSchema);
+        
         AutoJsonObject obj(writer, "MTConnectError");
         obj.AddPairs("jsonVersion", m_jsonVersion);
 
@@ -175,6 +178,9 @@ namespace mtconnect::printer {
       entity::JsonPrinter printer(writer, m_jsonVersion, includeHidden);
 
       AutoJsonObject top(writer);
+      if (m_devicesSchema)
+        top.AddPairs("$schema", *m_devicesSchema);
+
       AutoJsonObject obj(writer, "MTConnectDevices");
       obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
       {
@@ -203,6 +209,9 @@ namespace mtconnect::printer {
       entity::JsonPrinter printer(writer, m_jsonVersion);
 
       AutoJsonObject top(writer);
+      if (m_assetsSchema)
+        top.AddPairs("$schema", *m_assetsSchema);
+
       AutoJsonObject obj(writer, "MTConnectAssets");
       obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
       {
@@ -402,6 +411,9 @@ namespace mtconnect::printer {
     StringBuffer output;
     RenderJson(output, m_pretty || pretty, [&](auto &writer) {
       AutoJsonObject top(writer);
+      if (m_streamsSchema)
+        top.AddPairs("$schema", *m_streamsSchema);
+
       AutoJsonObject obj(writer, "MTConnectStreams");
       obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
       {

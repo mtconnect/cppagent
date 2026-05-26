@@ -253,7 +253,7 @@ namespace mtconnect {
             else
               m_key += ":DOUBLE";
           }
-          else if (type.ends_with("COUNT") || type.ends_with("NUMBER"))
+          else if (type != "TOOL_NUMBER" && (type.ends_with("COUNT") || type.ends_with("NUMBER")))
           {
             m_key += ":INT";
           }

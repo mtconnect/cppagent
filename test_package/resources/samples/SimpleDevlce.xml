@@ -119,7 +119,7 @@
             <Coolant id="x5ef9730" name="low">
               <DataItems>
                 <DataItem id="r25176b0" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="low_main_level" compositionId="t59d1170"/>
-                <DataItem id="obc97840" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="low_main_level" compositionId="a7973930"/>
+                <DataItem id="obc97840" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="low_reserve_level" compositionId="a7973930"/>
               </DataItems>
               <Compositions>
                 <Composition id="t59d1170" type="TANK" name="main"/>
@@ -129,7 +129,7 @@
             <Coolant id="b36e0070" name="high">
               <DataItems>
                 <DataItem id="q94f81e0" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="high_main_level" compositionId="a59bd5b0"/>
-                <DataItem id="wf2848e0" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="high_main_level" compositionId="aa373750"/>
+                <DataItem id="wf2848e0" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="high_reserve_level" compositionId="aa373750"/>
               </DataItems>
               <Compositions>
                 <Composition id="a59bd5b0" type="TANK" name="main"/>

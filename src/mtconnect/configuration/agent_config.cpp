@@ -863,6 +863,7 @@ namespace mtconnect::configuration {
                 {configuration::SuppressIPAddress, false},
                 {configuration::AllowPutFrom, ""s},
                 {configuration::Validation, false},
+                {configuration::ExternalBaseUrl, ""s},
                 {configuration::CorrectTimestamps, false}});
 
     m_workerThreadCount = *GetOption<int>(options, configuration::WorkerThreads);
@@ -930,14 +931,11 @@ namespace mtconnect::configuration {
     // Check for schema version
     auto port = get<int>(options[configuration::Port]);
     LOG(info) << "Starting agent on port " << int(port);
-
-    // Get the name of the sender
+    
+    // Get the ExternalBaseUrl for the agent
+    auto externalBaseUrl = GetOption<string>(options, configuration::ExternalBaseUrl);
     auto sender = GetOption<string>(options, configuration::Sender);
-    if (sender)
-    {
-      options[configuration::Sender] = *sender;
-    }
-    else
+    if (!sender && !externalBaseUrl)
     {
       boost::system::error_code ec;
       auto name = boost::asio::ip::host_name(ec);
@@ -947,6 +945,25 @@ namespace mtconnect::configuration {
         options[configuration::Sender] = name;
     }
 
+    if (externalBaseUrl)
+    {
+      auto url = url::Url::parse(*externalBaseUrl);
+      if (!sender)
+      {
+        sender = url.getHost();
+        options[configuration::Sender] = *sender;
+      }
+      
+    }
+    else if (sender)
+    {
+      auto tls = GetOption<string>(options, configuration::TlsPrivateKey);
+      string protocol = tls ? "https" : "http";
+      stringstream url;
+      url << protocol << "://" << *sender << '/';
+      options[configuration::ExternalBaseUrl] = url.str();
+    }
+    
     // Make the Agent
     m_agent = make_unique<Agent>(getAsyncContext(), m_devicesFile, options);
     m_afterAgentHooks.exec(*this);

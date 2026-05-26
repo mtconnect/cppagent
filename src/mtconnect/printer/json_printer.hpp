@@ -54,8 +54,44 @@ namespace mtconnect::printer {
     std::string mimeType() const override { return "application/mtconnect+json"; }
 
     uint32_t getJsonVersion() const { return m_jsonVersion; }
+    
+    /// @brief Add JSON Schema location for Devices Document
+    /// @param url The url referencing the schema
+    void setDevicesSchema(const std::string &url)
+    {
+      m_devicesSchema = url;
+    }
+    
+    /// @brief Add JSON Schema location for Streams Document
+    /// @param url The url referencing the schema
+    void setStreamsSchema(const std::string &url)
+    {
+      m_streamsSchema = url;
+    }
+
+    /// @brief Add JSON Schema location for Assets Document
+    /// @param url The url referencing the schema
+    void setAssetsSchema(const std::string &url)
+    {
+      m_assetsSchema = url;
+    }
+
+    /// @brief Add JSON Schema location for Errors Document
+    /// @param url The url referencing the schema
+    /// @param location the file location of the schema file
+    void setErrorsSchema(const std::string &url)
+    {
+      m_errorsSchema = url;
+    }
+
+
 
   protected:
+    std::optional<std::string> m_devicesSchema;
+    std::optional<std::string> m_streamsSchema;
+    std::optional<std::string> m_assetsSchema;
+    std::optional<std::string> m_errorsSchema;
+    
     std::string m_version;
     std::string m_hostname;
     uint32_t m_jsonVersion;

@@ -26,6 +26,7 @@
 #include "mtconnect/pipeline/shdr_tokenizer.hpp"
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
 #include "mtconnect/printer/xml_printer.hpp"
+#include "mtconnect/printer/json_printer.hpp"
 #include "server.hpp"
 
 namespace asio = boost::asio;
@@ -67,15 +68,21 @@ namespace mtconnect {
 
       // Get the HTTP Headers
       loadHttpHeaders(config);
-
+      
       m_server = make_unique<Server>(context, m_options);
       m_server->setErrorFunction(boost::bind(&RestService::writeErrorResponse, this, _1, _2));
 
+      auto base = GetOption<string>(options, config::ExternalBaseUrl);
+      if (!base)
+        base = "http://localhost:" + to_string(m_server->getPort());
+        
+
       auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_sinkContract->getPrinter("xml"));
+      auto jsonPrinter = dynamic_cast<JsonPrinter *>(m_sinkContract->getPrinter("json"));
 
       // Files served by the Agent... allows schema files to be served by
       // agent.
-      loadFiles(xmlPrinter, config);
+      loadFiles(xmlPrinter, jsonPrinter, config);
 
       // Load namespaces, allow for local file system serving as well.
       loadNamespace(config, "DevicesNamespaces", xmlPrinter, &XmlPrinter::addDevicesNamespace);
@@ -174,7 +181,9 @@ namespace mtconnect {
       }
     }
 
-    void RestService::loadFiles(XmlPrinter *xmlPrinter, const ptree &tree)
+    void RestService::loadFiles(XmlPrinter *xmlPrinter,
+                                JsonPrinter *jsonPrinter,
+                                const ptree &tree)
     {
       auto files = tree.get_child_optional("Files");
       if (files)
@@ -201,21 +210,33 @@ namespace mtconnect {
               auto namespaces = m_fileCache.registerFiles(*location, *resolved, m_schemaVersion);
               for (auto &ns : namespaces)
               {
-                if (ns.first.find("Devices") != string::npos)
+                if (ns.m_urn.find("Devices") != string::npos)
                 {
-                  xmlPrinter->addDevicesNamespace(ns.first, ns.second, "m");
+                  if (ns.m_type == SchemaType::XSD)
+                    xmlPrinter->addDevicesNamespace(ns.m_urn, ns.m_uri, "m");
+                  else
+                    jsonPrinter->setDevicesSchema(externalUrl(ns.m_uri));
                 }
-                else if (ns.first.find("Streams") != string::npos)
+                else if (ns.m_urn.find("Streams") != string::npos)
                 {
-                  xmlPrinter->addStreamsNamespace(ns.first, ns.second, "m");
+                  if (ns.m_type == SchemaType::XSD)
+                    xmlPrinter->addStreamsNamespace(ns.m_urn, ns.m_uri, "m");
+                  else
+                    jsonPrinter->setStreamsSchema(externalUrl(ns.m_uri));
                 }
-                else if (ns.first.find("Assets") != string::npos)
+                else if (ns.m_urn.find("Assets") != string::npos)
                 {
-                  xmlPrinter->addAssetsNamespace(ns.first, ns.second, "m");
+                  if (ns.m_type == SchemaType::XSD)
+                    xmlPrinter->addAssetsNamespace(ns.m_urn, ns.m_uri, "m");
+                  else
+                    jsonPrinter->setAssetsSchema(externalUrl(ns.m_uri));
                 }
-                else if (ns.first.find("Error") != string::npos)
+                else if (ns.m_urn.find("Error") != string::npos)
                 {
-                  xmlPrinter->addErrorNamespace(ns.first, ns.second, "m");
+                  if (ns.m_type == SchemaType::XSD)
+                    xmlPrinter->addErrorNamespace(ns.m_urn, ns.m_uri, "m");
+                  else
+                    jsonPrinter->setErrorsSchema(externalUrl(ns.m_uri));
                 }
               }
             }

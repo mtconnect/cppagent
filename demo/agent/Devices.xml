@@ -1166,7 +1166,7 @@
 					<Components>
 						<Personnel id="personnelm" name="personnel">
 							<DataItems>
-								<DataItem id="operator" type="USER" category="EVENT"/>
+								<DataItem id="operator" type="USER" category="EVENT" subType="OPERATOR"/>
 							</DataItems>
 						</Personnel>
 						<Materials id="materials" name="materials">
