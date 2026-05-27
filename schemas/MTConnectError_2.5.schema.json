@@ -1,8 +1,8 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "https://schemas.mtconnect.org/schemas/MTConnectError_2.7_draft-04.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mtconnect.org/schemas/MTConnectError_2.5.schema.json",
   "title": "MTConnectError",
-  "description": "MTConnect MTConnectError response, v2 JSON, from SysML model v2.7.",
+  "description": "MTConnect MTConnectError response, v2 JSON, from SysML model v2.5.",
   "type": "object",
   "required": [
     "MTConnectError"
@@ -12,11 +12,11 @@
       "type": "string"
     },
     "MTConnectError": {
-      "$ref": "#/definitions/MTConnectError"
+      "$ref": "#/$defs/MTConnectError"
     }
   },
   "additionalProperties": false,
-  "definitions": {
+  "$defs": {
     "Header": {
       "type": "object",
       "title": "Header",
@@ -117,82 +117,10 @@
         "Errors": {
           "type": "object",
           "properties": {
-            "InvalidParameterValue": {
+            "Error": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/InvalidParameterValue"
-              }
-            },
-            "InvalidXPath": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/InvalidXPath"
-              }
-            },
-            "QueryError": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/QueryError"
-              }
-            },
-            "AssetNotFound": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AssetNotFound"
-              }
-            },
-            "TooMany": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/TooMany"
-              }
-            },
-            "Unsupported": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Unsupported"
-              }
-            },
-            "InvalidURI": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/InvalidURI"
-              }
-            },
-            "InvalidRequest": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/InvalidRequest"
-              }
-            },
-            "InternalError": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/InternalError"
-              }
-            },
-            "NoDevice": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/NoDevice"
-              }
-            },
-            "OutOfRange": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/OutOfRange"
-              }
-            },
-            "Unauthorized": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Unauthorized"
-              }
-            },
-            "InvalidQueryParameter": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/InvalidQueryParameter"
+                "$ref": "#/$defs/Error"
               }
             }
           },
@@ -200,14 +128,14 @@
             "^[a-ln-zA-LN-Z]:[A-Za-z_][A-Za-z0-9_]*$": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Error"
+                "$ref": "#/$defs/Error"
               }
             }
           },
           "additionalProperties": false
         },
         "Header": {
-          "$ref": "#/definitions/Header"
+          "$ref": "#/$defs/Header"
         }
       },
       "required": [
@@ -218,497 +146,18 @@
     "Error": {
       "type": "object",
       "title": "Error",
-      "description": "abstract error encountered by an {{term(agent)}} when responding to a {{term(request)}}.",
+      "description": "error encountered by an {{term(agent)}} when responding to a {{term(request)}}.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
           "type": "string",
           "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
         }
       },
       "required": [
-        "URI",
-        "errorCode"
-      ]
-    },
-    "InvalidParameterValue": {
-      "type": "object",
-      "title": "InvalidParameterValue",
-      "description": "supplied value does not match the required type.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        },
-        "QueryParameter": {
-          "$ref": "#/definitions/QueryParameter"
-        }
-      },
-      "required": [
-        "ErrorMessage",
-        "QueryParameter",
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "InvalidXPath": {
-      "type": "object",
-      "title": "InvalidXPath",
-      "description": "{{term(XPath)}} is either structurally malformed or the XPath does not exist.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "QueryError": {
-      "type": "object",
-      "title": "QueryError",
-      "description": "agent was unable to interpret the query. The query parameters do not contain valid values or include an invalid parameter.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "AssetNotFound": {
-      "type": "object",
-      "title": "AssetNotFound",
-      "description": "request for information specifies an {{block(Asset)}} that is not recognized by the agent.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        },
-        "AssetId": {
-          "type": "string",
-          "description": "{{property(Asset::assetId)}} of the requested {{block(Asset)}}"
-        }
-      },
-      "required": [
-        "AssetId",
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "TooMany": {
-      "type": "object",
-      "title": "TooMany",
-      "description": "`count` parameter provided in the {{term(request)}} for information requires either of the following: * {{term(streaming data)}} that includes more pieces of data than the {{term(agent)}} is capable of organizing in an {{term(MTConnectStreams Response Document)}}. * {{block(Assets)}} that include more {{block(Asset)}} in an {{term(MTConnectAssets Response Document)}} than the {{term(agent)}} is capable of handling.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "Unsupported": {
-      "type": "object",
-      "title": "Unsupported",
-      "description": "valid request was provided, but the agent does not support the feature or type of request.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "InvalidURI": {
-      "type": "object",
-      "title": "InvalidURI",
-      "description": "{{term(URI)}} provided was incorrect.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "InvalidRequest": {
-      "type": "object",
-      "title": "InvalidRequest",
-      "description": "request contains information that was not recognized by the agent.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "ErrorMessage",
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "InternalError": {
-      "type": "object",
-      "title": "InternalError",
-      "description": "agent experienced an error while attempting to publish the requested information.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "NoDevice": {
-      "type": "object",
-      "title": "NoDevice",
-      "description": "identity of the {{block(Device)}} specified in the request for information is not associated with the agent.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "OutOfRange": {
-      "type": "object",
-      "title": "OutOfRange",
-      "description": "request for information specifies streaming data that includes sequence number(s) for pieces of data that are beyond the end of the buffer.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        },
-        "QueryParameter": {
-          "$ref": "#/definitions/QueryParameter"
-        }
-      },
-      "required": [
-        "QueryParameter",
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "Unauthorized": {
-      "type": "object",
-      "title": "Unauthorized",
-      "description": "requester does not have sufficient permissions to access the requested information.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "QueryParameter": {
-      "type": "object",
-      "title": "QueryParameter",
-      "description": "property of the {{term(HTTP Request)}} that modifies the information returned by the {{term(HTTP Request)}}.",
-      "properties": {
-        "name": {
-          "$ref": "#/definitions/QueryParameterEnum",
-          "description": "name of the parameter."
-        },
-        "Maximum": {
-          "type": "number",
-          "description": "maximum allowed value."
-        },
-        "Minimum": {
-          "type": "number",
-          "description": "minimal allowed value."
-        },
-        "Value": {
-          "type": "string",
-          "description": "given value."
-        },
-        "Type": {
-          "type": "string",
-          "description": "expected datatype of the parameter."
-        },
-        "Format": {
-          "type": "string",
-          "description": "expected datatype format of the parameter."
-        }
-      },
-      "required": [
-        "name"
-      ],
-      "additionalProperties": false
-    },
-    "InvalidQueryParameter": {
-      "type": "object",
-      "title": "InvalidQueryParameter",
-      "description": "agent does not recognize the parameter.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "ErrorMessage",
-        "URI",
         "errorCode"
       ],
       "additionalProperties": false
@@ -748,77 +197,6 @@
         "instanceId",
         "maxAssets",
         "sequenceNumber"
-      ],
-      "additionalProperties": false
-    },
-    "MTConnectExceptionsReport": {
-      "type": "object",
-      "title": "MTConnectExceptionsReport",
-      "description": "root entity of an {{term(MTConnectExceptionsReport Response Document)}} that contains the {{term(ExceptionReport Information Model)}}."
-    },
-    "Exception": {
-      "type": "object",
-      "title": "Exception",
-      "description": "irregularity encountered by an {{term(agent)}} in a {{term(response document)}} that may or may not conform to the MTConnect Standard.",
-      "properties": {
-        "severity": {
-          "$ref": "#/definitions/SeverityEnum",
-          "description": "criticality associated with the exception."
-        },
-        "code": {
-          "$ref": "#/definitions/ExceptionCodeEnum",
-          "description": "identifier that indicates the type of exception encountered."
-        },
-        "Message": {
-          "type": "string"
-        },
-        "Trace": {
-          "$ref": "#/definitions/Trace"
-        }
-      },
-      "required": [
-        "Message",
-        "Trace",
-        "code",
-        "severity"
-      ],
-      "additionalProperties": false
-    },
-    "Trace": {
-      "type": "object",
-      "title": "Trace",
-      "description": "information about the characteristics of the exception.",
-      "properties": {
-        "Source": {
-          "type": "string",
-          "description": "{{term(URI)}} of the artefact of where the exception occurred."
-        },
-        "Context": {
-          "type": "string",
-          "description": "unique path to the exception location."
-        },
-        "ScopeType": {
-          "$ref": "#/definitions/ScopeTypeEnum",
-          "description": "designates the exception property kind."
-        },
-        "Scope": {
-          "type": "string",
-          "description": "name of the property."
-        },
-        "Value": {
-          "type": "string",
-          "description": "given value of the property."
-        },
-        "ExpectedType": {
-          "type": "string",
-          "description": "normative value type for the property."
-        }
-      },
-      "required": [
-        "Context",
-        "Scope",
-        "ScopeType",
-        "Source"
       ],
       "additionalProperties": false
     },
@@ -941,8 +319,7 @@
             "COULOMB",
             "CUBIC_METER",
             "SQUARE_MILLIMETER",
-            "OHM_METER",
-            "MILLIGRAM/LITER"
+            "OHM_METER"
           ]
         },
         {
@@ -1092,13 +469,7 @@
             "MEASURED",
             "GAS",
             "LIQUID",
-            "SOLID",
-            "ELECTRODE",
-            "FILLER",
-            "PLUNGE",
-            "PECK",
-            "CUT",
-            "LAYER"
+            "SOLID"
           ]
         },
         {
@@ -1388,8 +759,7 @@
             "RESISTIVITY",
             "FILL_HEIGHT",
             "PARTICLE_COUNT",
-            "PARTICLE_SIZE",
-            "WATER_HARDNESS"
+            "PARTICLE_SIZE"
           ]
         },
         {
@@ -1541,16 +911,7 @@
             "LOCATION_NARRATIVE",
             "THICKNESS",
             "LOCATION_SPATIAL_GEOGRAPHIC",
-            "PART_INDEX",
-            "ASSOCIATED_ASSET_ID",
-            "ASSET_ADDED",
-            "TASK_ASSET_ID",
-            "BINDING_STATE",
-            "SWING_ANGLE",
-            "SWING_RADIUS",
-            "SWING_DIAMETER",
-            "DEPTH",
-            "FIXTURE_ASSET_ID"
+            "PART_INDEX"
           ]
         },
         {
@@ -1684,8 +1045,7 @@
             "IGES",
             "3DS",
             "ACIS",
-            "X_T",
-            "QIF_MBD"
+            "X_T"
           ]
         },
         {
@@ -3225,136 +2585,6 @@
         }
       ]
     },
-    "QueryParameterEnum": {
-      "title": "QueryParameterEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "device",
-            "deviceType",
-            "path",
-            "from",
-            "count",
-            "interval",
-            "heartbeat"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
-    "ScopeTypeEnum": {
-      "title": "ScopeTypeEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "ENTITY",
-            "VALUE_PROPERTY",
-            "PART"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
-    "ExceptionCodeEnum": {
-      "title": "ExceptionCodeEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "TYPE_MISMATCH",
-            "NOT_FOUND",
-            "DEPRECATED",
-            "EXTENDED",
-            "OUT_OF_RANGE",
-            "DUPLICATE_ENTRY",
-            "INVALID_FORMAT"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
-    "SeverityEnum": {
-      "title": "SeverityEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "FATAL",
-            "ERROR",
-            "WARNING",
-            "INFO"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
-    "TaskStateEnum": {
-      "title": "TaskStateEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "INACTIVE",
-            "PREPARING",
-            "COMMITTING",
-            "COMMITTED",
-            "COMPLETE",
-            "FAIL"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
-    "BindingStateEnum": {
-      "title": "BindingStateEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "INACTIVE",
-            "PREPARING",
-            "COMMITTED"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
-    "PartIdentifierEnum": {
-      "title": "PartIdentifierEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "UNIQUE_IDENTIFIER",
-            "GROUP_IDENTIFIER"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
     "ControlLimitResult": {
       "type": "object",
       "title": "ControlLimitResult",
@@ -3477,7 +2707,7 @@
           "description": "current interval value of the activity."
         },
         "Interval": {
-          "$ref": "#/definitions/MaintenanceListIntervalEnum",
+          "$ref": "#/$defs/MaintenanceListIntervalEnum",
           "description": "interval of the value observed.",
           "default": "ABSOLUTE"
         },
@@ -3494,7 +2724,7 @@
           "description": "level of severity on a scale of 1-10."
         },
         "Direction": {
-          "$ref": "#/definitions/MaintenanceListDirectionEnum",
+          "$ref": "#/$defs/MaintenanceListDirectionEnum",
           "description": "direction of the value observed.",
           "default": "UP"
         },
@@ -3507,7 +2737,7 @@
           "description": "last date/time stamp that maintenance was performed."
         },
         "Units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "same as {{property(DataItem::units)}}. See {{package(Device Information Model)}}.",
           "default": "COUNT"
         },
@@ -3556,11 +2786,11 @@
           "description": "engineering units of the measurement."
         },
         "CharacteristicStatus": {
-          "$ref": "#/definitions/CharacteristicStatusEnum",
+          "$ref": "#/$defs/CharacteristicStatusEnum",
           "description": "pass/fail result of the measurement."
         },
         "UncertaintyType": {
-          "$ref": "#/definitions/UncertaintyTypeEnum",
+          "$ref": "#/$defs/UncertaintyTypeEnum",
           "description": "method used to compute {{term(standard uncertainty)}}."
         },
         "Uncertainty": {
@@ -3690,6 +2920,136 @@
       ],
       "additionalProperties": false
     },
+    "TranslationDataSet": {
+      "type": "object",
+      "title": "TranslationDataSet",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "X": {
+          "type": "string",
+          "description": "translation along X axis."
+        },
+        "Y": {
+          "type": "string",
+          "description": "translation along Y axis."
+        },
+        "Z": {
+          "type": "string",
+          "description": "translation along Z axis."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "RotationDataSet": {
+      "type": "object",
+      "title": "RotationDataSet",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "X": {
+          "type": "string",
+          "description": "rotation about X axis."
+        },
+        "Y": {
+          "type": "string",
+          "description": "rotation about Y axis."
+        },
+        "Z": {
+          "type": "string",
+          "description": "rotation about Z axis."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "ScaleDataSet": {
+      "type": "object",
+      "title": "ScaleDataSet",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "X": {
+          "type": "number",
+          "description": "multiplier for X axis."
+        },
+        "Y": {
+          "type": "number",
+          "description": "multiplier for Y axis."
+        },
+        "Z": {
+          "type": "number",
+          "description": "multiplier for Z axis."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "AxisDataSet": {
+      "type": "object",
+      "title": "AxisDataSet",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "X": {
+          "type": "number",
+          "description": "x-component of {{block(Axis)}}."
+        },
+        "Y": {
+          "type": "number",
+          "description": "y-component of {{block(Axis)}}."
+        },
+        "Z": {
+          "type": "number",
+          "description": "z-component of {{block(Axis)}}."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "OriginDataSet": {
+      "type": "object",
+      "title": "OriginDataSet",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "X": {
+          "type": "string",
+          "description": "x-coordinate."
+        },
+        "Y": {
+          "type": "string",
+          "description": "y-coordinate."
+        },
+        "Z": {
+          "type": "string",
+          "description": "x-coordinate."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
     "organizer": {
       "description": "Unsupported UML kind: uml:Stereotype"
     },
@@ -3711,7 +3071,7 @@
     "satisfiedBy": {
       "description": "Unsupported UML kind: uml:Stereotype"
     },
-    "ImplementationFormat": {
+    "hasFormatSpecificRepresentation": {
       "description": "Unsupported UML kind: uml:Stereotype"
     },
     "valueType": {
@@ -3720,7 +3080,7 @@
     "isArray": {
       "description": "Unsupported UML kind: uml:Stereotype"
     },
-    "MTConnect Requirement": {
+    "MTConnectRequirementSpecification": {
       "description": "Unsupported UML kind: uml:Stereotype"
     },
     "AssetCountDataSet": {

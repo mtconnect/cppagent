@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mtconnect.org/v2.7/MTConnectError.schema.json",
+  "$id": "https://schemas.mtconnect.org/schemas/MTConnectError_2.7.schema.json",
   "title": "MTConnectError",
   "description": "MTConnect MTConnectError response, v2 JSON, from SysML model v2.7.",
   "type": "object",

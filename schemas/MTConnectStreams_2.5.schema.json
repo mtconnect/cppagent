@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mtconnect.org/schemas/MTConnectStreams_2.7.schema.json",
+  "$id": "https://schemas.mtconnect.org/schemas/MTConnectStreams_2.5.schema.json",
   "title": "MTConnectStreams",
-  "description": "MTConnect MTConnectStreams response, v2 JSON, from SysML model v2.7.",
+  "description": "MTConnect MTConnectStreams response, v2 JSON, from SysML model v2.5.",
   "type": "object",
   "required": [
     "MTConnectStreams"
@@ -905,60 +905,6 @@
                 "$ref": "#/$defs/PartIndex"
               }
             },
-            "AssociatedAssetId": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/AssociatedAssetId"
-              }
-            },
-            "AssetAdded": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/AssetAdded"
-              }
-            },
-            "TaskAssetId": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/TaskAssetId"
-              }
-            },
-            "BindingState": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/BindingState"
-              }
-            },
-            "SwingAngle": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/SwingAngle"
-              }
-            },
-            "SwingDiameter": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/SwingDiameter"
-              }
-            },
-            "SwingRadius": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/SwingRadius"
-              }
-            },
-            "Depth": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/Depth"
-              }
-            },
-            "FixtureAssetId": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/FixtureAssetId"
-              }
-            },
             "MaterialFeed": {
               "type": "array",
               "items": {
@@ -1023,6 +969,18 @@
               "type": "array",
               "items": {
                 "$ref": "#/$defs/InterfaceState"
+              }
+            },
+            "TranslationDataSet": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/TranslationDataSet"
+              }
+            },
+            "RotationDataSet": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RotationDataSet"
               }
             },
             "VariableDataSet": {
@@ -2250,18 +2208,6 @@
               "items": {
                 "$ref": "#/$defs/ParticleSizeTimeSeries"
               }
-            },
-            "WaterHardness": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/WaterHardness"
-              }
-            },
-            "WaterHardnessTimeSeries": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/WaterHardnessTimeSeries"
-              }
             }
           },
           "patternProperties": {
@@ -2580,6 +2526,25 @@
           ]
         }
       ]
+    },
+    "TableEntry": {
+      "type": "object",
+      "title": "TableEntry",
+      "description": "{{term(key-value pair)}} published as part of a {{block(Table)}}. > Note: In the {{term(XML)}} representation, {{block(TableEntry)}} **MUST** appear as {{block(Entry)}}.",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "unique identifier for each {{term(key-value pair)}}."
+        },
+        "removed": {
+          "type": "boolean",
+          "description": "removal indicator of a {{term(key-value pair)}}."
+        }
+      },
+      "required": [
+        "key"
+      ],
+      "additionalProperties": false
     },
     "Cell": {
       "type": "object",
@@ -8869,107 +8834,6 @@
         "units": {
           "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
-        },
-        "isUnavailable": {
-          "type": "boolean",
-          "description": "when `true`, {{property(Observation::result)}} is indeterminate. > Note 1 to entry: In {{term(XML)}}, when `isUnavailable` is `true`, the {{term(XML)}} `CDATA` of the `Observation` **MUST** be `UNAVAILABLE`. ```xml <Execution dataItemId=\"...\" ...>UNAVAILABLE</Execution> ``` > Note 2 to entry: In {{term(JSON)}}, when `isUnavailable` is `true`, the {{term(JSON)}} `value` of the `Observation` **MUST** be `UNAVAILABLE`. ```json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"UNAVAILABLE\" } ] ```",
-          "default": "true"
-        },
-        "quality": {
-          "$ref": "#/$defs/QualityEnum",
-          "description": "indicates if the {{block(Observation)}} is verifiable and is in accordance with the normative definitions within the MTConnect Standard.",
-          "default": "UNVERIFIABLE"
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been deprecated in the MTConnect Standard.",
-          "default": "false"
-        },
-        "extended": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been extended and cannot be validated.",
-          "default": "false"
-        },
-        "duration": {
-          "type": "number",
-          "description": "time-period over which the data was collected. {{property(Sample::duration)}} **MUST** be provided when the {{property(DataItem::statistic)}} is defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "resetTriggered": {
-          "$ref": "#/$defs/ResetTriggeredEnum",
-          "description": "identifies when a reported value has been reset and what has caused that reset to occur for those {{block(DataItem)}} entities that may be periodically reset to an initial value. `resetTriggered` **MUST** only be provided for the specific occurrence of a {{block(DataItem)}} reported in the {{term(MTConnectStreams Response Document)}} when the reset occurred."
-        },
-        "sampleRate": {
-          "type": "number",
-          "description": "rate at which successive samples of the value are recorded."
-        },
-        "statistic": {
-          "$ref": "#/$defs/StatisticEnum",
-          "description": "type of statistical calculation defined by the {{property(DataItem::statistic)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        }
-      },
-      "required": [
-        "dataItemId",
-        "sequence",
-        "timestamp",
-        "value"
-      ],
-      "additionalProperties": false
-    },
-    "WaterHardness": {
-      "type": "object",
-      "title": "WaterHardness",
-      "description": "{{def(SampleEnum::WATER_HARDNESS)}}",
-      "properties": {
-        "value": {
-          "oneOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "string",
-              "enum": [
-                "UNAVAILABLE"
-              ]
-            }
-          ]
-        },
-        "assetType": {
-          "type": "string"
-        },
-        "count": {
-          "type": "integer"
-        },
-        "compositionId": {
-          "type": "string",
-          "description": "identifier of the {{block(Composition)}} entity defined in the {{term(MTConnectDevices Response Document)}} associated with the data reported for the {{block(Observation)}}."
-        },
-        "dataItemId": {
-          "type": "string",
-          "description": "unique identifier of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::dataItemId)}} **MUST** match the associated {{property(DataItem::id)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "name": {
-          "type": "string",
-          "description": "name of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::name)}} **MUST** match the associated {{property(DataItem::name)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "sequence": {
-          "type": "integer",
-          "description": "number representing the sequential position of an occurrence of an {{term(observation)}} in the data buffer of an {{term(agent)}}. {{property(Observation::sequence)}} **MUST** have a value represented as an unsigned 64-bit value from 1 to $$ 2^{64}-1 $$."
-        },
-        "subType": {
-          "$ref": "#/$defs/DataItemSubTypeEnum",
-          "description": "subtype of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::subType)}} **MUST** match the associated {{property(DataItem::subType)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "most accurate time available to a piece of equipment that represents the point in time that the data reported was measured."
-        },
-        "type": {
-          "$ref": "#/$defs/SampleEnum",
-          "default": "WATER_HARDNESS"
-        },
-        "units": {
-          "$ref": "#/$defs/UnitEnum",
-          "default": "MILLIGRAM/LITER"
         },
         "isUnavailable": {
           "type": "boolean",
@@ -18177,710 +18041,6 @@
       ],
       "additionalProperties": false
     },
-    "AssociatedAssetId": {
-      "type": "object",
-      "title": "AssociatedAssetId",
-      "description": "{{def(EventEnum::ASSOCIATED_ASSET_ID)}} If defined as a DataSet or Table: * `key` **MUST** be an {{(block(Asset)}} type. Examples: CuttingTool, Fixture, File. * `value` **MUST** be the corresponding {{block(Asset::assetId)}}.",
-      "properties": {
-        "value": {
-          "description": "{{term(observation)}} of the {{block(Observation)}} entity. The default value type for {{property(Observation::result)}} is `string`. > Note 1 to entry: in {{term(XML)}} the {{property(Observation::result)}} is the `CDATA` of the Observation {{term(element)}}. ~~~~xml <Execution dataItemId=\"...\" ...>READY</Execution> ~~~~ > Note 2 to entry: in {{term(JSON)}} the {{property(Observation::result)}} is the member `value` of the Observation object. ~~~~json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"READY\" } ] ~~~~"
-        },
-        "assetType": {
-          "type": "string"
-        },
-        "count": {
-          "type": "integer"
-        },
-        "compositionId": {
-          "type": "string",
-          "description": "identifier of the {{block(Composition)}} entity defined in the {{term(MTConnectDevices Response Document)}} associated with the data reported for the {{block(Observation)}}."
-        },
-        "dataItemId": {
-          "type": "string",
-          "description": "unique identifier of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::dataItemId)}} **MUST** match the associated {{property(DataItem::id)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "name": {
-          "type": "string",
-          "description": "name of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::name)}} **MUST** match the associated {{property(DataItem::name)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "sequence": {
-          "type": "integer",
-          "description": "number representing the sequential position of an occurrence of an {{term(observation)}} in the data buffer of an {{term(agent)}}. {{property(Observation::sequence)}} **MUST** have a value represented as an unsigned 64-bit value from 1 to $$ 2^{64}-1 $$."
-        },
-        "subType": {
-          "$ref": "#/$defs/DataItemSubTypeEnum",
-          "description": "subtype of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::subType)}} **MUST** match the associated {{property(DataItem::subType)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "most accurate time available to a piece of equipment that represents the point in time that the data reported was measured."
-        },
-        "type": {
-          "$ref": "#/$defs/EventEnum",
-          "default": "ASSOCIATED_ASSET_ID"
-        },
-        "units": {
-          "$ref": "#/$defs/UnitEnum",
-          "description": "units of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::units)}} **MUST** match the associated {{property(DataItem::units)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "isUnavailable": {
-          "type": "boolean",
-          "description": "when `true`, {{property(Observation::result)}} is indeterminate. > Note 1 to entry: In {{term(XML)}}, when `isUnavailable` is `true`, the {{term(XML)}} `CDATA` of the `Observation` **MUST** be `UNAVAILABLE`. ```xml <Execution dataItemId=\"...\" ...>UNAVAILABLE</Execution> ``` > Note 2 to entry: In {{term(JSON)}}, when `isUnavailable` is `true`, the {{term(JSON)}} `value` of the `Observation` **MUST** be `UNAVAILABLE`. ```json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"UNAVAILABLE\" } ] ```",
-          "default": "true"
-        },
-        "quality": {
-          "$ref": "#/$defs/QualityEnum",
-          "description": "indicates if the {{block(Observation)}} is verifiable and is in accordance with the normative definitions within the MTConnect Standard.",
-          "default": "UNVERIFIABLE"
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been deprecated in the MTConnect Standard.",
-          "default": "false"
-        },
-        "extended": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been extended and cannot be validated.",
-          "default": "false"
-        },
-        "resetTriggered": {
-          "$ref": "#/$defs/ResetTriggeredEnum",
-          "description": "identifies when a reported value has been reset and what has caused that reset to occur for those {{block(DataItem)}} entities that may be periodically reset to an initial value. `resetTriggered` **MUST** only be provided for the specific occurrence of a {{block(DataItem)}} reported in the {{term(MTConnectStreams Response Document)}} when the reset occurred."
-        }
-      },
-      "required": [
-        "dataItemId",
-        "sequence",
-        "timestamp"
-      ],
-      "additionalProperties": false
-    },
-    "AssetAdded": {
-      "type": "object",
-      "title": "AssetAdded",
-      "description": "{{def(EventEnum::ASSET_ADDED)}}",
-      "properties": {
-        "value": {
-          "description": "{{term(observation)}} of the {{block(Observation)}} entity. The default value type for {{property(Observation::result)}} is `string`. > Note 1 to entry: in {{term(XML)}} the {{property(Observation::result)}} is the `CDATA` of the Observation {{term(element)}}. ~~~~xml <Execution dataItemId=\"...\" ...>READY</Execution> ~~~~ > Note 2 to entry: in {{term(JSON)}} the {{property(Observation::result)}} is the member `value` of the Observation object. ~~~~json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"READY\" } ] ~~~~"
-        },
-        "assetType": {
-          "type": "string",
-          "description": "type of {{block(Asset)}} added. See {{package(Asset Information Model)}} for details on the {{block(Asset)}} model."
-        },
-        "count": {
-          "type": "integer"
-        },
-        "compositionId": {
-          "type": "string",
-          "description": "identifier of the {{block(Composition)}} entity defined in the {{term(MTConnectDevices Response Document)}} associated with the data reported for the {{block(Observation)}}."
-        },
-        "dataItemId": {
-          "type": "string",
-          "description": "unique identifier of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::dataItemId)}} **MUST** match the associated {{property(DataItem::id)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "name": {
-          "type": "string",
-          "description": "name of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::name)}} **MUST** match the associated {{property(DataItem::name)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "sequence": {
-          "type": "integer",
-          "description": "number representing the sequential position of an occurrence of an {{term(observation)}} in the data buffer of an {{term(agent)}}. {{property(Observation::sequence)}} **MUST** have a value represented as an unsigned 64-bit value from 1 to $$ 2^{64}-1 $$."
-        },
-        "subType": {
-          "$ref": "#/$defs/DataItemSubTypeEnum",
-          "description": "subtype of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::subType)}} **MUST** match the associated {{property(DataItem::subType)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "most accurate time available to a piece of equipment that represents the point in time that the data reported was measured."
-        },
-        "type": {
-          "$ref": "#/$defs/EventEnum",
-          "default": "ASSET_ADDED"
-        },
-        "units": {
-          "$ref": "#/$defs/UnitEnum",
-          "description": "units of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::units)}} **MUST** match the associated {{property(DataItem::units)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "isUnavailable": {
-          "type": "boolean",
-          "description": "when `true`, {{property(Observation::result)}} is indeterminate. > Note 1 to entry: In {{term(XML)}}, when `isUnavailable` is `true`, the {{term(XML)}} `CDATA` of the `Observation` **MUST** be `UNAVAILABLE`. ```xml <Execution dataItemId=\"...\" ...>UNAVAILABLE</Execution> ``` > Note 2 to entry: In {{term(JSON)}}, when `isUnavailable` is `true`, the {{term(JSON)}} `value` of the `Observation` **MUST** be `UNAVAILABLE`. ```json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"UNAVAILABLE\" } ] ```",
-          "default": "true"
-        },
-        "quality": {
-          "$ref": "#/$defs/QualityEnum",
-          "description": "indicates if the {{block(Observation)}} is verifiable and is in accordance with the normative definitions within the MTConnect Standard.",
-          "default": "UNVERIFIABLE"
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been deprecated in the MTConnect Standard.",
-          "default": "false"
-        },
-        "extended": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been extended and cannot be validated.",
-          "default": "false"
-        },
-        "resetTriggered": {
-          "$ref": "#/$defs/ResetTriggeredEnum",
-          "description": "identifies when a reported value has been reset and what has caused that reset to occur for those {{block(DataItem)}} entities that may be periodically reset to an initial value. `resetTriggered` **MUST** only be provided for the specific occurrence of a {{block(DataItem)}} reported in the {{term(MTConnectStreams Response Document)}} when the reset occurred."
-        },
-        "hash": {
-          "type": "string",
-          "description": "condensed message digest from a secure one-way hash function. {{cite(FIPS PUB 180-4)}}"
-        }
-      },
-      "required": [
-        "dataItemId",
-        "sequence",
-        "timestamp"
-      ],
-      "additionalProperties": false
-    },
-    "TaskAssetId": {
-      "type": "object",
-      "title": "TaskAssetId",
-      "description": "{{def(EventEnum::TASK_ASSET_ID)}}",
-      "properties": {
-        "value": {
-          "description": "{{term(observation)}} of the {{block(Observation)}} entity. The default value type for {{property(Observation::result)}} is `string`. > Note 1 to entry: in {{term(XML)}} the {{property(Observation::result)}} is the `CDATA` of the Observation {{term(element)}}. ~~~~xml <Execution dataItemId=\"...\" ...>READY</Execution> ~~~~ > Note 2 to entry: in {{term(JSON)}} the {{property(Observation::result)}} is the member `value` of the Observation object. ~~~~json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"READY\" } ] ~~~~"
-        },
-        "assetType": {
-          "type": "string"
-        },
-        "count": {
-          "type": "integer"
-        },
-        "compositionId": {
-          "type": "string",
-          "description": "identifier of the {{block(Composition)}} entity defined in the {{term(MTConnectDevices Response Document)}} associated with the data reported for the {{block(Observation)}}."
-        },
-        "dataItemId": {
-          "type": "string",
-          "description": "unique identifier of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::dataItemId)}} **MUST** match the associated {{property(DataItem::id)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "name": {
-          "type": "string",
-          "description": "name of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::name)}} **MUST** match the associated {{property(DataItem::name)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "sequence": {
-          "type": "integer",
-          "description": "number representing the sequential position of an occurrence of an {{term(observation)}} in the data buffer of an {{term(agent)}}. {{property(Observation::sequence)}} **MUST** have a value represented as an unsigned 64-bit value from 1 to $$ 2^{64}-1 $$."
-        },
-        "subType": {
-          "$ref": "#/$defs/DataItemSubTypeEnum",
-          "description": "subtype of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::subType)}} **MUST** match the associated {{property(DataItem::subType)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "most accurate time available to a piece of equipment that represents the point in time that the data reported was measured."
-        },
-        "type": {
-          "$ref": "#/$defs/EventEnum",
-          "default": "TASK_ASSET_ID"
-        },
-        "units": {
-          "$ref": "#/$defs/UnitEnum",
-          "description": "units of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::units)}} **MUST** match the associated {{property(DataItem::units)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "isUnavailable": {
-          "type": "boolean",
-          "description": "when `true`, {{property(Observation::result)}} is indeterminate. > Note 1 to entry: In {{term(XML)}}, when `isUnavailable` is `true`, the {{term(XML)}} `CDATA` of the `Observation` **MUST** be `UNAVAILABLE`. ```xml <Execution dataItemId=\"...\" ...>UNAVAILABLE</Execution> ``` > Note 2 to entry: In {{term(JSON)}}, when `isUnavailable` is `true`, the {{term(JSON)}} `value` of the `Observation` **MUST** be `UNAVAILABLE`. ```json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"UNAVAILABLE\" } ] ```",
-          "default": "true"
-        },
-        "quality": {
-          "$ref": "#/$defs/QualityEnum",
-          "description": "indicates if the {{block(Observation)}} is verifiable and is in accordance with the normative definitions within the MTConnect Standard.",
-          "default": "UNVERIFIABLE"
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been deprecated in the MTConnect Standard.",
-          "default": "false"
-        },
-        "extended": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been extended and cannot be validated.",
-          "default": "false"
-        },
-        "resetTriggered": {
-          "$ref": "#/$defs/ResetTriggeredEnum",
-          "description": "identifies when a reported value has been reset and what has caused that reset to occur for those {{block(DataItem)}} entities that may be periodically reset to an initial value. `resetTriggered` **MUST** only be provided for the specific occurrence of a {{block(DataItem)}} reported in the {{term(MTConnectStreams Response Document)}} when the reset occurred."
-        }
-      },
-      "required": [
-        "dataItemId",
-        "sequence",
-        "timestamp"
-      ],
-      "additionalProperties": false
-    },
-    "BindingState": {
-      "type": "object",
-      "title": "BindingState",
-      "description": "{{def(EventEnum::BINDING_STATE)}}",
-      "properties": {
-        "value": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/BindingStateEnum"
-            },
-            {
-              "type": "string",
-              "enum": [
-                "UNAVAILABLE"
-              ]
-            }
-          ]
-        },
-        "assetType": {
-          "type": "string"
-        },
-        "count": {
-          "type": "integer"
-        },
-        "compositionId": {
-          "type": "string",
-          "description": "identifier of the {{block(Composition)}} entity defined in the {{term(MTConnectDevices Response Document)}} associated with the data reported for the {{block(Observation)}}."
-        },
-        "dataItemId": {
-          "type": "string",
-          "description": "unique identifier of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::dataItemId)}} **MUST** match the associated {{property(DataItem::id)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "name": {
-          "type": "string",
-          "description": "name of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::name)}} **MUST** match the associated {{property(DataItem::name)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "sequence": {
-          "type": "integer",
-          "description": "number representing the sequential position of an occurrence of an {{term(observation)}} in the data buffer of an {{term(agent)}}. {{property(Observation::sequence)}} **MUST** have a value represented as an unsigned 64-bit value from 1 to $$ 2^{64}-1 $$."
-        },
-        "subType": {
-          "$ref": "#/$defs/DataItemSubTypeEnum",
-          "description": "subtype of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::subType)}} **MUST** match the associated {{property(DataItem::subType)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "most accurate time available to a piece of equipment that represents the point in time that the data reported was measured."
-        },
-        "type": {
-          "$ref": "#/$defs/EventEnum",
-          "default": "BINDING_STATE"
-        },
-        "units": {
-          "$ref": "#/$defs/UnitEnum",
-          "description": "units of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::units)}} **MUST** match the associated {{property(DataItem::units)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "isUnavailable": {
-          "type": "boolean",
-          "description": "when `true`, {{property(Observation::result)}} is indeterminate. > Note 1 to entry: In {{term(XML)}}, when `isUnavailable` is `true`, the {{term(XML)}} `CDATA` of the `Observation` **MUST** be `UNAVAILABLE`. ```xml <Execution dataItemId=\"...\" ...>UNAVAILABLE</Execution> ``` > Note 2 to entry: In {{term(JSON)}}, when `isUnavailable` is `true`, the {{term(JSON)}} `value` of the `Observation` **MUST** be `UNAVAILABLE`. ```json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"UNAVAILABLE\" } ] ```",
-          "default": "true"
-        },
-        "quality": {
-          "$ref": "#/$defs/QualityEnum",
-          "description": "indicates if the {{block(Observation)}} is verifiable and is in accordance with the normative definitions within the MTConnect Standard.",
-          "default": "UNVERIFIABLE"
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been deprecated in the MTConnect Standard.",
-          "default": "false"
-        },
-        "extended": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been extended and cannot be validated.",
-          "default": "false"
-        },
-        "resetTriggered": {
-          "$ref": "#/$defs/ResetTriggeredEnum",
-          "description": "identifies when a reported value has been reset and what has caused that reset to occur for those {{block(DataItem)}} entities that may be periodically reset to an initial value. `resetTriggered` **MUST** only be provided for the specific occurrence of a {{block(DataItem)}} reported in the {{term(MTConnectStreams Response Document)}} when the reset occurred."
-        }
-      },
-      "required": [
-        "dataItemId",
-        "sequence",
-        "timestamp"
-      ],
-      "additionalProperties": false
-    },
-    "SwingAngle": {
-      "type": "object",
-      "title": "SwingAngle",
-      "description": "{{def(EventEnum::SWING_ANGLE)}}",
-      "properties": {
-        "value": {
-          "oneOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "string",
-              "enum": [
-                "UNAVAILABLE"
-              ]
-            }
-          ]
-        },
-        "assetType": {
-          "type": "string"
-        },
-        "count": {
-          "type": "integer"
-        },
-        "compositionId": {
-          "type": "string",
-          "description": "identifier of the {{block(Composition)}} entity defined in the {{term(MTConnectDevices Response Document)}} associated with the data reported for the {{block(Observation)}}."
-        },
-        "dataItemId": {
-          "type": "string",
-          "description": "unique identifier of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::dataItemId)}} **MUST** match the associated {{property(DataItem::id)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "name": {
-          "type": "string",
-          "description": "name of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::name)}} **MUST** match the associated {{property(DataItem::name)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "sequence": {
-          "type": "integer",
-          "description": "number representing the sequential position of an occurrence of an {{term(observation)}} in the data buffer of an {{term(agent)}}. {{property(Observation::sequence)}} **MUST** have a value represented as an unsigned 64-bit value from 1 to $$ 2^{64}-1 $$."
-        },
-        "subType": {
-          "$ref": "#/$defs/DataItemSubTypeEnum",
-          "description": "subtype of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::subType)}} **MUST** match the associated {{property(DataItem::subType)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "most accurate time available to a piece of equipment that represents the point in time that the data reported was measured."
-        },
-        "type": {
-          "$ref": "#/$defs/EventEnum",
-          "default": "SWING_ANGLE"
-        },
-        "units": {
-          "$ref": "#/$defs/UnitEnum",
-          "default": "MILLIMETER"
-        },
-        "isUnavailable": {
-          "type": "boolean",
-          "description": "when `true`, {{property(Observation::result)}} is indeterminate. > Note 1 to entry: In {{term(XML)}}, when `isUnavailable` is `true`, the {{term(XML)}} `CDATA` of the `Observation` **MUST** be `UNAVAILABLE`. ```xml <Execution dataItemId=\"...\" ...>UNAVAILABLE</Execution> ``` > Note 2 to entry: In {{term(JSON)}}, when `isUnavailable` is `true`, the {{term(JSON)}} `value` of the `Observation` **MUST** be `UNAVAILABLE`. ```json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"UNAVAILABLE\" } ] ```",
-          "default": "true"
-        },
-        "quality": {
-          "$ref": "#/$defs/QualityEnum",
-          "description": "indicates if the {{block(Observation)}} is verifiable and is in accordance with the normative definitions within the MTConnect Standard.",
-          "default": "UNVERIFIABLE"
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been deprecated in the MTConnect Standard.",
-          "default": "false"
-        },
-        "extended": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been extended and cannot be validated.",
-          "default": "false"
-        },
-        "resetTriggered": {
-          "$ref": "#/$defs/ResetTriggeredEnum",
-          "description": "identifies when a reported value has been reset and what has caused that reset to occur for those {{block(DataItem)}} entities that may be periodically reset to an initial value. `resetTriggered` **MUST** only be provided for the specific occurrence of a {{block(DataItem)}} reported in the {{term(MTConnectStreams Response Document)}} when the reset occurred."
-        }
-      },
-      "required": [
-        "dataItemId",
-        "sequence",
-        "timestamp"
-      ],
-      "additionalProperties": false
-    },
-    "SwingDiameter": {
-      "type": "object",
-      "title": "SwingDiameter",
-      "description": "{{def(EventEnum::SWING_DIAMETER)}}",
-      "properties": {
-        "value": {
-          "oneOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "string",
-              "enum": [
-                "UNAVAILABLE"
-              ]
-            }
-          ]
-        },
-        "assetType": {
-          "type": "string"
-        },
-        "count": {
-          "type": "integer"
-        },
-        "compositionId": {
-          "type": "string",
-          "description": "identifier of the {{block(Composition)}} entity defined in the {{term(MTConnectDevices Response Document)}} associated with the data reported for the {{block(Observation)}}."
-        },
-        "dataItemId": {
-          "type": "string",
-          "description": "unique identifier of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::dataItemId)}} **MUST** match the associated {{property(DataItem::id)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "name": {
-          "type": "string",
-          "description": "name of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::name)}} **MUST** match the associated {{property(DataItem::name)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "sequence": {
-          "type": "integer",
-          "description": "number representing the sequential position of an occurrence of an {{term(observation)}} in the data buffer of an {{term(agent)}}. {{property(Observation::sequence)}} **MUST** have a value represented as an unsigned 64-bit value from 1 to $$ 2^{64}-1 $$."
-        },
-        "subType": {
-          "$ref": "#/$defs/DataItemSubTypeEnum",
-          "description": "subtype of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::subType)}} **MUST** match the associated {{property(DataItem::subType)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "most accurate time available to a piece of equipment that represents the point in time that the data reported was measured."
-        },
-        "type": {
-          "$ref": "#/$defs/EventEnum",
-          "default": "SWING_DIAMETER"
-        },
-        "units": {
-          "$ref": "#/$defs/UnitEnum",
-          "default": "MILLIMETER"
-        },
-        "isUnavailable": {
-          "type": "boolean",
-          "description": "when `true`, {{property(Observation::result)}} is indeterminate. > Note 1 to entry: In {{term(XML)}}, when `isUnavailable` is `true`, the {{term(XML)}} `CDATA` of the `Observation` **MUST** be `UNAVAILABLE`. ```xml <Execution dataItemId=\"...\" ...>UNAVAILABLE</Execution> ``` > Note 2 to entry: In {{term(JSON)}}, when `isUnavailable` is `true`, the {{term(JSON)}} `value` of the `Observation` **MUST** be `UNAVAILABLE`. ```json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"UNAVAILABLE\" } ] ```",
-          "default": "true"
-        },
-        "quality": {
-          "$ref": "#/$defs/QualityEnum",
-          "description": "indicates if the {{block(Observation)}} is verifiable and is in accordance with the normative definitions within the MTConnect Standard.",
-          "default": "UNVERIFIABLE"
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been deprecated in the MTConnect Standard.",
-          "default": "false"
-        },
-        "extended": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been extended and cannot be validated.",
-          "default": "false"
-        },
-        "resetTriggered": {
-          "$ref": "#/$defs/ResetTriggeredEnum",
-          "description": "identifies when a reported value has been reset and what has caused that reset to occur for those {{block(DataItem)}} entities that may be periodically reset to an initial value. `resetTriggered` **MUST** only be provided for the specific occurrence of a {{block(DataItem)}} reported in the {{term(MTConnectStreams Response Document)}} when the reset occurred."
-        }
-      },
-      "required": [
-        "dataItemId",
-        "sequence",
-        "timestamp"
-      ],
-      "additionalProperties": false
-    },
-    "SwingRadius": {
-      "type": "object",
-      "title": "SwingRadius",
-      "description": "{{def(EventEnum::SWING_RADIUS)}}",
-      "properties": {
-        "value": {
-          "oneOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "string",
-              "enum": [
-                "UNAVAILABLE"
-              ]
-            }
-          ]
-        },
-        "assetType": {
-          "type": "string"
-        },
-        "count": {
-          "type": "integer"
-        },
-        "compositionId": {
-          "type": "string",
-          "description": "identifier of the {{block(Composition)}} entity defined in the {{term(MTConnectDevices Response Document)}} associated with the data reported for the {{block(Observation)}}."
-        },
-        "dataItemId": {
-          "type": "string",
-          "description": "unique identifier of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::dataItemId)}} **MUST** match the associated {{property(DataItem::id)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "name": {
-          "type": "string",
-          "description": "name of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::name)}} **MUST** match the associated {{property(DataItem::name)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "sequence": {
-          "type": "integer",
-          "description": "number representing the sequential position of an occurrence of an {{term(observation)}} in the data buffer of an {{term(agent)}}. {{property(Observation::sequence)}} **MUST** have a value represented as an unsigned 64-bit value from 1 to $$ 2^{64}-1 $$."
-        },
-        "subType": {
-          "$ref": "#/$defs/DataItemSubTypeEnum",
-          "description": "subtype of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::subType)}} **MUST** match the associated {{property(DataItem::subType)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "most accurate time available to a piece of equipment that represents the point in time that the data reported was measured."
-        },
-        "type": {
-          "$ref": "#/$defs/EventEnum",
-          "default": "SWING_RADIUS"
-        },
-        "units": {
-          "$ref": "#/$defs/UnitEnum",
-          "default": "MILLIMETER"
-        },
-        "isUnavailable": {
-          "type": "boolean",
-          "description": "when `true`, {{property(Observation::result)}} is indeterminate. > Note 1 to entry: In {{term(XML)}}, when `isUnavailable` is `true`, the {{term(XML)}} `CDATA` of the `Observation` **MUST** be `UNAVAILABLE`. ```xml <Execution dataItemId=\"...\" ...>UNAVAILABLE</Execution> ``` > Note 2 to entry: In {{term(JSON)}}, when `isUnavailable` is `true`, the {{term(JSON)}} `value` of the `Observation` **MUST** be `UNAVAILABLE`. ```json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"UNAVAILABLE\" } ] ```",
-          "default": "true"
-        },
-        "quality": {
-          "$ref": "#/$defs/QualityEnum",
-          "description": "indicates if the {{block(Observation)}} is verifiable and is in accordance with the normative definitions within the MTConnect Standard.",
-          "default": "UNVERIFIABLE"
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been deprecated in the MTConnect Standard.",
-          "default": "false"
-        },
-        "extended": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been extended and cannot be validated.",
-          "default": "false"
-        },
-        "resetTriggered": {
-          "$ref": "#/$defs/ResetTriggeredEnum",
-          "description": "identifies when a reported value has been reset and what has caused that reset to occur for those {{block(DataItem)}} entities that may be periodically reset to an initial value. `resetTriggered` **MUST** only be provided for the specific occurrence of a {{block(DataItem)}} reported in the {{term(MTConnectStreams Response Document)}} when the reset occurred."
-        }
-      },
-      "required": [
-        "dataItemId",
-        "sequence",
-        "timestamp"
-      ],
-      "additionalProperties": false
-    },
-    "Depth": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/Event"
-        },
-        {
-          "type": "object",
-          "title": "Depth",
-          "description": "{{def(EventEnum::DEPTH)}}",
-          "properties": {
-            "value": {
-              "oneOf": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "string",
-                  "enum": [
-                    "UNAVAILABLE"
-                  ]
-                }
-              ]
-            },
-            "type": {
-              "$ref": "#/$defs/EventEnum",
-              "default": "DEPTH"
-            },
-            "units": {
-              "$ref": "#/$defs/UnitEnum",
-              "default": "MILLIMETER"
-            }
-          }
-        }
-      ]
-    },
-    "FixtureAssetId": {
-      "type": "object",
-      "title": "FixtureAssetId",
-      "description": "{{def(EventEnum::FIXTURE_ASSET_ID)}}",
-      "properties": {
-        "value": {
-          "description": "{{term(observation)}} of the {{block(Observation)}} entity. The default value type for {{property(Observation::result)}} is `string`. > Note 1 to entry: in {{term(XML)}} the {{property(Observation::result)}} is the `CDATA` of the Observation {{term(element)}}. ~~~~xml <Execution dataItemId=\"...\" ...>READY</Execution> ~~~~ > Note 2 to entry: in {{term(JSON)}} the {{property(Observation::result)}} is the member `value` of the Observation object. ~~~~json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"READY\" } ] ~~~~"
-        },
-        "assetType": {
-          "type": "string"
-        },
-        "count": {
-          "type": "integer"
-        },
-        "compositionId": {
-          "type": "string",
-          "description": "identifier of the {{block(Composition)}} entity defined in the {{term(MTConnectDevices Response Document)}} associated with the data reported for the {{block(Observation)}}."
-        },
-        "dataItemId": {
-          "type": "string",
-          "description": "unique identifier of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::dataItemId)}} **MUST** match the associated {{property(DataItem::id)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "name": {
-          "type": "string",
-          "description": "name of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::name)}} **MUST** match the associated {{property(DataItem::name)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "sequence": {
-          "type": "integer",
-          "description": "number representing the sequential position of an occurrence of an {{term(observation)}} in the data buffer of an {{term(agent)}}. {{property(Observation::sequence)}} **MUST** have a value represented as an unsigned 64-bit value from 1 to $$ 2^{64}-1 $$."
-        },
-        "subType": {
-          "$ref": "#/$defs/DataItemSubTypeEnum",
-          "description": "subtype of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::subType)}} **MUST** match the associated {{property(DataItem::subType)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "most accurate time available to a piece of equipment that represents the point in time that the data reported was measured."
-        },
-        "type": {
-          "$ref": "#/$defs/EventEnum",
-          "default": "FIXTURE_ASSET_ID"
-        },
-        "units": {
-          "$ref": "#/$defs/UnitEnum",
-          "description": "units of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::units)}} **MUST** match the associated {{property(DataItem::units)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "isUnavailable": {
-          "type": "boolean",
-          "description": "when `true`, {{property(Observation::result)}} is indeterminate. > Note 1 to entry: In {{term(XML)}}, when `isUnavailable` is `true`, the {{term(XML)}} `CDATA` of the `Observation` **MUST** be `UNAVAILABLE`. ```xml <Execution dataItemId=\"...\" ...>UNAVAILABLE</Execution> ``` > Note 2 to entry: In {{term(JSON)}}, when `isUnavailable` is `true`, the {{term(JSON)}} `value` of the `Observation` **MUST** be `UNAVAILABLE`. ```json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"UNAVAILABLE\" } ] ```",
-          "default": "true"
-        },
-        "quality": {
-          "$ref": "#/$defs/QualityEnum",
-          "description": "indicates if the {{block(Observation)}} is verifiable and is in accordance with the normative definitions within the MTConnect Standard.",
-          "default": "UNVERIFIABLE"
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been deprecated in the MTConnect Standard.",
-          "default": "false"
-        },
-        "extended": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been extended and cannot be validated.",
-          "default": "false"
-        },
-        "resetTriggered": {
-          "$ref": "#/$defs/ResetTriggeredEnum",
-          "description": "identifies when a reported value has been reset and what has caused that reset to occur for those {{block(DataItem)}} entities that may be periodically reset to an initial value. `resetTriggered` **MUST** only be provided for the specific occurrence of a {{block(DataItem)}} reported in the {{term(MTConnectStreams Response Document)}} when the reset occurred."
-        }
-      },
-      "required": [
-        "dataItemId",
-        "sequence",
-        "timestamp"
-      ],
-      "additionalProperties": false
-    },
     "Actuator": {
       "type": "object",
       "title": "Actuator",
@@ -19946,8 +19106,7 @@
             "COULOMB",
             "CUBIC_METER",
             "SQUARE_MILLIMETER",
-            "OHM_METER",
-            "MILLIGRAM/LITER"
+            "OHM_METER"
           ]
         },
         {
@@ -20097,13 +19256,7 @@
             "MEASURED",
             "GAS",
             "LIQUID",
-            "SOLID",
-            "ELECTRODE",
-            "FILLER",
-            "PLUNGE",
-            "PECK",
-            "CUT",
-            "LAYER"
+            "SOLID"
           ]
         },
         {
@@ -20393,8 +19546,7 @@
             "RESISTIVITY",
             "FILL_HEIGHT",
             "PARTICLE_COUNT",
-            "PARTICLE_SIZE",
-            "WATER_HARDNESS"
+            "PARTICLE_SIZE"
           ]
         },
         {
@@ -20546,16 +19698,7 @@
             "LOCATION_NARRATIVE",
             "THICKNESS",
             "LOCATION_SPATIAL_GEOGRAPHIC",
-            "PART_INDEX",
-            "ASSOCIATED_ASSET_ID",
-            "ASSET_ADDED",
-            "TASK_ASSET_ID",
-            "BINDING_STATE",
-            "SWING_ANGLE",
-            "SWING_RADIUS",
-            "SWING_DIAMETER",
-            "DEPTH",
-            "FIXTURE_ASSET_ID"
+            "PART_INDEX"
           ]
         },
         {
@@ -20689,8 +19832,7 @@
             "IGES",
             "3DS",
             "ACIS",
-            "X_T",
-            "QIF_MBD"
+            "X_T"
           ]
         },
         {
@@ -22230,136 +21372,6 @@
         }
       ]
     },
-    "QueryParameterEnum": {
-      "title": "QueryParameterEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "device",
-            "deviceType",
-            "path",
-            "from",
-            "count",
-            "interval",
-            "heartbeat"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
-    "ScopeTypeEnum": {
-      "title": "ScopeTypeEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "ENTITY",
-            "VALUE_PROPERTY",
-            "PART"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
-    "ExceptionCodeEnum": {
-      "title": "ExceptionCodeEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "TYPE_MISMATCH",
-            "NOT_FOUND",
-            "DEPRECATED",
-            "EXTENDED",
-            "OUT_OF_RANGE",
-            "DUPLICATE_ENTRY",
-            "INVALID_FORMAT"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
-    "SeverityEnum": {
-      "title": "SeverityEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "FATAL",
-            "ERROR",
-            "WARNING",
-            "INFO"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
-    "TaskStateEnum": {
-      "title": "TaskStateEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "INACTIVE",
-            "PREPARING",
-            "COMMITTING",
-            "COMMITTED",
-            "COMPLETE",
-            "FAIL"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
-    "BindingStateEnum": {
-      "title": "BindingStateEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "INACTIVE",
-            "PREPARING",
-            "COMMITTED"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
-    "PartIdentifierEnum": {
-      "title": "PartIdentifierEnum",
-      "oneOf": [
-        {
-          "type": "string",
-          "enum": [
-            "UNIQUE_IDENTIFIER",
-            "GROUP_IDENTIFIER"
-          ]
-        },
-        {
-          "type": "string",
-          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
-        }
-      ]
-    },
     "ControlLimitResult": {
       "type": "object",
       "title": "ControlLimitResult",
@@ -22695,6 +21707,136 @@
       ],
       "additionalProperties": false
     },
+    "TranslationDataSet": {
+      "type": "object",
+      "title": "TranslationDataSet",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "X": {
+          "type": "string",
+          "description": "translation along X axis."
+        },
+        "Y": {
+          "type": "string",
+          "description": "translation along Y axis."
+        },
+        "Z": {
+          "type": "string",
+          "description": "translation along Z axis."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "RotationDataSet": {
+      "type": "object",
+      "title": "RotationDataSet",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "X": {
+          "type": "string",
+          "description": "rotation about X axis."
+        },
+        "Y": {
+          "type": "string",
+          "description": "rotation about Y axis."
+        },
+        "Z": {
+          "type": "string",
+          "description": "rotation about Z axis."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "ScaleDataSet": {
+      "type": "object",
+      "title": "ScaleDataSet",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "X": {
+          "type": "number",
+          "description": "multiplier for X axis."
+        },
+        "Y": {
+          "type": "number",
+          "description": "multiplier for Y axis."
+        },
+        "Z": {
+          "type": "number",
+          "description": "multiplier for Z axis."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "AxisDataSet": {
+      "type": "object",
+      "title": "AxisDataSet",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "X": {
+          "type": "number",
+          "description": "x-component of {{block(Axis)}}."
+        },
+        "Y": {
+          "type": "number",
+          "description": "y-component of {{block(Axis)}}."
+        },
+        "Z": {
+          "type": "number",
+          "description": "z-component of {{block(Axis)}}."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "OriginDataSet": {
+      "type": "object",
+      "title": "OriginDataSet",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "X": {
+          "type": "string",
+          "description": "x-coordinate."
+        },
+        "Y": {
+          "type": "string",
+          "description": "y-coordinate."
+        },
+        "Z": {
+          "type": "string",
+          "description": "x-coordinate."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
     "organizer": {
       "description": "Unsupported UML kind: uml:Stereotype"
     },
@@ -22716,7 +21858,7 @@
     "satisfiedBy": {
       "description": "Unsupported UML kind: uml:Stereotype"
     },
-    "ImplementationFormat": {
+    "hasFormatSpecificRepresentation": {
       "description": "Unsupported UML kind: uml:Stereotype"
     },
     "valueType": {
@@ -22725,7 +21867,7 @@
     "isArray": {
       "description": "Unsupported UML kind: uml:Stereotype"
     },
-    "MTConnect Requirement": {
+    "MTConnectRequirementSpecification": {
       "description": "Unsupported UML kind: uml:Stereotype"
     },
     "Header": {
@@ -22834,7 +21976,7 @@
     "Error": {
       "type": "object",
       "title": "Error",
-      "description": "abstract error encountered by an {{term(agent)}} when responding to a {{term(request)}}.",
+      "description": "error encountered by an {{term(agent)}} when responding to a {{term(request)}}.",
       "properties": {
         "errorCode": {
           "$ref": "#/$defs/ErrorCodeEnum",
@@ -22843,488 +21985,9 @@
         "value": {
           "type": "string",
           "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
         }
       },
       "required": [
-        "URI",
-        "errorCode"
-      ]
-    },
-    "InvalidParameterValue": {
-      "type": "object",
-      "title": "InvalidParameterValue",
-      "description": "supplied value does not match the required type.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        },
-        "QueryParameter": {
-          "$ref": "#/$defs/QueryParameter"
-        }
-      },
-      "required": [
-        "ErrorMessage",
-        "QueryParameter",
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "InvalidXPath": {
-      "type": "object",
-      "title": "InvalidXPath",
-      "description": "{{term(XPath)}} is either structurally malformed or the XPath does not exist.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "QueryError": {
-      "type": "object",
-      "title": "QueryError",
-      "description": "agent was unable to interpret the query. The query parameters do not contain valid values or include an invalid parameter.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "AssetNotFound": {
-      "type": "object",
-      "title": "AssetNotFound",
-      "description": "request for information specifies an {{block(Asset)}} that is not recognized by the agent.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        },
-        "AssetId": {
-          "type": "string",
-          "description": "{{property(Asset::assetId)}} of the requested {{block(Asset)}}"
-        }
-      },
-      "required": [
-        "AssetId",
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "TooMany": {
-      "type": "object",
-      "title": "TooMany",
-      "description": "`count` parameter provided in the {{term(request)}} for information requires either of the following: * {{term(streaming data)}} that includes more pieces of data than the {{term(agent)}} is capable of organizing in an {{term(MTConnectStreams Response Document)}}. * {{block(Assets)}} that include more {{block(Asset)}} in an {{term(MTConnectAssets Response Document)}} than the {{term(agent)}} is capable of handling.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "Unsupported": {
-      "type": "object",
-      "title": "Unsupported",
-      "description": "valid request was provided, but the agent does not support the feature or type of request.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "InvalidURI": {
-      "type": "object",
-      "title": "InvalidURI",
-      "description": "{{term(URI)}} provided was incorrect.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "InvalidRequest": {
-      "type": "object",
-      "title": "InvalidRequest",
-      "description": "request contains information that was not recognized by the agent.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "ErrorMessage",
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "InternalError": {
-      "type": "object",
-      "title": "InternalError",
-      "description": "agent experienced an error while attempting to publish the requested information.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "NoDevice": {
-      "type": "object",
-      "title": "NoDevice",
-      "description": "identity of the {{block(Device)}} specified in the request for information is not associated with the agent.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "OutOfRange": {
-      "type": "object",
-      "title": "OutOfRange",
-      "description": "request for information specifies streaming data that includes sequence number(s) for pieces of data that are beyond the end of the buffer.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        },
-        "QueryParameter": {
-          "$ref": "#/$defs/QueryParameter"
-        }
-      },
-      "required": [
-        "QueryParameter",
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "Unauthorized": {
-      "type": "object",
-      "title": "Unauthorized",
-      "description": "requester does not have sufficient permissions to access the requested information.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "URI",
-        "errorCode"
-      ],
-      "additionalProperties": false
-    },
-    "QueryParameter": {
-      "type": "object",
-      "title": "QueryParameter",
-      "description": "property of the {{term(HTTP Request)}} that modifies the information returned by the {{term(HTTP Request)}}.",
-      "properties": {
-        "name": {
-          "$ref": "#/$defs/QueryParameterEnum",
-          "description": "name of the parameter."
-        },
-        "Maximum": {
-          "type": "number",
-          "description": "maximum allowed value."
-        },
-        "Minimum": {
-          "type": "number",
-          "description": "minimal allowed value."
-        },
-        "Value": {
-          "type": "string",
-          "description": "given value."
-        },
-        "Type": {
-          "type": "string",
-          "description": "expected datatype of the parameter."
-        },
-        "Format": {
-          "type": "string",
-          "description": "expected datatype format of the parameter."
-        }
-      },
-      "required": [
-        "name"
-      ],
-      "additionalProperties": false
-    },
-    "InvalidQueryParameter": {
-      "type": "object",
-      "title": "InvalidQueryParameter",
-      "description": "agent does not recognize the parameter.",
-      "properties": {
-        "errorCode": {
-          "$ref": "#/$defs/ErrorCodeEnum",
-          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
-        },
-        "value": {
-          "type": "string",
-          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
-        },
-        "URI": {
-          "type": "string",
-          "description": "{{term(HTTP request)}}"
-        },
-        "ErrorMessage": {
-          "type": "string",
-          "description": "possible reason for the {{term(MTConnectErrors Response Document)}}"
-        },
-        "Request": {
-          "type": "string",
-          "description": "text of the invalid response document type."
-        }
-      },
-      "required": [
-        "ErrorMessage",
-        "URI",
         "errorCode"
       ],
       "additionalProperties": false
@@ -23364,91 +22027,6 @@
         "instanceId",
         "maxAssets",
         "sequenceNumber"
-      ],
-      "additionalProperties": false
-    },
-    "MTConnectExceptionsReport": {
-      "type": "object",
-      "title": "MTConnectExceptionsReport",
-      "description": "root entity of an {{term(MTConnectExceptionsReport Response Document)}} that contains the {{term(ExceptionReport Information Model)}}."
-    },
-    "MTConnectStreamsExceptionsReport": {
-      "type": "object",
-      "title": "MTConnectStreamsExceptionsReport",
-      "description": "{{block(MTConnectExceptionsReport)}} where exception is encountered in the {{term(MTConnectStreams Response Document)}}.",
-      "properties": {
-        "Header": {
-          "$ref": "#/$defs/Header"
-        }
-      },
-      "required": [
-        "Header"
-      ],
-      "additionalProperties": false
-    },
-    "Exception": {
-      "type": "object",
-      "title": "Exception",
-      "description": "irregularity encountered by an {{term(agent)}} in a {{term(response document)}} that may or may not conform to the MTConnect Standard.",
-      "properties": {
-        "severity": {
-          "$ref": "#/$defs/SeverityEnum",
-          "description": "criticality associated with the exception."
-        },
-        "code": {
-          "$ref": "#/$defs/ExceptionCodeEnum",
-          "description": "identifier that indicates the type of exception encountered."
-        },
-        "Message": {
-          "type": "string"
-        },
-        "Trace": {
-          "$ref": "#/$defs/Trace"
-        }
-      },
-      "required": [
-        "Message",
-        "Trace",
-        "code",
-        "severity"
-      ],
-      "additionalProperties": false
-    },
-    "Trace": {
-      "type": "object",
-      "title": "Trace",
-      "description": "information about the characteristics of the exception.",
-      "properties": {
-        "Source": {
-          "type": "string",
-          "description": "{{term(URI)}} of the artefact of where the exception occurred."
-        },
-        "Context": {
-          "type": "string",
-          "description": "unique path to the exception location."
-        },
-        "ScopeType": {
-          "$ref": "#/$defs/ScopeTypeEnum",
-          "description": "designates the exception property kind."
-        },
-        "Scope": {
-          "type": "string",
-          "description": "name of the property."
-        },
-        "Value": {
-          "type": "string",
-          "description": "given value of the property."
-        },
-        "ExpectedType": {
-          "type": "string",
-          "description": "normative value type for the property."
-        }
-      },
-      "required": [
-        "Context",
-        "Scope",
-        "ScopeType",
-        "Source"
       ],
       "additionalProperties": false
     },
@@ -29907,103 +28485,6 @@
         "units": {
           "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
-        },
-        "isUnavailable": {
-          "type": "boolean",
-          "description": "when `true`, {{property(Observation::result)}} is indeterminate. > Note 1 to entry: In {{term(XML)}}, when `isUnavailable` is `true`, the {{term(XML)}} `CDATA` of the `Observation` **MUST** be `UNAVAILABLE`. ```xml <Execution dataItemId=\"...\" ...>UNAVAILABLE</Execution> ``` > Note 2 to entry: In {{term(JSON)}}, when `isUnavailable` is `true`, the {{term(JSON)}} `value` of the `Observation` **MUST** be `UNAVAILABLE`. ```json \"Execution\" : [ { \"dataItemId\": \"...\" ..., \"value\": \"UNAVAILABLE\" } ] ```",
-          "default": "true"
-        },
-        "quality": {
-          "$ref": "#/$defs/QualityEnum",
-          "description": "indicates if the {{block(Observation)}} is verifiable and is in accordance with the normative definitions within the MTConnect Standard.",
-          "default": "UNVERIFIABLE"
-        },
-        "deprecated": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been deprecated in the MTConnect Standard.",
-          "default": "false"
-        },
-        "extended": {
-          "type": "boolean",
-          "description": "indicates if the {{block(Observation)}} has any property or controlled vocabulary that has been extended and cannot be validated.",
-          "default": "false"
-        },
-        "duration": {
-          "type": "number",
-          "description": "time-period over which the data was collected. {{property(Sample::duration)}} **MUST** be provided when the {{property(DataItem::statistic)}} is defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "resetTriggered": {
-          "$ref": "#/$defs/ResetTriggeredEnum",
-          "description": "identifies when a reported value has been reset and what has caused that reset to occur for those {{block(DataItem)}} entities that may be periodically reset to an initial value. `resetTriggered` **MUST** only be provided for the specific occurrence of a {{block(DataItem)}} reported in the {{term(MTConnectStreams Response Document)}} when the reset occurred."
-        },
-        "sampleRate": {
-          "type": "number",
-          "description": "rate at which successive samples of the value are recorded."
-        },
-        "statistic": {
-          "$ref": "#/$defs/StatisticEnum",
-          "description": "type of statistical calculation defined by the {{property(DataItem::statistic)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "sampleCount": {
-          "type": "integer"
-        }
-      },
-      "required": [
-        "dataItemId",
-        "sequence",
-        "timestamp",
-        "value"
-      ],
-      "additionalProperties": false
-    },
-    "WaterHardnessTimeSeries": {
-      "type": "object",
-      "title": "WaterHardnessTimeSeries",
-      "description": "{{def(SampleEnum::WATER_HARDNESS)}}",
-      "properties": {
-        "value": {
-          "type": "array",
-          "items": {
-            "type": "number"
-          }
-        },
-        "assetType": {
-          "type": "string"
-        },
-        "count": {
-          "type": "integer"
-        },
-        "compositionId": {
-          "type": "string",
-          "description": "identifier of the {{block(Composition)}} entity defined in the {{term(MTConnectDevices Response Document)}} associated with the data reported for the {{block(Observation)}}."
-        },
-        "dataItemId": {
-          "type": "string",
-          "description": "unique identifier of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::dataItemId)}} **MUST** match the associated {{property(DataItem::id)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "name": {
-          "type": "string",
-          "description": "name of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::name)}} **MUST** match the associated {{property(DataItem::name)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "sequence": {
-          "type": "integer",
-          "description": "number representing the sequential position of an occurrence of an {{term(observation)}} in the data buffer of an {{term(agent)}}. {{property(Observation::sequence)}} **MUST** have a value represented as an unsigned 64-bit value from 1 to $$ 2^{64}-1 $$."
-        },
-        "subType": {
-          "$ref": "#/$defs/DataItemSubTypeEnum",
-          "description": "subtype of the {{block(DataItem)}} associated with this {{block(Observation)}}. {{property(Observation::subType)}} **MUST** match the associated {{property(DataItem::subType)}} defined in the {{term(MTConnectDevices Response Document)}}."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "most accurate time available to a piece of equipment that represents the point in time that the data reported was measured."
-        },
-        "type": {
-          "$ref": "#/$defs/SampleEnum",
-          "default": "WATER_HARDNESS"
-        },
-        "units": {
-          "$ref": "#/$defs/UnitEnum",
-          "default": "MILLIGRAM/LITER"
         },
         "isUnavailable": {
           "type": "boolean",

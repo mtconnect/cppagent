@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mtconnect.org/v2.7/MTConnectDevices.schema.json",
+  "$id": "https://schemas.mtconnect.org/schemas/MTConnectDevices_2.7.schema.json",
   "title": "MTConnectDevices",
   "description": "MTConnect MTConnectDevices response, v2 JSON, from SysML model v2.7.",
   "type": "object",

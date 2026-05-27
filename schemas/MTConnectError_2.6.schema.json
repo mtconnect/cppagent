@@ -1,8 +1,8 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "https://schemas.mtconnect.org/schemas/MTConnectError_2.7_draft-04.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mtconnect.org/schemas/MTConnectError_2.6.schema.json",
   "title": "MTConnectError",
-  "description": "MTConnect MTConnectError response, v2 JSON, from SysML model v2.7.",
+  "description": "MTConnect MTConnectError response, v2 JSON, from SysML model v2.6.",
   "type": "object",
   "required": [
     "MTConnectError"
@@ -12,11 +12,11 @@
       "type": "string"
     },
     "MTConnectError": {
-      "$ref": "#/definitions/MTConnectError"
+      "$ref": "#/$defs/MTConnectError"
     }
   },
   "additionalProperties": false,
-  "definitions": {
+  "$defs": {
     "Header": {
       "type": "object",
       "title": "Header",
@@ -120,79 +120,79 @@
             "InvalidParameterValue": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/InvalidParameterValue"
+                "$ref": "#/$defs/InvalidParameterValue"
               }
             },
             "InvalidXPath": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/InvalidXPath"
+                "$ref": "#/$defs/InvalidXPath"
               }
             },
             "QueryError": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/QueryError"
+                "$ref": "#/$defs/QueryError"
               }
             },
             "AssetNotFound": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/AssetNotFound"
+                "$ref": "#/$defs/AssetNotFound"
               }
             },
             "TooMany": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/TooMany"
+                "$ref": "#/$defs/TooMany"
               }
             },
             "Unsupported": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Unsupported"
+                "$ref": "#/$defs/Unsupported"
               }
             },
             "InvalidURI": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/InvalidURI"
+                "$ref": "#/$defs/InvalidURI"
               }
             },
             "InvalidRequest": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/InvalidRequest"
+                "$ref": "#/$defs/InvalidRequest"
               }
             },
             "InternalError": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/InternalError"
+                "$ref": "#/$defs/InternalError"
               }
             },
             "NoDevice": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/NoDevice"
+                "$ref": "#/$defs/NoDevice"
               }
             },
             "OutOfRange": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/OutOfRange"
+                "$ref": "#/$defs/OutOfRange"
               }
             },
             "Unauthorized": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Unauthorized"
+                "$ref": "#/$defs/Unauthorized"
               }
             },
             "InvalidQueryParameter": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/InvalidQueryParameter"
+                "$ref": "#/$defs/InvalidQueryParameter"
               }
             }
           },
@@ -200,14 +200,14 @@
             "^[a-ln-zA-LN-Z]:[A-Za-z_][A-Za-z0-9_]*$": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Error"
+                "$ref": "#/$defs/Error"
               }
             }
           },
           "additionalProperties": false
         },
         "Header": {
-          "$ref": "#/definitions/Header"
+          "$ref": "#/$defs/Header"
         }
       },
       "required": [
@@ -221,7 +221,7 @@
       "description": "abstract error encountered by an {{term(agent)}} when responding to a {{term(request)}}.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -252,7 +252,7 @@
       "description": "supplied value does not match the required type.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -272,7 +272,7 @@
           "description": "text of the invalid response document type."
         },
         "QueryParameter": {
-          "$ref": "#/definitions/QueryParameter"
+          "$ref": "#/$defs/QueryParameter"
         }
       },
       "required": [
@@ -289,7 +289,7 @@
       "description": "{{term(XPath)}} is either structurally malformed or the XPath does not exist.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -321,7 +321,7 @@
       "description": "agent was unable to interpret the query. The query parameters do not contain valid values or include an invalid parameter.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -353,7 +353,7 @@
       "description": "request for information specifies an {{block(Asset)}} that is not recognized by the agent.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -390,7 +390,7 @@
       "description": "`count` parameter provided in the {{term(request)}} for information requires either of the following: * {{term(streaming data)}} that includes more pieces of data than the {{term(agent)}} is capable of organizing in an {{term(MTConnectStreams Response Document)}}. * {{block(Assets)}} that include more {{block(Asset)}} in an {{term(MTConnectAssets Response Document)}} than the {{term(agent)}} is capable of handling.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -422,7 +422,7 @@
       "description": "valid request was provided, but the agent does not support the feature or type of request.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -454,7 +454,7 @@
       "description": "{{term(URI)}} provided was incorrect.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -486,7 +486,7 @@
       "description": "request contains information that was not recognized by the agent.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -519,7 +519,7 @@
       "description": "agent experienced an error while attempting to publish the requested information.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -551,7 +551,7 @@
       "description": "identity of the {{block(Device)}} specified in the request for information is not associated with the agent.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -583,7 +583,7 @@
       "description": "request for information specifies streaming data that includes sequence number(s) for pieces of data that are beyond the end of the buffer.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -603,7 +603,7 @@
           "description": "text of the invalid response document type."
         },
         "QueryParameter": {
-          "$ref": "#/definitions/QueryParameter"
+          "$ref": "#/$defs/QueryParameter"
         }
       },
       "required": [
@@ -619,7 +619,7 @@
       "description": "requester does not have sufficient permissions to access the requested information.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -651,7 +651,7 @@
       "description": "property of the {{term(HTTP Request)}} that modifies the information returned by the {{term(HTTP Request)}}.",
       "properties": {
         "name": {
-          "$ref": "#/definitions/QueryParameterEnum",
+          "$ref": "#/$defs/QueryParameterEnum",
           "description": "name of the parameter."
         },
         "Maximum": {
@@ -686,7 +686,7 @@
       "description": "agent does not recognize the parameter.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -762,18 +762,18 @@
       "description": "irregularity encountered by an {{term(agent)}} in a {{term(response document)}} that may or may not conform to the MTConnect Standard.",
       "properties": {
         "severity": {
-          "$ref": "#/definitions/SeverityEnum",
+          "$ref": "#/$defs/SeverityEnum",
           "description": "criticality associated with the exception."
         },
         "code": {
-          "$ref": "#/definitions/ExceptionCodeEnum",
+          "$ref": "#/$defs/ExceptionCodeEnum",
           "description": "identifier that indicates the type of exception encountered."
         },
         "Message": {
           "type": "string"
         },
         "Trace": {
-          "$ref": "#/definitions/Trace"
+          "$ref": "#/$defs/Trace"
         }
       },
       "required": [
@@ -798,7 +798,7 @@
           "description": "unique path to the exception location."
         },
         "ScopeType": {
-          "$ref": "#/definitions/ScopeTypeEnum",
+          "$ref": "#/$defs/ScopeTypeEnum",
           "description": "designates the exception property kind."
         },
         "Scope": {
@@ -3477,7 +3477,7 @@
           "description": "current interval value of the activity."
         },
         "Interval": {
-          "$ref": "#/definitions/MaintenanceListIntervalEnum",
+          "$ref": "#/$defs/MaintenanceListIntervalEnum",
           "description": "interval of the value observed.",
           "default": "ABSOLUTE"
         },
@@ -3494,7 +3494,7 @@
           "description": "level of severity on a scale of 1-10."
         },
         "Direction": {
-          "$ref": "#/definitions/MaintenanceListDirectionEnum",
+          "$ref": "#/$defs/MaintenanceListDirectionEnum",
           "description": "direction of the value observed.",
           "default": "UP"
         },
@@ -3507,7 +3507,7 @@
           "description": "last date/time stamp that maintenance was performed."
         },
         "Units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "same as {{property(DataItem::units)}}. See {{package(Device Information Model)}}.",
           "default": "COUNT"
         },
@@ -3556,11 +3556,11 @@
           "description": "engineering units of the measurement."
         },
         "CharacteristicStatus": {
-          "$ref": "#/definitions/CharacteristicStatusEnum",
+          "$ref": "#/$defs/CharacteristicStatusEnum",
           "description": "pass/fail result of the measurement."
         },
         "UncertaintyType": {
-          "$ref": "#/definitions/UncertaintyTypeEnum",
+          "$ref": "#/$defs/UncertaintyTypeEnum",
           "description": "method used to compute {{term(standard uncertainty)}}."
         },
         "Uncertainty": {

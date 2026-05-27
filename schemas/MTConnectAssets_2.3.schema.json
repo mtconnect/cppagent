@@ -1,0 +1,5363 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mtconnect.org/schemas/MTConnectAssets_2.3.schema.json",
+  "title": "MTConnectAssets",
+  "description": "MTConnect MTConnectAssets response, v2 JSON, from SysML model v2.3.",
+  "type": "object",
+  "required": [
+    "MTConnectAssets"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "MTConnectAssets": {
+      "$ref": "#/$defs/MTConnectAssets"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "Asset": {
+      "type": "object",
+      "title": "Asset",
+      "description": "abstract {{term(Asset)}}.",
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "unique identifier for an {{block(Asset)}}."
+        },
+        "deviceUuid": {
+          "type": "string",
+          "description": "associated piece of equipment's {{term(UUID)}} that supplied the {{block(Asset)}}'s data. It references to {{property(Device::uuid)}} defined in {{package(Device Information Model)}}."
+        },
+        "removed": {
+          "type": "boolean",
+          "description": "indicator that the {{block(Asset)}} has been removed from the piece of equipment."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "time the {{block(Asset)}} data was last modified."
+        },
+        "Description": {
+          "$ref": "#/$defs/Description",
+          "description": "Description can contain any descriptive content about the Asset."
+        },
+        "hash": {
+          "type": "string",
+          "description": "condensed message digest from a secure one-way hash function. {{cite(FIPS PUB 180-4)}}"
+        }
+      },
+      "required": [
+        "assetId",
+        "timestamp"
+      ]
+    },
+    "CuttingTool": {
+      "type": "object",
+      "title": "CuttingTool",
+      "description": "{{block(Asset)}} that physically removes the material from the workpiece by shear deformation.",
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "unique identifier for an {{block(Asset)}}."
+        },
+        "deviceUuid": {
+          "type": "string",
+          "description": "associated piece of equipment's {{term(UUID)}} that supplied the {{block(Asset)}}'s data. It references to {{property(Device::uuid)}} defined in {{package(Device Information Model)}}."
+        },
+        "removed": {
+          "type": "boolean",
+          "description": "indicator that the {{block(Asset)}} has been removed from the piece of equipment."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "time the {{block(Asset)}} data was last modified."
+        },
+        "Description": {
+          "$ref": "#/$defs/Description",
+          "description": "Description can contain any descriptive content about the Asset."
+        },
+        "hash": {
+          "type": "string",
+          "description": "condensed message digest from a secure one-way hash function. {{cite(FIPS PUB 180-4)}}"
+        },
+        "serialNumber": {
+          "type": "string",
+          "description": "unique identifier for this assembly."
+        },
+        "toolId": {
+          "type": "string",
+          "description": "identifier for a class of cutting tools."
+        },
+        "CuttingToolLifeCycle": {
+          "$ref": "#/$defs/CuttingToolLifeCycle"
+        },
+        "CuttingToolArchetypeReference": {
+          "$ref": "#/$defs/CuttingToolArchetypeReference"
+        },
+        "CuttingToolDefinition": {
+          "$ref": "#/$defs/CuttingToolDefinition"
+        },
+        "manufacturers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "assetId",
+        "serialNumber",
+        "timestamp",
+        "toolId"
+      ],
+      "additionalProperties": false
+    },
+    "CuttingToolArchetype": {
+      "type": "object",
+      "title": "CuttingToolArchetype",
+      "description": "{{block(Asset)}} that describes the static cutting tool geometries and nominal values as one would expect from a tool catalog.",
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "unique identifier for an {{block(Asset)}}."
+        },
+        "deviceUuid": {
+          "type": "string",
+          "description": "associated piece of equipment's {{term(UUID)}} that supplied the {{block(Asset)}}'s data. It references to {{property(Device::uuid)}} defined in {{package(Device Information Model)}}."
+        },
+        "removed": {
+          "type": "boolean",
+          "description": "indicator that the {{block(Asset)}} has been removed from the piece of equipment."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "time the {{block(Asset)}} data was last modified."
+        },
+        "Description": {
+          "$ref": "#/$defs/Description",
+          "description": "Description can contain any descriptive content about the Asset."
+        },
+        "hash": {
+          "type": "string",
+          "description": "condensed message digest from a secure one-way hash function. {{cite(FIPS PUB 180-4)}}"
+        },
+        "serialNumber": {
+          "type": "string",
+          "description": "unique identifier for this assembly."
+        },
+        "toolId": {
+          "type": "string",
+          "description": "identifier for a class of cutting tools."
+        },
+        "CuttingToolDefinition": {
+          "$ref": "#/$defs/CuttingToolDefinition"
+        },
+        "CuttingToolLifeCycle": {
+          "$ref": "#/$defs/CuttingToolLifeCycle"
+        },
+        "manufacturers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "assetId",
+        "serialNumber",
+        "timestamp",
+        "toolId"
+      ],
+      "additionalProperties": false
+    },
+    "CuttingToolArchetypeReference": {
+      "type": "object",
+      "title": "CuttingToolArchetypeReference",
+      "description": "reference information about the {{property(Asset::assetId)}} and/or the URL of the data source of {{block(CuttingToolArchetype)}}.",
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "{{term(URL)}} of the {{block(CuttingToolArchetype)}} {{term(information model)}}."
+        },
+        "value": {
+          "type": "string",
+          "description": "`assetId` of the related {{block(CuttingToolArchetype)}}."
+        }
+      },
+      "additionalProperties": false
+    },
+    "CuttingToolDefinition": {
+      "type": "object",
+      "title": "CuttingToolDefinition",
+      "description": "detailed structure of the cutting tool which is static during its lifecycle. {{cite(ISO 13399)}}.",
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/FormatTypeEnum",
+          "description": "identifies the expected representation of the enclosed data.",
+          "default": "XML"
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "CuttingItem": {
+      "type": "object",
+      "title": "CuttingItem",
+      "description": "part of of the tool that physically removes the material from the workpiece by shear deformation.",
+      "properties": {
+        "CutterStatus": {
+          "type": "object",
+          "properties": {
+            "Status": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Status"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "Description": {
+          "type": "string",
+          "description": "free-form description of the cutting item."
+        },
+        "grade": {
+          "type": "string",
+          "description": "material composition for this cutting item."
+        },
+        "indices": {
+          "type": "string"
+        },
+        "itemId": {
+          "type": "string",
+          "description": "manufacturer identifier of this cutting item."
+        },
+        "Locus": {
+          "type": "string",
+          "description": "free form description of the location on the cutting tool. For clarity, the words `FLUTE`, `INSERT`, and `CARTRIDGE` **SHOULD** be used to assist in noting the location of a {{block(CuttingItem)}}. {{property(CuttingItem::Locus)}} **MAY** be any free form string, but **SHOULD** adhere to the following rules: * The location numbering **SHOULD** start at the furthest {{block(CuttingItem)}} and work it’s way back to the {{block(CuttingItem)}} closest to the gauge line. * Flutes **SHOULD** be identified as such using the word `FLUTE`:. For example: `FLUTE`: 1, `INSERT`: 2 - would indicate the first flute and the second furthest insert from the end of the tool on that flute. * Other designations such as `CARTRIDGE` **MAY** be included, but should be identified using upper case and followed by a colon (:)."
+        },
+        "ProgramToolGroup": {
+          "type": "string",
+          "description": "tool group this item is assigned in the part program."
+        },
+        "ItemLife": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemLife"
+          },
+          "description": "The tool life measured in tool wear."
+        },
+        "manufacturers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "CuttingItems": {
+      "type": "object",
+      "title": "CuttingItems",
+      "description": "{{block(CuttingItems)}} groups one or more {{block(CuttingItem)}} entities. See {{sect(CuttingItem)}} and {{package(Cutting Item)}} for more detail.",
+      "properties": {
+        "CuttingItem": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CuttingItem"
+          }
+        },
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(CuttingItem)}} organized by {{block(CuttingItems)}}."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "ItemLife": {
+      "type": "object",
+      "title": "ItemLife",
+      "description": "life of a {{block(CuttingItem)}}.",
+      "properties": {
+        "countDirection": {
+          "$ref": "#/$defs/CountDirectionTypeEnum",
+          "description": "indicates if the item life counts from zero to maximum or maximum to zero."
+        },
+        "initial": {
+          "type": "number",
+          "description": "initial life of the item when it is new."
+        },
+        "limit": {
+          "type": "number",
+          "description": "end of life limit for this item."
+        },
+        "type": {
+          "$ref": "#/$defs/ToolLifeEnum",
+          "description": "type of item life being accumulated."
+        },
+        "warning": {
+          "type": "number",
+          "description": "point at which a item life warning will be raised."
+        },
+        "value": {
+          "type": "number",
+          "description": "value of {{block(ItemLife)}}."
+        }
+      },
+      "required": [
+        "countDirection",
+        "type",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "FunctionalLength": {
+      "type": "object",
+      "title": "FunctionalLength",
+      "description": "distance from the gauge plane or from the end of the shank of the cutting tool, if a gauge plane does not exist, to the cutting reference point determined by the main function of the tool. This measurement will be with reference to the cutting tool and **MUST NOT** exist without a cutting tool.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "LFx"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CuttingReferencePoint": {
+      "type": "object",
+      "title": "CuttingReferencePoint",
+      "description": "theoretical sharp point of the cutting tool from which the major functional dimensions are taken.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "CRP"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CuttingEdgeLength": {
+      "type": "object",
+      "title": "CuttingEdgeLength",
+      "description": "theoretical length of the cutting edge of a cutting item over sharp corners.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "L"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "DriveAngle": {
+      "type": "object",
+      "title": "DriveAngle",
+      "description": "angle between the driving mechanism locator on a tool item and the main cutting edge.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "DRVA"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "DEGREE"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "FlangeDiameter": {
+      "type": "object",
+      "title": "FlangeDiameter",
+      "description": "dimension between two parallel tangents on the outside edge of a flange.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "DF"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "FunctionalWidth": {
+      "type": "object",
+      "title": "FunctionalWidth",
+      "description": "distance between the cutting reference point and the rear backing surface of a turning tool or the axis of a boring bar.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "WF"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "IncribedCircleDiameter": {
+      "type": "object",
+      "title": "IncribedCircleDiameter",
+      "description": "diameter of a circle to which all edges of a equilateral and round regular insert are tangential.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "IC"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PointAngle": {
+      "type": "object",
+      "title": "PointAngle",
+      "description": "angle between the major cutting edge and the same cutting edge rotated by 180 degrees about the tool axis.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "SIG"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "DEGREE"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ToolCuttingEdgeAngle": {
+      "type": "object",
+      "title": "ToolCuttingEdgeAngle",
+      "description": "angle between the tool cutting edge plane and the tool feed plane measured in a plane parallel the xy-plane.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "KAPR"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "DEGREE"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ToolLeadAngle": {
+      "type": "object",
+      "title": "ToolLeadAngle",
+      "description": "angle between the tool cutting edge plane and a plane perpendicular to the tool feed plane measured in a plane parallel the xy-plane.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "PSIR"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "DEGREE"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ToolOrientation": {
+      "type": "object",
+      "title": "ToolOrientation",
+      "description": "angle of the tool with respect to the workpiece for a given process. The value is application specific.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "N/A"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "DEGREE"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "StepDiameterLength": {
+      "type": "object",
+      "title": "StepDiameterLength",
+      "description": "length of a portion of a stepped tool that is related to a corresponding cutting diameter measured from the cutting reference point of that cutting diameter to the point on the next cutting edge at which the diameter starts to change.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "SDLx"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "StepIncludedAngle": {
+      "type": "object",
+      "title": "StepIncludedAngle",
+      "description": "angle between a major edge on a step of a stepped tool and the same cutting edge rotated 180 degrees about its tool axis.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "STAx"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "DEGREE"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "WiperEdgeLength": {
+      "type": "object",
+      "title": "WiperEdgeLength",
+      "description": "measure of the length of a wiper edge of a cutting item.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "BS"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CuttingDiameter": {
+      "type": "object",
+      "title": "CuttingDiameter",
+      "description": "diameter of a circle on which the defined point Pk located on this cutting tool. The normal of the machined peripheral surface points towards the axis of the cutting tool.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "DCx"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CuttingHeight": {
+      "type": "object",
+      "title": "CuttingHeight",
+      "description": "distance from the basal plane of the tool item to the cutting point.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "HF"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CornerRadius": {
+      "type": "object",
+      "title": "CornerRadius",
+      "description": "nominal radius of a rounded corner measured in the X Y-plane.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "RE"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Weight": {
+      "type": "object",
+      "title": "Weight",
+      "description": "total weight of the cutting tool in grams. The force exerted by the mass of the cutting tool.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "WT"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "GRAM"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ChamferFlatLength": {
+      "type": "object",
+      "title": "ChamferFlatLength",
+      "description": "flat length of a chamfer.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "BCH"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ChamferWidth": {
+      "type": "object",
+      "title": "ChamferWidth",
+      "description": "width of the chamfer.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "CHW"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "InsertWidth": {
+      "type": "object",
+      "title": "InsertWidth",
+      "description": "W1 is used for the insert width when an inscribed circle diameter is not practical.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "W1"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "BodyDiameterMax": {
+      "type": "object",
+      "title": "BodyDiameterMax",
+      "description": "largest diameter of the body of a tool item.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "BDX"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "BodyLengthMax": {
+      "type": "object",
+      "title": "BodyLengthMax",
+      "description": "distance measured along the X axis from that point of the item closest to the workpiece, including the cutting item for a tool item but excluding a protruding locking mechanism for an adaptive item, to either the front of the flange on a flanged body or the beginning of the connection interface feature on the machine side for cylindrical or prismatic shanks.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "LBX"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "DepthOfCutMax": {
+      "type": "object",
+      "title": "DepthOfCutMax",
+      "description": "maximum engagement of the cutting edge or edges with the workpiece measured perpendicular to the feed motion.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "APMX"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CuttingDiameterMax": {
+      "type": "object",
+      "title": "CuttingDiameterMax",
+      "description": "maximum diameter of a circle on which the defined point Pk of each of the master inserts is located on a tool item. The normal of the machined peripheral surface points towards the axis of the cutting tool.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "DC"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "FlangeDiameterMax": {
+      "type": "object",
+      "title": "FlangeDiameterMax",
+      "description": "dimension between two parallel tangents on the outside edge of a flange.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "DF"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "OverallToolLength": {
+      "type": "object",
+      "title": "OverallToolLength",
+      "description": "largest length dimension of the cutting tool including the master insert where applicable.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "OAL"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ShankDiameter": {
+      "type": "object",
+      "title": "ShankDiameter",
+      "description": "dimension of the diameter of a cylindrical portion of a tool item or an adaptive item that can participate in a connection.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "DMM"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ShankHeight": {
+      "type": "object",
+      "title": "ShankHeight",
+      "description": "dimension of the height of the shank.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "H"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ShankLength": {
+      "type": "object",
+      "title": "ShankLength",
+      "description": "dimension of the length of the shank.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "LS"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UsableLengthMax": {
+      "type": "object",
+      "title": "UsableLengthMax",
+      "description": "maximum length of a cutting tool that can be used in a particular cutting operation including the non-cutting portions of the tool.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "LUX"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ProtrudingLength": {
+      "type": "object",
+      "title": "ProtrudingLength",
+      "description": "dimension from the yz-plane to the furthest point of the tool item or adaptive item measured in the -X direction.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "default": "LPR"
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "default": "MILLIMETER"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CuttingToolLifeCycle": {
+      "type": "object",
+      "title": "CuttingToolLifeCycle",
+      "description": "data regarding the application or use of the tool. This data is provided by various pieces of equipment (i.e. machine tool, presetter) and statistical process control applications. Life cycle data will not remain static, but will change periodically when a tool is used or measured.",
+      "properties": {
+        "CutterStatus": {
+          "type": "object",
+          "properties": {
+            "Status": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Status"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "CuttingItems": {
+          "$ref": "#/$defs/CuttingItems"
+        },
+        "ConnectionCodeMachineSide": {
+          "type": "string",
+          "description": "identifier for the capability to connect any component of the cutting tool together, except Assembly Items, on the machine side. Code: `CCMS`"
+        },
+        "ProgramToolGroup": {
+          "type": "string",
+          "description": "tool group this tool is assigned in the part program."
+        },
+        "ProgramToolNumber": {
+          "type": "string",
+          "description": "number of the tool as referenced in the part program."
+        },
+        "ProcessFeedRate": {
+          "$ref": "#/$defs/ProcessFeedRate"
+        },
+        "ToolLife": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ToolLife"
+          }
+        },
+        "ProcessSpindleSpeed": {
+          "$ref": "#/$defs/ProcessSpindleSpeed"
+        },
+        "ReconditionCount": {
+          "$ref": "#/$defs/ReconditionCount"
+        },
+        "Location": {
+          "$ref": "#/$defs/Location"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ToolLife": {
+      "type": "object",
+      "title": "ToolLife",
+      "description": "cutting tool life as related to the assembly.",
+      "properties": {
+        "countDirection": {
+          "$ref": "#/$defs/CountDirectionTypeEnum",
+          "description": "indicates if the tool life counts from zero to maximum or maximum to zero."
+        },
+        "initial": {
+          "type": "number",
+          "description": "initial life of the tool when it is new."
+        },
+        "limit": {
+          "type": "number",
+          "description": "end of life limit for the tool."
+        },
+        "type": {
+          "$ref": "#/$defs/ToolLifeEnum",
+          "description": "type of tool life being accumulated."
+        },
+        "warning": {
+          "type": "number",
+          "description": "point at which a tool life warning will be raised."
+        },
+        "value": {
+          "type": "number",
+          "description": "value of {{block(ToolLife)}}."
+        }
+      },
+      "required": [
+        "countDirection",
+        "type",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "Location": {
+      "type": "object",
+      "title": "Location",
+      "description": "location of the pot or spindle the cutting tool currently resides in. If {{property(Location::negativeOverlap)}} or {{property(Location::positiveOverlap)}} is provided, the tool reserves additional locations on either side, otherwise if they are not given, no additional locations are required for this tool. If the pot occupies the first or last location, a rollover to the beginning or the end of the indexable values may occur. For example, if there are 64 pots and the tool is in pot 64 with a {{property(Location::positiveOverlap)}} of 1, the first pot **MAY** be occupied as well.",
+      "properties": {
+        "negativeOverlap": {
+          "type": "integer",
+          "description": "number of locations at lower index values from this location."
+        },
+        "positiveOverlap": {
+          "type": "integer",
+          "description": "number of locations at higher index value from this location."
+        },
+        "type": {
+          "$ref": "#/$defs/LocationTypeEnum",
+          "description": "type of location being identified. When a `POT` or `STATION` type is used, {{property(Location::value)}}**MUST** be a numeric value."
+        },
+        "turret": {
+          "type": "string",
+          "description": "turret associated with a tool."
+        },
+        "toolMagazine": {
+          "type": "string",
+          "description": "tool magazine associated with a tool."
+        },
+        "toolBar": {
+          "type": "string",
+          "description": "tool bar associated with a tool."
+        },
+        "toolRack": {
+          "type": "string",
+          "description": "tool rack associated with a tool."
+        },
+        "automaticToolChanger": {
+          "type": "string",
+          "description": "automatic tool changer associated with a tool."
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ReconditionCount": {
+      "type": "object",
+      "title": "ReconditionCount",
+      "description": "number of times the cutter has been reconditioned.",
+      "properties": {
+        "maximumCount": {
+          "type": "integer",
+          "description": "maximum number of times the tool may be reconditioned."
+        },
+        "value": {
+          "type": "integer",
+          "description": "{{property(ReconditionCount::value)}} **MUST** be provided for {{block(CuttingTool::CuttingToolLifeCycle)}} and **MUST NOT** be provided for the {{block(CuttingToolArchetype::CuttingToolLifeCycle)}}."
+        }
+      },
+      "additionalProperties": false
+    },
+    "ProcessSpindleSpeed": {
+      "type": "object",
+      "title": "ProcessSpindleSpeed",
+      "description": "constrained process spindle speed for the tool in revolutions/minute. The {{property(ProcessSpindleSpeed::value)}} **MAY** contain the nominal process target spindle speed if available. If {{block(ProcessSpindleSpeed)}} is provided, at least one value of {{property(ProcessSpindleSpeed::maximum)}}, {{property(ProcessSpindleSpeed::nominal)}}, or {{property(ProcessSpindleSpeed::minimum)}} **MUST** be specified.",
+      "properties": {
+        "maximum": {
+          "type": "number",
+          "description": "upper bound for the tool’s target spindle speed."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "lower bound for the tools spindle speed."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "nominal speed the tool is designed to operate at."
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ProcessFeedRate": {
+      "type": "object",
+      "title": "ProcessFeedRate",
+      "description": "constrained process feed rate for the tool in mm/s. The {{property(ProcessFeedRate::value)}} **MAY** contain the nominal process target feed rate if available. If {{block(ProcessFeedRate)}} is provided, at least one value of {{property(ProcessFeedRate::maximum)}}, {{property(ProcessFeedRate::nominal)}}, or {{property(ProcessFeedRate::minimum)}} **MUST** be specified.",
+      "properties": {
+        "maximum": {
+          "type": "number",
+          "description": "upper bound for the tool’s process target feedrate."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "lower bound for the tool's feedrate."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "nominal feedrate the tool is designed to operate at."
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Status": {
+      "type": "object",
+      "title": "Status",
+      "description": "status of the cutting tool.",
+      "properties": {
+        "value": {
+          "$ref": "#/$defs/CutterStatusTypeEnum",
+          "description": "status value of the cutting tool."
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "Measurement": {
+      "type": "object",
+      "title": "Measurement",
+      "description": "constrained scalar value associated with a cutting tool.",
+      "properties": {
+        "code": {
+          "$ref": "#/$defs/CodeEnum",
+          "description": "shop specific code for the measurement. ISO 13399 codes **MAY** be used for these codes as well. See {{package(Cutting Tool Measurement Subtypes)}} and {{package(Cutting Item Measurement Subtypes)}} for details on {{block(Measurement)}} types and their respective {{property(Measurement::code)}} values."
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum value for the measurement."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimum value for the measurement."
+        },
+        "nativeUnits": {
+          "$ref": "#/$defs/NativeUnitEnum",
+          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "as advertised value for the measurement."
+        },
+        "significantDigits": {
+          "type": "integer",
+          "description": "number of significant digits in the reported value."
+        },
+        "units": {
+          "$ref": "#/$defs/UnitEnum",
+          "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    "AbstractFile": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Asset"
+        },
+        {
+          "type": "object",
+          "title": "AbstractFile",
+          "description": "abstract {{block(Asset)}} that contains the common properties of the {{block(File)}} and {{block(FileArchetype)}} types.",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "name of the file."
+            },
+            "mediaType": {
+              "type": "string",
+              "description": "mime type of the file."
+            },
+            "applicationCategory": {
+              "$ref": "#/$defs/ApplicationCategoryEnum",
+              "description": "category of application that will use this file."
+            },
+            "applicationType": {
+              "$ref": "#/$defs/ApplicationTypeEnum",
+              "description": "type of application that will use this file."
+            }
+          },
+          "required": [
+            "applicationCategory",
+            "applicationType",
+            "mediaType",
+            "name"
+          ]
+        }
+      ]
+    },
+    "File": {
+      "type": "object",
+      "title": "File",
+      "description": "{{block(AbstractFile)}} type that provides information about the {{block(File)}} instance and its {{term(URL)}}.",
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "unique identifier for an {{block(Asset)}}."
+        },
+        "deviceUuid": {
+          "type": "string",
+          "description": "associated piece of equipment's {{term(UUID)}} that supplied the {{block(Asset)}}'s data. It references to {{property(Device::uuid)}} defined in {{package(Device Information Model)}}."
+        },
+        "removed": {
+          "type": "boolean",
+          "description": "indicator that the {{block(Asset)}} has been removed from the piece of equipment."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "time the {{block(Asset)}} data was last modified."
+        },
+        "Description": {
+          "$ref": "#/$defs/Description",
+          "description": "Description can contain any descriptive content about the Asset."
+        },
+        "hash": {
+          "type": "string",
+          "description": "condensed message digest from a secure one-way hash function. {{cite(FIPS PUB 180-4)}}"
+        },
+        "name": {
+          "type": "string",
+          "description": "name of the file."
+        },
+        "mediaType": {
+          "type": "string",
+          "description": "mime type of the file."
+        },
+        "applicationCategory": {
+          "$ref": "#/$defs/ApplicationCategoryEnum",
+          "description": "category of application that will use this file."
+        },
+        "applicationType": {
+          "$ref": "#/$defs/ApplicationTypeEnum",
+          "description": "type of application that will use this file."
+        },
+        "size": {
+          "type": "integer",
+          "description": "size of the file in bytes."
+        },
+        "versionId": {
+          "type": "string",
+          "description": "version identifier of the file."
+        },
+        "state": {
+          "$ref": "#/$defs/FileStateEnum",
+          "description": "state of the file."
+        },
+        "Signature": {
+          "type": "string",
+          "description": "secure hash of the file."
+        },
+        "PublicKey": {
+          "type": "string",
+          "description": "public key used to verify the signature."
+        },
+        "CreationTime": {
+          "type": "string",
+          "description": "time the file was created."
+        },
+        "ModificationTime": {
+          "type": "string",
+          "description": "time the file was modified."
+        },
+        "FileLocation": {
+          "$ref": "#/$defs/FileLocation"
+        }
+      },
+      "required": [
+        "CreationTime",
+        "FileLocation",
+        "applicationCategory",
+        "applicationType",
+        "assetId",
+        "mediaType",
+        "name",
+        "size",
+        "state",
+        "timestamp",
+        "versionId"
+      ],
+      "additionalProperties": false
+    },
+    "FileArchetype": {
+      "type": "object",
+      "title": "FileArchetype",
+      "description": "{{block(AbstractFile)}} type that provides information common to all versions of a file.",
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "unique identifier for an {{block(Asset)}}."
+        },
+        "deviceUuid": {
+          "type": "string",
+          "description": "associated piece of equipment's {{term(UUID)}} that supplied the {{block(Asset)}}'s data. It references to {{property(Device::uuid)}} defined in {{package(Device Information Model)}}."
+        },
+        "removed": {
+          "type": "boolean",
+          "description": "indicator that the {{block(Asset)}} has been removed from the piece of equipment."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "time the {{block(Asset)}} data was last modified."
+        },
+        "Description": {
+          "$ref": "#/$defs/Description",
+          "description": "Description can contain any descriptive content about the Asset."
+        },
+        "hash": {
+          "type": "string",
+          "description": "condensed message digest from a secure one-way hash function. {{cite(FIPS PUB 180-4)}}"
+        },
+        "name": {
+          "type": "string",
+          "description": "name of the file."
+        },
+        "mediaType": {
+          "type": "string",
+          "description": "mime type of the file."
+        },
+        "applicationCategory": {
+          "$ref": "#/$defs/ApplicationCategoryEnum",
+          "description": "category of application that will use this file."
+        },
+        "applicationType": {
+          "$ref": "#/$defs/ApplicationTypeEnum",
+          "description": "type of application that will use this file."
+        }
+      },
+      "required": [
+        "applicationCategory",
+        "applicationType",
+        "assetId",
+        "mediaType",
+        "name",
+        "timestamp"
+      ],
+      "additionalProperties": false
+    },
+    "FileProperty": {
+      "type": "object",
+      "title": "FileProperty",
+      "description": "key-value pair providing additional metadata about a {{block(File)}}.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "name of the {{block(FileProperty)}}."
+        },
+        "value": {
+          "type": "string",
+          "description": "The value of the {{block(FileProperty)}}."
+        }
+      },
+      "required": [
+        "name",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "FileComment": {
+      "type": "object",
+      "title": "FileComment",
+      "description": "remark or interpretation for human interpretation associated with a {{block(File)}} or {{block(FileArchetype)}}.",
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "description": "time the comment was made."
+        },
+        "value": {
+          "type": "string",
+          "description": "text of the comment about the file."
+        }
+      },
+      "required": [
+        "timestamp",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "FileLocation": {
+      "type": "object",
+      "title": "FileLocation",
+      "description": "{{term(URL)}} reference to the file location.",
+      "properties": {
+        "href": {
+          "type": "string",
+          "description": "{{term(URL)}} reference to the file. `href` is of type `xlink:href` from the W3C XLink specification."
+        },
+        "xlink:type": {
+          "type": "string",
+          "description": "type of href for the xlink href type. **MUST** be `locator` referring to a {{term(URL)}} ."
+        }
+      },
+      "required": [
+        "href"
+      ],
+      "additionalProperties": false
+    },
+    "Destination": {
+      "type": "object",
+      "title": "Destination",
+      "description": "reference to the target {{block(Device)}} for this {{block(File)}}.",
+      "properties": {
+        "deviceUuid": {
+          "type": "string",
+          "description": "`uuid` of the target device or application."
+        }
+      },
+      "required": [
+        "deviceUuid"
+      ],
+      "additionalProperties": false
+    },
+    "RawMaterial": {
+      "type": "object",
+      "title": "RawMaterial",
+      "description": "{{block(Asset)}} that represents {{term(raw material)}}.",
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "unique identifier for an {{block(Asset)}}."
+        },
+        "deviceUuid": {
+          "type": "string",
+          "description": "associated piece of equipment's {{term(UUID)}} that supplied the {{block(Asset)}}'s data. It references to {{property(Device::uuid)}} defined in {{package(Device Information Model)}}."
+        },
+        "removed": {
+          "type": "boolean",
+          "description": "indicator that the {{block(Asset)}} has been removed from the piece of equipment."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "time the {{block(Asset)}} data was last modified."
+        },
+        "Description": {
+          "$ref": "#/$defs/Description",
+          "description": "Description can contain any descriptive content about the Asset."
+        },
+        "hash": {
+          "type": "string",
+          "description": "condensed message digest from a secure one-way hash function. {{cite(FIPS PUB 180-4)}}"
+        },
+        "name": {
+          "type": "string",
+          "description": "name of the {{term(raw material)}}. Examples: `Container1` and `AcrylicContainer`."
+        },
+        "containerType": {
+          "type": "string",
+          "description": "type of container holding the {{term(raw material)}}. Examples: `Pallet`, `Canister`, `Cartridge`, `Tank`, `Bin`, `Roll`, and `Spool`."
+        },
+        "processKind": {
+          "type": "string",
+          "description": "ISO process type supported by this {{term(raw material)}}. Examples include: `VAT_POLYMERIZATION`, `BINDER_JETTING`, `MATERIAL_EXTRUSION`, `MATERIAL_JETTING`, `SHEET_LAMINATION`, `POWDER_BED_FUSION` and `DIRECTED_ENERGY_DEPOSITION`."
+        },
+        "serialNumber": {
+          "type": "string",
+          "description": "serial number of the {{term(raw material)}}."
+        },
+        "HasMaterial": {
+          "type": "boolean",
+          "description": "{{block(Material)}} has existing usable volume."
+        },
+        "Material": {
+          "$ref": "#/$defs/Material"
+        },
+        "Form": {
+          "$ref": "#/$defs/FormEnum",
+          "description": "form of the {{term(raw material)}}."
+        },
+        "ManufacturingDate": {
+          "type": "string",
+          "description": "date the {{term(raw material)}} was created."
+        },
+        "FirstUseDate": {
+          "type": "string",
+          "description": "date {{term(raw material)}} was first used."
+        },
+        "LastUseDate": {
+          "type": "string",
+          "description": "date {{term(raw material)}} was last used."
+        },
+        "InitialVolume": {
+          "type": "string",
+          "description": "amount of material initially placed in {{term(raw material)}} when manufactured."
+        },
+        "InitialDimension": {
+          "type": "string",
+          "description": "dimension of material initially placed in {{term(raw material)}} when manufactured."
+        },
+        "InitialQuantity": {
+          "type": "integer",
+          "description": "quantity of material initially placed in {{term(raw material)}} when manufactured."
+        },
+        "CurrentVolume": {
+          "type": "string",
+          "description": "amount of material currently in {{term(raw material)}}."
+        },
+        "CurrentDimension": {
+          "type": "string",
+          "description": "dimension of material currently in {{term(raw material)}}."
+        },
+        "CurrentQuantity": {
+          "type": "integer",
+          "description": "quantity of material currently in {{term(raw material)}}."
+        }
+      },
+      "required": [
+        "Form",
+        "assetId",
+        "timestamp"
+      ],
+      "additionalProperties": false
+    },
+    "Material": {
+      "type": "object",
+      "title": "Material",
+      "description": "material used as the {{block(RawMaterial)}}.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "unique identifier for the material."
+        },
+        "name": {
+          "type": "string",
+          "description": "name of the material. Examples: `ULTM9085`, `ABS`, `4140`."
+        },
+        "type": {
+          "type": "string",
+          "description": "type of material. Examples: `Metal`, `Polymer`, `Wood`, `4140`, `Recycled`, `Prestine` and `Used`."
+        },
+        "Lot": {
+          "type": "string",
+          "description": "manufacturer's lot code of the material."
+        },
+        "Manufacturer": {
+          "type": "string",
+          "description": "name of the material manufacturer."
+        },
+        "ManufacturingDate": {
+          "type": "string",
+          "description": "manufacturing date of the material from the material manufacturer."
+        },
+        "ManufacturingCode": {
+          "type": "string",
+          "description": "lot code of the raw feed stock for the material, from the feed stock manufacturer."
+        },
+        "MaterialCode": {
+          "type": "string",
+          "description": "{{term(ASTM)}} standard code that the material complies with."
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "QIFDocument": {
+      "type": "object",
+      "title": "QIFDocument",
+      "description": "QIF Document as given by the {{term(QIF)}} standard.",
+      "additionalProperties": false
+    },
+    "QIFDocumentWrapper": {
+      "type": "object",
+      "title": "QIFDocumentWrapper",
+      "description": "{{block(Asset)}} that carries the QIF Document.",
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "unique identifier for an {{block(Asset)}}."
+        },
+        "deviceUuid": {
+          "type": "string",
+          "description": "associated piece of equipment's {{term(UUID)}} that supplied the {{block(Asset)}}'s data. It references to {{property(Device::uuid)}} defined in {{package(Device Information Model)}}."
+        },
+        "removed": {
+          "type": "boolean",
+          "description": "indicator that the {{block(Asset)}} has been removed from the piece of equipment."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "time the {{block(Asset)}} data was last modified."
+        },
+        "Description": {
+          "$ref": "#/$defs/Description",
+          "description": "Description can contain any descriptive content about the Asset."
+        },
+        "hash": {
+          "type": "string",
+          "description": "condensed message digest from a secure one-way hash function. {{cite(FIPS PUB 180-4)}}"
+        },
+        "qifDocumentType": {
+          "$ref": "#/$defs/QIFDocumentTypeEnum",
+          "description": "contained QIF Document type as defined in the {{term(QIF)}} Standard."
+        },
+        "QIFDocument": {
+          "$ref": "#/$defs/QIFDocument"
+        }
+      },
+      "required": [
+        "QIFDocument",
+        "assetId",
+        "timestamp"
+      ],
+      "additionalProperties": false
+    },
+    "ComponentConfigurationParameters": {
+      "type": "object",
+      "title": "ComponentConfigurationParameters",
+      "description": "set of {{block(ParameterSet)}}s that govern the functionality of the related {{block(Component)}}.",
+      "properties": {
+        "assetId": {
+          "type": "string",
+          "description": "unique identifier for an {{block(Asset)}}."
+        },
+        "deviceUuid": {
+          "type": "string",
+          "description": "associated piece of equipment's {{term(UUID)}} that supplied the {{block(Asset)}}'s data. It references to {{property(Device::uuid)}} defined in {{package(Device Information Model)}}."
+        },
+        "removed": {
+          "type": "boolean",
+          "description": "indicator that the {{block(Asset)}} has been removed from the piece of equipment."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "time the {{block(Asset)}} data was last modified."
+        },
+        "Description": {
+          "$ref": "#/$defs/Description",
+          "description": "Description can contain any descriptive content about the Asset."
+        },
+        "hash": {
+          "type": "string",
+          "description": "condensed message digest from a secure one-way hash function. {{cite(FIPS PUB 180-4)}}"
+        }
+      },
+      "required": [
+        "assetId",
+        "timestamp"
+      ],
+      "additionalProperties": false
+    },
+    "ParameterSet": {
+      "type": "object",
+      "title": "ParameterSet",
+      "description": "set of {{block(Parameter)}}s.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "name of the parameter set if more than one exists."
+        }
+      },
+      "additionalProperties": false
+    },
+    "Parameter": {
+      "type": "object",
+      "title": "Parameter",
+      "description": "property defining a configuration of a {{block(Component)}}.",
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "description": "internal identifier, register, or address."
+        },
+        "name": {
+          "type": "string",
+          "description": "descriptive name."
+        },
+        "minimum": {
+          "type": "number",
+          "description": "minimal allowed value."
+        },
+        "maximum": {
+          "type": "number",
+          "description": "maximum allowed value."
+        },
+        "nominal": {
+          "type": "number",
+          "description": "nominal value."
+        },
+        "value": {
+          "type": "string",
+          "description": "configured value."
+        },
+        "units": {
+          "type": "string",
+          "description": "engineering units. {{property(Parameter::units)}} **SHOULD** be SI or MTConnect Units."
+        }
+      },
+      "required": [
+        "identifier",
+        "name",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "CoordinateSystemEnum": {
+      "title": "CoordinateSystemEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "MACHINE",
+            "WORK"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ResetTriggerEnum": {
+      "title": "ResetTriggerEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTION_COMPLETE",
+            "ANNUAL",
+            "DAY",
+            "LIFE",
+            "MAINTENANCE",
+            "MONTH",
+            "POWER_ON",
+            "SHIFT",
+            "WEEK"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "StatisticEnum": {
+      "title": "StatisticEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "AVERAGE",
+            "KURTOSIS",
+            "MAXIMUM",
+            "MEDIAN",
+            "MINIMUM",
+            "MODE",
+            "RANGE",
+            "ROOT_MEAN_SQUARE",
+            "STANDARD_DEVIATION"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "UnitEnum": {
+      "title": "UnitEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "AMPERE",
+            "CELSIUS",
+            "COUNT",
+            "DECIBEL",
+            "DEGREE",
+            "DEGREE_3D",
+            "DEGREE/SECOND",
+            "DEGREE/SECOND\\^2",
+            "HERTZ",
+            "JOULE",
+            "KILOGRAM",
+            "LITER",
+            "LITER/SECOND",
+            "MICRO_RADIAN",
+            "MILLIMETER",
+            "MILLIMETER_3D",
+            "MILLIMETER/REVOLUTION",
+            "MILLIMETER/SECOND",
+            "MILLIMETER/SECOND\\^2",
+            "NEWTON",
+            "NEWTON_METER",
+            "OHM",
+            "PASCAL",
+            "PASCAL_SECOND",
+            "PERCENT",
+            "PH",
+            "REVOLUTION/MINUTE",
+            "SECOND",
+            "SIEMENS/METER",
+            "VOLT",
+            "VOLT_AMPERE",
+            "VOLT_AMPERE_REACTIVE",
+            "WATT",
+            "WATT_SECOND",
+            "GRAM/CUBIC_METER",
+            "CUBIC_MILLIMETER",
+            "CUBIC_MILLIMETER/SECOND",
+            "CUBIC_MILLIMETER/SECOND\\^2",
+            "MILLIGRAM",
+            "MILLIGRAM/CUBIC_MILLIMETER",
+            "MILLILITER",
+            "COUNT/SECOND",
+            "PASCAL/SECOND",
+            "UNIT_VECTOR_3D",
+            "REVOLUTION/SECOND\\^2",
+            "REVOLUTION/SECOND",
+            "GRAM",
+            "METER/SECOND\\^2",
+            "COULOMB"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DataItemTypeEnum": {
+      "type": "string",
+      "title": "DataItemTypeEnum"
+    },
+    "CategoryEnum": {
+      "title": "CategoryEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "EVENT",
+            "CONDITION"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DataItemSubTypeEnum": {
+      "title": "DataItemSubTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ABSOLUTE",
+            "ACTION",
+            "ACTUAL",
+            "ALL",
+            "ALTERNATING",
+            "A_SCALE",
+            "AUXILIARY",
+            "BAD",
+            "BRINELL",
+            "B_SCALE",
+            "COMMANDED",
+            "CONSUMED",
+            "CONTROL",
+            "C_SCALE",
+            "DELAY",
+            "DIRECT",
+            "DRY_RUN",
+            "D_SCALE",
+            "EXPIRATION",
+            "FIRST_USE",
+            "GOOD",
+            "INCREMENTAL",
+            "JOG",
+            "LATERAL",
+            "LEEB",
+            "LENGTH",
+            "LINE",
+            "LINEAR",
+            "LOADED",
+            "MACHINE_AXIS_LOCK",
+            "MAIN",
+            "MAINTENANCE",
+            "MANUAL_UNCLAMP",
+            "MANUFACTURE",
+            "MAXIMUM",
+            "MINIMUM",
+            "MOHS",
+            "MOTION",
+            "NO_SCALE",
+            "OPERATING",
+            "OPERATOR",
+            "OPTIONAL_STOP",
+            "OVERRIDE",
+            "POWERED",
+            "PRIMARY",
+            "PROBE",
+            "PROCESS",
+            "PROGRAMMED",
+            "RADIAL",
+            "RAPID",
+            "REMAINING",
+            "ROCKWELL",
+            "ROTARY",
+            "SCHEDULE",
+            "SET_UP",
+            "SHORE",
+            "SINGLE_BLOCK",
+            "STANDARD",
+            "START",
+            "SWITCHED",
+            "TARGET",
+            "TARGET_COMPLETION",
+            "TOOL_CHANGE_STOP",
+            "USEABLE",
+            "VERTICAL",
+            "VICKERS",
+            "WORKING",
+            "IPV4_ADDRESS",
+            "IPV6_ADDRESS",
+            "GATEWAY",
+            "SUBNET_MASK",
+            "VLAN_ID",
+            "MAC_ADDRESS",
+            "WIRELESS",
+            "LICENSE",
+            "VERSION",
+            "RELEASE_DATE",
+            "INSTALL_DATE",
+            "MANUFACTURER",
+            "UUID",
+            "SERIAL_NUMBER",
+            "RAW_MATERIAL",
+            "LOT",
+            "BATCH",
+            "HEAT_TREAT",
+            "PART_NUMBER",
+            "PART_FAMILY",
+            "PART_NAME",
+            "PROCESS_STEP",
+            "PROCESS_PLAN",
+            "ORDER_NUMBER",
+            "PROCESS_NAME",
+            "ISO_STEP_EXECUTABLE",
+            "COMPLETE",
+            "ACTIVE",
+            "FAILED",
+            "ABORTED",
+            "ENDED",
+            "WASTE",
+            "PART",
+            "REQUEST",
+            "RESPONSE",
+            "ACTIVITY",
+            "SEGMENT",
+            "RECIPE",
+            "OPERATION",
+            "BINARY",
+            "BOOLEAN",
+            "ENUMERATED",
+            "DETECT",
+            "MODEL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "NativeUnitEnum": {
+      "title": "NativeUnitEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CENTIPOISE",
+            "DEGREE/MINUTE",
+            "FAHRENHEIT",
+            "FOOT",
+            "FOOT/MINUTE",
+            "FOOT/SECOND",
+            "FOOT/SECOND\\^2",
+            "FOOT_3D",
+            "GALLON/MINUTE",
+            "HOUR",
+            "INCH",
+            "INCH/MINUTE",
+            "INCH/SECOND",
+            "INCH/SECOND\\^2",
+            "INCH_POUND",
+            "INCH_3D",
+            "KELVIN",
+            "KILOWATT",
+            "KILOWATT_HOUR",
+            "LITER/MINUTE",
+            "MILLIMETER/MINUTE",
+            "MINUTE",
+            "OTHER",
+            "POUND",
+            "POUND/INCH\\^2",
+            "RADIAN",
+            "RADIAN/MINUTE",
+            "RADIAN/SECOND",
+            "RADIAN/SECOND\\^2",
+            "BAR",
+            "TORR",
+            "MILLIMETER_MERCURY",
+            "PASCAL/MINUTE",
+            "GRAVITATIONAL_FORCE",
+            "GRAVITATIONAL_ACCELERATION",
+            "AMPERE_HOUR",
+            "CUBIC_FOOT/HOUR",
+            "CUBIC_FOOT/MINUTE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "FilterEnum": {
+      "title": "FilterEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "MINIMUM_DELTA",
+            "PERIOD"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "RepresentationEnum": {
+      "title": "RepresentationEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "TIME_SERIES",
+            "VALUE",
+            "DATA_SET",
+            "DISCRETE",
+            "TABLE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "boolean": {
+      "type": "boolean",
+      "title": "boolean",
+      "description": "primitive type."
+    },
+    "ID": {
+      "type": "string",
+      "title": "ID",
+      "description": "string that represents an {{term(ID)}}."
+    },
+    "string": {
+      "type": "string",
+      "title": "string",
+      "description": "primitive type."
+    },
+    "float": {
+      "type": "number",
+      "title": "float",
+      "description": "primitive type."
+    },
+    "datetime": {
+      "type": "string",
+      "title": "datetime",
+      "description": "string that represents timestamp in ISO 8601 format."
+    },
+    "integer": {
+      "type": "integer",
+      "title": "integer",
+      "description": "primitive type."
+    },
+    "xlinktype": {
+      "type": "string",
+      "title": "xlinktype",
+      "description": "string that represents the type of an XLink element. See {{url(https://www.w3.org/TR/xlink11/)}}."
+    },
+    "xslang": {
+      "type": "string",
+      "title": "xslang",
+      "description": "string that represents a language tag. See {{url(http://www.ietf.org/rfc/rfc4646.txt)}}."
+    },
+    "SECOND": {
+      "type": "string",
+      "title": "SECOND",
+      "description": "float that represents time in seconds."
+    },
+    "IDREF": {
+      "type": "string",
+      "title": "IDREF",
+      "description": "string that represents a reference to an `ID`."
+    },
+    "xlinkhref": {
+      "type": "string",
+      "title": "xlinkhref",
+      "description": "string that represents the locator attribute of an XLink element. See {{url(https://www.w3.org/TR/xlink11/)}}."
+    },
+    "ResetTriggeredEnum": {
+      "title": "ResetTriggeredEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTION_COMPLETE",
+            "ANNUAL",
+            "DAY",
+            "MAINTENANCE",
+            "MANUAL",
+            "MONTH",
+            "POWER_ON",
+            "SHIFT",
+            "WEEK"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "QualifierEnum": {
+      "title": "QualifierEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "HIGH",
+            "LOW"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "SampleEnum": {
+      "title": "SampleEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACCELERATION",
+            "ACCUMULATED_TIME",
+            "AMPERAGE",
+            "ANGLE",
+            "ANGULAR_ACCELERATION",
+            "ANGULAR_VELOCITY",
+            "AXIS_FEEDRATE",
+            "CAPACITY_FLUID",
+            "CAPACITY_SPATIAL",
+            "CONCENTRATION",
+            "CONDUCTIVITY",
+            "CUTTING_SPEED",
+            "DENSITY",
+            "DEPOSITION_ACCELERATION_VOLUMETRIC",
+            "DEPOSITION_DENSITY",
+            "DEPOSITION_MASS",
+            "DEPOSITION_RATE_VOLUMETRIC",
+            "DEPOSITION_VOLUME",
+            "DISPLACEMENT",
+            "ELECTRICAL_ENERGY",
+            "EQUIPMENT_TIMER",
+            "FILL_LEVEL",
+            "FLOW",
+            "FREQUENCY",
+            "GLOBAL_POSITION",
+            "LENGTH",
+            "LEVEL",
+            "LINEAR_FORCE",
+            "LOAD",
+            "MASS",
+            "PATH_FEEDRATE",
+            "PATH_FEEDRATE_PER_REVOLUTION",
+            "PATH_POSITION",
+            "PH",
+            "POSITION",
+            "POWER_FACTOR",
+            "PRESSURE",
+            "PROCESS_TIMER",
+            "RESISTANCE",
+            "ROTARY_VELOCITY",
+            "SOUND_LEVEL",
+            "SPINDLE_SPEED",
+            "STRAIN",
+            "TEMPERATURE",
+            "TENSION",
+            "TILT",
+            "TORQUE",
+            "VELOCITY",
+            "VISCOSITY",
+            "VOLTAGE",
+            "VOLT_AMPERE",
+            "VOLT_AMPERE_REACTIVE",
+            "VOLUME_FLUID",
+            "VOLUME_SPATIAL",
+            "WATTAGE",
+            "AMPERAGE_AC",
+            "AMPERAGE_DC",
+            "VOLTAGE_AC",
+            "VOLTAGE_DC",
+            "X_DIMENSION",
+            "Y_DIMENSION",
+            "Z_DIMENSION",
+            "DIAMETER",
+            "ORIENTATION",
+            "HUMIDITY_RELATIVE",
+            "HUMIDITY_ABSOLUTE",
+            "HUMIDITY_SPECIFIC",
+            "OBSERVATION_UPDATE_RATE",
+            "ASSET_UPDATE_RATE",
+            "PRESSURIZATION_RATE",
+            "DECELERATION",
+            "ANGULAR_DECELERATION",
+            "PRESSURE_ABSOLUTE",
+            "OPENNESS",
+            "DEW_POINT",
+            "GRAVITATIONAL_FORCE",
+            "GRAVITATIONAL_ACCELERATION",
+            "BATTERY_CAPACITY",
+            "DISCHARGE_RATE",
+            "CHARGE_RATE",
+            "BATTERY_CHARGE",
+            "SETTLING_ERROR",
+            "FOLLOWING_ERROR",
+            "SETTLING_ERROR_LINEAR",
+            "SETTLING_ERROR_ANGULAR",
+            "FOLLOWING_ERROR_LINEAR",
+            "FOLLOWING_ERROR_ANGULAR",
+            "DISPLACEMENT_LINEAR",
+            "DISPLACEMENT_ANGULAR",
+            "POSITION_CARTESIAN"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "EventEnum": {
+      "title": "EventEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE_AXES",
+            "ACTUATOR_STATE",
+            "ALARM",
+            "ASSET_CHANGED",
+            "ASSET_REMOVED",
+            "AVAILABILITY",
+            "AXIS_COUPLING",
+            "AXIS_FEEDRATE_OVERRIDE",
+            "AXIS_INTERLOCK",
+            "AXIS_STATE",
+            "BLOCK",
+            "BLOCK_COUNT",
+            "CHUCK_INTERLOCK",
+            "CHUCK_STATE",
+            "CODE",
+            "COMPOSITION_STATE",
+            "CONTROLLER_MODE",
+            "CONTROLLER_MODE_OVERRIDE",
+            "COUPLED_AXES",
+            "DATE_CODE",
+            "DEVICE_UUID",
+            "DIRECTION",
+            "DOOR_STATE",
+            "EMERGENCY_STOP",
+            "END_OF_BAR",
+            "EQUIPMENT_MODE",
+            "EXECUTION",
+            "FUNCTIONAL_MODE",
+            "HARDNESS",
+            "LINE",
+            "LINE_LABEL",
+            "LINE_NUMBER",
+            "MATERIAL",
+            "MATERIAL_LAYER",
+            "MESSAGE",
+            "OPERATOR_ID",
+            "PALLET_ID",
+            "PART_COUNT",
+            "PART_DETECT",
+            "PART_ID",
+            "PART_NUMBER",
+            "PATH_FEEDRATE_OVERRIDE",
+            "PATH_MODE",
+            "POWER_STATE",
+            "POWER_STATUS",
+            "PROCESS_TIME",
+            "PROGRAM",
+            "PROGRAM_COMMENT",
+            "PROGRAM_EDIT",
+            "PROGRAM_EDIT_NAME",
+            "PROGRAM_HEADER",
+            "PROGRAM_LOCATION",
+            "PROGRAM_LOCATION_TYPE",
+            "PROGRAM_NEST_LEVEL",
+            "ROTARY_MODE",
+            "ROTARY_VELOCITY_OVERRIDE",
+            "SERIAL_NUMBER",
+            "SPINDLE_INTERLOCK",
+            "TOOL_ASSET_ID",
+            "TOOL_GROUP",
+            "TOOL_ID",
+            "TOOL_NUMBER",
+            "TOOL_OFFSET",
+            "USER",
+            "VARIABLE",
+            "WAIT_STATE",
+            "WIRE",
+            "WORKHOLDING_ID",
+            "WORK_OFFSET",
+            "OPERATING_SYSTEM",
+            "FIRMWARE",
+            "APPLICATION",
+            "LIBRARY",
+            "HARDWARE",
+            "NETWORK",
+            "ROTATION",
+            "TRANSLATION",
+            "DEVICE_ADDED",
+            "DEVICE_REMOVED",
+            "DEVICE_CHANGED",
+            "CONNECTION_STATUS",
+            "ADAPTER_SOFTWARE_VERSION",
+            "ADAPTER_URI",
+            "MTCONNECT_VERSION",
+            "SENSOR_ATTACHMENT",
+            "PART_STATUS",
+            "PROCESS_OCCURRENCE_ID",
+            "PROCESS_AGGREGATE_ID",
+            "PROCESS_KIND_ID",
+            "PART_GROUP_ID",
+            "PART_KIND_ID",
+            "PART_UNIQUE_ID",
+            "CONTROL_LIMIT",
+            "SPECIFICATION_LIMIT",
+            "ALARM_LIMIT",
+            "LOAD_COUNT",
+            "UNLOAD_COUNT",
+            "TRANSFER_COUNT",
+            "ACTIVATION_COUNT",
+            "DEACTIVATION_COUNT",
+            "CYCLE_COUNT",
+            "VALVE_STATE",
+            "LOCK_STATE",
+            "PROCESS_STATE",
+            "PART_PROCESSING_STATE",
+            "OPERATING_MODE",
+            "ASSET_COUNT",
+            "MAINTENANCE_LIST",
+            "FIXTURE_ID",
+            "PART_COUNT_TYPE",
+            "CLOCK_TIME",
+            "HOST_NAME",
+            "NETWORK_PORT",
+            "LEAK_DETECT",
+            "BATTERY_STATE",
+            "FEATURE_PERSISTENT_ID",
+            "SENSOR_STATE",
+            "COMPONENT_DATA",
+            "WORK_OFFSETS",
+            "TOOL_OFFSETS",
+            "FEATURE_MEASUREMENT",
+            "CHARACTERISTIC_PERSISTENT_ID",
+            "MEASUREMENT_TYPE",
+            "MEASUREMENT_VALUE",
+            "MEASUREMENT_UNITS",
+            "CHARACTERISTIC_STATUS",
+            "UNCERTAINTY_TYPE",
+            "UNCERTAINTY",
+            "SPECIFICATION_LIMITS",
+            "CONTROL_LIMITS",
+            "ALARM_LIMITS",
+            "TOOL_CUTTING_ITEM",
+            "LOCATION_ADDRESS",
+            "ACTIVE_POWER_SOURCE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ConditionEnum": {
+      "title": "ConditionEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "COMMUNICATIONS",
+            "DATA_RANGE",
+            "LOGIC_PROGRAM",
+            "MOTION_PROGRAM",
+            "SYSTEM",
+            "ACTUATOR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "MotionActuationTypeEnum": {
+      "title": "MotionActuationTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "DIRECT",
+            "VIRTUAL",
+            "NONE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "MotionTypeEnum": {
+      "title": "MotionTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "PRISMATIC",
+            "CONTINUOUS",
+            "REVOLUTE",
+            "FIXED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CoordinateSystemTypeEnum": {
+      "title": "CoordinateSystemTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "WORLD",
+            "BASE",
+            "OBJECT",
+            "TASK",
+            "MECHANICAL_INTERFACE",
+            "TOOL",
+            "MOBILE_PLATFORM",
+            "MACHINE",
+            "CAMERA"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DataItemRelationshipTypeEnum": {
+      "title": "DataItemRelationshipTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ATTACHMENT",
+            "COORDINATE_SYSTEM",
+            "LIMIT",
+            "OBSERVATION"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "SpecificationRelationshipTypeEnum": {
+      "title": "SpecificationRelationshipTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "LIMIT"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "MediaTypeEnum": {
+      "title": "MediaTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "STEP",
+            "STL",
+            "GDML",
+            "OBJ",
+            "COLLADA",
+            "IGES",
+            "3DS",
+            "ACIS",
+            "X_T"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "OriginatorEnum": {
+      "title": "OriginatorEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "MANUFACTURER",
+            "USER"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "QIFDocumentTypeEnum": {
+      "title": "QIFDocumentTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "MEASUREMENT_RESOURCE",
+            "PLAN",
+            "PRODUCT",
+            "RESULTS",
+            "RULES",
+            "STATISTICS"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ProcessStateEnum": {
+      "title": "ProcessStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "INITIALIZING",
+            "READY",
+            "ACTIVE",
+            "COMPLETE",
+            "INTERRUPTED",
+            "ABORTED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AssetTypeEnum": {
+      "title": "AssetTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CuttingTool",
+            "File",
+            "QIFDocumentWrapper",
+            "RawMaterial",
+            "CuttingToolArchetype",
+            "FileArchetype"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ChuckStateEnum": {
+      "title": "ChuckStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "OPEN",
+            "CLOSED",
+            "UNLATCHED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AxisCouplingEnum": {
+      "title": "AxisCouplingEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "TANDEM",
+            "SYNCHRONOUS",
+            "MASTER",
+            "SLAVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "PartStatusEnum": {
+      "title": "PartStatusEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DirectionRotaryEnum": {
+      "title": "DirectionRotaryEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CLOCKWISE",
+            "COUNTER_CLOCKWISE",
+            "NONE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "FileStateEnum": {
+      "title": "FileStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "EXPERIMENTAL",
+            "PRODUCTION",
+            "REVISION"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CriticalityTypeEnum": {
+      "title": "CriticalityTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CRITICAL",
+            "NONCRITICAL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CompositionStateMotionEnum": {
+      "title": "CompositionStateMotionEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "OPEN",
+            "UNLATCHED",
+            "CLOSED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ActuatorStateEnum": {
+      "title": "ActuatorStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "INACTIVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ConnectionStatusEnum": {
+      "title": "ConnectionStatusEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CLOSED",
+            "LISTEN",
+            "ESTABLISHED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "RoleTypeEnum": {
+      "title": "RoleTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "SYSTEM",
+            "AUXILIARY"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "PathModeEnum": {
+      "title": "PathModeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "INDEPENDENT",
+            "MASTER",
+            "SYNCHRONOUS",
+            "MIRROR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CompositionStateActionEnum": {
+      "title": "CompositionStateActionEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "INACTIVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "MILLIMETER": {
+      "type": "string",
+      "title": "MILLIMETER",
+      "description": "float that represents measurement in millimeter."
+    },
+    "PartProcessingStateEnum": {
+      "title": "PartProcessingStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "NEEDS_PROCESSING",
+            "IN_PROCESS",
+            "PROCESSING_ENDED",
+            "PROCESSING_ENDED_COMPLETE",
+            "PROCESSING_ENDED_STOPPED",
+            "PROCESSING_ENDED_ABORTED",
+            "PROCESSING_ENDED_LOST",
+            "PROCESSING_ENDED_SKIPPED",
+            "PROCESSING_ENDED_REJECTED",
+            "WAITING_FOR_TRANSIT",
+            "IN_TRANSIT",
+            "TRANSIT_COMPLETE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ControllerModeEnum": {
+      "title": "ControllerModeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "AUTOMATIC",
+            "MANUAL",
+            "MANUAL_DATA_INPUT",
+            "SEMI_AUTOMATIC",
+            "EDIT",
+            "FEED_HOLD"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DirectionLinearEnum": {
+      "title": "DirectionLinearEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "POSITIVE",
+            "NEGATIVE",
+            "NONE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "EndOfBarEnum": {
+      "title": "EndOfBarEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "YES",
+            "NO"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "LocationTypeEnum": {
+      "title": "LocationTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Enumeration for Location types",
+          "enum": [
+            "POT",
+            "STATION",
+            "CRIB",
+            "SPINDLE",
+            "TRANSFER_POT",
+            "RETURN_POT",
+            "STAGING_POT",
+            "REMOVAL_POT",
+            "EXPIRED_POT",
+            "END_EFFECTOR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ValveStateEnum": {
+      "title": "ValveStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "OPEN",
+            "OPENING",
+            "CLOSED",
+            "CLOSING"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CodeEnum": {
+      "title": "CodeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "BDX",
+            "LBX",
+            "APMX",
+            "DC",
+            "DF",
+            "OAL",
+            "DMM",
+            "H",
+            "LS",
+            "LUX",
+            "LPR",
+            "WT",
+            "LF",
+            "CRP",
+            "L",
+            "DRVA",
+            "WF",
+            "IC",
+            "SIG",
+            "KAPR",
+            "PSIR",
+            "N/A",
+            "BS",
+            "SDLx",
+            "STAx",
+            "DCx",
+            "HF",
+            "RE",
+            "LFx",
+            "BCH",
+            "CHW",
+            "W1"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ApplicationCategoryEnum": {
+      "title": "ApplicationCategoryEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ASSEMBLY",
+            "DEVICE",
+            "HANDLING",
+            "MAINTENANCE",
+            "PART",
+            "PROCESS",
+            "INSPECTION",
+            "SETUP"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CutterStatusTypeEnum": {
+      "title": "CutterStatusTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Enumeration for CutterStatus values.",
+          "enum": [
+            "NEW",
+            "AVAILABLE",
+            "UNAVAILABLE",
+            "ALLOCATED",
+            "UNALLOCATED",
+            "MEASURED",
+            "RECONDITIONED",
+            "USED",
+            "EXPIRED",
+            "BROKEN",
+            "NOT_REGISTERED",
+            "UNKNOWN"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CompositionStateLateralEnum": {
+      "title": "CompositionStateLateralEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "RIGHT",
+            "LEFT",
+            "TRANSITIONING"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "PartDetectEnum": {
+      "title": "PartDetectEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "PRESENT",
+            "NOT_PRESENT"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ExecutionEnum": {
+      "title": "ExecutionEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "READY",
+            "ACTIVE",
+            "INTERRUPTED",
+            "FEED_HOLD",
+            "STOPPED",
+            "OPTIONAL_STOP",
+            "PROGRAM_STOPPED",
+            "PROGRAM_COMPLETED",
+            "WAIT",
+            "PROGRAM_OPTIONAL_STOP"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DEGREE": {
+      "type": "string",
+      "title": "DEGREE",
+      "description": "float that represents angle in degrees."
+    },
+    "AvailabilityEnum": {
+      "title": "AvailabilityEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "AVAILABLE",
+            "UNAVAILABLE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ProgramEditEnum": {
+      "title": "ProgramEditEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "READY",
+            "NOT_READY"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ControllerModeOverrideEnum": {
+      "title": "ControllerModeOverrideEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ON",
+            "OFF"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "FunctionalModeEnum": {
+      "title": "FunctionalModeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "PRODUCTION",
+            "SETUP",
+            "TEARDOWN",
+            "MAINTENANCE",
+            "PROCESS_DEVELOPMENT"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "WaitStateEnum": {
+      "title": "WaitStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "POWERING_UP",
+            "POWERING_DOWN",
+            "PART_LOAD",
+            "PART_UNLOAD",
+            "TOOL_LOAD",
+            "TOOL_UNLOAD",
+            "MATERIAL_LOAD",
+            "MATERIAL_UNLOAD",
+            "SECONDARY_PROCESS",
+            "PAUSING",
+            "RESUMING"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "RotaryModeEnum": {
+      "title": "RotaryModeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "SPINDLE",
+            "INDEX",
+            "CONTOUR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CompositionStateSwitchedEnum": {
+      "title": "CompositionStateSwitchedEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ON",
+            "OFF"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "EmergencyStopEnum": {
+      "title": "EmergencyStopEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ARMED",
+            "TRIGGERED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "LockStateEnum": {
+      "title": "LockStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "LOCKED",
+            "UNLOCKED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AxisStateEnum": {
+      "title": "AxisStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "HOME",
+            "TRAVEL",
+            "PARKED",
+            "STOPPED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "InterfaceStateEnum": {
+      "title": "InterfaceStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ENABLED",
+            "DISABLED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "RelationshipTypeEnum": {
+      "title": "RelationshipTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "PARENT",
+            "CHILD",
+            "PEER"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "FormatTypeEnum": {
+      "title": "FormatTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Enumeration for CuttingToolDefinition format values.",
+          "enum": [
+            "EXPRESS",
+            "TEXT",
+            "UNDEFINED",
+            "XML"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CompositionTypeEnum": {
+      "title": "CompositionTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTUATOR",
+            "AMPLIFIER",
+            "BALLSCREW",
+            "BELT",
+            "BRAKE",
+            "CHAIN",
+            "CHOPPER",
+            "CHUCK",
+            "CHUTE",
+            "CIRCUIT_BREAKER",
+            "CLAMP",
+            "COMPRESSOR",
+            "DOOR",
+            "DRAIN",
+            "ENCODER",
+            "EXPOSURE_UNIT",
+            "EXTRUSION_UNIT",
+            "FAN",
+            "FILTER",
+            "GALVANOMOTOR",
+            "GRIPPER",
+            "HOPPER",
+            "LINEAR_POSITION_FEEDBACK",
+            "MOTOR",
+            "OIL",
+            "POWER_SUPPLY",
+            "PULLEY",
+            "PUMP",
+            "REEL",
+            "SENSING_ELEMENT",
+            "SPREADER",
+            "STORAGE_BATTERY",
+            "SWITCH",
+            "TABLE",
+            "TANK",
+            "TENSIONER",
+            "TRANSFORMER",
+            "VALVE",
+            "VAT",
+            "WATER",
+            "WIRE",
+            "WORKPIECE",
+            "COOLING_TOWER",
+            "POT",
+            "STATION",
+            "TRANSFER_ARM",
+            "TRANSFER_POT",
+            "RETURN_POT",
+            "STAGING_POT",
+            "REMOVAL_POT",
+            "EXPIRED_POT"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CountDirectionTypeEnum": {
+      "title": "CountDirectionTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Enumeration for countDirection types.",
+          "enum": [
+            "UP",
+            "DOWN"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ApplicationTypeEnum": {
+      "title": "ApplicationTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "DESIGN",
+            "DATA",
+            "DOCUMENTATION",
+            "INSTRUCTIONS",
+            "LOG",
+            "PRODUCTION_PROGRAM"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "FormEnum": {
+      "title": "FormEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "BAR",
+            "SHEET",
+            "BLOCK",
+            "CASTING",
+            "POWDER",
+            "LIQUID",
+            "GEL",
+            "FILAMENT",
+            "GAS"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CompositionStateVerticalEnum": {
+      "title": "CompositionStateVerticalEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "UP",
+            "DOWN",
+            "TRANSITIONING"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "RequestStateEnum": {
+      "title": "RequestStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "NOT_READY",
+            "READY",
+            "ACTIVE",
+            "FAIL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ResponseStateEnum": {
+      "title": "ResponseStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "NOT_READY",
+            "READY",
+            "ACTIVE",
+            "COMPLETE",
+            "FAIL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "SpindleInterlockEnum": {
+      "title": "SpindleInterlockEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "INACTIVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AxisInterlockEnum": {
+      "title": "AxisInterlockEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "INACTIVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ChuckInterlockEnum": {
+      "title": "ChuckInterlockEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "INACTIVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DoorStateEnum": {
+      "title": "DoorStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "OPEN",
+            "CLOSED",
+            "UNLATCHED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "EquipmentModeEnum": {
+      "title": "EquipmentModeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ON",
+            "OFF"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "PowerStateEnum": {
+      "title": "PowerStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ON",
+            "OFF"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ConditionStateEnum": {
+      "title": "ConditionStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "Normal",
+            "Warning",
+            "Fault"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ToolLifeEnum": {
+      "title": "ToolLifeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "MINUTES",
+            "PART_COUNT",
+            "WEAR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "x509": {
+      "type": "string",
+      "title": "x509",
+      "description": "string that represents an `x509` data block. {{cite(ISO/IEC 9594-8:2020)}}."
+    },
+    "unit": {
+      "type": "string",
+      "title": "unit"
+    },
+    "CUBIC_MILLIMETER": {
+      "type": "string",
+      "title": "CUBIC_MILLIMETER",
+      "description": "float that represents volume in cubic millimeter."
+    },
+    "OperatingModeEnum": {
+      "title": "OperatingModeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "AUTOMATIC",
+            "MANUAL",
+            "SEMI_AUTOMATIC"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "int32": {
+      "type": "string",
+      "title": "int32",
+      "description": "32-bit integer."
+    },
+    "int64": {
+      "type": "string",
+      "title": "int64",
+      "description": "64-bit integer."
+    },
+    "version": {
+      "type": "string",
+      "title": "version",
+      "description": "series of three numeric values, separated by a decimal point, representing a {{term(major)}}, {{term(minor)}}, and {{term(patch)}} number of the MTConnect Standard."
+    },
+    "uint32": {
+      "type": "string",
+      "title": "uint32",
+      "description": "32-bit unsigned integer."
+    },
+    "uint64": {
+      "type": "string",
+      "title": "uint64",
+      "description": "64-bit unsigned integer."
+    },
+    "ErrorCodeEnum": {
+      "title": "ErrorCodeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ASSET_NOT_FOUND",
+            "INTERNAL_ERROR",
+            "INVALID_REQUEST",
+            "INVALID_URI",
+            "INVALID_XPATH",
+            "NO_DEVICE",
+            "OUT_OF_RANGE",
+            "QUERY_ERROR",
+            "TOO_MANY",
+            "UNAUTHORIZED",
+            "UNSUPPORTED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "MaintenanceListDirectionEnum": {
+      "title": "MaintenanceListDirectionEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "UP",
+            "DOWN"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "MaintenanceListIntervalEnum": {
+      "title": "MaintenanceListIntervalEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ABSOLUTE",
+            "INCREMENTAL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "PartCountTypeEnum": {
+      "title": "PartCountTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "EACH",
+            "BATCH"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AlarmSeverityEnum": {
+      "title": "AlarmSeverityEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CRITICAL",
+            "ERROR",
+            "WARNING",
+            "INFORMATION"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AlarmStateEnum": {
+      "title": "AlarmStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "INSTANT",
+            "ACTIVE",
+            "CLEARED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AlarmCodeEnum": {
+      "title": "AlarmCodeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CRASH",
+            "JAM",
+            "FAILURE",
+            "FAULT",
+            "STALLED",
+            "OVERLOAD",
+            "ESTOP",
+            "MATERIAL",
+            "MESSAGE",
+            "OTHER"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DirectionEnum": {
+      "title": "DirectionEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CLOCKWISE",
+            "COUNTER_CLOCKWISE",
+            "POSITIVE",
+            "NEGATIVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "PowerStatusEnum": {
+      "title": "PowerStatusEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ON",
+            "OFF"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "NetworkWirelessEnum": {
+      "title": "NetworkWirelessEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "YES",
+            "NO"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ProgramLocationTypeEnum": {
+      "title": "ProgramLocationTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "LOCAL",
+            "EXTERNAL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "InterfaceEventEnum": {
+      "title": "InterfaceEventEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "INTERFACE_STATE",
+            "MATERIAL_FEED",
+            "MATERIAL_CHANGE",
+            "MATERIAL_RETRACT",
+            "PART_CHANGE",
+            "MATERIAL_LOAD",
+            "MATERIAL_UNLOAD",
+            "OPEN_CHUCK",
+            "OPEN_DOOR",
+            "CLOSE_CHUCK",
+            "CLOSE_DOOR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "LeakDetectEnum": {
+      "title": "LeakDetectEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "DETECTED",
+            "NOT_DETECTED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "BatteryStateEnum": {
+      "title": "BatteryStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CHARGED",
+            "CHARGING",
+            "DISCHARGING",
+            "DISCHARGED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "binary": {
+      "type": "string",
+      "title": "binary",
+      "description": "base-2 numeral system or binary numeral system represented by two digits: \"0\" and \"1\"."
+    },
+    "SensorStateDetectEnum": {
+      "title": "SensorStateDetectEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "DETECTED",
+            "NOT_DETECTED",
+            "UNKNOWN"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CharacteristicStatusEnum": {
+      "title": "CharacteristicStatusEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "FAIL",
+            "REWORK",
+            "SYSTEM_ERROR",
+            "INDETERMINATE",
+            "NOT_ANALYZED",
+            "BASIC_OR_THEORETIC_EXACT_DIMENSION",
+            "UNDEFINED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "UncertaintyTypeEnum": {
+      "title": "UncertaintyTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "COMBINED",
+            "MEAN"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "double": {
+      "type": "number",
+      "title": "double",
+      "description": "primitive type."
+    },
+    "Array": {
+      "type": "string",
+      "title": "Array",
+      "description": "array."
+    },
+    "float3d": {
+      "type": "string",
+      "title": "float3d",
+      "description": "array of size 3 and datatype float."
+    },
+    "PowerSourceTypeEnum": {
+      "title": "PowerSourceTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "PRIMARY",
+            "SECONDARY",
+            "STANDBY"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ControlLimitResult": {
+      "type": "object",
+      "title": "ControlLimitResult",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "UpperLimit": {
+          "type": "number",
+          "description": "upper conformance boundary for a variable. > Note: immediate concern or action may be required."
+        },
+        "UpperWarning": {
+          "type": "number",
+          "description": "upper boundary indicating increased concern and supervision may be required."
+        },
+        "Nominal": {
+          "type": "number",
+          "description": "ideal or desired value for a variable."
+        },
+        "LowerWarning": {
+          "type": "number",
+          "description": "lower boundary indicating increased concern and supervision may be required."
+        },
+        "LowerLimit": {
+          "type": "number",
+          "description": "lower conformance boundary for a variable. > Note: immediate concern or action may be required."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "SpecificationLimitResult": {
+      "type": "object",
+      "title": "SpecificationLimitResult",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "UpperLimit": {
+          "type": "number",
+          "description": "upper conformance boundary for a variable. > Note: immediate concern or action may be required."
+        },
+        "Nominal": {
+          "type": "number",
+          "description": "ideal or desired value for a variable."
+        },
+        "LowerLimit": {
+          "type": "number",
+          "description": "lower conformance boundary for a variable. > Note: immediate concern or action may be required."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "AlarmLimitResult": {
+      "type": "object",
+      "title": "AlarmLimitResult",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "UpperLimit": {
+          "type": "number",
+          "description": "upper conformance boundary for a variable. > Note: immediate concern or action may be required."
+        },
+        "UpperWarning": {
+          "type": "number",
+          "description": "upper boundary indicating increased concern and supervision may be required."
+        },
+        "LowerWarning": {
+          "type": "number",
+          "description": "lower boundary indicating increased concern and supervision may be required."
+        },
+        "LowerLimit": {
+          "type": "number",
+          "description": "lower conformance boundary for a variable. > Note: immediate concern or action may be required."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "SensorAttachmentResult": {
+      "type": "object",
+      "title": "SensorAttachmentResult",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "SensorId": {
+          "type": "string",
+          "description": "identity of a sensor used to observe some measurement of an item."
+        }
+      },
+      "required": [
+        "SensorId",
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "MaintenanceListResult": {
+      "type": "object",
+      "title": "MaintenanceListResult",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{termplural(key-value pair)}} represented as {{block(Entry)}} entities."
+        },
+        "Value": {
+          "type": "number",
+          "description": "current interval value of the activity."
+        },
+        "Interval": {
+          "$ref": "#/$defs/MaintenanceListIntervalEnum",
+          "description": "interval of the value observed.",
+          "default": "ABSOLUTE"
+        },
+        "NextServiceDate": {
+          "type": "string",
+          "description": "next date/time stamp that maintenance should be performed."
+        },
+        "Reset": {
+          "type": "string",
+          "description": "last date/time stamp of the {{term(observation)}} was reset."
+        },
+        "Severity": {
+          "type": "integer",
+          "description": "level of severity on a scale of 1-10."
+        },
+        "Direction": {
+          "$ref": "#/$defs/MaintenanceListDirectionEnum",
+          "description": "direction of the value observed.",
+          "default": "UP"
+        },
+        "Name": {
+          "type": "string",
+          "description": "identifier of the maintenance activity."
+        },
+        "LastServiceDate": {
+          "type": "string",
+          "description": "last date/time stamp that maintenance was performed."
+        },
+        "Units": {
+          "$ref": "#/$defs/UnitEnum",
+          "description": "same as {{property(DataItem::units)}}. See {{package(Device Information Model)}}.",
+          "default": "COUNT"
+        },
+        "Target": {
+          "type": "number",
+          "description": "target value of the next maintenance."
+        }
+      },
+      "required": [
+        "Name",
+        "Value",
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "FeatureMeasurementResult": {
+      "type": "object",
+      "title": "FeatureMeasurementResult",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{termplural(key-value pair)}} represented as {{block(Entry)}} entities."
+        },
+        "MeasurementId": {
+          "type": "string",
+          "description": "identifier of this measurement."
+        },
+        "FeaturePersistentId": {
+          "type": "string",
+          "description": "{{term(UUID)}} of the feature."
+        },
+        "CharacteristicPersistentId": {
+          "type": "string",
+          "description": "{{term(UUID)}} of the characteristic."
+        },
+        "MeasurementType": {
+          "type": "string",
+          "description": "class of measurement being performed. {{cite(QIF 3:2018 Section 6.3)}} Examples: `POINT`, `RADIUS`, `ANGLE`, `LENGTH`, etc."
+        },
+        "MeasurementValue": {
+          "type": "number",
+          "description": "measurement based on the measurement type."
+        },
+        "MeasurementUnits": {
+          "type": "string",
+          "description": "engineering units of the measurement."
+        },
+        "CharacteristicStatus": {
+          "$ref": "#/$defs/CharacteristicStatusEnum",
+          "description": "pass/fail result of the measurement."
+        },
+        "UncertaintyType": {
+          "$ref": "#/$defs/UncertaintyTypeEnum",
+          "description": "method used to compute {{term(standard uncertainty)}}."
+        },
+        "Uncertainty": {
+          "type": "number",
+          "description": "{{term(uncertainty)}} specified by `UNCERTAINTY_TYPE`."
+        }
+      },
+      "required": [
+        "FeaturePersistentId",
+        "MeasurementId",
+        "MeasurementType",
+        "MeasurementUnits",
+        "MeasurementValue",
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "LocationAddressResult": {
+      "type": "object",
+      "title": "LocationAddressResult",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "number of {{block(Entry)}} elements for the {{block(Observation)}}."
+        },
+        "GivenName": {
+          "type": "string",
+          "description": "element specifying the name used to distinguish between persons having the same surname(s) and who may have access to a particular delivery point."
+        },
+        "Surname": {
+          "type": "string",
+          "description": "element which identifies the family or parentage of an individual."
+        },
+        "Qualification": {
+          "type": "string",
+          "description": "element indicating an individual’s professional or academic qualification or rank in a professional group or society (e.g. PhD, Fellow of the Royal Society, FRS, Barrister at Law)."
+        },
+        "NameQualifier": {
+          "type": "string",
+          "description": "element used in some countries to distinguish between persons with the same surname(s) who have similar given names or initials (e.g.III, Senior, the Third.)."
+        },
+        "OrganizationName": {
+          "type": "string",
+          "description": "element giving the official name, the registered business name or other official designation of an organization."
+        },
+        "LegalStatus": {
+          "type": "string",
+          "description": "element indicating the formal registration of an organization (e.g. GmbH, Inc., Ltd.)."
+        },
+        "OrganizationUnit": {
+          "type": "string",
+          "description": "element identifying a subdivision of an organization."
+        },
+        "Building": {
+          "type": "string",
+          "description": "element identifying the number or name and type of the edifice or construction in or adjacent to which a delivery point is located."
+        },
+        "Floor": {
+          "type": "string",
+          "description": "element indicating the floor or level on which a delivery point is located in a multi-story building."
+        },
+        "Door": {
+          "type": "string",
+          "description": "element indicating the apartment, room or office in, at or adjacent to which a delivery point, situated within a building, is located."
+        },
+        "Thoroughfare": {
+          "type": "string",
+          "description": "element which identifies the road or part of a road or other access route along which a delivery point can be accessed, either directly or via a secondary or tertiary road or access route."
+        },
+        "PremiseIdentifier": {
+          "type": "string",
+          "description": "element designating the area or the object on an area, adjacent to thoroughfare, in which the delivery point or delivery point access is located."
+        },
+        "Town": {
+          "type": "string",
+          "description": "element indicating the name of the populated place in which a delivery point is located, or the populated."
+        },
+        "Region": {
+          "type": "string",
+          "description": "element specifying the geographic or administrative area of the country in which the town is situated."
+        },
+        "District": {
+          "type": "string",
+          "description": "element indicating the name of the area within or adjacent to the town in which a delivery point is located, or via which it is accessed."
+        },
+        "CountryName": {
+          "type": "string",
+          "description": "element designating the country, dependency or area of geopolitical interest, in which a delivery point is located or via which the delivery point is accessed."
+        },
+        "CountryCode": {
+          "type": "string",
+          "description": "interest, in which a delivery point is located or via which the delivery point is accessed."
+        },
+        "PostCode": {
+          "type": "string",
+          "description": "element designating the code used for the sorting of mail."
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "additionalProperties": false
+    },
+    "organizer": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "deprecated": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "extensible": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "informative": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "normative": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "observes": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "satisfiedBy": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "hasFormatSpecificRepresentation": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "valueType": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "isArray": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "MTConnectRequirementSpecification": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "MTConnectAssets": {
+      "type": "object",
+      "title": "MTConnectAssets",
+      "description": "root entity of an {{term(MTConnectAssets Response Document)}} that contains the {{term(Asset Information Model)}} of {{block(Asset)}} types. ![MTConnectAssets](figures/MTConnectAssets.png \"MTConnectAssets\"){: width=\"0.8\"} > Note: Additional properties of {{block(MTConnectAssets)}} **MAY** be defined for schema and namespace declaration. See {{sect(Schema and Namespace Declaration Information)}} for an {{term(XML)}} example.",
+      "properties": {
+        "jsonVersion": {
+          "type": "integer"
+        },
+        "schemaVersion": {
+          "type": "string"
+        },
+        "$schema": {
+          "type": "string"
+        },
+        "Header": {
+          "$ref": "#/$defs/Header"
+        },
+        "Assets": {
+          "type": "object",
+          "properties": {
+            "CuttingTool": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CuttingTool"
+              }
+            },
+            "CuttingToolArchetype": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CuttingToolArchetype"
+              }
+            },
+            "AbstractFile": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/AbstractFile"
+              }
+            },
+            "RawMaterial": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawMaterial"
+              }
+            },
+            "QIFDocumentWrapper": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/QIFDocumentWrapper"
+              }
+            },
+            "ComponentConfigurationParameters": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ComponentConfigurationParameters"
+              }
+            },
+            "File": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/File"
+              }
+            },
+            "FileArchetype": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FileArchetype"
+              }
+            }
+          },
+          "patternProperties": {
+            "^[a-ln-zA-LN-Z]:[A-Za-z_][A-Za-z0-9_]*$": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Asset"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "Header"
+      ],
+      "additionalProperties": false
+    },
+    "Header": {
+      "type": "object",
+      "title": "Header",
+      "description": "provides information from an {{term(agent)}} defining version information, storage capacity, and parameters associated with the data management within the {{term(agent)}}.",
+      "properties": {
+        "schemaVersion": {
+          "type": "string"
+        },
+        "bufferSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nextSequence": {
+          "type": "integer"
+        },
+        "lastSequence": {
+          "type": "integer"
+        },
+        "firstSequence": {
+          "type": "integer"
+        },
+        "deviceModelChangeTime": {
+          "type": "string",
+          "description": "timestamp of the last update of the {{block(Device)}} information for any device."
+        },
+        "assetBufferSize": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "maximum number of {{block(Asset)}} types that can be stored in the {{term(agent)}} that published the {{term(response document)}}. > Note: The implementer is responsible for allocating the appropriate amount of storage capacity required to accommodate the {{property(Header::assetBufferSize)}}."
+        },
+        "assetCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "current number of {{block(Asset)}} that are currently stored in the {{term(agent)}} as of the {{property(Header::creationTime)}} that the {{term(agent)}} published the {{term(response document)}}. {{property(Header::assetCount)}} **MUST NOT** be larger than the value reported for {{property(Header::assetBufferSize)}}."
+        },
+        "creationTime": {
+          "type": "string",
+          "description": "timestamp that an {{term(agent)}} published the {{term(response document)}}."
+        },
+        "instanceId": {
+          "type": "integer",
+          "description": "identifier for a specific instantiation of the {{term(buffer)}} associated with the {{term(agent)}} that published the {{term(response document)}}. {{property(Header::instanceId)}} **MUST** be changed to a different unique number each time the {{term(buffer)}} is cleared and a new set of data begins to be collected."
+        },
+        "sender": {
+          "type": "string",
+          "description": "identification defining where the {{term(agent)}} that published the {{term(response document)}} is installed or hosted. {{property(Header::sender)}} **MUST** be either an IP Address or Hostname describing where the {{term(agent)}} is installed or the URL of the {{term(agent)}}; e.g., `http://<address>[:port]/`. > Note: The port number need not be specified if it is the default HTTP port 80."
+        },
+        "testIndicator": {
+          "type": "boolean",
+          "description": "indicates whether the {{term(agent)}} that published the {{term(response document)}} is operating in a test mode. If {{property(Header::testIndicator)}} is not specified, the value for {{property(Header::testIndicator)}} **MUST** be interpreted to be `false`.",
+          "default": "false"
+        },
+        "version": {
+          "type": "string",
+          "description": "{{term(major)}}, {{term(minor)}}, and {{term(revision)}} number of the MTConnect Standard that defines the {{term(semantic data model)}} that represents the content of the {{term(response document)}}. It also includes the revision number of the {{term(schema)}} associated with that specific {{term(semantic data model)}}. As an example, the value reported for {{property(Header::version)}} for a {{term(response document)}} that was structured based on {{term(schema)}} revision 10 associated with Version 1.4.0 of the MTConnect Standard would be: 1.4.0.10"
+        }
+      },
+      "required": [
+        "creationTime",
+        "deviceModelChangeTime",
+        "instanceId",
+        "sender",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "AssetCount": {
+      "type": "object",
+      "title": "AssetCount",
+      "description": "count of each asset type currently in the {{term(agent)}}.",
+      "properties": {
+        "assetType": {
+          "type": "string",
+          "description": "type of {{term(Asset)}}."
+        }
+      },
+      "required": [
+        "assetType"
+      ],
+      "additionalProperties": false
+    },
+    "Error": {
+      "type": "object",
+      "title": "Error",
+      "description": "error encountered by an {{term(agent)}} when responding to a {{term(request)}}.",
+      "properties": {
+        "errorCode": {
+          "$ref": "#/$defs/ErrorCodeEnum",
+          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
+        },
+        "value": {
+          "type": "string",
+          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
+        }
+      },
+      "required": [
+        "errorCode"
+      ],
+      "additionalProperties": false
+    },
+    "Agent": {
+      "type": "object",
+      "title": "Agent",
+      "description": "{{term(agent)}}. An {{term(agent)}} **MUST** perform the following tasks: * Collect data from manufacturing equipment. * Generate {{termplural(response document)}}. * Provide a REST interface using {{term(HTTP)}}. In addition to {{term(XML)}} and {{term(HTTP)}}, An {{term(agent)}} **MAY** provide additional protocols and representations. Some representations **MAY** have companion specifications.",
+      "properties": {
+        "mtconnectVersion": {
+          "type": "string"
+        },
+        "instanceId": {
+          "type": "string",
+          "description": "identifier for an {{term(instance)}} of the {{term(agent)}}. {{property(Header::instanceId)}} **MUST** be changed to a different unique number each time the {{term(buffer)}} is cleared and a new set of data begins to be collected."
+        },
+        "sequenceNumber": {
+          "type": "string",
+          "description": "{{term(sequence number)}}."
+        },
+        "bufferSize": {
+          "type": "string",
+          "description": "maximum number of {{termplural(Observation)}} that **MAY** be retained in the {{term(agent)}} that published the {{term(response document)}} at any point in time."
+        },
+        "maxAssets": {
+          "type": "string",
+          "description": "maximum number of {{termplural(Asset)}} that **MAY** be retained in the {{term(agent)}} that published the {{term(response document)}} at any point in time."
+        },
+        "assetCount": {
+          "type": "string",
+          "description": "current number of {{termplural(Asset)}} that are currently stored in the {{term(agent)}} as of the {{property(Header::creationTime)}} that the {{term(agent)}} published the {{term(response document)}}."
+        },
+        "Assets": {
+          "type": "object",
+          "properties": {
+            "CuttingTool": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CuttingTool"
+              }
+            },
+            "CuttingToolArchetype": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/CuttingToolArchetype"
+              }
+            },
+            "AbstractFile": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/AbstractFile"
+              }
+            },
+            "RawMaterial": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RawMaterial"
+              }
+            },
+            "QIFDocumentWrapper": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/QIFDocumentWrapper"
+              }
+            },
+            "ComponentConfigurationParameters": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ComponentConfigurationParameters"
+              }
+            },
+            "File": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/File"
+              }
+            },
+            "FileArchetype": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/FileArchetype"
+              }
+            }
+          },
+          "patternProperties": {
+            "^[a-ln-zA-LN-Z]:[A-Za-z_][A-Za-z0-9_]*$": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Asset"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "assetCount",
+        "bufferSize",
+        "instanceId",
+        "maxAssets",
+        "sequenceNumber"
+      ],
+      "additionalProperties": false
+    },
+    "AssetCountDataSet": {
+      "type": "object",
+      "title": "AssetCountDataSet",
+      "description": "count of each asset type currently in the {{term(agent)}}.",
+      "properties": {
+        "assetType": {
+          "type": "string",
+          "description": "type of {{term(Asset)}}."
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "UNAVAILABLE"
+              ]
+            }
+          ]
+        },
+        "count": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "assetType"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

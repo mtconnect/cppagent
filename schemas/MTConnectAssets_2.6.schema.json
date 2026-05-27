@@ -1,8 +1,8 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "https://schemas.mtconnect.org/schemas/MTConnectAssets_2.7_draft-04.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mtconnect.org/schemas/MTConnectAssets_2.6.schema.json",
   "title": "MTConnectAssets",
-  "description": "MTConnect MTConnectAssets response, v2 JSON, from SysML model v2.7.",
+  "description": "MTConnect MTConnectAssets response, v2 JSON, from SysML model v2.6.",
   "type": "object",
   "required": [
     "MTConnectAssets"
@@ -12,11 +12,11 @@
       "type": "string"
     },
     "MTConnectAssets": {
-      "$ref": "#/definitions/MTConnectAssets"
+      "$ref": "#/$defs/MTConnectAssets"
     }
   },
   "additionalProperties": false,
-  "definitions": {
+  "$defs": {
     "Asset": {
       "type": "object",
       "title": "Asset",
@@ -68,69 +68,33 @@
       ]
     },
     "PhysicalAsset": {
-      "type": "object",
-      "title": "PhysicalAsset",
-      "description": "abstract physical {{block(Asset)}}.",
-      "properties": {
-        "assetId": {
-          "type": "string",
-          "description": "unique identifier for an {{block(Asset)}}."
+      "allOf": [
+        {
+          "$ref": "#/$defs/Asset"
         },
-        "deviceUuid": {
-          "type": "string",
-          "description": "associated piece of equipment's {{term(UUID)}} that supplied the {{block(Asset)}}'s data. It references to {{property(Device::uuid)}} defined in {{package(Device Information Model)}}."
-        },
-        "removed": {
-          "type": "boolean",
-          "description": "indicator that the {{block(Asset)}} has been removed from the piece of equipment."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "time the {{block(Asset)}} data was last modified."
-        },
-        "hash": {
-          "type": "string",
-          "description": "condensed message digest from a secure one-way hash function. {{cite(FIPS PUB 180-4)}}"
-        },
-        "Description": {
-          "type": "string",
-          "description": "textual description for {{block(Asset)}}."
-        },
-        "model": {
-          "type": "string"
-        },
-        "serialNumber": {
-          "type": "string"
-        },
-        "station": {
-          "type": "string"
-        },
-        "ManufactureDate": {
-          "type": "string",
-          "description": "date of creation or built of the {{block(Asset)}}."
-        },
-        "CalibrationDate": {
-          "type": "string",
-          "description": "date of calibration of the {{block(Asset)}}."
-        },
-        "InspectionDate": {
-          "type": "string",
-          "description": "date of last inspection of the {{block(Asset)}}."
-        },
-        "NextInspectionDate": {
-          "type": "string",
-          "description": "date of next inspection of the {{block(Asset)}}."
-        },
-        "manufacturers": {
-          "type": "array",
-          "items": {
-            "type": "string"
+        {
+          "type": "object",
+          "title": "PhysicalAsset",
+          "description": "abstract physical {{block(Asset)}}.",
+          "properties": {
+            "ManufactureDate": {
+              "type": "string",
+              "description": "date of creation or built of the {{block(Asset)}}."
+            },
+            "CalibrationDate": {
+              "type": "string",
+              "description": "date of calibration of the {{block(Asset)}}."
+            },
+            "InspectionDate": {
+              "type": "string",
+              "description": "date of last inspection of the {{block(Asset)}}."
+            },
+            "NextInspectionDate": {
+              "type": "string",
+              "description": "date of next inspection of the {{block(Asset)}}."
+            }
           }
         }
-      },
-      "required": [
-        "assetId",
-        "timestamp"
       ]
     },
     "CuttingTool": {
@@ -177,13 +141,13 @@
           "description": "identifier for a class of cutting tools."
         },
         "CuttingToolLifeCycle": {
-          "$ref": "#/definitions/CuttingToolLifeCycle"
+          "$ref": "#/$defs/CuttingToolLifeCycle"
         },
         "CuttingToolArchetypeReference": {
-          "$ref": "#/definitions/CuttingToolArchetypeReference"
+          "$ref": "#/$defs/CuttingToolArchetypeReference"
         },
         "CuttingToolDefinition": {
-          "$ref": "#/definitions/CuttingToolDefinition"
+          "$ref": "#/$defs/CuttingToolDefinition"
         },
         "manufacturers": {
           "type": "array",
@@ -244,10 +208,10 @@
           "description": "identifier for a class of cutting tools."
         },
         "CuttingToolDefinition": {
-          "$ref": "#/definitions/CuttingToolDefinition"
+          "$ref": "#/$defs/CuttingToolDefinition"
         },
         "CuttingToolLifeCycle": {
-          "$ref": "#/definitions/CuttingToolLifeCycle"
+          "$ref": "#/$defs/CuttingToolLifeCycle"
         },
         "manufacturers": {
           "type": "array",
@@ -286,7 +250,7 @@
       "description": "detailed structure of the cutting tool which is static during its lifecycle. {{cite(ISO 13399)}}.",
       "properties": {
         "format": {
-          "$ref": "#/definitions/FormatTypeEnum",
+          "$ref": "#/$defs/FormatTypeEnum",
           "description": "identifies the expected representation of the enclosed data.",
           "default": "XML"
         },
@@ -310,7 +274,7 @@
             "Status": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Status"
+                "$ref": "#/$defs/Status"
               }
             }
           },
@@ -342,7 +306,7 @@
         "ItemLife": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ItemLife"
+            "$ref": "#/$defs/ItemLife"
           },
           "description": "The tool life measured in tool wear."
         },
@@ -352,193 +316,193 @@
             "FunctionalLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/FunctionalLength"
+                "$ref": "#/$defs/FunctionalLength"
               }
             },
             "CuttingReferencePoint": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingReferencePoint"
+                "$ref": "#/$defs/CuttingReferencePoint"
               }
             },
             "CuttingEdgeLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingEdgeLength"
+                "$ref": "#/$defs/CuttingEdgeLength"
               }
             },
             "DriveAngle": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/DriveAngle"
+                "$ref": "#/$defs/DriveAngle"
               }
             },
             "FlangeDiameter": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/FlangeDiameter"
+                "$ref": "#/$defs/FlangeDiameter"
               }
             },
             "FunctionalWidth": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/FunctionalWidth"
+                "$ref": "#/$defs/FunctionalWidth"
               }
             },
             "IncribedCircleDiameter": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/IncribedCircleDiameter"
+                "$ref": "#/$defs/IncribedCircleDiameter"
               }
             },
             "PointAngle": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/PointAngle"
+                "$ref": "#/$defs/PointAngle"
               }
             },
             "ToolCuttingEdgeAngle": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ToolCuttingEdgeAngle"
+                "$ref": "#/$defs/ToolCuttingEdgeAngle"
               }
             },
             "ToolLeadAngle": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ToolLeadAngle"
+                "$ref": "#/$defs/ToolLeadAngle"
               }
             },
             "ToolOrientation": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ToolOrientation"
+                "$ref": "#/$defs/ToolOrientation"
               }
             },
             "StepDiameterLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/StepDiameterLength"
+                "$ref": "#/$defs/StepDiameterLength"
               }
             },
             "StepIncludedAngle": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/StepIncludedAngle"
+                "$ref": "#/$defs/StepIncludedAngle"
               }
             },
             "WiperEdgeLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/WiperEdgeLength"
+                "$ref": "#/$defs/WiperEdgeLength"
               }
             },
             "CuttingDiameter": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingDiameter"
+                "$ref": "#/$defs/CuttingDiameter"
               }
             },
             "CuttingHeight": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingHeight"
+                "$ref": "#/$defs/CuttingHeight"
               }
             },
             "CornerRadius": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CornerRadius"
+                "$ref": "#/$defs/CornerRadius"
               }
             },
             "Weight": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Weight"
+                "$ref": "#/$defs/Weight"
               }
             },
             "ChamferFlatLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ChamferFlatLength"
+                "$ref": "#/$defs/ChamferFlatLength"
               }
             },
             "ChamferWidth": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ChamferWidth"
+                "$ref": "#/$defs/ChamferWidth"
               }
             },
             "InsertWidth": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/InsertWidth"
+                "$ref": "#/$defs/InsertWidth"
               }
             },
             "BodyDiameterMax": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/BodyDiameterMax"
+                "$ref": "#/$defs/BodyDiameterMax"
               }
             },
             "BodyLengthMax": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/BodyLengthMax"
+                "$ref": "#/$defs/BodyLengthMax"
               }
             },
             "DepthOfCutMax": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/DepthOfCutMax"
+                "$ref": "#/$defs/DepthOfCutMax"
               }
             },
             "CuttingDiameterMax": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingDiameterMax"
+                "$ref": "#/$defs/CuttingDiameterMax"
               }
             },
             "FlangeDiameterMax": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/FlangeDiameterMax"
+                "$ref": "#/$defs/FlangeDiameterMax"
               }
             },
             "OverallToolLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/OverallToolLength"
+                "$ref": "#/$defs/OverallToolLength"
               }
             },
             "ShankDiameter": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ShankDiameter"
+                "$ref": "#/$defs/ShankDiameter"
               }
             },
             "ShankHeight": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ShankHeight"
+                "$ref": "#/$defs/ShankHeight"
               }
             },
             "ShankLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ShankLength"
+                "$ref": "#/$defs/ShankLength"
               }
             },
             "UsableLengthMax": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/UsableLengthMax"
+                "$ref": "#/$defs/UsableLengthMax"
               }
             },
             "ProtrudingLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ProtrudingLength"
+                "$ref": "#/$defs/ProtrudingLength"
               }
             }
           },
@@ -546,7 +510,7 @@
             "^[a-ln-zA-LN-Z]:[A-Za-z_][A-Za-z0-9_]*$": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ToolingMeasurement"
+                "$ref": "#/$defs/ToolingMeasurement"
               }
             }
           },
@@ -569,7 +533,7 @@
         "CuttingItem": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/CuttingItem"
+            "$ref": "#/$defs/CuttingItem"
           }
         },
         "count": {
@@ -588,7 +552,7 @@
       "description": "life of a {{block(CuttingItem)}}.",
       "properties": {
         "countDirection": {
-          "$ref": "#/definitions/CountDirectionTypeEnum",
+          "$ref": "#/$defs/CountDirectionTypeEnum",
           "description": "indicates if the item life counts from zero to maximum or maximum to zero."
         },
         "initial": {
@@ -600,7 +564,7 @@
           "description": "end of life limit for this item."
         },
         "type": {
-          "$ref": "#/definitions/ToolLifeEnum",
+          "$ref": "#/$defs/ToolLifeEnum",
           "description": "type of item life being accumulated."
         },
         "warning": {
@@ -633,7 +597,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -645,14 +609,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "LFx"
         }
       },
@@ -672,7 +636,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -684,14 +648,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "CRP"
         }
       },
@@ -711,7 +675,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -723,14 +687,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "L"
         }
       },
@@ -750,7 +714,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -762,14 +726,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "DEGREE"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "DRVA"
         }
       },
@@ -789,7 +753,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -801,14 +765,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "DF"
         }
       },
@@ -828,7 +792,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -840,14 +804,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "WF"
         }
       },
@@ -867,7 +831,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -879,14 +843,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "IC"
         }
       },
@@ -906,7 +870,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -918,14 +882,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "DEGREE"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "SIG"
         }
       },
@@ -945,7 +909,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -957,14 +921,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "DEGREE"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "KAPR"
         }
       },
@@ -984,7 +948,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -996,14 +960,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "DEGREE"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "PSIR"
         }
       },
@@ -1023,7 +987,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1035,14 +999,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "DEGREE"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "N/A"
         }
       },
@@ -1062,7 +1026,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1074,14 +1038,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "SDLx"
         }
       },
@@ -1101,7 +1065,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1113,14 +1077,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "DEGREE"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "STAx"
         }
       },
@@ -1140,7 +1104,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1152,14 +1116,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "BS"
         }
       },
@@ -1179,7 +1143,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1191,14 +1155,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "DCx"
         }
       },
@@ -1218,7 +1182,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1230,14 +1194,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "HF"
         }
       },
@@ -1257,7 +1221,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1269,14 +1233,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "RE"
         }
       },
@@ -1296,7 +1260,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1308,14 +1272,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "GRAM"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "WT"
         }
       },
@@ -1335,7 +1299,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1347,14 +1311,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "BCH"
         }
       },
@@ -1374,7 +1338,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1386,14 +1350,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "CHW"
         }
       },
@@ -1413,7 +1377,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1425,14 +1389,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "W1"
         }
       },
@@ -1452,7 +1416,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1464,14 +1428,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "BDX"
         }
       },
@@ -1491,7 +1455,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1503,14 +1467,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "LBX"
         }
       },
@@ -1530,7 +1494,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1542,14 +1506,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "APMX"
         }
       },
@@ -1569,7 +1533,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1581,14 +1545,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "DC"
         }
       },
@@ -1608,7 +1572,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1620,14 +1584,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "DF"
         }
       },
@@ -1647,7 +1611,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1659,14 +1623,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "OAL"
         }
       },
@@ -1686,7 +1650,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1698,14 +1662,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "DMM"
         }
       },
@@ -1725,7 +1689,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1737,14 +1701,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "H"
         }
       },
@@ -1764,7 +1728,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1776,14 +1740,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "LS"
         }
       },
@@ -1803,7 +1767,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1815,14 +1779,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "LUX"
         }
       },
@@ -1842,7 +1806,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -1854,14 +1818,14 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "default": "MILLIMETER"
         },
         "value": {
           "type": "number"
         },
         "code": {
-          "$ref": "#/definitions/CodeEnum",
+          "$ref": "#/$defs/CodeEnum",
           "default": "LPR"
         }
       },
@@ -1878,14 +1842,14 @@
             "Status": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Status"
+                "$ref": "#/$defs/Status"
               }
             }
           },
           "additionalProperties": false
         },
         "CuttingItems": {
-          "$ref": "#/definitions/CuttingItems"
+          "$ref": "#/$defs/CuttingItems"
         },
         "ConnectionCodeMachineSide": {
           "type": "string",
@@ -1900,22 +1864,22 @@
           "description": "number of the tool as referenced in the part program."
         },
         "ProcessFeedRate": {
-          "$ref": "#/definitions/ProcessFeedRate"
+          "$ref": "#/$defs/ProcessFeedRate"
         },
         "ToolLife": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ToolLife"
+            "$ref": "#/$defs/ToolLife"
           }
         },
         "ProcessSpindleSpeed": {
-          "$ref": "#/definitions/ProcessSpindleSpeed"
+          "$ref": "#/$defs/ProcessSpindleSpeed"
         },
         "ReconditionCount": {
-          "$ref": "#/definitions/ReconditionCount"
+          "$ref": "#/$defs/ReconditionCount"
         },
         "Location": {
-          "$ref": "#/definitions/Location"
+          "$ref": "#/$defs/Location"
         },
         "Measurements": {
           "type": "object",
@@ -1923,193 +1887,193 @@
             "FunctionalLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/FunctionalLength"
+                "$ref": "#/$defs/FunctionalLength"
               }
             },
             "CuttingReferencePoint": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingReferencePoint"
+                "$ref": "#/$defs/CuttingReferencePoint"
               }
             },
             "CuttingEdgeLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingEdgeLength"
+                "$ref": "#/$defs/CuttingEdgeLength"
               }
             },
             "DriveAngle": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/DriveAngle"
+                "$ref": "#/$defs/DriveAngle"
               }
             },
             "FlangeDiameter": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/FlangeDiameter"
+                "$ref": "#/$defs/FlangeDiameter"
               }
             },
             "FunctionalWidth": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/FunctionalWidth"
+                "$ref": "#/$defs/FunctionalWidth"
               }
             },
             "IncribedCircleDiameter": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/IncribedCircleDiameter"
+                "$ref": "#/$defs/IncribedCircleDiameter"
               }
             },
             "PointAngle": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/PointAngle"
+                "$ref": "#/$defs/PointAngle"
               }
             },
             "ToolCuttingEdgeAngle": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ToolCuttingEdgeAngle"
+                "$ref": "#/$defs/ToolCuttingEdgeAngle"
               }
             },
             "ToolLeadAngle": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ToolLeadAngle"
+                "$ref": "#/$defs/ToolLeadAngle"
               }
             },
             "ToolOrientation": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ToolOrientation"
+                "$ref": "#/$defs/ToolOrientation"
               }
             },
             "StepDiameterLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/StepDiameterLength"
+                "$ref": "#/$defs/StepDiameterLength"
               }
             },
             "StepIncludedAngle": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/StepIncludedAngle"
+                "$ref": "#/$defs/StepIncludedAngle"
               }
             },
             "WiperEdgeLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/WiperEdgeLength"
+                "$ref": "#/$defs/WiperEdgeLength"
               }
             },
             "CuttingDiameter": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingDiameter"
+                "$ref": "#/$defs/CuttingDiameter"
               }
             },
             "CuttingHeight": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingHeight"
+                "$ref": "#/$defs/CuttingHeight"
               }
             },
             "CornerRadius": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CornerRadius"
+                "$ref": "#/$defs/CornerRadius"
               }
             },
             "Weight": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Weight"
+                "$ref": "#/$defs/Weight"
               }
             },
             "ChamferFlatLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ChamferFlatLength"
+                "$ref": "#/$defs/ChamferFlatLength"
               }
             },
             "ChamferWidth": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ChamferWidth"
+                "$ref": "#/$defs/ChamferWidth"
               }
             },
             "InsertWidth": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/InsertWidth"
+                "$ref": "#/$defs/InsertWidth"
               }
             },
             "BodyDiameterMax": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/BodyDiameterMax"
+                "$ref": "#/$defs/BodyDiameterMax"
               }
             },
             "BodyLengthMax": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/BodyLengthMax"
+                "$ref": "#/$defs/BodyLengthMax"
               }
             },
             "DepthOfCutMax": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/DepthOfCutMax"
+                "$ref": "#/$defs/DepthOfCutMax"
               }
             },
             "CuttingDiameterMax": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingDiameterMax"
+                "$ref": "#/$defs/CuttingDiameterMax"
               }
             },
             "FlangeDiameterMax": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/FlangeDiameterMax"
+                "$ref": "#/$defs/FlangeDiameterMax"
               }
             },
             "OverallToolLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/OverallToolLength"
+                "$ref": "#/$defs/OverallToolLength"
               }
             },
             "ShankDiameter": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ShankDiameter"
+                "$ref": "#/$defs/ShankDiameter"
               }
             },
             "ShankHeight": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ShankHeight"
+                "$ref": "#/$defs/ShankHeight"
               }
             },
             "ShankLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ShankLength"
+                "$ref": "#/$defs/ShankLength"
               }
             },
             "UsableLengthMax": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/UsableLengthMax"
+                "$ref": "#/$defs/UsableLengthMax"
               }
             },
             "ProtrudingLength": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ProtrudingLength"
+                "$ref": "#/$defs/ProtrudingLength"
               }
             }
           },
@@ -2117,7 +2081,7 @@
             "^[a-ln-zA-LN-Z]:[A-Za-z_][A-Za-z0-9_]*$": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ToolingMeasurement"
+                "$ref": "#/$defs/ToolingMeasurement"
               }
             }
           },
@@ -2132,7 +2096,7 @@
       "description": "cutting tool life as related to the assembly.",
       "properties": {
         "countDirection": {
-          "$ref": "#/definitions/CountDirectionTypeEnum",
+          "$ref": "#/$defs/CountDirectionTypeEnum",
           "description": "indicates if the tool life counts from zero to maximum or maximum to zero."
         },
         "initial": {
@@ -2144,7 +2108,7 @@
           "description": "end of life limit for the tool."
         },
         "type": {
-          "$ref": "#/definitions/ToolLifeEnum",
+          "$ref": "#/$defs/ToolLifeEnum",
           "description": "type of tool life being accumulated."
         },
         "warning": {
@@ -2177,7 +2141,7 @@
           "description": "number of locations at higher index value from this location."
         },
         "type": {
-          "$ref": "#/definitions/LocationTypeEnum",
+          "$ref": "#/$defs/LocationTypeEnum",
           "description": "type of location being identified. When a `POT` or `STATION` type is used, {{property(Location::value)}}**MUST** be a numeric value."
         },
         "turret": {
@@ -2277,7 +2241,7 @@
       "description": "status of the cutting tool.",
       "properties": {
         "value": {
-          "$ref": "#/definitions/CutterStatusTypeEnum",
+          "$ref": "#/$defs/CutterStatusTypeEnum",
           "description": "status value of the cutting tool."
         }
       },
@@ -2287,111 +2251,57 @@
       "additionalProperties": false
     },
     "ToolingMeasurement": {
-      "type": "object",
-      "title": "ToolingMeasurement",
-      "description": "constrained scalar value associated with a cutting tool.",
-      "properties": {
-        "maximum": {
-          "type": "number",
-          "description": "maximum value for the measurement."
+      "allOf": [
+        {
+          "$ref": "#/$defs/Measurement"
         },
-        "minimum": {
-          "type": "number",
-          "description": "minimum value for the measurement."
-        },
-        "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
-          "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
-        },
-        "nominal": {
-          "type": "number",
-          "description": "as advertised value for the measurement."
-        },
-        "significantDigits": {
-          "type": "integer",
-          "description": "number of significant digits in the reported value."
-        },
-        "units": {
-          "$ref": "#/definitions/UnitEnum",
-          "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
-        },
-        "value": {
-          "type": "number"
-        },
-        "code": {
-          "$ref": "#/definitions/CodeEnum",
-          "description": "shop specific code for the measurement. ISO 13399 codes **MAY** be used for these codes as well. See {{package(Cutting Tool Measurement Subtypes)}} and {{package(Cutting Item Measurement Subtypes)}} for details on {{block(Measurement)}} types and their respective {{property(Measurement::code)}} values."
-        }
-      }
-    },
-    "AbstractFile": {
-      "type": "object",
-      "title": "AbstractFile",
-      "description": "abstract {{block(Asset)}} that contains the common properties of the {{block(File)}} and {{block(FileArchetype)}} types.",
-      "properties": {
-        "assetId": {
-          "type": "string",
-          "description": "unique identifier for an {{block(Asset)}}."
-        },
-        "deviceUuid": {
-          "type": "string",
-          "description": "associated piece of equipment's {{term(UUID)}} that supplied the {{block(Asset)}}'s data. It references to {{property(Device::uuid)}} defined in {{package(Device Information Model)}}."
-        },
-        "removed": {
-          "type": "boolean",
-          "description": "indicator that the {{block(Asset)}} has been removed from the piece of equipment."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "time the {{block(Asset)}} data was last modified."
-        },
-        "hash": {
-          "type": "string",
-          "description": "condensed message digest from a secure one-way hash function. {{cite(FIPS PUB 180-4)}}"
-        },
-        "Description": {
-          "type": "string",
-          "description": "textual description for {{block(Asset)}}."
-        },
-        "model": {
-          "type": "string"
-        },
-        "serialNumber": {
-          "type": "string"
-        },
-        "station": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string",
-          "description": "name of the file."
-        },
-        "mediaType": {
-          "type": "string",
-          "description": "mime type of the file."
-        },
-        "applicationCategory": {
-          "$ref": "#/definitions/ApplicationCategoryEnum",
-          "description": "category of application that will use this file."
-        },
-        "applicationType": {
-          "$ref": "#/definitions/ApplicationTypeEnum",
-          "description": "type of application that will use this file."
-        },
-        "manufacturers": {
-          "type": "array",
-          "items": {
-            "type": "string"
+        {
+          "type": "object",
+          "title": "ToolingMeasurement",
+          "description": "constrained scalar value associated with a cutting tool.",
+          "properties": {
+            "code": {
+              "$ref": "#/$defs/CodeEnum",
+              "description": "shop specific code for the measurement. ISO 13399 codes **MAY** be used for these codes as well. See {{package(Cutting Tool Measurement Subtypes)}} and {{package(Cutting Item Measurement Subtypes)}} for details on {{block(Measurement)}} types and their respective {{property(Measurement::code)}} values."
+            }
           }
         }
-      },
-      "required": [
-        "applicationCategory",
-        "applicationType",
-        "assetId",
-        "mediaType",
-        "name",
-        "timestamp"
+      ]
+    },
+    "AbstractFile": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Asset"
+        },
+        {
+          "type": "object",
+          "title": "AbstractFile",
+          "description": "abstract {{block(Asset)}} that contains the common properties of the {{block(File)}} and {{block(FileArchetype)}} types.",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "name of the file."
+            },
+            "mediaType": {
+              "type": "string",
+              "description": "mime type of the file."
+            },
+            "applicationCategory": {
+              "$ref": "#/$defs/ApplicationCategoryEnum",
+              "description": "category of application that will use this file."
+            },
+            "applicationType": {
+              "$ref": "#/$defs/ApplicationTypeEnum",
+              "description": "type of application that will use this file."
+            }
+          },
+          "required": [
+            "applicationCategory",
+            "applicationType",
+            "mediaType",
+            "name"
+          ]
+        }
       ]
     },
     "File": {
@@ -2441,11 +2351,11 @@
           "description": "mime type of the file."
         },
         "applicationCategory": {
-          "$ref": "#/definitions/ApplicationCategoryEnum",
+          "$ref": "#/$defs/ApplicationCategoryEnum",
           "description": "category of application that will use this file."
         },
         "applicationType": {
-          "$ref": "#/definitions/ApplicationTypeEnum",
+          "$ref": "#/$defs/ApplicationTypeEnum",
           "description": "type of application that will use this file."
         },
         "size": {
@@ -2457,7 +2367,7 @@
           "description": "version identifier of the file."
         },
         "state": {
-          "$ref": "#/definitions/FileStateEnum",
+          "$ref": "#/$defs/FileStateEnum",
           "description": "state of the file."
         },
         "Signature": {
@@ -2477,7 +2387,7 @@
           "description": "time the file was modified."
         },
         "FileLocation": {
-          "$ref": "#/definitions/FileLocation"
+          "$ref": "#/$defs/FileLocation"
         },
         "manufacturers": {
           "type": "array",
@@ -2548,11 +2458,11 @@
           "description": "mime type of the file."
         },
         "applicationCategory": {
-          "$ref": "#/definitions/ApplicationCategoryEnum",
+          "$ref": "#/$defs/ApplicationCategoryEnum",
           "description": "category of application that will use this file."
         },
         "applicationType": {
-          "$ref": "#/definitions/ApplicationTypeEnum",
+          "$ref": "#/$defs/ApplicationTypeEnum",
           "description": "type of application that will use this file."
         },
         "manufacturers": {
@@ -2702,10 +2612,10 @@
           "description": "{{block(Material)}} has existing usable volume."
         },
         "Material": {
-          "$ref": "#/definitions/Material"
+          "$ref": "#/$defs/Material"
         },
         "Form": {
-          "$ref": "#/definitions/FormEnum",
+          "$ref": "#/$defs/FormEnum",
           "description": "form of the {{term(raw material)}}."
         },
         "ManufacturingDate": {
@@ -2846,11 +2756,11 @@
           "type": "string"
         },
         "qifDocumentType": {
-          "$ref": "#/definitions/QIFDocumentTypeEnum",
+          "$ref": "#/$defs/QIFDocumentTypeEnum",
           "description": "contained QIF Document type as defined in the {{term(QIF)}} Standard."
         },
         "QIFDocument": {
-          "$ref": "#/definitions/QIFDocument"
+          "$ref": "#/$defs/QIFDocument"
         },
         "manufacturers": {
           "type": "array",
@@ -3153,7 +3063,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -3165,7 +3075,7 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
         },
         "value": {
@@ -3187,7 +3097,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -3199,7 +3109,7 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
         },
         "value": {
@@ -3222,7 +3132,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -3234,7 +3144,7 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
         },
         "value": {
@@ -3257,7 +3167,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -3269,7 +3179,7 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
         },
         "value": {
@@ -3292,7 +3202,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -3304,7 +3214,7 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
         },
         "value": {
@@ -3327,7 +3237,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -3339,7 +3249,7 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
         },
         "value": {
@@ -3362,7 +3272,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -3374,7 +3284,7 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
         },
         "value": {
@@ -3397,7 +3307,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -3409,7 +3319,7 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
         },
         "value": {
@@ -3432,7 +3342,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -3444,7 +3354,7 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
         },
         "value": {
@@ -3467,7 +3377,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -3479,7 +3389,7 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
         },
         "value": {
@@ -3531,7 +3441,7 @@
           "description": "identifier assigned to a process version that reflects a change"
         },
         "Routing": {
-          "$ref": "#/definitions/Routing"
+          "$ref": "#/$defs/Routing"
         },
         "manufacturers": {
           "type": "array",
@@ -3781,7 +3691,7 @@
       "description": "unique name or label for a part.",
       "properties": {
         "type": {
-          "$ref": "#/definitions/PartIdentifierEnum",
+          "$ref": "#/$defs/PartIdentifierEnum",
           "description": "{{termuniversal(type)}} of identifier"
         },
         "stepIdRef": {
@@ -3808,7 +3718,7 @@
       "description": "identifier for a group of parts or a piece of raw material that will be transformed into multiple parts",
       "properties": {
         "type": {
-          "$ref": "#/definitions/PartIdentifierEnum",
+          "$ref": "#/$defs/PartIdentifierEnum",
           "default": "GROUP_IDENTIFIER"
         },
         "stepIdRef": {
@@ -3992,7 +3902,7 @@
       "description": "unique serialized part identifier.",
       "properties": {
         "type": {
-          "$ref": "#/definitions/PartIdentifierEnum",
+          "$ref": "#/$defs/PartIdentifierEnum",
           "default": "UNIQUE_IDENTIFIER"
         },
         "stepIdRef": {
@@ -4057,7 +3967,7 @@
           "description": "semantic goal of the task Examples include `MOVE_MATERIAL` and `CHANGE_TOOL`."
         },
         "TaskState": {
-          "$ref": "#/definitions/TaskStateEnum",
+          "$ref": "#/$defs/TaskStateEnum",
           "description": "{{termuniversal(state)}} of the task"
         },
         "ParentTaskAssetId": {
@@ -4065,7 +3975,7 @@
           "description": "reference to the {{property(Task::assetId)}} of the parent task"
         },
         "Collaborator": {
-          "$ref": "#/definitions/Collaborator"
+          "$ref": "#/$defs/Collaborator"
         },
         "Assets": {
           "type": "object",
@@ -4073,103 +3983,103 @@
             "PhysicalAsset": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/PhysicalAsset"
+                "$ref": "#/$defs/PhysicalAsset"
               }
             },
             "CuttingTool": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingTool"
+                "$ref": "#/$defs/CuttingTool"
               }
             },
             "CuttingToolArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingToolArchetype"
+                "$ref": "#/$defs/CuttingToolArchetype"
               }
             },
             "AbstractFile": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/AbstractFile"
+                "$ref": "#/$defs/AbstractFile"
               }
             },
             "RawMaterial": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/RawMaterial"
+                "$ref": "#/$defs/RawMaterial"
               }
             },
             "QIFDocumentWrapper": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/QIFDocumentWrapper"
+                "$ref": "#/$defs/QIFDocumentWrapper"
               }
             },
             "ComponentConfigurationParameters": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ComponentConfigurationParameters"
+                "$ref": "#/$defs/ComponentConfigurationParameters"
               }
             },
             "Process": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Process"
+                "$ref": "#/$defs/Process"
               }
             },
             "ProcessArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ProcessArchetype"
+                "$ref": "#/$defs/ProcessArchetype"
               }
             },
             "PartArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/PartArchetype"
+                "$ref": "#/$defs/PartArchetype"
               }
             },
             "Part": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Part"
+                "$ref": "#/$defs/Part"
               }
             },
             "Task": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Task"
+                "$ref": "#/$defs/Task"
               }
             },
             "TaskArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/TaskArchetype"
+                "$ref": "#/$defs/TaskArchetype"
               }
             },
             "Fixture": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Fixture"
+                "$ref": "#/$defs/Fixture"
               }
             },
             "Pallet": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Pallet"
+                "$ref": "#/$defs/Pallet"
               }
             },
             "File": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/File"
+                "$ref": "#/$defs/File"
               }
             },
             "FileArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/FileArchetype"
+                "$ref": "#/$defs/FileArchetype"
               }
             }
           },
@@ -4177,7 +4087,7 @@
             "^[a-ln-zA-LN-Z]:[A-Za-z_][A-Za-z0-9_]*$": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Asset"
+                "$ref": "#/$defs/Asset"
               }
             }
           },
@@ -4266,7 +4176,7 @@
           "type": "string"
         },
         "Collaborator": {
-          "$ref": "#/definitions/Collaborator"
+          "$ref": "#/$defs/Collaborator"
         },
         "TaskType": {
           "type": "string",
@@ -4296,10 +4206,10 @@
       "title": "SubTaskRef",
       "properties": {
         "taskArchetype2": {
-          "$ref": "#/definitions/TaskArchetype"
+          "$ref": "#/$defs/TaskArchetype"
         },
         "taskArchetype3": {
-          "$ref": "#/definitions/TaskArchetype"
+          "$ref": "#/$defs/TaskArchetype"
         },
         "parallel": {
           "type": "boolean",
@@ -6985,7 +6895,7 @@
           "description": "current interval value of the activity."
         },
         "Interval": {
-          "$ref": "#/definitions/MaintenanceListIntervalEnum",
+          "$ref": "#/$defs/MaintenanceListIntervalEnum",
           "description": "interval of the value observed.",
           "default": "ABSOLUTE"
         },
@@ -7002,7 +6912,7 @@
           "description": "level of severity on a scale of 1-10."
         },
         "Direction": {
-          "$ref": "#/definitions/MaintenanceListDirectionEnum",
+          "$ref": "#/$defs/MaintenanceListDirectionEnum",
           "description": "direction of the value observed.",
           "default": "UP"
         },
@@ -7015,7 +6925,7 @@
           "description": "last date/time stamp that maintenance was performed."
         },
         "Units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "same as {{property(DataItem::units)}}. See {{package(Device Information Model)}}.",
           "default": "COUNT"
         },
@@ -7064,11 +6974,11 @@
           "description": "engineering units of the measurement."
         },
         "CharacteristicStatus": {
-          "$ref": "#/definitions/CharacteristicStatusEnum",
+          "$ref": "#/$defs/CharacteristicStatusEnum",
           "description": "pass/fail result of the measurement."
         },
         "UncertaintyType": {
-          "$ref": "#/definitions/UncertaintyTypeEnum",
+          "$ref": "#/$defs/UncertaintyTypeEnum",
           "description": "method used to compute {{term(standard uncertainty)}}."
         },
         "Uncertainty": {
@@ -7246,7 +7156,7 @@
           "type": "string"
         },
         "Header": {
-          "$ref": "#/definitions/Header"
+          "$ref": "#/$defs/Header"
         },
         "Assets": {
           "type": "object",
@@ -7254,103 +7164,103 @@
             "PhysicalAsset": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/PhysicalAsset"
+                "$ref": "#/$defs/PhysicalAsset"
               }
             },
             "CuttingTool": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingTool"
+                "$ref": "#/$defs/CuttingTool"
               }
             },
             "CuttingToolArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingToolArchetype"
+                "$ref": "#/$defs/CuttingToolArchetype"
               }
             },
             "AbstractFile": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/AbstractFile"
+                "$ref": "#/$defs/AbstractFile"
               }
             },
             "RawMaterial": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/RawMaterial"
+                "$ref": "#/$defs/RawMaterial"
               }
             },
             "QIFDocumentWrapper": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/QIFDocumentWrapper"
+                "$ref": "#/$defs/QIFDocumentWrapper"
               }
             },
             "ComponentConfigurationParameters": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ComponentConfigurationParameters"
+                "$ref": "#/$defs/ComponentConfigurationParameters"
               }
             },
             "Process": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Process"
+                "$ref": "#/$defs/Process"
               }
             },
             "ProcessArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ProcessArchetype"
+                "$ref": "#/$defs/ProcessArchetype"
               }
             },
             "PartArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/PartArchetype"
+                "$ref": "#/$defs/PartArchetype"
               }
             },
             "Part": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Part"
+                "$ref": "#/$defs/Part"
               }
             },
             "Task": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Task"
+                "$ref": "#/$defs/Task"
               }
             },
             "TaskArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/TaskArchetype"
+                "$ref": "#/$defs/TaskArchetype"
               }
             },
             "Fixture": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Fixture"
+                "$ref": "#/$defs/Fixture"
               }
             },
             "Pallet": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Pallet"
+                "$ref": "#/$defs/Pallet"
               }
             },
             "File": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/File"
+                "$ref": "#/$defs/File"
               }
             },
             "FileArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/FileArchetype"
+                "$ref": "#/$defs/FileArchetype"
               }
             }
           },
@@ -7358,7 +7268,7 @@
             "^[a-ln-zA-LN-Z]:[A-Za-z_][A-Za-z0-9_]*$": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Asset"
+                "$ref": "#/$defs/Asset"
               }
             }
           },
@@ -7462,7 +7372,7 @@
       "description": "abstract error encountered by an {{term(agent)}} when responding to a {{term(request)}}.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7493,7 +7403,7 @@
       "description": "supplied value does not match the required type.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7513,7 +7423,7 @@
           "description": "text of the invalid response document type."
         },
         "QueryParameter": {
-          "$ref": "#/definitions/QueryParameter"
+          "$ref": "#/$defs/QueryParameter"
         }
       },
       "required": [
@@ -7530,7 +7440,7 @@
       "description": "{{term(XPath)}} is either structurally malformed or the XPath does not exist.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7562,7 +7472,7 @@
       "description": "agent was unable to interpret the query. The query parameters do not contain valid values or include an invalid parameter.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7594,7 +7504,7 @@
       "description": "request for information specifies an {{block(Asset)}} that is not recognized by the agent.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7631,7 +7541,7 @@
       "description": "`count` parameter provided in the {{term(request)}} for information requires either of the following: * {{term(streaming data)}} that includes more pieces of data than the {{term(agent)}} is capable of organizing in an {{term(MTConnectStreams Response Document)}}. * {{block(Assets)}} that include more {{block(Asset)}} in an {{term(MTConnectAssets Response Document)}} than the {{term(agent)}} is capable of handling.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7663,7 +7573,7 @@
       "description": "valid request was provided, but the agent does not support the feature or type of request.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7695,7 +7605,7 @@
       "description": "{{term(URI)}} provided was incorrect.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7727,7 +7637,7 @@
       "description": "request contains information that was not recognized by the agent.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7760,7 +7670,7 @@
       "description": "agent experienced an error while attempting to publish the requested information.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7792,7 +7702,7 @@
       "description": "identity of the {{block(Device)}} specified in the request for information is not associated with the agent.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7824,7 +7734,7 @@
       "description": "request for information specifies streaming data that includes sequence number(s) for pieces of data that are beyond the end of the buffer.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7844,7 +7754,7 @@
           "description": "text of the invalid response document type."
         },
         "QueryParameter": {
-          "$ref": "#/definitions/QueryParameter"
+          "$ref": "#/$defs/QueryParameter"
         }
       },
       "required": [
@@ -7860,7 +7770,7 @@
       "description": "requester does not have sufficient permissions to access the requested information.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7892,7 +7802,7 @@
       "description": "property of the {{term(HTTP Request)}} that modifies the information returned by the {{term(HTTP Request)}}.",
       "properties": {
         "name": {
-          "$ref": "#/definitions/QueryParameterEnum",
+          "$ref": "#/$defs/QueryParameterEnum",
           "description": "name of the parameter."
         },
         "Maximum": {
@@ -7927,7 +7837,7 @@
       "description": "agent does not recognize the parameter.",
       "properties": {
         "errorCode": {
-          "$ref": "#/definitions/ErrorCodeEnum",
+          "$ref": "#/$defs/ErrorCodeEnum",
           "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
         },
         "value": {
@@ -7988,103 +7898,103 @@
             "PhysicalAsset": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/PhysicalAsset"
+                "$ref": "#/$defs/PhysicalAsset"
               }
             },
             "CuttingTool": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingTool"
+                "$ref": "#/$defs/CuttingTool"
               }
             },
             "CuttingToolArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/CuttingToolArchetype"
+                "$ref": "#/$defs/CuttingToolArchetype"
               }
             },
             "AbstractFile": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/AbstractFile"
+                "$ref": "#/$defs/AbstractFile"
               }
             },
             "RawMaterial": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/RawMaterial"
+                "$ref": "#/$defs/RawMaterial"
               }
             },
             "QIFDocumentWrapper": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/QIFDocumentWrapper"
+                "$ref": "#/$defs/QIFDocumentWrapper"
               }
             },
             "ComponentConfigurationParameters": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ComponentConfigurationParameters"
+                "$ref": "#/$defs/ComponentConfigurationParameters"
               }
             },
             "Process": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Process"
+                "$ref": "#/$defs/Process"
               }
             },
             "ProcessArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ProcessArchetype"
+                "$ref": "#/$defs/ProcessArchetype"
               }
             },
             "PartArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/PartArchetype"
+                "$ref": "#/$defs/PartArchetype"
               }
             },
             "Part": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Part"
+                "$ref": "#/$defs/Part"
               }
             },
             "Task": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Task"
+                "$ref": "#/$defs/Task"
               }
             },
             "TaskArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/TaskArchetype"
+                "$ref": "#/$defs/TaskArchetype"
               }
             },
             "Fixture": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Fixture"
+                "$ref": "#/$defs/Fixture"
               }
             },
             "Pallet": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Pallet"
+                "$ref": "#/$defs/Pallet"
               }
             },
             "File": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/File"
+                "$ref": "#/$defs/File"
               }
             },
             "FileArchetype": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/FileArchetype"
+                "$ref": "#/$defs/FileArchetype"
               }
             }
           },
@@ -8092,7 +8002,7 @@
             "^[a-ln-zA-LN-Z]:[A-Za-z_][A-Za-z0-9_]*$": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Asset"
+                "$ref": "#/$defs/Asset"
               }
             }
           },
@@ -8119,7 +8029,7 @@
       "description": "{{block(MTConnectExceptionsReport)}} where exception is encountered in the {{term(MTConnectAssets Response Document)}}.",
       "properties": {
         "Header": {
-          "$ref": "#/definitions/Header"
+          "$ref": "#/$defs/Header"
         }
       },
       "required": [
@@ -8133,18 +8043,18 @@
       "description": "irregularity encountered by an {{term(agent)}} in a {{term(response document)}} that may or may not conform to the MTConnect Standard.",
       "properties": {
         "severity": {
-          "$ref": "#/definitions/SeverityEnum",
+          "$ref": "#/$defs/SeverityEnum",
           "description": "criticality associated with the exception."
         },
         "code": {
-          "$ref": "#/definitions/ExceptionCodeEnum",
+          "$ref": "#/$defs/ExceptionCodeEnum",
           "description": "identifier that indicates the type of exception encountered."
         },
         "Message": {
           "type": "string"
         },
         "Trace": {
-          "$ref": "#/definitions/Trace"
+          "$ref": "#/$defs/Trace"
         }
       },
       "required": [
@@ -8169,7 +8079,7 @@
           "description": "unique path to the exception location."
         },
         "ScopeType": {
-          "$ref": "#/definitions/ScopeTypeEnum",
+          "$ref": "#/$defs/ScopeTypeEnum",
           "description": "designates the exception property kind."
         },
         "Scope": {
@@ -8207,7 +8117,7 @@
           "description": "minimum value for the measurement."
         },
         "nativeUnits": {
-          "$ref": "#/definitions/NativeUnitEnum",
+          "$ref": "#/$defs/NativeUnitEnum",
           "description": "units the measurement was originally recorded in. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::nativeUnits)}}."
         },
         "nominal": {
@@ -8219,7 +8129,7 @@
           "description": "number of significant digits in the reported value."
         },
         "units": {
-          "$ref": "#/definitions/UnitEnum",
+          "$ref": "#/$defs/UnitEnum",
           "description": "units for the measurements. See {{package(Device Information Model)}} for the complete list of {{property(DataItem::units)}}."
         },
         "value": {

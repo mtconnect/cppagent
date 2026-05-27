@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "https://schemas.mtconnect.org/schemas/MTConnectAssets_2.7_draft-04.schema.json",
+  "id": "https://schemas.mtconnect.org/schemas/MTConnectAssets_2.6_draft-04.schema.json",
   "title": "MTConnectAssets",
-  "description": "MTConnect MTConnectAssets response, v2 JSON, from SysML model v2.7.",
+  "description": "MTConnect MTConnectAssets response, v2 JSON, from SysML model v2.6.",
   "type": "object",
   "required": [
     "MTConnectAssets"
