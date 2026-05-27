@@ -931,7 +931,7 @@ namespace mtconnect::configuration {
     // Check for schema version
     auto port = get<int>(options[configuration::Port]);
     LOG(info) << "Starting agent on port " << int(port);
-    
+
     // Get the ExternalBaseUrl for the agent
     auto externalBaseUrl = GetOption<string>(options, configuration::ExternalBaseUrl);
     auto sender = GetOption<string>(options, configuration::Sender);
@@ -953,7 +953,6 @@ namespace mtconnect::configuration {
         sender = url.getHost();
         options[configuration::Sender] = *sender;
       }
-      
     }
     else if (sender)
     {
@@ -963,7 +962,7 @@ namespace mtconnect::configuration {
       url << protocol << "://" << *sender << '/';
       options[configuration::ExternalBaseUrl] = url.str();
     }
-    
+
     // Make the Agent
     m_agent = make_unique<Agent>(getAsyncContext(), m_devicesFile, options);
     m_afterAgentHooks.exec(*this);

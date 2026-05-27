@@ -25,8 +25,8 @@
 #include "mtconnect/pipeline/shdr_token_mapper.hpp"
 #include "mtconnect/pipeline/shdr_tokenizer.hpp"
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
-#include "mtconnect/printer/xml_printer.hpp"
 #include "mtconnect/printer/json_printer.hpp"
+#include "mtconnect/printer/xml_printer.hpp"
 #include "server.hpp"
 
 namespace asio = boost::asio;
@@ -68,7 +68,7 @@ namespace mtconnect {
 
       // Get the HTTP Headers
       loadHttpHeaders(config);
-      
+
       m_server = make_unique<Server>(context, m_options);
       m_server->setErrorFunction(boost::bind(&RestService::writeErrorResponse, this, _1, _2));
 
@@ -89,7 +89,7 @@ namespace mtconnect {
       loadNamespace(config, "StreamsNamespaces", xmlPrinter, &XmlPrinter::addStreamsNamespace);
       loadNamespace(config, "AssetsNamespaces", xmlPrinter, &XmlPrinter::addAssetsNamespace);
       loadNamespace(config, "ErrorNamespaces", xmlPrinter, &XmlPrinter::addErrorNamespace);
-      
+
       // Explicitly load the json schema files. Can be used for specifying draft 4 schemas
       loadJsonSchema(config, "DevicesJsonSchema", jsonPrinter, &JsonPrinter::setDevicesSchema);
       loadJsonSchema(config, "StreamsJsonSchema", jsonPrinter, &JsonPrinter::setStreamsSchema);
@@ -187,7 +187,7 @@ namespace mtconnect {
         }
       }
     }
-    
+
     // Configuration
     void RestService::loadJsonSchema(const ptree &tree, const char *schemaType,
                                      JsonPrinter *jsonPrinter, SchemaFunction callback)
@@ -211,19 +211,17 @@ namespace mtconnect {
             auto xns = m_fileCache.registerFile(*location, *path, m_schemaVersion);
             if (!xns)
             {
-              LOG(debug) << "Location " << *location << " did not match MTConnect schema pattern for path " << *path;
+              LOG(debug) << "Location " << *location
+                         << " did not match MTConnect schema pattern for path " << *path;
             }
           }
-          
+
           (jsonPrinter->*callback)(*location);
         }
       }
     }
 
-
-    void RestService::loadFiles(XmlPrinter *xmlPrinter,
-                                JsonPrinter *jsonPrinter,
-                                const ptree &tree)
+    void RestService::loadFiles(XmlPrinter *xmlPrinter, JsonPrinter *jsonPrinter, const ptree &tree)
     {
       auto files = tree.get_child_optional("Files");
       if (files)

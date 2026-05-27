@@ -173,7 +173,10 @@ TEST_F(DataItemTest, pascalize_converts_screaming_snake_case_to_pascal_case)
   ASSERT_EQ((string) "y", *prefix);
 }
 
-TEST_F(DataItemTest, condition_category_data_item_has_condition_category) { ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory()); }
+TEST_F(DataItemTest, condition_category_data_item_has_condition_category)
+{
+  ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory());
+}
 
 TEST_F(DataItemTest, time_series_representation_appends_time_series_to_observation_name)
 {

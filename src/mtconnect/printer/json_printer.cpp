@@ -134,9 +134,9 @@ namespace mtconnect::printer {
         if (m_errorSchema)
           obj.AddPairs("$schema", *m_errorSchema);
         else if (m_schemaVersion && m_jsonVersion == 2)
-          obj.AddPairs("$schema", "https://schemas.mtconnect.org/schemas/MTConnectError_" + *m_schemaVersion + ".schema.json");
-        
-        
+          obj.AddPairs("$schema", "https://schemas.mtconnect.org/schemas/MTConnectError_" +
+                                      *m_schemaVersion + ".schema.json");
+
         AutoJsonObject obj(writer, "MTConnectError");
         obj.AddPairs("jsonVersion", m_jsonVersion);
 
@@ -184,7 +184,8 @@ namespace mtconnect::printer {
       if (m_devicesSchema)
         top.AddPairs("$schema", *m_devicesSchema);
       else if (m_schemaVersion && m_jsonVersion == 2)
-        top.AddPairs("$schema", "https://schemas.mtconnect.org/schemas/MTConnectDevices_" + *m_schemaVersion + ".schema.json");
+        top.AddPairs("$schema", "https://schemas.mtconnect.org/schemas/MTConnectDevices_" +
+                                    *m_schemaVersion + ".schema.json");
 
       AutoJsonObject obj(writer, "MTConnectDevices");
       obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
@@ -217,8 +218,9 @@ namespace mtconnect::printer {
       if (m_assetsSchema)
         top.AddPairs("$schema", *m_assetsSchema);
       else if (m_schemaVersion && m_jsonVersion == 2)
-        top.AddPairs("$schema", "https://schemas.mtconnect.org/schemas/MTConnectAssets_" + *m_schemaVersion + ".schema.json");
-      
+        top.AddPairs("$schema", "https://schemas.mtconnect.org/schemas/MTConnectAssets_" +
+                                    *m_schemaVersion + ".schema.json");
+
       AutoJsonObject obj(writer, "MTConnectAssets");
       obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
       {
@@ -421,7 +423,8 @@ namespace mtconnect::printer {
       if (m_streamsSchema)
         top.AddPairs("$schema", *m_streamsSchema);
       else if (m_schemaVersion && m_jsonVersion == 2)
-        top.AddPairs("$schema", "https://schemas.mtconnect.org/schemas/MTConnectStreams_" + *m_schemaVersion + ".schema.json");
+        top.AddPairs("$schema", "https://schemas.mtconnect.org/schemas/MTConnectStreams_" +
+                                    *m_schemaVersion + ".schema.json");
 
       AutoJsonObject obj(writer, "MTConnectStreams");
       obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);

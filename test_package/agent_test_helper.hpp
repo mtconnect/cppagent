@@ -403,7 +403,8 @@ public:
     m_agent->addSource(m_loopback);
 
     auto sinkContract = m_agent->makeSinkContract();
-    sinkContract->m_findDataFile = [](const std::string &n) -> std::optional<std::filesystem::path> {
+    sinkContract->m_findDataFile =
+        [](const std::string &n) -> std::optional<std::filesystem::path> {
       if (std::filesystem::exists(n))
       {
         return std::filesystem::path(n);

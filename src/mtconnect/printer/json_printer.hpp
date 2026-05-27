@@ -54,35 +54,23 @@ namespace mtconnect::printer {
     std::string mimeType() const override { return "application/mtconnect+json"; }
 
     uint32_t getJsonVersion() const { return m_jsonVersion; }
-    
+
     /// @brief Add JSON Schema location for Devices Document
     /// @param url The url referencing the schema
-    void setDevicesSchema(const std::string &url)
-    {
-      m_devicesSchema = url;
-    }
-    
+    void setDevicesSchema(const std::string &url) { m_devicesSchema = url; }
+
     /// @brief Add JSON Schema location for Streams Document
     /// @param url The url referencing the schema
-    void setStreamsSchema(const std::string &url)
-    {
-      m_streamsSchema = url;
-    }
+    void setStreamsSchema(const std::string &url) { m_streamsSchema = url; }
 
     /// @brief Add JSON Schema location for Assets Document
     /// @param url The url referencing the schema
-    void setAssetsSchema(const std::string &url)
-    {
-      m_assetsSchema = url;
-    }
+    void setAssetsSchema(const std::string &url) { m_assetsSchema = url; }
 
     /// @brief Add JSON Schema location for Errors Document
     /// @param url The url referencing the schema
     /// @param location the file location of the schema file
-    void setErrorSchema(const std::string &url)
-    {
-      m_errorSchema = url;
-    }
+    void setErrorSchema(const std::string &url) { m_errorSchema = url; }
 
     /// @brief Get the JSON Schema url for the Devices Document
     /// @returns The url if the schema is set, otherwise `std::nullopt`
@@ -105,7 +93,7 @@ namespace mtconnect::printer {
     std::optional<std::string> m_streamsSchema;
     std::optional<std::string> m_assetsSchema;
     std::optional<std::string> m_errorSchema;
-    
+
     std::string m_version;
     std::string m_hostname;
     uint32_t m_jsonVersion;

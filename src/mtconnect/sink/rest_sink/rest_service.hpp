@@ -32,7 +32,7 @@ namespace mtconnect {
   namespace printer {
     class XmlPrinter;
     class JsonPrinter;
-  }
+  }  // namespace printer
   namespace observation {
     class AsyncObserver;
   }
@@ -326,12 +326,11 @@ namespace mtconnect {
       // Configuration
       void loadNamespace(const boost::property_tree::ptree &tree, const char *namespaceType,
                          printer::XmlPrinter *xmlPrinter, NamespaceFunction callback);
-      
+
       void loadJsonSchema(const boost::property_tree::ptree &tree, const char *schemaType,
                           printer::JsonPrinter *jsonPrinter, SchemaFunction callback);
 
-      void loadFiles(printer::XmlPrinter *xmlPrinter,
-                     printer::JsonPrinter *jsonPrinter,
+      void loadFiles(printer::XmlPrinter *xmlPrinter, printer::JsonPrinter *jsonPrinter,
                      const boost::property_tree::ptree &tree);
 
       void loadHttpHeaders(const boost::property_tree::ptree &tree);
@@ -378,7 +377,7 @@ namespace mtconnect {
                      const std::optional<std::string> &deviceType = std::nullopt) const;
 
       DevicePtr checkDevice(const printer::Printer *printer, const std::string &uuid) const;
-      
+
       std::string externalUrl(const std::string &url)
       {
         std::string fullUrl = m_externalBaseAddress;

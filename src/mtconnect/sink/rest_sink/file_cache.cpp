@@ -61,7 +61,7 @@ namespace mtconnect::sink::rest_sink {
 
   // Register a file
   MTConnectSchemaList FileCache::registerDirectory(const string &uri, const fs::path &pathName,
-                                                const string &version)
+                                                   const string &version)
   {
     MTConnectSchemaList namespaces;
 
@@ -103,8 +103,9 @@ namespace mtconnect::sink::rest_sink {
     return namespaces;
   }
 
-  std::optional<MTConnectSchema> FileCache::registerFile(const std::string &uri, const fs::path &path,
-                                                      const std::string &version)
+  std::optional<MTConnectSchema> FileCache::registerFile(const std::string &uri,
+                                                         const fs::path &path,
+                                                         const std::string &version)
   {
     optional<MTConnectSchema> ns;
 
@@ -144,7 +145,6 @@ namespace mtconnect::sink::rest_sink {
       else
         LOG(warning) << "Unrecognized schema file extension: " << match[3].str();
     }
-    
 
     return ns;
   }
