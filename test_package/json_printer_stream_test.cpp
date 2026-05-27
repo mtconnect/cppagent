@@ -777,5 +777,18 @@ TEST_F(JsonPrinterStreamTest, event_with_count_or_number_types)
   
   ASSERT_EQ(13.5, pathFeedrateOverride.at("/value"_json_pointer).get<double>());
   ASSERT_EQ(string("a01c7f35"), pathFeedrateOverride.at("/dataItemId"_json_pointer).get<string>());
-
 }
+
+TEST_F(JsonPrinterStreamTest, streams_schema_url_is_set_in_document_when_configured)
+{
+  m_printer->setStreamsSchema("https://example.org/MTConnectStreams_2.0.schema.json");
+  Checkpoint checkpoint;
+  ObservationList list;
+  checkpoint.getObservations(list);
+  auto doc = m_printer->printSample(123, 131072, 1, 1, 1, list);
+  auto jdoc = json::parse(doc);
+  ASSERT_EQ("https://example.org/MTConnectStreams_2.0.schema.json",
+            jdoc.at("/$schema"_json_pointer).get<string>());
+}
+
+

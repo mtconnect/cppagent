@@ -174,3 +174,13 @@ TEST_F(JsonPrinterErrorTest, should_print_error_with_2_6_out_of_range)
             jdoc.at("/MTConnectError/Errors/0/OutOfRange/QueryParameter/Maximum"_json_pointer)
                 .get<int32_t>());
 }
+
+TEST_F(JsonPrinterErrorTest, errors_schema_url_is_set_in_document_when_configured)
+{
+  m_printer->setErrorSchema("https://example.org/MTConnectError_2.0.schema.json");
+  auto error = Error::make(Error::ErrorCode::INVALID_REQUEST, "ERROR TEXT!");
+  auto doc = m_printer->printError(123, 9999, 1, error, true);
+  auto jdoc = json::parse(doc);
+  ASSERT_EQ("https://example.org/MTConnectError_2.0.schema.json",
+            jdoc.at("/$schema"_json_pointer).get<string>());
+}

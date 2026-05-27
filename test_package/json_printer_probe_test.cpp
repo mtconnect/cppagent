@@ -398,3 +398,12 @@ TEST_F(JsonPrinterProbeTest, version_2_with_multiple_devices)
   ASSERT_EQ("device-1", device.at("/0/uuid"_json_pointer));
   ASSERT_EQ("device-2", device.at("/1/uuid"_json_pointer));
 }
+
+TEST_F(JsonPrinterProbeTest, devices_schema_url_is_set_in_document_when_configured)
+{
+  m_printer->setDevicesSchema("https://example.org/MTConnectDevices_2.0.schema.json");
+  auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+  auto jdoc = json::parse(doc);
+  ASSERT_EQ("https://example.org/MTConnectDevices_2.0.schema.json",
+            jdoc.at("/$schema"_json_pointer).get<string>());
+}

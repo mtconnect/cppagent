@@ -102,17 +102,17 @@ TEST_F(FileCacheTest, verify_large_files_are_not_cached)
 
 TEST_F(FileCacheTest, base_directory_should_redirect)
 {
-  m_cache->addDirectory("/schemas", TEST_RESOURCE_DIR "/schemas", "none.xsd");
-  auto file = m_cache->getFile("/schemas");
+  m_cache->addDirectory("/app", TEST_RESOURCE_DIR "/schemas", "index.html");
+  auto file = m_cache->getFile("/app");
   ASSERT_TRUE(file);
-  ASSERT_EQ("/schemas/none.xsd", file->m_redirect);
-  ASSERT_TRUE(m_cache->hasFile("/schemas"));
+  ASSERT_EQ("/app/index.html", file->m_redirect);
+  ASSERT_TRUE(m_cache->hasFile("/app"));
   ASSERT_TRUE(std::string_view(file->m_buffer).starts_with("<html>"));
 
-  auto file2 = m_cache->getFile("/schemas");
+  auto file2 = m_cache->getFile("/app");
   ASSERT_TRUE(file);
-  ASSERT_EQ("/schemas/none.xsd", file2->m_redirect);
-  ASSERT_TRUE(m_cache->hasFile("/schemas"));
+  ASSERT_EQ("/app/index.html", file2->m_redirect);
+  ASSERT_TRUE(m_cache->hasFile("/app"));
   ASSERT_TRUE(std::string_view(file->m_buffer).starts_with("<html>"));
 }
 
@@ -260,4 +260,71 @@ TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)
   {
     fs::remove(zipped);
   }
+}
+
+TEST_F(FileCacheTest, should_find_mtconnect_schema_files_for_xsd_and_json)
+{
+  auto files = m_cache->registerDirectory("/myschemas", PROJECT_ROOT_DIR "/schemas", "2.7");
+  ASSERT_EQ(8, files.size());
+  
+  auto exists = [&files](const std::string &uri) -> std::optional<MTConnectSchema> {
+    auto it = std::find_if(files.begin(), files.end(), [&uri](const MTConnectSchema &s) {
+      return s.m_uri == uri;
+    });
+    if (it != files.end()) {
+      return *it;
+    }
+    else
+    {
+      return std::nullopt;
+    }
+  };
+  
+  auto devicesXsd = exists("/myschemas/MTConnectDevices_2.7.xsd");
+  ASSERT_TRUE(devicesXsd);
+  EXPECT_EQ(SchemaType::XSD, devicesXsd->m_type);
+  EXPECT_EQ("Devices", devicesXsd->m_doc);
+  EXPECT_TRUE(m_cache->hasFile("/myschemas/MTConnectDevices_2.7.xsd"));
+
+  auto devicesJson = exists("/myschemas/MTConnectDevices_2.7.schema.json");
+  ASSERT_TRUE(devicesJson);
+  EXPECT_EQ(SchemaType::JSON, devicesJson->m_type);
+  EXPECT_EQ("Devices", devicesJson->m_doc);
+  EXPECT_TRUE(m_cache->hasFile("/myschemas/MTConnectDevices_2.7.schema.json"));
+
+  auto streamsXsd = exists("/myschemas/MTConnectStreams_2.7.xsd");
+  ASSERT_TRUE(streamsXsd);
+  EXPECT_EQ(SchemaType::XSD, streamsXsd->m_type);
+  EXPECT_EQ("Streams", streamsXsd->m_doc);
+  EXPECT_TRUE(m_cache->hasFile("/myschemas/MTConnectStreams_2.7.xsd"));
+  
+  auto streamsJson = exists("/myschemas/MTConnectStreams_2.7.schema.json");
+  ASSERT_TRUE(streamsJson);
+  EXPECT_EQ(SchemaType::JSON, streamsJson->m_type);
+  EXPECT_EQ("Streams", streamsJson->m_doc);
+  EXPECT_TRUE(m_cache->hasFile("/myschemas/MTConnectStreams_2.7.schema.json"));
+
+  auto assetsXsd = exists("/myschemas/MTConnectAssets_2.7.xsd");
+  ASSERT_TRUE(assetsXsd);
+  EXPECT_EQ(SchemaType::XSD, assetsXsd->m_type);
+  EXPECT_EQ("Assets", assetsXsd->m_doc);
+  EXPECT_TRUE(m_cache->hasFile("/myschemas/MTConnectAssets_2.7.xsd"));
+
+  auto assetsJson = exists("/myschemas/MTConnectAssets_2.7.schema.json");
+  ASSERT_TRUE(assetsJson);
+  EXPECT_EQ(SchemaType::JSON, assetsJson->m_type);
+  EXPECT_EQ("Assets", assetsJson->m_doc);
+  EXPECT_TRUE(m_cache->hasFile("/myschemas/MTConnectAssets_2.7.schema.json"));
+
+  auto errorsXsd = exists("/myschemas/MTConnectError_2.7.xsd");
+  ASSERT_TRUE(errorsXsd);
+  EXPECT_EQ(SchemaType::XSD, errorsXsd->m_type);
+  EXPECT_EQ("Error", errorsXsd->m_doc);
+  EXPECT_TRUE(m_cache->hasFile("/myschemas/MTConnectError_2.7.xsd"));
+
+  auto errorsJson = exists("/myschemas/MTConnectError_2.7.schema.json");
+  ASSERT_TRUE(errorsJson);
+  EXPECT_EQ(SchemaType::JSON, errorsJson->m_type);
+  EXPECT_EQ("Error", errorsJson->m_doc);
+  EXPECT_TRUE(m_cache->hasFile("/myschemas/MTConnectError_2.7.schema.json"));
 }

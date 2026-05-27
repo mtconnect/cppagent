@@ -46,6 +46,10 @@ namespace mtconnect {
     using NamespaceFunction = void (printer::XmlPrinter::*)(const std::string &,
                                                             const std::string &,
                                                             const std::string &);
+
+    /// @brief Callback fundtion for setting json schema
+    using SchemaFunction = void (printer::JsonPrinter::*)(const std::string &);
+
     /// @brief Callback fundtion for setting stylesheet
     using StyleFunction = void (printer::XmlPrinter::*)(const std::string &);
 
@@ -322,6 +326,9 @@ namespace mtconnect {
       // Configuration
       void loadNamespace(const boost::property_tree::ptree &tree, const char *namespaceType,
                          printer::XmlPrinter *xmlPrinter, NamespaceFunction callback);
+      
+      void loadJsonSchema(const boost::property_tree::ptree &tree, const char *schemaType,
+                          printer::JsonPrinter *jsonPrinter, SchemaFunction callback);
 
       void loadFiles(printer::XmlPrinter *xmlPrinter,
                      printer::JsonPrinter *jsonPrinter,
@@ -375,12 +382,19 @@ namespace mtconnect {
       std::string externalUrl(const std::string &url)
       {
         std::string fullUrl = m_externalBaseAddress;
-        if (fullUrl.back() == '/' && url.front() == '/')
-          fullUrl.pop_back();
-        else if (fullUrl.back() != '/' && url.front() != '/')
-          fullUrl += '/';
-        fullUrl += url;
-        return fullUrl;
+        if (!fullUrl.empty() && !url.empty())
+        {
+          if (fullUrl.back() == '/' && url.front() == '/')
+            fullUrl.pop_back();
+          else if (fullUrl.back() != '/' && url.front() != '/')
+            fullUrl += '/';
+          fullUrl += url;
+          return fullUrl;
+        }
+        else
+        {
+          return url;
+        }
       }
 
     protected:

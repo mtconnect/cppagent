@@ -79,18 +79,32 @@ namespace mtconnect::printer {
     /// @brief Add JSON Schema location for Errors Document
     /// @param url The url referencing the schema
     /// @param location the file location of the schema file
-    void setErrorsSchema(const std::string &url)
+    void setErrorSchema(const std::string &url)
     {
-      m_errorsSchema = url;
+      m_errorSchema = url;
     }
 
+    /// @brief Get the JSON Schema url for the Devices Document
+    /// @returns The url if the schema is set, otherwise `std::nullopt`
+    const auto &getDevicesSchema() const { return m_devicesSchema; }
 
+    /// @brief Get the JSON Schema url for the Streams Document
+    /// @returns The url if the schema is set, otherwise `std::nullopt`
+    const auto &getStreamsSchema() const { return m_streamsSchema; }
+
+    /// @brief Get the JSON Schema url for the Assets Document
+    /// @returns The url if the schema is set, otherwise `std::nullopt`
+    const auto &getAssetsSchema() const { return m_assetsSchema; }
+
+    /// @brief Get the JSON Schema url for the Error Document
+    /// @returns The url if the schema is set, otherwise `std::nullopt`
+    const auto &getErrorSchema() const { return m_errorSchema; }
 
   protected:
     std::optional<std::string> m_devicesSchema;
     std::optional<std::string> m_streamsSchema;
     std::optional<std::string> m_assetsSchema;
-    std::optional<std::string> m_errorsSchema;
+    std::optional<std::string> m_errorSchema;
     
     std::string m_version;
     std::string m_hostname;

@@ -38,11 +38,11 @@ namespace mtconnect::sink::rest_sink {
   };
   struct MTConnectSchema {
     SchemaType m_type;
-    std::string m_urn;
     std::string m_uri;
+    std::string m_doc;
     
-    MTConnectSchema(SchemaType type, const std::string &urn, const std::string &uri)
-      : m_type(type), m_urn(urn), m_uri(uri)
+    MTConnectSchema(SchemaType type, const std::string &uri, const std::string &doc)
+      : m_type(type), m_uri(uri), m_doc(doc)
     {}
   };
   using MTConnectSchemaList = std::list<MTConnectSchema>;

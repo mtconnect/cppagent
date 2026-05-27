@@ -75,7 +75,7 @@ namespace mtconnect {
       auto base = GetOption<string>(options, config::ExternalBaseUrl);
       if (!base)
         base = "http://localhost:" + to_string(m_server->getPort());
-        
+      m_externalBaseAddress = *base;
 
       auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_sinkContract->getPrinter("xml"));
       auto jsonPrinter = dynamic_cast<JsonPrinter *>(m_sinkContract->getPrinter("json"));
@@ -89,7 +89,14 @@ namespace mtconnect {
       loadNamespace(config, "StreamsNamespaces", xmlPrinter, &XmlPrinter::addStreamsNamespace);
       loadNamespace(config, "AssetsNamespaces", xmlPrinter, &XmlPrinter::addAssetsNamespace);
       loadNamespace(config, "ErrorNamespaces", xmlPrinter, &XmlPrinter::addErrorNamespace);
+      
+      // Explicitly load the json schema files. Can be used for specifying draft 4 schemas
+      loadJsonSchema(config, "DevicesJsonSchema", jsonPrinter, &JsonPrinter::setDevicesSchema);
+      loadJsonSchema(config, "StreamsJsonSchema", jsonPrinter, &JsonPrinter::setStreamsSchema);
+      loadJsonSchema(config, "AssetsJsonSchema", jsonPrinter, &JsonPrinter::setAssetsSchema);
+      loadJsonSchema(config, "ErrorJsonSchema", jsonPrinter, &JsonPrinter::setErrorSchema);
 
+      // Load the XML style sheets
       loadStyle(config, "DevicesStyle", xmlPrinter, &XmlPrinter::setDevicesStyle);
       loadStyle(config, "StreamsStyle", xmlPrinter, &XmlPrinter::setStreamStyle);
       loadStyle(config, "AssetsStyle", xmlPrinter, &XmlPrinter::setAssetsStyle);
@@ -180,6 +187,39 @@ namespace mtconnect {
         }
       }
     }
+    
+    // Configuration
+    void RestService::loadJsonSchema(const ptree &tree, const char *schemaType,
+                                     JsonPrinter *jsonPrinter, SchemaFunction callback)
+    {
+      // Load namespaces, allow for local file system serving as well.
+      auto schema = tree.get_child_optional(schemaType);
+      if (schema)
+      {
+        auto location = schema->get_optional<string>("Location");
+        if (!location)
+        {
+          LOG(warning) << "Json schema for " << schemaType << " must have a Location";
+          return;
+        }
+        if (!location->starts_with("http://") && !location->starts_with("https://"))
+        {
+          location = externalUrl(*location);
+          auto path = schema->get_optional<string>("Path");
+          if (path && !location->empty())
+          {
+            auto xns = m_fileCache.registerFile(*location, *path, m_schemaVersion);
+            if (!xns)
+            {
+              LOG(debug) << "Location " << *location << " did not match MTConnect schema pattern for path " << *path;
+            }
+          }
+          
+          (jsonPrinter->*callback)(*location);
+        }
+      }
+    }
+
 
     void RestService::loadFiles(XmlPrinter *xmlPrinter,
                                 JsonPrinter *jsonPrinter,
@@ -210,33 +250,34 @@ namespace mtconnect {
               auto namespaces = m_fileCache.registerFiles(*location, *resolved, m_schemaVersion);
               for (auto &ns : namespaces)
               {
-                if (ns.m_urn.find("Devices") != string::npos)
+                string urn = "urn:mtconnect.org:MTConnect" + ns.m_doc + ":" + m_schemaVersion;
+                if (ns.m_doc == "Devices")
                 {
                   if (ns.m_type == SchemaType::XSD)
-                    xmlPrinter->addDevicesNamespace(ns.m_urn, ns.m_uri, "m");
+                    xmlPrinter->addDevicesNamespace(urn, ns.m_uri, "m");
                   else
                     jsonPrinter->setDevicesSchema(externalUrl(ns.m_uri));
                 }
-                else if (ns.m_urn.find("Streams") != string::npos)
+                else if (ns.m_doc == "Streams")
                 {
                   if (ns.m_type == SchemaType::XSD)
-                    xmlPrinter->addStreamsNamespace(ns.m_urn, ns.m_uri, "m");
+                    xmlPrinter->addStreamsNamespace(urn, ns.m_uri, "m");
                   else
                     jsonPrinter->setStreamsSchema(externalUrl(ns.m_uri));
                 }
-                else if (ns.m_urn.find("Assets") != string::npos)
+                else if (ns.m_doc == "Assets")
                 {
                   if (ns.m_type == SchemaType::XSD)
-                    xmlPrinter->addAssetsNamespace(ns.m_urn, ns.m_uri, "m");
+                    xmlPrinter->addAssetsNamespace(urn, ns.m_uri, "m");
                   else
                     jsonPrinter->setAssetsSchema(externalUrl(ns.m_uri));
                 }
-                else if (ns.m_urn.find("Error") != string::npos)
+                else if (ns.m_doc == "Error")
                 {
                   if (ns.m_type == SchemaType::XSD)
-                    xmlPrinter->addErrorNamespace(ns.m_urn, ns.m_uri, "m");
+                    xmlPrinter->addErrorNamespace(urn, ns.m_uri, "m");
                   else
-                    jsonPrinter->setErrorsSchema(externalUrl(ns.m_uri));
+                    jsonPrinter->setErrorSchema(externalUrl(ns.m_uri));
                 }
               }
             }

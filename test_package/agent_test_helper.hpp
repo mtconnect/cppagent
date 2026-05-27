@@ -368,7 +368,8 @@ public:
 
   auto createAgent(const std::string &file, int bufferSize = 8, int maxAssets = 4,
                    const std::string &version = "1.7", int checkpoint = 25, bool put = false,
-                   bool observe = true, const mtconnect::ConfigOptions ops = {})
+                   bool observe = true, const mtconnect::ConfigOptions ops = {},
+                   const boost::property_tree::ptree &config = {})
   {
     using namespace mtconnect;
     using namespace mtconnect::pipeline;
@@ -402,10 +403,20 @@ public:
     m_agent->addSource(m_loopback);
 
     auto sinkContract = m_agent->makeSinkContract();
+    sinkContract->m_findDataFile = [](const std::string &n) -> std::optional<std::filesystem::path> {
+      if (std::filesystem::exists(n))
+      {
+        return std::filesystem::path(n);
+      }
+      else
+      {
+        return std::nullopt;
+      }
+    };
     sinkContract->m_pipelineContext = m_context;
 
     auto sink = m_sinkFactory.make("RestService", "RestService", m_ioContext,
-                                   std::move(sinkContract), options, ptree {});
+                                   std::move(sinkContract), options, config);
     m_restService = std::dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
     m_agent->addSink(m_restService);
 

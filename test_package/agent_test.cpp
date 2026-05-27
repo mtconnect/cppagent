@@ -2689,3 +2689,114 @@ TEST_F(AgentTest, should_not_have_device_model_change_time_in_the_header_for_pre
     ASSERT_FALSE(header.contains("deviceModelChangeTime"));
   }
 }
+
+TEST_F(AgentTest, should_add_the_default_schema_location_for_json_documents)
+{
+  using namespace nlohmann;
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.7", 4, true, true,
+                                 {{configuration::JsonVersion, 2}});
+  
+  
+  {
+    PARSE_JSON_RESPONSE("/probe");
+    json schema = doc.at("/$schema"_json_pointer);
+    ASSERT_TRUE(schema.is_string());
+    ASSERT_EQ("https://schemas.mtconnect.org/schemas/MTConnectDevices_2.7.schema.json", schema.get<string>());
+  }
+  
+  {
+    PARSE_JSON_RESPONSE("/current");
+    json schema = doc.at("/$schema"_json_pointer);
+    ASSERT_TRUE(schema.is_string());
+    ASSERT_EQ("https://schemas.mtconnect.org/schemas/MTConnectStreams_2.7.schema.json", schema.get<string>());
+  }
+
+  {
+    PARSE_JSON_RESPONSE("/assets");
+    json schema = doc.at("/$schema"_json_pointer);
+    ASSERT_TRUE(schema.is_string());
+    ASSERT_EQ("https://schemas.mtconnect.org/schemas/MTConnectAssets_2.7.schema.json", schema.get<string>());
+  }
+
+  {
+    PARSE_JSON_RESPONSE("/junk");
+    json schema = doc.at("/$schema"_json_pointer);
+    ASSERT_TRUE(schema.is_string());
+    ASSERT_EQ("https://schemas.mtconnect.org/schemas/MTConnectError_2.7.schema.json", schema.get<string>());
+  }
+}
+
+TEST_F(AgentTest, should_not_add_the_default_schema_location_for_json_documents_for_json_v1)
+{
+  using namespace nlohmann;
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.7", 4, true, true,
+                                 {{configuration::JsonVersion, 1}});
+  
+  
+  {
+    PARSE_JSON_RESPONSE("/probe");
+    ASSERT_FALSE(doc.contains("/$schema"_json_pointer));
+  }
+  
+  {
+    PARSE_JSON_RESPONSE("/current");
+    ASSERT_FALSE(doc.contains("/$schema"_json_pointer));
+  }
+  
+  {
+    PARSE_JSON_RESPONSE("/assets");
+    ASSERT_FALSE(doc.contains("/$schema"_json_pointer));
+  }
+  
+  {
+    PARSE_JSON_RESPONSE("/junk");
+    ASSERT_FALSE(doc.contains("/$schema"_json_pointer));
+  }
+}
+
+TEST_F(AgentTest, should_add_local_locations_when_files_are_given)
+{
+  using namespace nlohmann;
+  auto configFiles = std::format(R"(
+Files {{
+  schemas {{
+    Path = {}/schemas
+    Location = /myschemas/
+  }}
+}}
+)", PROJECT_ROOT_DIR);
+  
+  auto config = configuration::Parser::parse(configFiles);
+  
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.7", 4, true, true,
+                                 {{configuration::JsonVersion, 2}}, config);
+  
+  {
+    PARSE_JSON_RESPONSE("/probe");
+    json schema = doc.at("/$schema"_json_pointer);
+    ASSERT_TRUE(schema.is_string());
+    ASSERT_EQ("http://localhost:0/myschemas/MTConnectDevices_2.7.schema.json", schema.get<string>());
+  }
+  
+  {
+    PARSE_JSON_RESPONSE("/current");
+    json schema = doc.at("/$schema"_json_pointer);
+    ASSERT_TRUE(schema.is_string());
+    ASSERT_EQ("http://localhost:0/myschemas/MTConnectStreams_2.7.schema.json", schema.get<string>());
+  }
+  
+  {
+    PARSE_JSON_RESPONSE("/assets");
+    json schema = doc.at("/$schema"_json_pointer);
+    ASSERT_TRUE(schema.is_string());
+    ASSERT_EQ("http://localhost:0/myschemas/MTConnectAssets_2.7.schema.json", schema.get<string>());
+  }
+  
+  {
+    PARSE_JSON_RESPONSE("/junk");
+    json schema = doc.at("/$schema"_json_pointer);
+    ASSERT_TRUE(schema.is_string());
+    ASSERT_EQ("http://localhost:0/myschemas/MTConnectError_2.7.schema.json", schema.get<string>());
+  }
+}
+

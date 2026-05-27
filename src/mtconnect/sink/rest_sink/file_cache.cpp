@@ -130,18 +130,17 @@ namespace mtconnect::sink::rest_sink {
     string name = path.filename().string();
 
     // Check if the file name maps to a standard MTConnect schema file.
-    // Matches: MTConnect{Type}_{version}.xsd  or  MTConnect{Type}_{version}schema.json
+    // Matches: MTConnect{Type}_{version}.xsd  or  MTConnect{Type}_{version}.schema.json
     static const regex s_mtcSchema(
         R"(^MTConnect(Error|Devices|Assets|Streams)_(\d\.\d+)(\.xsd|.schema\.json)$)");
 
     smatch match;
     if (regex_match(name, match, s_mtcSchema) && match[2].str() == version)
     {
-      string urn = "urn:mtconnect.org:MTConnect" + match[1].str() + ":" + match[2].str();
       if (match[3].str() == ".xsd")
-        ns = make_optional<MTConnectSchema>(SchemaType::XSD, urn, uri);
+        ns = make_optional<MTConnectSchema>(SchemaType::XSD, uri, match[1].str());
       else if (match[3].str() == ".schema.json")
-        ns = make_optional<MTConnectSchema>(SchemaType::JSON, urn, uri);
+        ns = make_optional<MTConnectSchema>(SchemaType::JSON, uri, match[1].str());
       else
         LOG(warning) << "Unrecognized schema file extension: " << match[3].str();
     }
