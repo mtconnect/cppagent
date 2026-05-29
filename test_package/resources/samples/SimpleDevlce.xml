@@ -57,11 +57,13 @@
               <DataItems>
                 <DataItem id="if36ff60" name="mode" type="CONTROLLER_MODE" category="EVENT"/>
                 <DataItem id="a01c7f30" type="EXECUTION" category="EVENT"/>
+                <DataItem id="a01c7f35" type="PATH_FEEDRATE_OVERRIDE" category="EVENT" units="PERCENT"/>
                 <DataItem id="k8dd9030" type="PROGRAM" category="EVENT"/>
                 <DataItem id="r63f9b10" type="CONTROLLER_MODE_OVERRIDE" subType="OPTIONAL_STOP" category="EVENT"/>
                 <DataItem id="a557d330" type="LOGIC_PROGRAM" category="CONDITION"/>
                 <DataItem id="a5b23650" type="MOTION_PROGRAM" category="CONDITION" name="motion"/>
                 <DataItem id="bbafe670" type="LINE" category="EVENT"/>
+                <DataItem id="bbafe675" type="LINE_NUMBER" category="EVENT"/>
                 <DataItem id="d2e9e4a0" type="PART_COUNT" category="EVENT">
                   <InitialValue>1</InitialValue>
                 </DataItem>
@@ -117,7 +119,7 @@
             <Coolant id="x5ef9730" name="low">
               <DataItems>
                 <DataItem id="r25176b0" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="low_main_level" compositionId="t59d1170"/>
-                <DataItem id="obc97840" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="low_main_level" compositionId="a7973930"/>
+                <DataItem id="obc97840" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="low_reserve_level" compositionId="a7973930"/>
               </DataItems>
               <Compositions>
                 <Composition id="t59d1170" type="TANK" name="main"/>
@@ -127,7 +129,7 @@
             <Coolant id="b36e0070" name="high">
               <DataItems>
                 <DataItem id="q94f81e0" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="high_main_level" compositionId="a59bd5b0"/>
-                <DataItem id="wf2848e0" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="high_main_level" compositionId="aa373750"/>
+                <DataItem id="wf2848e0" type="FILL_LEVEL" category="SAMPLE" units="CELSIUS" name="high_reserve_level" compositionId="aa373750"/>
               </DataItems>
               <Compositions>
                 <Composition id="a59bd5b0" type="TANK" name="main"/>

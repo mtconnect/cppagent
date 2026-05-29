@@ -306,3 +306,13 @@ TEST_F(JsonPrinterAssetTest, json_printer_version_2_with_multiple_assets)
 
   ASSERT_EQ("SECOND", arch.at("/assetId"_json_pointer));
 }
+
+TEST_F(JsonPrinterAssetTest, assets_schema_url_is_set_in_document_when_configured)
+{
+  m_printer->setAssetsSchema("https://example.org/MTConnectAssets_2.0.schema.json");
+  AssetList assetList;
+  auto doc = m_printer->printAssets(123, 1024, 10, assetList);
+  auto jdoc = json::parse(doc);
+  ASSERT_EQ("https://example.org/MTConnectAssets_2.0.schema.json",
+            jdoc.at("/$schema"_json_pointer).get<string>());
+}

@@ -1,0 +1,2608 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.mtconnect.org/schemas/MTConnectError_2.1.schema.json",
+  "title": "MTConnectError",
+  "description": "MTConnect MTConnectError response, v2 JSON, from SysML model v2.1.",
+  "type": "object",
+  "required": [
+    "MTConnectError"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "MTConnectError": {
+      "$ref": "#/$defs/MTConnectError"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "Header": {
+      "type": "object",
+      "title": "Header",
+      "description": "provides information from an {{term(agent)}} defining version information, storage capacity, and parameters associated with the data management within the {{term(agent)}}.",
+      "properties": {
+        "schemaVersion": {
+          "type": "string"
+        },
+        "bufferSize": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nextSequence": {
+          "type": "integer"
+        },
+        "lastSequence": {
+          "type": "integer"
+        },
+        "firstSequence": {
+          "type": "integer"
+        },
+        "deviceModelChangeTime": {
+          "type": "string",
+          "description": "timestamp of the last update of the {{block(Device)}} information for any device."
+        },
+        "assetBufferSize": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "maximum number of {{block(Asset)}} types that can be stored in the {{term(agent)}} that published the {{term(response document)}}. > Note: The implementer is responsible for allocating the appropriate amount of storage capacity required to accommodate the {{property(assetBufferSize)}}."
+        },
+        "assetCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "current number of {{block(Asset)}} that are currently stored in the {{term(agent)}} as of the {{property(creationTime)}} that the {{term(agent)}} published the {{term(response document)}}. {{property(assetCount)}} **MUST NOT** be larger than the value reported for {{property(assetBufferSize)}}."
+        },
+        "creationTime": {
+          "type": "string",
+          "description": "timestamp that an {{term(agent)}} published the {{term(response document)}}."
+        },
+        "instanceId": {
+          "type": "integer",
+          "description": "identifier for a specific instantiation of the {{term(buffer)}} associated with the {{term(agent)}} that published the {{term(response document)}}. {{property(instanceId)}} **MUST** be changed to a different unique number each time the {{term(buffer)}} is cleared and a new set of data begins to be collected."
+        },
+        "sender": {
+          "type": "string",
+          "description": "identification defining where the {{term(agent)}} that published the {{term(response document)}} is installed or hosted. {{property(sender)}} **MUST** be either an IP Address or Hostname describing where the {{term(agent)}} is installed or the URL of the {{term(agent)}}; e.g., `http://<address>[:port]/`. > Note: The port number need not be specified if it is the default HTTP port 80."
+        },
+        "testIndicator": {
+          "type": "boolean",
+          "description": "indicates whether the {{term(agent)}} that published the {{term(response document)}} is operating in a test mode. If {{property(testIndicator)}} is not specified, the value for {{property(testIndicator)}} **MUST** be interpreted to be `false`.",
+          "default": "false"
+        },
+        "version": {
+          "type": "string",
+          "description": "{{term(major)}}, {{term(minor)}}, and {{term(revision)}} number of the MTConnect Standard that defines the {{term(semantic data model)}} that represents the content of the {{term(response document)}}. It also includes the revision number of the {{term(schema)}} associated with that specific {{term(semantic data model)}}. As an example, the value reported for {{property(version)}} for a {{term(response document)}} that was structured based on {{term(schema)}} revision 10 associated with Version 1.4.0 of the MTConnect Standard would be: 1.4.0.10"
+        }
+      },
+      "required": [
+        "creationTime",
+        "deviceModelChangeTime",
+        "instanceId",
+        "sender",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "AssetCount": {
+      "type": "object",
+      "title": "AssetCount",
+      "description": "count of each asset type currently in the {{term(agent)}}.",
+      "properties": {
+        "assetType": {
+          "type": "string",
+          "description": "type of {{term(Asset)}}."
+        }
+      },
+      "required": [
+        "assetType"
+      ],
+      "additionalProperties": false
+    },
+    "MTConnectError": {
+      "type": "object",
+      "title": "MTConnectError",
+      "description": "root entity of an {{term(MTConnectErrors Response Document)}} that contains the {{term(Error Information Model)}}. ![MTConnectError](figures/MTConnectError.png \"MTConnectError\"){: width=\"0.8\"} > Note: Additional properties of {{block(MTConnectError)}} **MAY** be defined for schema and namespace declaration. See {{sect(Schema and Namespace Declaration Information)}} for an {{term(XML)}} example.",
+      "properties": {
+        "jsonVersion": {
+          "type": "integer"
+        },
+        "schemaVersion": {
+          "type": "string"
+        },
+        "Errors": {
+          "type": "object",
+          "properties": {
+            "Error": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Error"
+              }
+            }
+          },
+          "patternProperties": {
+            "^[a-ln-zA-LN-Z]:[A-Za-z_][A-Za-z0-9_]*$": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Error"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "Header": {
+          "$ref": "#/$defs/Header"
+        }
+      },
+      "required": [
+        "Header"
+      ],
+      "additionalProperties": false
+    },
+    "Error": {
+      "type": "object",
+      "title": "Error",
+      "description": "error encountered by an {{term(agent)}} when responding to a {{term(request)}}.",
+      "properties": {
+        "errorCode": {
+          "$ref": "#/$defs/ErrorCodeEnum",
+          "description": "descriptive code that indicates the type of error that was encountered by an {{term(agent)}}."
+        },
+        "value": {
+          "type": "string",
+          "description": "textual description of the error and any additional information an {{term(agent)}} is capable of providing regarding a specific error."
+        }
+      },
+      "required": [
+        "errorCode"
+      ],
+      "additionalProperties": false
+    },
+    "Agent": {
+      "type": "object",
+      "title": "Agent",
+      "description": "{{term(agent)}}. An {{term(agent)}} **MUST** perform the following tasks: * Collect data from manufacturing equipment. * Generate {{termplural(response document)}}. * Provide a REST interface using {{term(HTTP)}}. In addition to {{term(XML)}} and {{term(HTTP)}}, An {{term(agent)}} **MAY** provide additional protocols and representations. Some representations **MAY** have companion specifications.",
+      "properties": {
+        "mtconnectVersion": {
+          "type": "string"
+        },
+        "instanceId": {
+          "type": "string",
+          "description": "identifier for an {{term(instance)}} of the {{term(agent)}}. {{property(instanceId)}} **MUST** be changed to a different unique number each time the {{term(buffer)}} is cleared and a new set of data begins to be collected."
+        },
+        "sequenceNumber": {
+          "type": "string",
+          "description": "{{term(sequence number)}}."
+        },
+        "bufferSize": {
+          "type": "string",
+          "description": "maximum number of {{termplural(Observation)}} that **MAY** be retained in the {{term(agent)}} that published the {{term(response document)}} at any point in time."
+        },
+        "maxAssets": {
+          "type": "string",
+          "description": "maximum number of {{termplural(Asset)}} that **MAY** be retained in the {{term(agent)}} that published the {{term(response document)}} at any point in time."
+        },
+        "assetCount": {
+          "type": "string",
+          "description": "current number of {{termplural(Asset)}} that are currently stored in the {{term(agent)}} as of the {{property(creationTime)}} that the {{term(agent)}} published the {{term(response document)}}."
+        }
+      },
+      "required": [
+        "assetCount",
+        "bufferSize",
+        "instanceId",
+        "maxAssets",
+        "sequenceNumber"
+      ],
+      "additionalProperties": false
+    },
+    "CoordinateSystemEnum": {
+      "title": "CoordinateSystemEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "MACHINE",
+            "WORK"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ResetTriggerEnum": {
+      "title": "ResetTriggerEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTION_COMPLETE",
+            "ANNUAL",
+            "DAY",
+            "LIFE",
+            "MAINTENANCE",
+            "MONTH",
+            "POWER_ON",
+            "SHIFT",
+            "WEEK"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "StatisticEnum": {
+      "title": "StatisticEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "AVERAGE",
+            "KURTOSIS",
+            "MAXIMUM",
+            "MEDIAN",
+            "MINIMUM",
+            "MODE",
+            "RANGE",
+            "ROOT_MEAN_SQUARE",
+            "STANDARD_DEVIATION"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "UnitEnum": {
+      "title": "UnitEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "AMPERE",
+            "CELSIUS",
+            "COUNT",
+            "DECIBEL",
+            "DEGREE",
+            "DEGREE_3D",
+            "DEGREE/SECOND",
+            "DEGREE/SECOND\\^2",
+            "HERTZ",
+            "JOULE",
+            "KILOGRAM",
+            "LITER",
+            "LITER/SECOND",
+            "MICRO_RADIAN",
+            "MILLIMETER",
+            "MILLIMETER_3D",
+            "MILLIMETER/REVOLUTION",
+            "MILLIMETER/SECOND",
+            "MILLIMETER/SECOND\\^2",
+            "NEWTON",
+            "NEWTON_METER",
+            "OHM",
+            "PASCAL",
+            "PASCAL_SECOND",
+            "PERCENT",
+            "PH",
+            "REVOLUTION/MINUTE",
+            "SECOND",
+            "SIEMENS/METER",
+            "VOLT",
+            "VOLT_AMPERE",
+            "VOLT_AMPERE_REACTIVE",
+            "WATT",
+            "WATT_SECOND",
+            "GRAM/CUBIC_METER",
+            "CUBIC_MILLIMETER",
+            "CUBIC_MILLIMETER/SECOND",
+            "CUBIC_MILLIMETER/SECOND\\^2",
+            "MILLIGRAM",
+            "MILLIGRAM/CUBIC_MILLIMETER",
+            "MILLILITER",
+            "COUNT/SECOND",
+            "PASCAL/SECOND",
+            "UNIT_VECTOR_3D",
+            "REVOLUTION/SECOND\\^2",
+            "REVOLUTION/SECOND",
+            "GRAM",
+            "METER/SECOND\\^2",
+            "COULOMB"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DataItemTypeEnum": {
+      "type": "string",
+      "title": "DataItemTypeEnum"
+    },
+    "CategoryEnum": {
+      "title": "CategoryEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "EVENT",
+            "CONDITION"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DataItemSubTypeEnum": {
+      "title": "DataItemSubTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ABSOLUTE",
+            "ACTION",
+            "ACTUAL",
+            "ALL",
+            "ALTERNATING",
+            "A_SCALE",
+            "AUXILIARY",
+            "BAD",
+            "BRINELL",
+            "B_SCALE",
+            "COMMANDED",
+            "CONSUMED",
+            "CONTROL",
+            "C_SCALE",
+            "DELAY",
+            "DIRECT",
+            "DRY_RUN",
+            "D_SCALE",
+            "EXPIRATION",
+            "FIRST_USE",
+            "GOOD",
+            "INCREMENTAL",
+            "JOG",
+            "LATERAL",
+            "LEEB",
+            "LENGTH",
+            "LINE",
+            "LINEAR",
+            "LOADED",
+            "MACHINE_AXIS_LOCK",
+            "MAIN",
+            "MAINTENANCE",
+            "MANUAL_UNCLAMP",
+            "MANUFACTURE",
+            "MAXIMUM",
+            "MINIMUM",
+            "MOHS",
+            "MOTION",
+            "NO_SCALE",
+            "OPERATING",
+            "OPERATOR",
+            "OPTIONAL_STOP",
+            "OVERRIDE",
+            "POWERED",
+            "PRIMARY",
+            "PROBE",
+            "PROCESS",
+            "PROGRAMMED",
+            "RADIAL",
+            "RAPID",
+            "REMAINING",
+            "ROCKWELL",
+            "ROTARY",
+            "SCHEDULE",
+            "SET_UP",
+            "SHORE",
+            "SINGLE_BLOCK",
+            "STANDARD",
+            "START",
+            "SWITCHED",
+            "TARGET",
+            "TARGET_COMPLETION",
+            "TOOL_CHANGE_STOP",
+            "USEABLE",
+            "VERTICAL",
+            "VICKERS",
+            "WORKING",
+            "IPV4_ADDRESS",
+            "IPV6_ADDRESS",
+            "GATEWAY",
+            "SUBNET_MASK",
+            "VLAN_ID",
+            "MAC_ADDRESS",
+            "WIRELESS",
+            "LICENSE",
+            "VERSION",
+            "RELEASE_DATE",
+            "INSTALL_DATE",
+            "MANUFACTURER",
+            "UUID",
+            "SERIAL_NUMBER",
+            "RAW_MATERIAL",
+            "LOT",
+            "BATCH",
+            "HEAT_TREAT",
+            "PART_NUMBER",
+            "PART_FAMILY",
+            "PART_NAME",
+            "PROCESS_STEP",
+            "PROCESS_PLAN",
+            "ORDER_NUMBER",
+            "PROCESS_NAME",
+            "ISO_STEP_EXECUTABLE",
+            "COMPLETE",
+            "ACTIVE",
+            "FAILED",
+            "ABORTED",
+            "ENDED",
+            "WASTE",
+            "PART",
+            "REQUEST",
+            "RESPONSE",
+            "ACTIVITY",
+            "SEGMENT",
+            "RECIPE",
+            "OPERATION"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "NativeUnitEnum": {
+      "title": "NativeUnitEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CENTIPOISE",
+            "DEGREE/MINUTE",
+            "FAHRENHEIT",
+            "FOOT",
+            "FOOT/MINUTE",
+            "FOOT/SECOND",
+            "FOOT/SECOND\\^2",
+            "FOOT_3D",
+            "GALLON/MINUTE",
+            "HOUR",
+            "INCH",
+            "INCH/MINUTE",
+            "INCH/SECOND",
+            "INCH/SECOND\\^2",
+            "INCH_POUND",
+            "INCH_3D",
+            "KELVIN",
+            "KILOWATT",
+            "KILOWATT_HOUR",
+            "LITER/MINUTE",
+            "MILLIMETER/MINUTE",
+            "MINUTE",
+            "OTHER",
+            "POUND",
+            "POUND/INCH\\^2",
+            "RADIAN",
+            "RADIAN/MINUTE",
+            "RADIAN/SECOND",
+            "RADIAN/SECOND\\^2",
+            "BAR",
+            "TORR",
+            "MILLIMETER_MERCURY",
+            "PASCAL/MINUTE",
+            "GRAVITATIONAL_FORCE",
+            "GRAVITATIONAL_ACCELERATION",
+            "AMPERE_HOUR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "FilterEnum": {
+      "title": "FilterEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "MINIMUM_DELTA",
+            "PERIOD"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "RepresentationEnum": {
+      "title": "RepresentationEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "TIME_SERIES",
+            "VALUE",
+            "DATA_SET",
+            "DISCRETE",
+            "TABLE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "boolean": {
+      "type": "boolean",
+      "title": "boolean",
+      "description": "primitive type."
+    },
+    "ID": {
+      "type": "string",
+      "title": "ID",
+      "description": "string that represents an {{term(ID)}}."
+    },
+    "string": {
+      "type": "string",
+      "title": "string",
+      "description": "primitive type."
+    },
+    "float": {
+      "type": "number",
+      "title": "float",
+      "description": "primitive type."
+    },
+    "datetime": {
+      "type": "string",
+      "title": "datetime",
+      "description": "string that represents timestamp in ISO 8601 format."
+    },
+    "integer": {
+      "type": "integer",
+      "title": "integer",
+      "description": "primitive type."
+    },
+    "xlinktype": {
+      "type": "string",
+      "title": "xlinktype",
+      "description": "string that represents the type of an XLink element. See {{url(https://www.w3.org/TR/xlink11/)}}."
+    },
+    "xslang": {
+      "type": "string",
+      "title": "xslang",
+      "description": "string that represents a language tag. See {{url(http://www.ietf.org/rfc/rfc4646.txt)}}."
+    },
+    "SECOND": {
+      "type": "string",
+      "title": "SECOND",
+      "description": "float that represents time in seconds."
+    },
+    "IDREF": {
+      "type": "string",
+      "title": "IDREF",
+      "description": "string that represents a reference to an `ID`."
+    },
+    "xlinkhref": {
+      "type": "string",
+      "title": "xlinkhref",
+      "description": "string that represents the locator attribute of an XLink element. See {{url(https://www.w3.org/TR/xlink11/)}}."
+    },
+    "ResetTriggeredEnum": {
+      "title": "ResetTriggeredEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTION_COMPLETE",
+            "ANNUAL",
+            "DAY",
+            "MAINTENANCE",
+            "MANUAL",
+            "MONTH",
+            "POWER_ON",
+            "SHIFT",
+            "WEEK"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "QualifierEnum": {
+      "title": "QualifierEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "HIGH",
+            "LOW"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "SampleEnum": {
+      "title": "SampleEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACCELERATION",
+            "ACCUMULATED_TIME",
+            "AMPERAGE",
+            "ANGLE",
+            "ANGULAR_ACCELERATION",
+            "ANGULAR_VELOCITY",
+            "AXIS_FEEDRATE",
+            "CAPACITY_FLUID",
+            "CAPACITY_SPATIAL",
+            "CONCENTRATION",
+            "CONDUCTIVITY",
+            "CUTTING_SPEED",
+            "DENSITY",
+            "DEPOSITION_ACCELERATION_VOLUMETRIC",
+            "DEPOSITION_DENSITY",
+            "DEPOSITION_MASS",
+            "DEPOSITION_RATE_VOLUMETRIC",
+            "DEPOSITION_VOLUME",
+            "DISPLACEMENT",
+            "ELECTRICAL_ENERGY",
+            "EQUIPMENT_TIMER",
+            "FILL_LEVEL",
+            "FLOW",
+            "FREQUENCY",
+            "GLOBAL_POSITION",
+            "LENGTH",
+            "LEVEL",
+            "LINEAR_FORCE",
+            "LOAD",
+            "MASS",
+            "PATH_FEEDRATE",
+            "PATH_FEEDRATE_PER_REVOLUTION",
+            "PATH_POSITION",
+            "PH",
+            "POSITION",
+            "POWER_FACTOR",
+            "PRESSURE",
+            "PROCESS_TIMER",
+            "RESISTANCE",
+            "ROTARY_VELOCITY",
+            "SOUND_LEVEL",
+            "SPINDLE_SPEED",
+            "STRAIN",
+            "TEMPERATURE",
+            "TENSION",
+            "TILT",
+            "TORQUE",
+            "VELOCITY",
+            "VISCOSITY",
+            "VOLTAGE",
+            "VOLT_AMPERE",
+            "VOLT_AMPERE_REACTIVE",
+            "VOLUME_FLUID",
+            "VOLUME_SPATIAL",
+            "WATTAGE",
+            "AMPERAGE_AC",
+            "AMPERAGE_DC",
+            "VOLTAGE_AC",
+            "VOLTAGE_DC",
+            "X_DIMENSION",
+            "Y_DIMENSION",
+            "Z_DIMENSION",
+            "DIAMETER",
+            "ORIENTATION",
+            "HUMIDITY_RELATIVE",
+            "HUMIDITY_ABSOLUTE",
+            "HUMIDITY_SPECIFIC",
+            "OBSERVATION_UPDATE_RATE",
+            "ASSET_UPDATE_RATE",
+            "PRESSURIZATION_RATE",
+            "DECELERATION",
+            "ANGULAR_DECELERATION",
+            "PRESSURE_ABSOLUTE",
+            "OPENNESS",
+            "DEW_POINT",
+            "GRAVITATIONAL_FORCE",
+            "GRAVITATIONAL_ACCELERATION",
+            "BATTERY_CAPACITY",
+            "DISCHARGE_RATE",
+            "CHARGE_RATE",
+            "BATTERY_CHARGE",
+            "SETTLING_ERROR",
+            "FOLLOWING_ERROR",
+            "SETTLING_ERROR_LINEAR",
+            "SETTLING_ERROR_ANGULAR",
+            "FOLLOWING_ERROR_LINEAR",
+            "FOLLOWING_ERROR_ANGULAR",
+            "DISPLACEMENT_LINEAR",
+            "DISPLACEMENT_ANGULAR",
+            "POSITION_CARTESIAN"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "EventEnum": {
+      "title": "EventEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE_AXES",
+            "ACTUATOR_STATE",
+            "ALARM",
+            "ASSET_CHANGED",
+            "ASSET_REMOVED",
+            "AVAILABILITY",
+            "AXIS_COUPLING",
+            "AXIS_FEEDRATE_OVERRIDE",
+            "AXIS_INTERLOCK",
+            "AXIS_STATE",
+            "BLOCK",
+            "BLOCK_COUNT",
+            "CHUCK_INTERLOCK",
+            "CHUCK_STATE",
+            "CODE",
+            "COMPOSITION_STATE",
+            "CONTROLLER_MODE",
+            "CONTROLLER_MODE_OVERRIDE",
+            "COUPLED_AXES",
+            "DATE_CODE",
+            "DEVICE_UUID",
+            "DIRECTION",
+            "DOOR_STATE",
+            "EMERGENCY_STOP",
+            "END_OF_BAR",
+            "EQUIPMENT_MODE",
+            "EXECUTION",
+            "FUNCTIONAL_MODE",
+            "HARDNESS",
+            "LINE",
+            "LINE_LABEL",
+            "LINE_NUMBER",
+            "MATERIAL",
+            "MATERIAL_LAYER",
+            "MESSAGE",
+            "OPERATOR_ID",
+            "PALLET_ID",
+            "PART_COUNT",
+            "PART_DETECT",
+            "PART_ID",
+            "PART_NUMBER",
+            "PATH_FEEDRATE_OVERRIDE",
+            "PATH_MODE",
+            "POWER_STATE",
+            "POWER_STATUS",
+            "PROCESS_TIME",
+            "PROGRAM",
+            "PROGRAM_COMMENT",
+            "PROGRAM_EDIT",
+            "PROGRAM_EDIT_NAME",
+            "PROGRAM_HEADER",
+            "PROGRAM_LOCATION",
+            "PROGRAM_LOCATION_TYPE",
+            "PROGRAM_NEST_LEVEL",
+            "ROTARY_MODE",
+            "ROTARY_VELOCITY_OVERRIDE",
+            "SERIAL_NUMBER",
+            "SPINDLE_INTERLOCK",
+            "TOOL_ASSET_ID",
+            "TOOL_GROUP",
+            "TOOL_ID",
+            "TOOL_NUMBER",
+            "TOOL_OFFSET",
+            "USER",
+            "VARIABLE",
+            "WAIT_STATE",
+            "WIRE",
+            "WORKHOLDING_ID",
+            "WORK_OFFSET",
+            "OPERATING_SYSTEM",
+            "FIRMWARE",
+            "APPLICATION",
+            "LIBRARY",
+            "HARDWARE",
+            "NETWORK",
+            "ROTATION",
+            "TRANSLATION",
+            "DEVICE_ADDED",
+            "DEVICE_REMOVED",
+            "DEVICE_CHANGED",
+            "CONNECTION_STATUS",
+            "ADAPTER_SOFTWARE_VERSION",
+            "ADAPTER_URI",
+            "MTCONNECT_VERSION",
+            "SENSOR_ATTACHMENT",
+            "PART_STATUS",
+            "PROCESS_OCCURRENCE_ID",
+            "PROCESS_AGGREGATE_ID",
+            "PROCESS_KIND_ID",
+            "PART_GROUP_ID",
+            "PART_KIND_ID",
+            "PART_UNIQUE_ID",
+            "CONTROL_LIMIT",
+            "SPECIFICATION_LIMIT",
+            "ALARM_LIMIT",
+            "LOAD_COUNT",
+            "UNLOAD_COUNT",
+            "TRANSFER_COUNT",
+            "ACTIVATION_COUNT",
+            "DEACTIVATION_COUNT",
+            "CYCLE_COUNT",
+            "VALVE_STATE",
+            "LOCK_STATE",
+            "PROCESS_STATE",
+            "PART_PROCESSING_STATE",
+            "OPERATING_MODE",
+            "ASSET_COUNT",
+            "MAINTENANCE_LIST",
+            "FIXTURE_ID",
+            "PART_COUNT_TYPE",
+            "CLOCK_TIME",
+            "HOST_NAME",
+            "NETWORK_PORT",
+            "LEAK_DETECT",
+            "BATTERY_STATE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ConditionEnum": {
+      "title": "ConditionEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "COMMUNICATIONS",
+            "DATA_RANGE",
+            "LOGIC_PROGRAM",
+            "MOTION_PROGRAM",
+            "SYSTEM",
+            "ACTUATOR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "MotionActuationTypeEnum": {
+      "title": "MotionActuationTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "DIRECT",
+            "VIRTUAL",
+            "NONE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "MotionTypeEnum": {
+      "title": "MotionTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "PRISMATIC",
+            "CONTINUOUS",
+            "REVOLUTE",
+            "FIXED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CoordinateSystemTypeEnum": {
+      "title": "CoordinateSystemTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "WORLD",
+            "BASE",
+            "OBJECT",
+            "TASK",
+            "MECHANICAL_INTERFACE",
+            "TOOL",
+            "MOBILE_PLATFORM",
+            "MACHINE",
+            "CAMERA"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DataItemRelationshipTypeEnum": {
+      "title": "DataItemRelationshipTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ATTACHMENT",
+            "COORDINATE_SYSTEM",
+            "LIMIT",
+            "OBSERVATION"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "SpecificationRelationshipTypeEnum": {
+      "title": "SpecificationRelationshipTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "LIMIT"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "MediaTypeEnum": {
+      "title": "MediaTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "STEP",
+            "STL",
+            "GDML",
+            "OBJ",
+            "COLLADA",
+            "IGES",
+            "3DS",
+            "ACIS",
+            "X_T"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "OriginatorEnum": {
+      "title": "OriginatorEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "MANUFACTURER",
+            "USER"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "QIFDocumentTypeEnum": {
+      "title": "QIFDocumentTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "MEASUREMENT_RESOURCE",
+            "PLAN",
+            "PRODUCT",
+            "RESULTS",
+            "RULES",
+            "STATISTICS"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ProcessStateEnum": {
+      "title": "ProcessStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "INITIALIZING",
+            "READY",
+            "ACTIVE",
+            "COMPLETE",
+            "INTERRUPTED",
+            "ABORTED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AssetTypeEnum": {
+      "title": "AssetTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CuttingTool",
+            "File",
+            "QIFDocumentWrapper",
+            "RawMaterial",
+            "CuttingToolArchetype",
+            "FileArchetype"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ChuckStateEnum": {
+      "title": "ChuckStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "OPEN",
+            "CLOSED",
+            "UNLATCHED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AxisCouplingEnum": {
+      "title": "AxisCouplingEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "TANDEM",
+            "SYNCHRONOUS",
+            "MASTER",
+            "SLAVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "PartStatusEnum": {
+      "title": "PartStatusEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DirectionRotaryEnum": {
+      "title": "DirectionRotaryEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CLOCKWISE",
+            "COUNTER_CLOCKWISE",
+            "NONE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "FileStateEnum": {
+      "title": "FileStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "EXPERIMENTAL",
+            "PRODUCTION",
+            "REVISION"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CriticalityTypeEnum": {
+      "title": "CriticalityTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CRITICAL",
+            "NONCRITICAL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CompositionStateMotionEnum": {
+      "title": "CompositionStateMotionEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "OPEN",
+            "UNLATCHED",
+            "CLOSED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ActuatorStateEnum": {
+      "title": "ActuatorStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "INACTIVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ConnectionStatusEnum": {
+      "title": "ConnectionStatusEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CLOSED",
+            "LISTEN",
+            "ESTABLISHED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "RoleTypeEnum": {
+      "title": "RoleTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "SYSTEM",
+            "AUXILIARY"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "PathModeEnum": {
+      "title": "PathModeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "INDEPENDENT",
+            "MASTER",
+            "SYNCHRONOUS",
+            "MIRROR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CompositionStateActionEnum": {
+      "title": "CompositionStateActionEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "INACTIVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "MILLIMETER": {
+      "type": "string",
+      "title": "MILLIMETER",
+      "description": "float that represents measurement in millimeter."
+    },
+    "PartProcessingStateEnum": {
+      "title": "PartProcessingStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "NEEDS_PROCESSING",
+            "IN_PROCESS",
+            "PROCESSING_ENDED",
+            "PROCESSING_ENDED_COMPLETE",
+            "PROCESSING_ENDED_STOPPED",
+            "PROCESSING_ENDED_ABORTED",
+            "PROCESSING_ENDED_LOST",
+            "PROCESSING_ENDED_SKIPPED",
+            "PROCESSING_ENDED_REJECTED",
+            "WAITING_FOR_TRANSIT",
+            "IN_TRANSIT",
+            "TRANSIT_COMPLETE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ControllerModeEnum": {
+      "title": "ControllerModeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "AUTOMATIC",
+            "MANUAL",
+            "MANUAL_DATA_INPUT",
+            "SEMI_AUTOMATIC",
+            "EDIT",
+            "FEED_HOLD"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DirectionLinearEnum": {
+      "title": "DirectionLinearEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "POSITIVE",
+            "NEGATIVE",
+            "NONE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "EndOfBarEnum": {
+      "title": "EndOfBarEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "YES",
+            "NO"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "LocationTypeEnum": {
+      "title": "LocationTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Enumeration for Location types",
+          "enum": [
+            "POT",
+            "STATION",
+            "CRIB",
+            "SPINDLE",
+            "TRANSFER_POT",
+            "RETURN_POT",
+            "STAGING_POT",
+            "REMOVAL_POT",
+            "EXPIRED_POT",
+            "END_EFFECTOR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ValveStateEnum": {
+      "title": "ValveStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "OPEN",
+            "OPENING",
+            "CLOSED",
+            "CLOSING"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CodeEnum": {
+      "title": "CodeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "BDX",
+            "LBX",
+            "APMX",
+            "DC",
+            "DF",
+            "OAL",
+            "DMM",
+            "H",
+            "LS",
+            "LUX",
+            "LPR",
+            "WT",
+            "LF",
+            "CRP",
+            "L",
+            "DRVA",
+            "WF",
+            "IC",
+            "SIG",
+            "KAPR",
+            "PSIR",
+            "N/A",
+            "BS",
+            "SDLx",
+            "STAx",
+            "DCx",
+            "HF",
+            "RE",
+            "LFx",
+            "BCH",
+            "CHW",
+            "W1"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ApplicationCategoryEnum": {
+      "title": "ApplicationCategoryEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ASSEMBLY",
+            "DEVICE",
+            "HANDLING",
+            "MAINTENANCE",
+            "PART",
+            "PROCESS",
+            "INSPECTION",
+            "SETUP"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CutterStatusTypeEnum": {
+      "title": "CutterStatusTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Enumeration for CutterStatus values.",
+          "enum": [
+            "NEW",
+            "AVAILABLE",
+            "UNAVAILABLE",
+            "ALLOCATED",
+            "UNALLOCATED",
+            "MEASURED",
+            "RECONDITIONED",
+            "USED",
+            "EXPIRED",
+            "BROKEN",
+            "NOT_REGISTERED",
+            "UNKNOWN"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CompositionStateLateralEnum": {
+      "title": "CompositionStateLateralEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "RIGHT",
+            "LEFT",
+            "TRANSITIONING"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "PartDetectEnum": {
+      "title": "PartDetectEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "PRESENT",
+            "NOT_PRESENT"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ExecutionEnum": {
+      "title": "ExecutionEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "READY",
+            "ACTIVE",
+            "INTERRUPTED",
+            "FEED_HOLD",
+            "STOPPED",
+            "OPTIONAL_STOP",
+            "PROGRAM_STOPPED",
+            "PROGRAM_COMPLETED",
+            "WAIT"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DEGREE": {
+      "type": "string",
+      "title": "DEGREE",
+      "description": "float that represents angle in degrees."
+    },
+    "AvailabilityEnum": {
+      "title": "AvailabilityEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "AVAILABLE",
+            "UNAVAILABLE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ProgramEditEnum": {
+      "title": "ProgramEditEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "READY",
+            "NOT_READY"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ControllerModeOverrideEnum": {
+      "title": "ControllerModeOverrideEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ON",
+            "OFF"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "FunctionalModeEnum": {
+      "title": "FunctionalModeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "PRODUCTION",
+            "SETUP",
+            "TEARDOWN",
+            "MAINTENANCE",
+            "PROCESS_DEVELOPMENT"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "WaitStateEnum": {
+      "title": "WaitStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "POWERING_UP",
+            "POWERING_DOWN",
+            "PART_LOAD",
+            "PART_UNLOAD",
+            "TOOL_LOAD",
+            "TOOL_UNLOAD",
+            "MATERIAL_LOAD",
+            "MATERIAL_UNLOAD",
+            "SECONDARY_PROCESS",
+            "PAUSING",
+            "RESUMING"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "RotaryModeEnum": {
+      "title": "RotaryModeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "SPINDLE",
+            "INDEX",
+            "CONTOUR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CompositionStateSwitchedEnum": {
+      "title": "CompositionStateSwitchedEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ON",
+            "OFF"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "EmergencyStopEnum": {
+      "title": "EmergencyStopEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ARMED",
+            "TRIGGERED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "LockStateEnum": {
+      "title": "LockStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "LOCKED",
+            "UNLOCKED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AxisStateEnum": {
+      "title": "AxisStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "HOME",
+            "TRAVEL",
+            "PARKED",
+            "STOPPED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "InterfaceStateEnum": {
+      "title": "InterfaceStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ENABLED",
+            "DISABLED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "RelationshipTypeEnum": {
+      "title": "RelationshipTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "PARENT",
+            "CHILD",
+            "PEER"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "FormatTypeEnum": {
+      "title": "FormatTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Enumeration for CuttingToolDefinition format values.",
+          "enum": [
+            "EXPRESS",
+            "TEXT",
+            "UNDEFINED",
+            "XML"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CompositionTypeEnum": {
+      "title": "CompositionTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTUATOR",
+            "AMPLIFIER",
+            "BALLSCREW",
+            "BELT",
+            "BRAKE",
+            "CHAIN",
+            "CHOPPER",
+            "CHUCK",
+            "CHUTE",
+            "CIRCUIT_BREAKER",
+            "CLAMP",
+            "COMPRESSOR",
+            "DOOR",
+            "DRAIN",
+            "ENCODER",
+            "EXPOSURE_UNIT",
+            "EXTRUSION_UNIT",
+            "FAN",
+            "FILTER",
+            "GALVANOMOTOR",
+            "GRIPPER",
+            "HOPPER",
+            "LINEAR_POSITION_FEEDBACK",
+            "MOTOR",
+            "OIL",
+            "POWER_SUPPLY",
+            "PULLEY",
+            "PUMP",
+            "REEL",
+            "SENSING_ELEMENT",
+            "SPREADER",
+            "STORAGE_BATTERY",
+            "SWITCH",
+            "TABLE",
+            "TANK",
+            "TENSIONER",
+            "TRANSFORMER",
+            "VALVE",
+            "VAT",
+            "WATER",
+            "WIRE",
+            "WORKPIECE",
+            "COOLING_TOWER",
+            "POT",
+            "STATION",
+            "TRANSFER_ARM",
+            "TRANSFER_POT",
+            "RETURN_POT",
+            "STAGING_POT",
+            "REMOVAL_POT",
+            "EXPIRED_POT"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CountDirectionTypeEnum": {
+      "title": "CountDirectionTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Enumeration for countDirection types.",
+          "enum": [
+            "UP",
+            "DOWN"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ApplicationTypeEnum": {
+      "title": "ApplicationTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "DESIGN",
+            "DATA",
+            "DOCUMENTATION",
+            "INSTRUCTIONS",
+            "LOG",
+            "PRODUCTION_PROGRAM"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "FormEnum": {
+      "title": "FormEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "BAR",
+            "SHEET",
+            "BLOCK",
+            "CASTING",
+            "POWDER",
+            "LIQUID",
+            "GEL",
+            "FILAMENT",
+            "GAS"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "CompositionStateVerticalEnum": {
+      "title": "CompositionStateVerticalEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "UP",
+            "DOWN",
+            "TRANSITIONING"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "RequestStateEnum": {
+      "title": "RequestStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "NOT_READY",
+            "READY",
+            "ACTIVE",
+            "FAIL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ResponseStateEnum": {
+      "title": "ResponseStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "NOT_READY",
+            "READY",
+            "ACTIVE",
+            "COMPLETE",
+            "FAIL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "SpindleInterlockEnum": {
+      "title": "SpindleInterlockEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "INACTIVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AxisInterlockEnum": {
+      "title": "AxisInterlockEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "INACTIVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ChuckInterlockEnum": {
+      "title": "ChuckInterlockEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "INACTIVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DoorStateEnum": {
+      "title": "DoorStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "OPEN",
+            "CLOSED",
+            "UNLATCHED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "EquipmentModeEnum": {
+      "title": "EquipmentModeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ON",
+            "OFF"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "PowerStateEnum": {
+      "title": "PowerStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ON",
+            "OFF"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ConditionStateEnum": {
+      "title": "ConditionStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "Normal",
+            "Warning",
+            "Fault"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ToolLifeEnum": {
+      "title": "ToolLifeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "MINUTES",
+            "PART_COUNT",
+            "WEAR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "x509": {
+      "type": "string",
+      "title": "x509",
+      "description": "string that represents an `x509` data block. {{cite(ISO/IEC 9594-8:2020)}}."
+    },
+    "unit": {
+      "type": "string",
+      "title": "unit"
+    },
+    "CUBIC_MILLIMETER": {
+      "type": "string",
+      "title": "CUBIC_MILLIMETER",
+      "description": "float that represents volume in cubic millimeter."
+    },
+    "OperatingModeEnum": {
+      "title": "OperatingModeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "AUTOMATIC",
+            "MANUAL",
+            "SEMI_AUTOMATIC"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "int32": {
+      "type": "string",
+      "title": "int32",
+      "description": "32-bit integer."
+    },
+    "int64": {
+      "type": "string",
+      "title": "int64",
+      "description": "64-bit integer."
+    },
+    "version": {
+      "type": "string",
+      "title": "version",
+      "description": "series of four numeric values, separated by a decimal point, representing a {{term(major)}}, {{term(minor)}}, and {{term(revision)}} number of the MTConnect Standard and the revision number of a specific {{term(schema)}}."
+    },
+    "uint32": {
+      "type": "string",
+      "title": "uint32",
+      "description": "32-bit unsigned integer."
+    },
+    "uint64": {
+      "type": "string",
+      "title": "uint64",
+      "description": "64-bit unsigned integer."
+    },
+    "ErrorCodeEnum": {
+      "title": "ErrorCodeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ASSET_NOT_FOUND",
+            "INTERNAL_ERROR",
+            "INVALID_REQUEST",
+            "INVALID_URI",
+            "INVALID_XPATH",
+            "NO_DEVICE",
+            "OUT_OF_RANGE",
+            "QUERY_ERROR",
+            "TOO_MANY",
+            "UNAUTHORIZED",
+            "UNSUPPORTED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "MaintenanceListDirectionEnum": {
+      "title": "MaintenanceListDirectionEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "UP",
+            "DOWN"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "MaintenanceListIntervalEnum": {
+      "title": "MaintenanceListIntervalEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ABSOLUTE",
+            "INCREMENTAL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "PartCountTypeEnum": {
+      "title": "PartCountTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "EACH",
+            "BATCH"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AlarmSeverityEnum": {
+      "title": "AlarmSeverityEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CRITICAL",
+            "ERROR",
+            "WARNING",
+            "INFORMATION"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AlarmStateEnum": {
+      "title": "AlarmStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "INSTANT",
+            "ACTIVE",
+            "CLEARED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "AlarmCodeEnum": {
+      "title": "AlarmCodeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CRASH",
+            "JAM",
+            "FAILURE",
+            "FAULT",
+            "STALLED",
+            "OVERLOAD",
+            "ESTOP",
+            "MATERIAL",
+            "MESSAGE",
+            "OTHER"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "DirectionEnum": {
+      "title": "DirectionEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CLOCKWISE",
+            "COUNTER_CLOCKWISE",
+            "POSITIVE",
+            "NEGATIVE"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "PowerStatusEnum": {
+      "title": "PowerStatusEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "ON",
+            "OFF"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "NetworkWirelessEnum": {
+      "title": "NetworkWirelessEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "YES",
+            "NO"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ProgramLocationTypeEnum": {
+      "title": "ProgramLocationTypeEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "LOCAL",
+            "EXTERNAL"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "InterfaceEventEnum": {
+      "title": "InterfaceEventEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "INTERFACE_STATE",
+            "MATERIAL_FEED",
+            "MATERIAL_CHANGE",
+            "MATERIAL_RETRACT",
+            "PART_CHANGE",
+            "MATERIAL_LOAD",
+            "MATERIAL_UNLOAD",
+            "OPEN_CHUCK",
+            "OPEN_DOOR",
+            "CLOSE_CHUCK",
+            "CLOSE_DOOR"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "LeakDetectEnum": {
+      "title": "LeakDetectEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "DETECTED",
+            "NOT_DETECTED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "BatteryStateEnum": {
+      "title": "BatteryStateEnum",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "CHARGED",
+            "CHARGING",
+            "DISCHARGING",
+            "DISCHARGED"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-ln-zA-LN-Z]:[A-Z_][A-Z0-9_]*$"
+        }
+      ]
+    },
+    "ControlLimitResult": {
+      "type": "object",
+      "title": "ControlLimitResult",
+      "properties": {
+        "UPPER_LIMIT": {
+          "type": "number",
+          "description": "upper conformance boundary for a variable. > Note: immediate concern or action may be required."
+        },
+        "UPPER_WARNING": {
+          "type": "number",
+          "description": "upper boundary indicating increased concern and supervision may be required."
+        },
+        "NOMINAL": {
+          "type": "number",
+          "description": "ideal or desired value for a variable."
+        },
+        "LOWER_WARNING": {
+          "type": "number",
+          "description": "lower boundary indicating increased concern and supervision may be required."
+        },
+        "LOWER_LIMIT": {
+          "type": "number",
+          "description": "lower conformance boundary for a variable. > Note: immediate concern or action may be required."
+        }
+      },
+      "additionalProperties": false
+    },
+    "SpecificationLimitResult": {
+      "type": "object",
+      "title": "SpecificationLimitResult",
+      "properties": {
+        "UPPER_LIMIT": {
+          "type": "number",
+          "description": "upper conformance boundary for a variable. > Note: immediate concern or action may be required."
+        },
+        "NOMINAL": {
+          "type": "number",
+          "description": "ideal or desired value for a variable."
+        },
+        "LOWER_LIMIT": {
+          "type": "number",
+          "description": "lower conformance boundary for a variable. > Note: immediate concern or action may be required."
+        }
+      },
+      "additionalProperties": false
+    },
+    "AlarmLimitResult": {
+      "type": "object",
+      "title": "AlarmLimitResult",
+      "properties": {
+        "UPPER_LIMIT": {
+          "type": "number",
+          "description": "upper conformance boundary for a variable. > Note: immediate concern or action may be required."
+        },
+        "UPPER_WARNING": {
+          "type": "number",
+          "description": "upper boundary indicating increased concern and supervision may be required."
+        },
+        "LOWER_WARNING": {
+          "type": "number",
+          "description": "lower boundary indicating increased concern and supervision may be required."
+        },
+        "LOWER_LIMIT": {
+          "type": "number",
+          "description": "lower conformance boundary for a variable. > Note: immediate concern or action may be required."
+        }
+      },
+      "additionalProperties": false
+    },
+    "SensorAttachmentResult": {
+      "type": "object",
+      "title": "SensorAttachmentResult",
+      "properties": {
+        "SENSOR_ID": {
+          "type": "string",
+          "description": "The identity of a sensor used to observe some measurement of an item."
+        }
+      },
+      "additionalProperties": false
+    },
+    "MaintenanceListResult": {
+      "type": "object",
+      "title": "MaintenanceListResult",
+      "properties": {
+        "VALUE": {
+          "type": "number",
+          "description": "current interval value of the activity."
+        },
+        "INTERVAL": {
+          "$ref": "#/$defs/MaintenanceListIntervalEnum",
+          "description": "interval of the value observed.",
+          "default": "ABSOLUTE"
+        },
+        "NEXT_SERVICE_DATE": {
+          "type": "string",
+          "description": "next date/time stamp that maintenance should be performed."
+        },
+        "RESET": {
+          "type": "string",
+          "description": "last date/time stamp of the {{term(observation)}} was reset."
+        },
+        "SEVERITY": {
+          "type": "integer",
+          "description": "level of severity on a scale of 1-10."
+        },
+        "DIRECTION": {
+          "$ref": "#/$defs/MaintenanceListDirectionEnum",
+          "description": "direction of the value observed.",
+          "default": "UP"
+        },
+        "NAME": {
+          "type": "string",
+          "description": "identifier of the maintenance activity."
+        },
+        "LAST_SERVICE_DATE": {
+          "type": "string",
+          "description": "last date/time stamp that maintenance was performed."
+        },
+        "UNITS": {
+          "$ref": "#/$defs/UnitEnum",
+          "description": "same as {{block(DataItem)}} {{property(units)}}. See {{package(Device Information Model)}}.",
+          "default": "COUNT"
+        },
+        "TARGET": {
+          "type": "number",
+          "description": "target value of the next maintenance."
+        }
+      },
+      "required": [
+        "NAME",
+        "VALUE"
+      ],
+      "additionalProperties": false
+    },
+    "organizer": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "deprecated": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "extensible": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "informative": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "valueType": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "normative": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "observes": {
+      "description": "Unsupported UML kind: uml:Stereotype"
+    },
+    "AssetCountDataSet": {
+      "type": "object",
+      "title": "AssetCountDataSet",
+      "description": "count of each asset type currently in the {{term(agent)}}.",
+      "properties": {
+        "assetType": {
+          "type": "string",
+          "description": "type of {{term(Asset)}}."
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "UNAVAILABLE"
+              ]
+            }
+          ]
+        },
+        "count": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "assetType"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

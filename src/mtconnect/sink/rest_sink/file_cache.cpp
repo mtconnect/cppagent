@@ -28,6 +28,7 @@
 
 #include <chrono>
 #include <future>
+#include <regex>
 #include <thread>
 
 #include "cached_file.hpp"
@@ -59,10 +60,10 @@ namespace mtconnect::sink::rest_sink {
   namespace fs = std::filesystem;
 
   // Register a file
-  XmlNamespaceList FileCache::registerDirectory(const string &uri, const fs::path &pathName,
-                                                const string &version)
+  MTConnectSchemaList FileCache::registerDirectory(const string &uri, const fs::path &pathName,
+                                                   const string &version)
   {
-    XmlNamespaceList namespaces;
+    MTConnectSchemaList namespaces;
 
     try
     {
@@ -102,10 +103,11 @@ namespace mtconnect::sink::rest_sink {
     return namespaces;
   }
 
-  std::optional<XmlNamespace> FileCache::registerFile(const std::string &uri, const fs::path &path,
-                                                      const std::string &version)
+  std::optional<MTConnectSchema> FileCache::registerFile(const std::string &uri,
+                                                         const fs::path &path,
+                                                         const std::string &version)
   {
-    optional<XmlNamespace> ns;
+    optional<MTConnectSchema> ns;
 
     if (!fs::exists(path))
     {
@@ -129,31 +131,19 @@ namespace mtconnect::sink::rest_sink {
     string name = path.filename().string();
 
     // Check if the file name maps to a standard MTConnect schema file.
-    if (!name.find("MTConnect") && name.substr(name.length() - 4u, 4u) == ".xsd" &&
-        version == name.substr(name.length() - 7u, 3u))
-    {
-      string version = name.substr(name.length() - 7u, 3u);
+    // Matches: MTConnect{Type}_{version}.xsd  or  MTConnect{Type}_{version}.schema.json
+    static const regex s_mtcSchema(
+        R"(^MTConnect(Error|Devices|Assets|Streams)_(\d\.\d+)(\.xsd|.schema\.json)$)");
 
-      if (name.substr(9u, 5u) == "Error")
-      {
-        string urn = "urn:mtconnect.org:MTConnectError:" + version;
-        ns = make_optional<XmlNamespace>(urn, uri);
-      }
-      else if (name.substr(9u, 7u) == "Devices")
-      {
-        string urn = "urn:mtconnect.org:MTConnectDevices:" + version;
-        ns = make_optional<XmlNamespace>(urn, uri);
-      }
-      else if (name.substr(9u, 6u) == "Assets")
-      {
-        string urn = "urn:mtconnect.org:MTConnectAssets:" + version;
-        ns = make_optional<XmlNamespace>(urn, uri);
-      }
-      else if (name.substr(9u, 7u) == "Streams")
-      {
-        string urn = "urn:mtconnect.org:MTConnectStreams:" + version;
-        ns = make_optional<XmlNamespace>(urn, uri);
-      }
+    smatch match;
+    if (regex_match(name, match, s_mtcSchema) && match[2].str() == version)
+    {
+      if (match[3].str() == ".xsd")
+        ns = make_optional<MTConnectSchema>(SchemaType::XSD, uri, match[1].str());
+      else if (match[3].str() == ".schema.json")
+        ns = make_optional<MTConnectSchema>(SchemaType::JSON, uri, match[1].str());
+      else
+        LOG(warning) << "Unrecognized schema file extension: " << match[3].str();
     }
 
     return ns;

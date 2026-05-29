@@ -213,4 +213,7 @@ TEST(UtilitiesTest, parse_time_micro_handles_millisecond_and_microsecond_timesta
   ASSERT_TRUE(1353414802123000LL == time);
 }
 
-TEST(UtilitiesTest, int64_to_string_converts_large_unsigned_integer) { ASSERT_EQ((string) "8805345009", to_string(8805345009ULL)); }
+TEST(UtilitiesTest, int64_to_string_converts_large_unsigned_integer)
+{
+  ASSERT_EQ((string) "8805345009", to_string(8805345009ULL));
+}

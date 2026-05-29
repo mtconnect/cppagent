@@ -32,8 +32,22 @@ namespace boost {
 }  // namespace boost
 
 namespace mtconnect::sink::rest_sink {
-  using XmlNamespace = std::pair<std::string, std::string>;
-  using XmlNamespaceList = std::list<XmlNamespace>;
+  enum class SchemaType
+  {
+    XSD,
+    JSON
+  };
+  struct MTConnectSchema
+  {
+    SchemaType m_type;
+    std::string m_uri;
+    std::string m_doc;
+
+    MTConnectSchema(SchemaType type, const std::string &uri, const std::string &doc)
+      : m_type(type), m_uri(uri), m_doc(doc)
+    {}
+  };
+  using MTConnectSchemaList = std::list<MTConnectSchema>;
   /// @brief Class to manage file caching for the REST service
   class AGENT_LIB_API FileCache
   {
@@ -51,8 +65,8 @@ namespace mtconnect::sink::rest_sink {
     /// @param path the path on the file system
     /// @param version schema version when registering MTConnect files
     /// @return A namespace list associated with the files
-    XmlNamespaceList registerFiles(const std::string &uri, const std::filesystem::path &path,
-                                   const std::string &version)
+    MTConnectSchemaList registerFiles(const std::string &uri, const std::filesystem::path &path,
+                                      const std::string &version)
     {
       return registerDirectory(uri, path, version);
     }
@@ -61,16 +75,16 @@ namespace mtconnect::sink::rest_sink {
     /// @param path the path on the file system
     /// @param version schema version when registering MTConnect files
     /// @return A namespace list associated with the files
-    XmlNamespaceList registerDirectory(const std::string &uri, const std::filesystem::path &path,
-                                       const std::string &version);
+    MTConnectSchemaList registerDirectory(const std::string &uri, const std::filesystem::path &path,
+                                          const std::string &version);
     /// @brief Register a single file
     /// @param uri the uri for the file
     /// @param pathName the std filesystem path of file
     /// @param version the schema version when registering MTConnect files
     /// @return an optional XmlNamespace if successful
-    std::optional<XmlNamespace> registerFile(const std::string &uri,
-                                             const std::filesystem::path &path,
-                                             const std::string &version);
+    std::optional<MTConnectSchema> registerFile(const std::string &uri,
+                                                const std::filesystem::path &path,
+                                                const std::string &version);
     /// @brief get a cached file given a filename and optional encoding
     /// @param name the name of the file from the server
     /// @param acceptEncoding optional accepted encodings

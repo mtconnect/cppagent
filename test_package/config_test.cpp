@@ -32,7 +32,8 @@
 #include "mtconnect/agent.hpp"
 #include "mtconnect/configuration/agent_config.hpp"
 #include "mtconnect/configuration/config_options.hpp"
-#include "mtconnect/printer//xml_printer.hpp"
+#include "mtconnect/printer/json_printer.hpp"
+#include "mtconnect/printer/xml_printer.hpp"
 #include "mtconnect/sink/rest_sink/rest_service.hpp"
 #include "mtconnect/source/adapter/shdr/shdr_adapter.hpp"
 
@@ -2527,3 +2528,75 @@ DevicesStyle {
     ASSERT_EQ("MachineXXX"s, sender);
   }
 }  // namespace
+
+TEST_F(ConfigTest, custom_json_schema_location_for_devices)
+{
+  string config {std::format(R"(DevicesJsonSchema {{
+ Location = /myschemas/MTConnectDevices_2.7_draft-04.schema.json
+ Path = {}/schemas/MTConnectDevices_2.7_draft-04.schema.json
+}})",
+                             PROJECT_ROOT_DIR)};
+
+  m_config->loadConfig(config);
+  auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+  ASSERT_TRUE(agent);
+  auto printer = dynamic_cast<printer::JsonPrinter *>(agent->getPrinter("json"));
+  ASSERT_TRUE(printer);
+  const auto &schema = printer->getDevicesSchema();
+  ASSERT_TRUE(schema);
+  ASSERT_EQ("http://localhost:5000/myschemas/MTConnectDevices_2.7_draft-04.schema.json", *schema);
+}
+
+TEST_F(ConfigTest, custom_json_schema_location_for_streams)
+{
+  string config {std::format(R"(StreamsJsonSchema {{
+ Location = /myschemas/MTConnectStreams_2.7_draft-04.schema.json
+ Path = {}/schemas/MTConnectStreams_2.7_draft-04.schema.json
+}})",
+                             PROJECT_ROOT_DIR)};
+
+  m_config->loadConfig(config);
+  auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+  ASSERT_TRUE(agent);
+  auto printer = dynamic_cast<printer::JsonPrinter *>(agent->getPrinter("json"));
+  ASSERT_TRUE(printer);
+  const auto &schema = printer->getStreamsSchema();
+  ASSERT_TRUE(schema);
+  ASSERT_EQ("http://localhost:5000/myschemas/MTConnectStreams_2.7_draft-04.schema.json", *schema);
+}
+
+TEST_F(ConfigTest, custom_json_schema_location_for_assets)
+{
+  string config {std::format(R"(AssetsJsonSchema {{
+ Location = /myschemas/MTConnectAssets_2.7_draft-04.schema.json
+ Path = {}/schemas/MTConnectAssets_2.7_draft-04.schema.json
+}})",
+                             PROJECT_ROOT_DIR)};
+
+  m_config->loadConfig(config);
+  auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+  ASSERT_TRUE(agent);
+  auto printer = dynamic_cast<printer::JsonPrinter *>(agent->getPrinter("json"));
+  ASSERT_TRUE(printer);
+  const auto &schema = printer->getAssetsSchema();
+  ASSERT_TRUE(schema);
+  ASSERT_EQ("http://localhost:5000/myschemas/MTConnectAssets_2.7_draft-04.schema.json", *schema);
+}
+
+TEST_F(ConfigTest, custom_json_schema_location_for_error)
+{
+  string config {std::format(R"(ErrorJsonSchema {{
+ Location = /myschemas/MTConnectError_2.7_draft-04.schema.json
+ Path = {}/schemas/MTConnectError_2.7_draft-04.schema.json
+}})",
+                             PROJECT_ROOT_DIR)};
+
+  m_config->loadConfig(config);
+  auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+  ASSERT_TRUE(agent);
+  auto printer = dynamic_cast<printer::JsonPrinter *>(agent->getPrinter("json"));
+  ASSERT_TRUE(printer);
+  const auto &schema = printer->getErrorSchema();
+  ASSERT_TRUE(schema);
+  ASSERT_EQ("http://localhost:5000/myschemas/MTConnectError_2.7_draft-04.schema.json", *schema);
+}

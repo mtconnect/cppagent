@@ -244,12 +244,19 @@ namespace mtconnect {
       {
         if (m_specialClass == THREE_SPACE_CLS)
           m_key += ":3D";
-        else if (m_category == EVENT && hasProperty("units"))
+        else if (m_category == EVENT)
         {
-          if (this->get<string>("units") == "COUNT")
+          if (hasProperty("units"))
+          {
+            if (this->get<string>("units") == "COUNT")
+              m_key += ":INT";
+            else
+              m_key += ":DOUBLE";
+          }
+          else if (type != "TOOL_NUMBER" && (type.ends_with("COUNT") || type.ends_with("NUMBER")))
+          {
             m_key += ":INT";
-          else
-            m_key += ":DOUBLE";
+          }
         }
       }
     }

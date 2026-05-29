@@ -78,6 +78,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(WorkerThreads);
     DECLARE_CONFIGURATION(Validation);
     DECLARE_CONFIGURATION(CorrectTimestamps);
+    DECLARE_CONFIGURATION(ExternalBaseUrl);
     ///@}
 
     /// @name MQTT Configuration
