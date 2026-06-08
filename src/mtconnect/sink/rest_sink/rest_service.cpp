@@ -77,7 +77,7 @@ namespace mtconnect {
       if (!base)
       {
         auto ip = GetOption<string>(options, config::ServerIp);
-        if (!ip)
+        if (!ip || *ip == "0.0.0.0")
           ip = GetBestHostAddress(m_context, true);
         string protocol;
         if (m_server->isTlsEnabled())

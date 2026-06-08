@@ -2531,7 +2531,8 @@ DevicesStyle {
 
 TEST_F(ConfigTest, custom_json_schema_location_for_devices)
 {
-  string config {std::format(R"(DevicesJsonSchema {{
+  string config {std::format(R"(ExternalBaseUrl = http://localhost:5000
+DevicesJsonSchema {{
  Location = /myschemas/MTConnectDevices_2.7_draft-04.schema.json
  Path = {}/schemas/MTConnectDevices_2.7_draft-04.schema.json
 }})",
@@ -2549,7 +2550,8 @@ TEST_F(ConfigTest, custom_json_schema_location_for_devices)
 
 TEST_F(ConfigTest, custom_json_schema_location_for_streams)
 {
-  string config {std::format(R"(StreamsJsonSchema {{
+  string config {std::format(R"(ExternalBaseUrl = http://localhost:5000
+StreamsJsonSchema {{
  Location = /myschemas/MTConnectStreams_2.7_draft-04.schema.json
  Path = {}/schemas/MTConnectStreams_2.7_draft-04.schema.json
 }})",
@@ -2567,7 +2569,8 @@ TEST_F(ConfigTest, custom_json_schema_location_for_streams)
 
 TEST_F(ConfigTest, custom_json_schema_location_for_assets)
 {
-  string config {std::format(R"(AssetsJsonSchema {{
+  string config {std::format(R"(ExternalBaseUrl = http://localhost:5000
+AssetsJsonSchema {{
  Location = /myschemas/MTConnectAssets_2.7_draft-04.schema.json
  Path = {}/schemas/MTConnectAssets_2.7_draft-04.schema.json
 }})",
@@ -2585,7 +2588,8 @@ TEST_F(ConfigTest, custom_json_schema_location_for_assets)
 
 TEST_F(ConfigTest, custom_json_schema_location_for_error)
 {
-  string config {std::format(R"(ErrorJsonSchema {{
+  string config {std::format(R"(ExternalBaseUrl = http://localhost:5000
+ErrorJsonSchema {{
  Location = /myschemas/MTConnectError_2.7_draft-04.schema.json
  Path = {}/schemas/MTConnectError_2.7_draft-04.schema.json
 }})",

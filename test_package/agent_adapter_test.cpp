@@ -417,6 +417,233 @@ TEST_F(AgentAdapterTest, should_reconnect)
   timeout.cancel();
 }
 
+TEST_F(AgentAdapterTest, should_reset_request_from_sequence_on_recovery)
+{
+  createAgent();
+
+  auto port = m_agentTestHelper->m_restService->getServer()->getPort();
+  auto adapter = createAdapter(port, {}, "", 1000);
+
+  addAdapter();
+
+  unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
+
+  int rc = 0;
+  ResponseDocument rd;
+  bool response = false;
+  handler->m_processData = [&](const string &d, const string &s) {
+    response = true;
+
+    ResponseDocument::parse(d, rd, m_context);
+    rc++;
+
+    if (rd.m_next != 0)
+      adapter->getFeedback().m_next = rd.m_next;
+    adapter->getFeedback().m_instanceId = rd.m_instanceId;
+  };
+  handler->m_connecting = [&](const string id) {};
+  handler->m_connected = [&](const string id) {};
+  handler->m_disconnected = [&](const string id) {};
+
+  adapter->setHandler(handler);
+  adapter->start();
+
+  sink::rest_sink::SessionPtr session;
+  m_agentTestHelper->m_restService->getServer()->m_lastSession =
+      [&](sink::rest_sink::SessionPtr ptr) { session = ptr; };
+
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 5s);
+  timeout.async_wait([](boost::system::error_code ec) {
+    if (!ec)
+    {
+      throw runtime_error("test timed out");
+    }
+  });
+
+  // Wait for the current and the initial sample request. After this the
+  // streaming sample request exists with `from` set to the sequence that
+  // followed the current response.
+  while (rc < 2)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_EQ(2, rc);
+  ASSERT_TRUE(session);
+
+  ASSERT_TRUE(adapter->getStreamRequest());
+  auto fromInitial =
+      boost::lexical_cast<uint64_t>(adapter->getStreamRequest()->m_query.at("from"));
+
+  // Push a new observation upstream so the next sequence advances past the
+  // value baked into the original streaming request.
+  rd.m_entities.clear();
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|execution|READY");
+  while (rc < 3)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_EQ(3, rc);
+
+  auto advanced = adapter->getFeedback().m_next;
+  ASSERT_GT(advanced, fromInitial);
+
+  // Force a disconnect to trigger recovery.
+  session->close();
+  response = false;
+  while (!response)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+
+  // On recovery the request must be rebuilt ("reset") so that it resumes from
+  // the advanced sequence instead of replaying the original `from`, which would
+  // re-deliver every observation already streamed during the prior session.
+  ASSERT_TRUE(adapter->getStreamRequest());
+  auto fromRecovered =
+      boost::lexical_cast<uint64_t>(adapter->getStreamRequest()->m_query.at("from"));
+
+  ASSERT_GT(fromRecovered, fromInitial);
+  ASSERT_EQ(advanced, fromRecovered);
+
+  m_agentTestHelper->m_restService->getServer()->m_lastSession = nullptr;
+  timeout.cancel();
+}
+
+TEST_F(AgentAdapterTest, should_resync_with_current_when_instance_id_changes_on_recovery)
+{
+  createAgent();
+
+  auto port = m_agentTestHelper->m_restService->getServer()->getPort();
+  auto adapter = createAdapter(port, {}, "", 500);
+
+  addAdapter();
+
+  unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
+
+  int rc = 0;
+  bool disconnected = false;
+  bool recovering = false;
+  bool response = false;
+  ResponseDocument rd;
+
+  // Record the (operation, from) of the request each response answers so we can
+  // verify the adapter resets to a `current` after an instance-id change rather
+  // than resuming a `sample` from the now-stale sequence.
+  vector<pair<string, string>> requests;
+
+  handler->m_processData = [&](const string &d, const string &s) {
+    rd.m_next = 0;
+    rd.m_instanceId = 0;
+    ResponseDocument::parse(d, rd, m_context);
+    rc++;
+
+    if (auto &req = adapter->getStreamRequest())
+    {
+      string from;
+      auto f = req->m_query.find("from");
+      if (f != req->m_query.end())
+        from = f->second;
+      requests.emplace_back(req->m_operation, from);
+    }
+
+    if (rd.m_next != 0)
+      response = true;
+
+    auto seq = &adapter->getFeedback();
+    if (rd.m_next != 0)
+      seq->m_next = rd.m_next;
+    if (recovering)
+    {
+      // Simulate the source agent restarting with a new instance id and
+      // sequences reset backward: the transform would detect this and throw.
+      recovering = false;
+      throw std::system_error(make_error_code(mtconnect::source::ErrorCode::INSTANCE_ID_CHANGED));
+    }
+    seq->m_instanceId = rd.m_instanceId;
+    disconnected = false;
+  };
+  handler->m_connecting = [&](const string id) {};
+  handler->m_connected = [&](const string id) {};
+  handler->m_disconnected = [&](const string id) { disconnected = true; };
+
+  adapter->setHandler(handler);
+  adapter->start();
+
+  sink::rest_sink::SessionPtr session;
+  m_agentTestHelper->m_restService->getServer()->m_lastSession =
+      [&](sink::rest_sink::SessionPtr ptr) { session = ptr; };
+
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 5s);
+  timeout.async_wait([](boost::system::error_code ec) {
+    if (!ec)
+    {
+      throw runtime_error("test timed out");
+    }
+  });
+
+  // Wait for the current and the initial sample.
+  while (rc < 2)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_EQ(2, rc);
+  ASSERT_TRUE(session);
+
+  // Advance the sequence so the streaming `from` is well past the start.
+  rd.m_entities.clear();
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|execution|READY");
+  while (rc < 3)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_EQ(3, rc);
+
+  auto staleNext = adapter->getFeedback().m_next;
+  ASSERT_GT(staleNext, 0u);
+
+  size_t requestsBefore = requests.size();
+
+  // Drop the connection and trigger an instance-id change on the next response.
+  session->close();
+  recovering = true;
+  session.reset();
+  while (recovering)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_FALSE(recovering);
+  ASSERT_TRUE(disconnected);
+
+  // After the instance change the adapter must resync with a `current`.
+  response = false;
+  rd.m_entities.clear();
+  while (!response)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_TRUE(response);
+
+  // A `current` (no stale `from`) must be issued after the instance change,
+  // proving the request was reset rather than resumed from the old sequence.
+  bool sawCurrent = false;
+  for (size_t i = requestsBefore; i < requests.size(); i++)
+  {
+    if (requests[i].first == "current")
+    {
+      ASSERT_TRUE(requests[i].second.empty()) << "current request must not carry a stale 'from'";
+      sawCurrent = true;
+      break;
+    }
+  }
+  ASSERT_TRUE(sawCurrent) << "Adapter must issue a current() to resync after an instance-id change";
+
+  // The resync must actually deliver the new observations, not filter them out.
+  ASSERT_FALSE(rd.m_entities.empty());
+
+  m_agentTestHelper->m_restService->getServer()->m_lastSession = nullptr;
+  timeout.cancel();
+}
+
 TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
 {
   createAgent();

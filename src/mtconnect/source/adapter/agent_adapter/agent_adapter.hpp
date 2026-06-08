@@ -89,6 +89,10 @@ namespace mtconnect::source::adapter::agent_adapter {
     /// @return reference to the transform feedback
     auto &getFeedback() { return m_feedback; }
 
+    /// @brief get the current outstanding stream request (for testing)
+    /// @return reference to the optional stream request
+    auto &getStreamRequest() { return m_streamRequest; }
+
     ~AgentAdapter() override;
 
     /// @name Source interface

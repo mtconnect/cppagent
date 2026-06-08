@@ -232,6 +232,10 @@ namespace mtconnect::source::adapter::agent_adapter {
         m_strand, [weak = std::weak_ptr(getptr())](boost::system::error_code ec) {
           if (auto self = weak.lock(); self && !ec)
           {
+            // Rebuild the sample request from the latest processed sequence rather
+            // than replaying the cached request. In streaming mode the cached
+            // request's `from` is baked in when the stream opens and never advances,
+            // so replaying it re-delivers every observation seen during the session.
             if (self->canRecover() && self->m_streamRequest)
               self->recover();
             else
