@@ -198,3 +198,29 @@ TEST_F(MessageMappingTest, should_reprocess_as_shdr_when_no_data_item)
   ASSERT_EQ("Data", m_capture->m_last->getName());
   ASSERT_EQ("2021-02-01T12:00:00Z|execution|READY", m_capture->m_last->getValue<string>());
 }
+
+/// @test a message with a non-string value and no resolved data item must not throw
+///       (the error-logging path used to call getValue<string>() and throw
+///       bad_variant_access) and returns null without forwarding anything
+TEST_F(MessageMappingTest, should_not_throw_for_non_string_value_with_no_data_item)
+{
+  // double value, no data item
+  {
+    auto msg = makeMessage({{"VALUE", 3.14}, {"topic", "some/topic"s}});
+    // m_dataItem intentionally left null
+    EntityPtr res;
+    ASSERT_NO_THROW(res = (*m_mapper)(std::move(msg)));
+    ASSERT_FALSE(res);
+    ASSERT_EQ(0, m_capture->m_count);
+  }
+
+  // Vector value, no data item and no topic
+  {
+    auto msg = makeMessage({{"VALUE", Vector {1.0, 2.0, 3.0}}});
+    // m_dataItem intentionally left null
+    EntityPtr res;
+    ASSERT_NO_THROW(res = (*m_mapper)(std::move(msg)));
+    ASSERT_FALSE(res);
+    ASSERT_EQ(0, m_capture->m_count);
+  }
+}

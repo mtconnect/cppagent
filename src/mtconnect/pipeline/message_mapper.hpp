@@ -90,8 +90,21 @@ namespace mtconnect::pipeline {
             msg = *topic;
           else
             msg = "unknown topic";
-          LOG(error) << "Cannot find data item for topic: " << msg
-                     << " and data: " << data->getValue<std::string>();
+
+          // Render the value as a string in a type-safe way. The value is known to not
+          // be a string here, so convert a copy to avoid throwing on bad_variant_access.
+          std::string valueStr;
+          try
+          {
+            entity::Value v = data->getValue();
+            entity::ConvertValueToType(v, entity::ValueType::STRING);
+            valueStr = std::get<std::string>(v);
+          }
+          catch (...)
+          {
+            valueStr = "<non-string value>";
+          }
+          LOG(error) << "Cannot find data item for topic: " << msg << " and data: " << valueStr;
         }
         return nullptr;
       }
