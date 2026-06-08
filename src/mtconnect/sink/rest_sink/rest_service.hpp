@@ -380,7 +380,7 @@ namespace mtconnect {
 
       std::string externalUrl(const std::string &url)
       {
-        std::string fullUrl = m_externalBaseAddress;
+        std::string fullUrl = m_baseUrl;
         if (!fullUrl.empty() && !url.empty())
         {
           if (fullUrl.back() == '/' && url.front() == '/')
@@ -405,7 +405,7 @@ namespace mtconnect {
       std::shared_ptr<source::LoopbackSource> m_loopback;
       uint64_t m_instanceId;
       std::unique_ptr<Server> m_server;
-      std::string m_externalBaseAddress;
+      std::string m_baseUrl;
 
       // Buffers
       FileCache m_fileCache;
