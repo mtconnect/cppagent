@@ -14,8 +14,9 @@ class MTConnectAgentConan(ConanFile):
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type"
     options = { "without_ipv6": [True, False],
-                "with_ruby": [True, False], 
+                "with_ruby": [True, False],
                  "development" : [True, False],
+                 "coverage" : [True, False],
                  "shared": [True, False],
                  "winver": [None, "ANY"],
                  "with_docs" : [True, False],
@@ -34,6 +35,7 @@ class MTConnectAgentConan(ConanFile):
         "without_ipv6": False,
         "with_ruby": True,
         "development": False,
+        "coverage": False,
         "shared": False,
         "winver": "0x0A00",
         "with_docs": False,
@@ -177,6 +179,7 @@ class MTConnectAgentConan(ConanFile):
         tc.cache_variables['AGENT_WITH_DOCS'] = self.options.with_docs.__bool__()
         tc.cache_variables['AGENT_WITHOUT_IPV6'] = self.options.without_ipv6.__bool__()
         tc.cache_variables['DEVELOPMENT'] = self.options.development.__bool__()
+        tc.cache_variables['AGENT_ENABLE_COVERAGE'] = self.options.coverage.__bool__()
         if self.options.agent_prefix:
             tc.cache_variables['AGENT_PREFIX'] = self.options.agent_prefix
         if is_msvc(self):

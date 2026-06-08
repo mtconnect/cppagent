@@ -71,6 +71,7 @@ include(cmake/remove_link_directories.cmake)
 include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/ClangFormat.cmake)
 include(cmake/ClangTidy.cmake)
+include(cmake/Coverage.cmake)
 
 # Add our projects
 add_subdirectory(agent_lib)
