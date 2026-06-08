@@ -233,7 +233,7 @@ namespace mtconnect::source::adapter::agent_adapter {
           if (auto self = weak.lock(); self && !ec)
           {
             if (self->canRecover() && self->m_streamRequest)
-              self->m_session->makeRequest(*self->m_streamRequest);
+              self->recover();
             else
               self->run();
           }
