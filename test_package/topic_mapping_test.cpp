@@ -116,6 +116,38 @@ protected:
     return d;
   }
 
+  /// @brief add a data item to a device WITHOUT registering it in the
+  ///        findDataItem lookup map (forces resolution via the device scan path)
+  DataItemPtr makeDeviceOnlyDataItem(const std::string &device, const Properties &props)
+  {
+    auto dev = m_devices.find(device);
+    EXPECT_NE(m_devices.end(), dev) << "Cannot find device: " << device;
+    Properties ps(props);
+    ErrorList errors;
+    auto di = DataItem::make(ps, errors);
+    dev->second->addDataItem(di, errors);
+    return di;
+  }
+
+  /// @brief build a TopicMapper with the given default device, bound to a pass-through
+  std::shared_ptr<TopicMapper> makeMapper(const std::string &defaultDevice = "")
+  {
+    auto m = make_shared<TopicMapper>(m_context, defaultDevice);
+    m->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
+    return m;
+  }
+
+  /// @brief run a message body (and optional topic) through a mapper
+  PipelineMessagePtr map(std::shared_ptr<TopicMapper> &mapper, const std::string &body,
+                         std::optional<std::string> topic = std::nullopt)
+  {
+    Properties props {{"VALUE", body}};
+    if (topic)
+      props.insert({"topic", *topic});
+    auto e = make_shared<Entity>("Message", props);
+    return dynamic_pointer_cast<PipelineMessage>((*mapper)(std::move(e)));
+  }
+
   shared_ptr<PipelineContext> m_context;
   shared_ptr<TopicMapper> m_mapper;
   std::map<string, DataItemPtr> m_dataItems;
@@ -129,4 +161,120 @@ TEST_F(TopicMappingTest, should_find_data_item_for_topic)
   makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
   Properties props {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
   auto di = makeDataItem("device", props);
+}
+
+/// @test a JSON object body is wrapped as a JsonMessage carrying the default device
+TEST_F(TopicMappingTest, should_map_json_object_to_json_message)
+{
+  auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  auto mapper = makeMapper("device");
+
+  auto res = map(mapper, R"({"a":"ACTIVE"})", "device/whatever");
+  ASSERT_TRUE(res);
+  ASSERT_TRUE(dynamic_pointer_cast<JsonMessage>(res));
+  ASSERT_FALSE(dynamic_pointer_cast<DataMessage>(res));
+  // The default device is attached; topic is not resolved for JSON messages
+  ASSERT_EQ(dev, res->m_device.lock());
+  ASSERT_FALSE(res->m_dataItem);
+}
+
+/// @test a JSON array body is also wrapped as a JsonMessage
+TEST_F(TopicMappingTest, should_map_json_array_to_json_message)
+{
+  auto mapper = makeMapper();
+  auto res = map(mapper, R"([{"a":1}])", "topic");
+  ASSERT_TRUE(res);
+  ASSERT_TRUE(dynamic_pointer_cast<JsonMessage>(res));
+}
+
+/// @test non-JSON body resolves a data item from `<device>/<name>`
+TEST_F(TopicMappingTest, should_resolve_data_item_by_device_and_name)
+{
+  makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  auto di = makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+
+  auto mapper = makeMapper();
+  auto res = map(mapper, "ACTIVE", "device/a");
+  ASSERT_TRUE(res);
+  ASSERT_TRUE(dynamic_pointer_cast<DataMessage>(res));
+  ASSERT_EQ(di, res->m_dataItem);
+}
+
+/// @test a single-segment topic resolves against the default device + name
+TEST_F(TopicMappingTest, should_resolve_data_item_by_default_device_and_name)
+{
+  makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  auto di = makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+
+  auto mapper = makeMapper("device");
+  auto res = map(mapper, "ACTIVE", "a");
+  ASSERT_TRUE(res);
+  ASSERT_EQ(di, res->m_dataItem);
+}
+
+/// @test when the second segment misses, the last path segment is tried
+TEST_F(TopicMappingTest, should_resolve_data_item_by_last_path_segment)
+{
+  makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  auto di = makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+
+  auto mapper = makeMapper();
+  // "foo" (segment 1) and "dev/foo/a" (whole) miss; back() == "a" resolves
+  auto res = map(mapper, "ACTIVE", "dev/foo/a");
+  ASSERT_TRUE(res);
+  ASSERT_EQ(di, res->m_dataItem);
+}
+
+/// @test fall back to scanning the path for a device, then its data items
+TEST_F(TopicMappingTest, should_resolve_device_and_data_item_by_path_scan)
+{
+  auto dev = makeDevice("Device", {{"id", "scan"s}, {"name", "scan"s}, {"uuid", "scan"s}});
+  // data item lives on the device but is NOT in the findDataItem map, so the
+  // first three lookups miss and resolution must fall through to the scan.
+  auto di = makeDeviceOnlyDataItem("scan",
+                                   {{"id", "z"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+
+  auto mapper = makeMapper();
+  auto res = map(mapper, "ACTIVE", "scan/z");
+  ASSERT_TRUE(res);
+  ASSERT_EQ(dev, res->m_device.lock());
+  ASSERT_EQ(di, res->m_dataItem);
+}
+
+/// @test the second lookup for a topic is served from the resolution cache
+TEST_F(TopicMappingTest, should_cache_resolved_topic)
+{
+  makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  auto di = makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+
+  auto mapper = makeMapper();
+  auto first = map(mapper, "ACTIVE", "device/a");
+  ASSERT_EQ(di, first->m_dataItem);
+
+  // Remove from the lookup map; a cache hit must still resolve the data item.
+  m_dataItems.clear();
+  auto second = map(mapper, "STOPPED", "device/a");
+  ASSERT_TRUE(second);
+  ASSERT_EQ(di, second->m_dataItem);
+}
+
+/// @test an unresolvable topic yields a DataMessage with no data item or device
+TEST_F(TopicMappingTest, should_return_unresolved_data_message_when_no_match)
+{
+  auto mapper = makeMapper();
+  auto res = map(mapper, "ACTIVE", "no/such/topic");
+  ASSERT_TRUE(res);
+  ASSERT_TRUE(dynamic_pointer_cast<DataMessage>(res));
+  ASSERT_FALSE(res->m_dataItem);
+  ASSERT_FALSE(res->m_device.lock());
+}
+
+/// @test a non-JSON message with no topic property is passed through unresolved
+TEST_F(TopicMappingTest, should_handle_message_without_topic)
+{
+  auto mapper = makeMapper();
+  auto res = map(mapper, "ACTIVE");  // no topic
+  ASSERT_TRUE(res);
+  ASSERT_TRUE(dynamic_pointer_cast<DataMessage>(res));
+  ASSERT_FALSE(res->m_dataItem);
 }
