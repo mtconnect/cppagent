@@ -74,8 +74,19 @@ namespace mtconnect {
 
       auto base = GetOption<string>(options, config::ExternalBaseUrl);
       if (!base)
-        base = "http://localhost:" + to_string(m_server->getPort());
-      m_externalBaseAddress = *base;
+      {
+        auto ip = GetOption<string>(options, config::ServerIp);
+        if (!ip || *ip == "0.0.0.0")
+          ip = GetBestHostAddress(m_context, true);
+        string protocol;
+        if (m_server->isTlsEnabled())
+          protocol = "https://";
+        else
+          protocol = "http://";
+        base = protocol + *ip + ":" + to_string(m_server->getPort()) + '/';
+      }
+      m_baseUrl = *base;
+      m_server->setBaseUrl(m_baseUrl);
 
       auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_sinkContract->getPrinter("xml"));
       auto jsonPrinter = dynamic_cast<JsonPrinter *>(m_sinkContract->getPrinter("json"));

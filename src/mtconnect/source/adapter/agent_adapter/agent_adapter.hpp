@@ -89,6 +89,10 @@ namespace mtconnect::source::adapter::agent_adapter {
     /// @return reference to the transform feedback
     auto &getFeedback() { return m_feedback; }
 
+    /// @brief get the current outstanding stream request (for testing)
+    /// @return reference to the optional stream request
+    auto &getStreamRequest() { return m_streamRequest; }
+
     ~AgentAdapter() override;
 
     /// @name Source interface
@@ -128,7 +132,6 @@ namespace mtconnect::source::adapter::agent_adapter {
     url::Url m_url;
     int m_count = 1000;
     std::chrono::milliseconds m_heartbeat;
-    bool m_reconnecting = false;
     bool m_failed = false;
     bool m_stopped = false;
     bool m_usePolling = false;

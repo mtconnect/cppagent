@@ -2,7 +2,7 @@
 set(AGENT_VERSION_MAJOR 2)
 set(AGENT_VERSION_MINOR 7)
 set(AGENT_VERSION_PATCH 0)
-set(AGENT_VERSION_BUILD 11)
+set(AGENT_VERSION_BUILD 12)
 set(AGENT_VERSION_RC "")
 
 # This minimum version is to support Visual Studio 2019 and C++ feature checking and FetchContent
@@ -71,6 +71,7 @@ include(cmake/remove_link_directories.cmake)
 include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/ClangFormat.cmake)
 include(cmake/ClangTidy.cmake)
+include(cmake/Coverage.cmake)
 
 # Add our projects
 add_subdirectory(agent_lib)

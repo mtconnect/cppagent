@@ -371,15 +371,7 @@ namespace mtconnect::sink::rest_sink {
         AutoJsonArray<T> ary(writer, "servers");
         {
           AutoJsonObject<T> obj(writer);
-
-          stringstream str;
-          if (m_tlsEnabled)
-            str << "https://";
-          else
-            str << "http://";
-
-          str << GetBestHostAddress(m_context, true) << ':' << m_port << '/';
-          obj.AddPairs("url", str.str());
+          obj.AddPairs("url", m_baseUrl);
         }
       }
       {
