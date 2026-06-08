@@ -2805,3 +2805,46 @@ TEST_F(AgentTest, should_add_local_locations_when_files_are_given)
     ASSERT_EQ("http://localhost:0/myschemas/MTConnectError_2.7.schema.json", schema.get<string>());
   }
 }
+
+/// @test the const getDeviceByName resolves the default device, a known device
+///       by name, and returns null for an unknown name
+TEST_F(AgentTest, get_device_by_name_const_resolves_default_known_and_unknown)
+{
+  const Agent &agent = *m_agentTestHelper->getAgent();
+
+  // Empty name returns the default device
+  auto def = agent.getDeviceByName("");
+  ASSERT_TRUE(def);
+
+  // A known device name resolves to the same device (the ByName index is
+  // keyed on the component name)
+  auto byName = agent.getDeviceByName(*def->getComponentName());
+  EXPECT_EQ(def, byName);
+
+  // An unknown name resolves to null
+  EXPECT_FALSE(agent.getDeviceByName("NoSuchDevice_xyz"));
+}
+
+/// @test when a source fails but other external sources remain, the failed
+///       source is removed and the agent keeps running (no shutdown)
+TEST_F(AgentTest, source_failed_removes_source_and_keeps_running_when_others_remain)
+{
+  auto device = m_agentTestHelper->m_agent->getDefaultDevice()->getName();
+
+  // Two external (non-loopback) adapters on distinct ports -> distinct identities
+  auto a1 = m_agentTestHelper->addAdapter({}, "localhost", 7878, device);
+  auto a2 = m_agentTestHelper->addAdapter({}, "localhost", 7879, device);
+
+  auto agent = m_agentTestHelper->getAgent();
+  const auto id1 = a1->getIdentity();
+  const auto id2 = a2->getIdentity();
+  ASSERT_NE(id1, id2);
+  ASSERT_TRUE(agent->findSource(id1));
+  ASSERT_TRUE(agent->findSource(id2));
+
+  // Fail the first source; the second is still external so no shutdown occurs
+  agent->sourceFailed(id1);
+
+  EXPECT_FALSE(agent->findSource(id1));
+  EXPECT_TRUE(agent->findSource(id2));
+}
