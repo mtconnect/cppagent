@@ -356,7 +356,6 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     clear();
 
-    m_reconnecting = false;
     if (m_probeAgent)
     {
       probe();
@@ -373,7 +372,6 @@ namespace mtconnect::source::adapter::agent_adapter {
     if (m_stopped)
       return;
 
-    m_reconnecting = false;
     sample();
   }
 
