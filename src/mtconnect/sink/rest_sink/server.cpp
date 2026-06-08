@@ -77,7 +77,7 @@ namespace mtconnect::sink::rest_sink {
       m_tlsEnabled = true;
 
       m_tlsOnly = IsOptionSet(m_options, configuration::TlsOnly);
-      
+
       if (IsOptionSet(m_options, configuration::TlsVerifyClientCertificate))
       {
         LOG(info) << "Will only accept client connections with valid certificates";

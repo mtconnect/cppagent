@@ -471,8 +471,7 @@ TEST_F(AgentAdapterTest, should_reset_request_from_sequence_on_recovery)
   ASSERT_TRUE(session);
 
   ASSERT_TRUE(adapter->getStreamRequest());
-  auto fromInitial =
-      boost::lexical_cast<uint64_t>(adapter->getStreamRequest()->m_query.at("from"));
+  auto fromInitial = boost::lexical_cast<uint64_t>(adapter->getStreamRequest()->m_query.at("from"));
 
   // Push a new observation upstream so the next sequence advances past the
   // value baked into the original streaming request.

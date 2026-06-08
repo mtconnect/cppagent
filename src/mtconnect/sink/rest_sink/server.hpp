@@ -123,11 +123,11 @@ namespace mtconnect::sink::rest_sink {
     /// @brief get the bind port
     /// @return the port being bound
     auto getPort() const { return m_port; }
-    
+
     ///@brief Is TLS enabled?
     ///@return `true` if TLS is enabled
     bool isTlsEnabled() const { return m_tlsEnabled; }
-    
+
     /// @brief Set the external base URL
     /// @param[in] url the base URL to set
     void setBaseUrl(const std::string &url) { m_baseUrl = url; }

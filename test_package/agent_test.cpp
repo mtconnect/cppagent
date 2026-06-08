@@ -2759,8 +2759,7 @@ TEST_F(AgentTest, should_not_add_the_default_schema_location_for_json_documents_
 TEST_F(AgentTest, should_add_local_locations_when_files_are_given)
 {
   using namespace nlohmann;
-  auto configFiles = std::format(R"(
-Files {{
+  auto configFiles = std::format(R"(Files {{
   schemas {{
     Path = {}/schemas
     Location = /myschemas/
@@ -2771,8 +2770,10 @@ Files {{
 
   auto config = configuration::Parser::parse(configFiles);
 
-  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.7", 4, true, true,
-                                 {{configuration::JsonVersion, 2}}, config);
+  m_agentTestHelper->createAgent(
+      "/samples/test_config.xml", 8, 4, "2.7", 4, true, true,
+      {{configuration::JsonVersion, 2}, {configuration::ExternalBaseUrl, "http://localhost:0"s}},
+      config);
 
   {
     PARSE_JSON_RESPONSE("/probe");

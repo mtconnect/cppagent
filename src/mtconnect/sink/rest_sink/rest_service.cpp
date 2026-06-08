@@ -71,8 +71,7 @@ namespace mtconnect {
 
       m_server = make_unique<Server>(context, m_options);
       m_server->setErrorFunction(boost::bind(&RestService::writeErrorResponse, this, _1, _2));
-      
-      
+
       auto base = GetOption<string>(options, config::ExternalBaseUrl);
       if (!base)
       {
