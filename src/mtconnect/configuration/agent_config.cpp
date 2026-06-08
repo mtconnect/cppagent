@@ -809,6 +809,10 @@ namespace mtconnect::configuration {
       throw;
     }
 
+    // Expand $VAR and ${VAR} references from sibling config values and the
+    // environment before any options are read.
+    expandConfigVariables(config);
+
     if (m_logChannels.empty())
     {
       configureLogger(config);
