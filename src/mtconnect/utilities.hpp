@@ -997,7 +997,7 @@ namespace mtconnect {
       /// @brief Format the URL as text
       /// @param device optional device to add to the URL
       /// @return formatted URL
-      std::string getUrlText(const std::optional<std::string> &device)
+      std::string getUrlText(const std::optional<std::string> &device) const
       {
         std::stringstream url;
         url << m_protocol << "://" << getHost() << ':' << getPort() << getTarget();
@@ -1010,5 +1010,15 @@ namespace mtconnect {
       /// @return parsed URL
       static Url parse(const std::string_view &url);
     };
+
+    /// @brief output operator for Value
+    /// @param os the output stream
+    /// @param v the Value to output
+    inline std::ostream &operator<<(std::ostream &os, const Url &url)
+    {
+      os << url.getUrlText(std::nullopt);
+      return os;
+    }
+
   }  // namespace url
 }  // namespace mtconnect

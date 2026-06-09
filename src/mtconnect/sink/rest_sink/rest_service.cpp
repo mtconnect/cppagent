@@ -795,11 +795,11 @@ namespace mtconnect {
           "deviceType={string}&format={string}");
       m_server->addRouting({boost::beast::http::verb::get, "/current?" + qp, handler})
           .document("MTConnect current request",
-                    "Gets a stapshot of the state of all the observations for all devices "
+                    "Gets a snapshot of the state of all the observations for all devices "
                     "optionally filtered by the `path`");
       m_server->addRouting({boost::beast::http::verb::get, "/{device}/current?" + qp, handler})
           .document("MTConnect current request",
-                    "Gets a stapshot of the state of all the observations for device `device` "
+                    "Gets a snapshot of the state of all the observations for device `device` "
                     "optionally filtered by the `path`")
           .command("current");
     }

@@ -155,6 +155,8 @@ namespace mtconnect::source::adapter::agent_adapter {
       LOG(error) << "Agent adapter cannot start: fatal error";
       return false;
     }
+
+    LOG(debug) << "Starting agent adapter for " << m_identity;
     m_pipeline.start();
 
     if (m_url.m_protocol == "https")
@@ -201,6 +203,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::clear()
   {
+    LOG(debug) << "Clearing adapter state for " << m_url;
     m_streamRequest.reset();
     m_assetRequest.reset();
 
@@ -237,9 +240,15 @@ namespace mtconnect::source::adapter::agent_adapter {
             // request's `from` is baked in when the stream opens and never advances,
             // so replaying it re-delivers every observation seen during the session.
             if (self->canRecover() && self->m_streamRequest)
+            {
+              LOG(info) << "Attmempting to recover stream for " << self->m_url;
               self->recover();
+            }
             else
+            {
+              LOG(info) << "Cannot recover stream for " << self->m_url << ", restarting session";
               self->run();
+            }
           }
         }));
   }
@@ -253,6 +262,7 @@ namespace mtconnect::source::adapter::agent_adapter {
           m_strand, [weak = std::weak_ptr(getptr())](boost::system::error_code ec) {
             if (auto self = weak.lock(); self && !ec && self->m_assetRequest)
             {
+              LOG(debug) << "Recovering asset request for " << self->m_url;
               self->m_assetSession->makeRequest(*self->m_assetRequest);
             }
           }));
@@ -269,6 +279,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       switch (static_cast<ErrorCode>(ec.value()))
       {
         case ErrorCode::ADAPTER_FAILED:
+          LOG(debug) << "Assets Failed, adapter failed for " << m_url;
           stop();
           if (m_handler->m_disconnected)
             m_handler->m_disconnected(m_identity);
@@ -276,11 +287,13 @@ namespace mtconnect::source::adapter::agent_adapter {
           break;
 
         case ErrorCode::RETRY_REQUEST:
+          LOG(debug) << "Assets Failed, Retrying asset request for " << m_url;
           recoverAssetRequest();
           break;
 
         default:
-
+          LOG(debug) << "Assets Failed, unknown failure message " << ec.message() << " for "
+                     << m_identity;
           break;
       }
     }
@@ -291,6 +304,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     if (m_stopped)
       return;
 
+    LOG(debug) << "Streams Failed: " << ec.message() << " for " << m_url;
     if (ec.category() == source::TheErrorCategory())
     {
       switch (static_cast<ErrorCode>(ec.value()))
@@ -298,6 +312,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         case ErrorCode::INSTANCE_ID_CHANGED:
         case ErrorCode::RESTART_STREAM:
         {
+          LOG(debug) << "Streams must be restarted for " << m_url;
           if (m_handler->m_disconnected)
             m_handler->m_disconnected(m_identity);
           clear();
@@ -306,16 +321,19 @@ namespace mtconnect::source::adapter::agent_adapter {
         }
 
         case ErrorCode::RETRY_REQUEST:
+          LOG(debug) << "Streams must be recovered for " << m_url;
           recoverStreams();
           break;
 
         case ErrorCode::STREAM_CLOSED:
+          LOG(debug) << "Streams must be recovered for " << m_url;
           if (m_handler->m_disconnected)
             m_handler->m_disconnected(m_identity);
           recoverStreams();
           break;
 
         case ErrorCode::ADAPTER_FAILED:
+          LOG(debug) << "Stopping adapter for " << m_url;
           stop();
           if (m_handler->m_disconnected)
             m_handler->m_disconnected(m_identity);
@@ -323,12 +341,13 @@ namespace mtconnect::source::adapter::agent_adapter {
           break;
 
         case ErrorCode::MULTIPART_STREAM_FAILED:
+          LOG(debug) << "Multipart stream failed, switching to polling for " << m_url;
           m_usePolling = true;
           recoverStreams();
           break;
 
         default:
-          LOG(error) << "Unknown error: " << ec.message();
+          LOG(error) << "Unknown error: " << ec.message() << " for " << m_url;
           break;
       }
     }
@@ -340,6 +359,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       switch (static_cast<beast::http::error>(ec.value()))
       {
         case beast::http::error::end_of_stream:
+          LOG(debug) << "Streams Failed, end of stream for " << m_url << ", attempting to recover";
           recoverStreams();
           break;
 
@@ -354,6 +374,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     if (m_stopped)
       return;
 
+    LOG(debug) << "Starting session for " << m_url;
     clear();
 
     if (m_probeAgent)
@@ -372,6 +393,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     if (m_stopped)
       return;
 
+    LOG(debug) << "Recovering session for " << m_url;
     sample();
   }
 
@@ -380,6 +402,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     if (m_stopped)
       return false;
 
+    LOG(debug) << "Requesting probe for " << m_url;
     m_streamRequest.emplace(m_sourceDevice, "probe", UrlQuery(), false, [this]() {
       m_agentVersion = m_feedback.m_agentVersion;
       assets();
@@ -393,6 +416,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     if (m_stopped)
       return false;
 
+    LOG(debug) << "Requesting current for " << m_url;
     m_streamRequest.emplace(m_sourceDevice, "current", UrlQuery(), false,
                             [this]() { return sample(); });
     return m_session->makeRequest(*m_streamRequest);
@@ -405,6 +429,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     if (m_usePolling)
     {
+      LOG(debug) << "Starting polling sample stream for " << m_url << " from " << m_feedback.m_next;
       using namespace boost;
       UrlQuery query({{"from", lexical_cast<string>(m_feedback.m_next)},
                       {"count", lexical_cast<string>(m_count)}});
@@ -423,6 +448,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     }
     else
     {
+      LOG(debug) << "Starting long poll sample stream for " << m_url << " from "
+                 << m_feedback.m_next;
       using namespace boost;
       UrlQuery query({{"from", lexical_cast<string>(m_feedback.m_next)},
                       {"count", lexical_cast<string>(m_count)},
@@ -437,6 +464,8 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::stop()
   {
+    LOG(debug) << "Stopping agent adapter for " << m_url;
+
     m_stopped = true;
     clear();
     if (m_session)
@@ -469,7 +498,7 @@ namespace mtconnect::source::adapter::agent_adapter {
                    back_inserter(idList),
                    [](const EntityPtr entity) { return entity->getValue<string>(); });
     string ids = boost::join(idList, ";");
-
+    LOG(debug) << "Updating assets with ids: " << ids << " for " << m_url;
     m_assetRequest.emplace(nullopt, "assets/" + ids, UrlQuery(), false, [this]() {
       m_assetRequest.reset();
       return true;
