@@ -18,6 +18,7 @@
 #pragma once
 
 #include "mtconnect/config.hpp"
+#include "mtconnect/logging.hpp"
 
 namespace mtconnect::ruby {
   class AGENT_LIB_API RubyVM

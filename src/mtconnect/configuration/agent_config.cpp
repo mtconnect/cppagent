@@ -53,6 +53,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <vector>
+#include <format>
 
 #include "mtconnect/agent.hpp"
 #include "mtconnect/configuration/config_options.hpp"
