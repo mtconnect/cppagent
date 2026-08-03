@@ -121,7 +121,7 @@ protected:
   DataItemPtr makeDeviceOnlyDataItem(const std::string &device, const Properties &props)
   {
     auto dev = m_devices.find(device);
-    EXPECT_NE(m_devices.end(), dev) << "Cannot find device: " << device;
+    ASSERT_NE(m_devices.end(), dev) << "Cannot find device: " << device;
     Properties ps(props);
     ErrorList errors;
     auto di = DataItem::make(ps, errors);

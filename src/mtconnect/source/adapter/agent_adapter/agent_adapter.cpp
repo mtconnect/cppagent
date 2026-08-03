@@ -241,7 +241,7 @@ namespace mtconnect::source::adapter::agent_adapter {
             // so replaying it re-delivers every observation seen during the session.
             if (self->canRecover() && self->m_streamRequest)
             {
-              LOG(info) << "Attmempting to recover stream for " << self->m_url;
+              LOG(info) << "Attempting to recover stream for " << self->m_url;
               self->recover();
             }
             else

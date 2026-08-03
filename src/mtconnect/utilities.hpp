@@ -1011,9 +1011,9 @@ namespace mtconnect {
       static Url parse(const std::string_view &url);
     };
 
-    /// @brief output operator for Value
+    /// @brief output operator for URL
     /// @param os the output stream
-    /// @param v the Value to output
+    /// @param url the URL to output
     inline std::ostream &operator<<(std::ostream &os, const Url &url)
     {
       os << url.getUrlText(std::nullopt);

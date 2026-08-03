@@ -276,7 +276,7 @@ public:
   string m_boundary;
   map<string, string> m_fields;
   string m_contentType;
-  string m_accept;  // optional Accept header to send with the next request
+  string m_accept;  // optional Accept header to send with the requests
 
   std::function<std::size_t(std::uint64_t, boost::string_view, boost::system::error_code&)>
       m_chunkHandler;
