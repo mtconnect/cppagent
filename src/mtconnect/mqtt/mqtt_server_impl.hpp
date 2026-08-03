@@ -357,7 +357,7 @@ namespace mtconnect {
               ctx.set_verify_mode(boost::asio::ssl::verify_peer);
               if (HasOption(m_options, configuration::TlsClientCAs))
               {
-                LOG(info) << "Server: Adding Client Certificates.";
+                LOG(info) << "Server: Adding Client Certificates.";
                 ctx.load_verify_file(*GetOption<std::string>(m_options, configuration::TlsClientCAs));
               }
             }

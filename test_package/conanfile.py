@@ -5,6 +5,9 @@ from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.build import can_run
 
+import os
+import io
+import re
 
 class MTConnectAgentTest(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
