@@ -38,7 +38,6 @@ namespace mtconnect::ruby {
   using namespace device_model;
   using namespace data_item;
   using namespace entity;
-  using namespace std;
 
   /// @brief Convert a table cell value to a ruby hash element. Recursive in the case of tables.
   /// @param[in] mrb the mruby state
@@ -131,6 +130,8 @@ namespace mtconnect::ruby {
   /// @returns true if succesful
   inline bool tableRowCellValueFromRuby(mrb_state *mrb, mrb_value value, TableCellValue &tcv)
   {
+    using namespace std;
+
     bool res = true;
     switch (mrb_type(value))
     {
@@ -161,6 +162,8 @@ namespace mtconnect::ruby {
   /// @brief convert a ruby hash table to a table row
   inline void tableRowFromRuby(mrb_state *mrb, mrb_value value, TableRow &row)
   {
+    using namespace std;
+
     auto hash = mrb_hash_ptr(value);
     mrb_hash_foreach(
         mrb, hash,
@@ -182,6 +185,8 @@ namespace mtconnect::ruby {
   /// @returns true if succesful
   inline bool dataSetValueFromRuby(mrb_state *mrb, mrb_value value, DataSetValue &dsv)
   {
+    using namespace std;
+
     bool res = true;
     switch (mrb_type(value))
     {
@@ -223,6 +228,7 @@ namespace mtconnect::ruby {
   /// @param[out] dataSet the data set to populate
   inline void dataSetFromRuby(mrb_state *mrb, mrb_value value, DataSet &dataSet)
   {
+    using namespace std;
     auto hash = mrb_hash_ptr(value);
     mrb_hash_foreach(
         mrb, hash,
@@ -259,7 +265,7 @@ namespace mtconnect::ruby {
         break;
 
       case MRB_TT_STRING:
-        res.emplace<string>(mrb_str_to_cstr(mrb, value));
+        res.emplace<std::string>(mrb_str_to_cstr(mrb, value));
         break;
 
       case MRB_TT_BIGINT:
@@ -339,7 +345,7 @@ namespace mtconnect::ruby {
       case MRB_TT_DATA:
       case MRB_TT_OBJECT:
       {
-        string kn(mrb_obj_classname(mrb, value));
+        std::string kn(mrb_obj_classname(mrb, value));
         // Convert time
         if (kn == "Time")
         {
@@ -403,7 +409,7 @@ namespace mtconnect::ruby {
               return ary;
             },
             [mrb](const Timestamp &v) -> mrb_value { return toRuby(mrb, v); },
-            [mrb](const string &arg) -> mrb_value { return mrb_str_new_cstr(mrb, arg.c_str()); },
+            [mrb](const std::string &arg) -> mrb_value { return mrb_str_new_cstr(mrb, arg.c_str()); },
             [](const bool arg) -> mrb_value { return mrb_bool_value(static_cast<mrb_bool>(arg)); },
             [mrb](const double arg) -> mrb_value { return mrb_float_value(mrb, arg); },
             [mrb](const int64_t arg) -> mrb_value { return mrb_int_value(mrb, arg); }},
@@ -432,7 +438,7 @@ namespace mtconnect::ruby {
           mrb, hash,
           [](mrb_state *mrb, mrb_value key, mrb_value val, void *data) {
             Properties *props = static_cast<Properties *>(data);
-            string k = stringFromRuby(mrb, key);
+            std::string k = stringFromRuby(mrb, key);
             auto v = valueFromRuby(mrb, val);
 
             props->emplace(k, v);

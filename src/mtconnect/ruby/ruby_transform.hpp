@@ -36,6 +36,8 @@ namespace mtconnect::ruby {
   public:
     static void initialize(mrb_state *mrb, RClass *module)
     {
+      using namespace std;
+
       auto transClass = mrb_define_class_under(mrb, module, "Transform", mrb->object_class);
       MRB_SET_INSTANCE_TT(transClass, MRB_TT_DATA);
       mrb_mod_cv_set(mrb, transClass, mrb_intern_check_cstr(mrb, "CONTINUE"),
@@ -150,7 +152,7 @@ namespace mtconnect::ruby {
           MRB_ARGS_OPT(1) | MRB_ARGS_BLOCK());
     }
 
-    RubyTransform(mrb_state *mrb, mrb_value self, const std::string &name, const string &guard)
+    RubyTransform(mrb_state *mrb, mrb_value self, const std::string &name, const std::string &guard)
       : Transform(name),
         m_self(self),
         m_method(mrb_intern_lit(mrb, "transform")),
@@ -248,7 +250,7 @@ namespace mtconnect::ruby {
         m_guard = GuardCls(RUN);
     }
 
-    using calldata = pair<RubyTransform *, EntityPtr>;
+    using calldata = std::pair<RubyTransform *, EntityPtr>;
 
     entity::EntityPtr operator()(entity::EntityPtr &&entity) override
     {

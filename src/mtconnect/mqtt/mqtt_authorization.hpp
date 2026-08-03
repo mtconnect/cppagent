@@ -21,7 +21,6 @@
 #include "mtconnect/logging.hpp"
 #include "mtconnect/utilities.hpp"
 
-using namespace std;
 using namespace mtconnect;
 
 namespace mtconnect {
@@ -99,9 +98,9 @@ namespace mtconnect {
         return mqttTopicPerm;
       }
 
-      list<MqttTopicPermission> getPermissionsForClient(const std::list<std::string>& topics)
+      std::list<MqttTopicPermission> getPermissionsForClient(const std::list<std::string>& topics)
       {
-        list<MqttTopicPermission> mqttTopicPermissions;
+        std::list<MqttTopicPermission> mqttTopicPermissions;
 
         for (auto& topic : topics)
         {

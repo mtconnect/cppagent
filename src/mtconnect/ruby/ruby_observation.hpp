@@ -24,7 +24,6 @@
 
 namespace mtconnect::ruby {
   using namespace mtconnect::observation;
-  using namespace std;
 
   struct RubyObservation
   {
@@ -34,6 +33,7 @@ namespace mtconnect::ruby {
 
     static void initialize(mrb_state *mrb, RClass *module)
     {
+      using namespace std;
       auto entityClass = mrb_class_get_under(mrb, module, "Entity");
       auto observationClass = mrb_define_class_under(mrb, module, "Observation", entityClass);
       MRB_SET_INSTANCE_TT(observationClass, MRB_TT_DATA);

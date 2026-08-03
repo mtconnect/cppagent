@@ -33,9 +33,6 @@
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/adapter/mqtt/mqtt_adapter.hpp"
 
-using namespace std;
-namespace asio = boost::asio;
-
 namespace mtconnect {
   using namespace observation;
   using namespace entity;

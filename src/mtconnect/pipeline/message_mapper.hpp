@@ -46,7 +46,7 @@ namespace mtconnect::pipeline {
 
     EntityPtr operator()(entity::EntityPtr &&entity) override
     {
-      auto source = entity->maybeGet<string>("source");
+      auto source = entity->maybeGet<std::string>("source");
       auto data = std::dynamic_pointer_cast<DataMessage>(entity);
       if (data->m_dataItem)
       {
@@ -80,7 +80,7 @@ namespace mtconnect::pipeline {
         {
           // Try processing as shdr data
           auto entity = make_shared<Entity>(
-              "Data", Properties {{"VALUE", data->getValue()}, {"source", string("")}});
+              "Data", Properties {{"VALUE", data->getValue()}, {"source", std::string("")}});
           next(std::move(entity));
         }
         else
