@@ -337,7 +337,7 @@ namespace mtconnect {
             if (HasOption(m_options, configuration::TlsCertificatePassword))
             {
               ctx.set_password_callback(
-                  [this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
+                  [this](size_t, boost::asio::ssl::context_base::password_purpose) -> std::string {
                     return *GetOption<std::string>(m_options, configuration::TlsCertificatePassword);
                   });
             }
@@ -358,7 +358,7 @@ namespace mtconnect {
               if (HasOption(m_options, configuration::TlsClientCAs))
               {
                 LOG(info) << "Server: Adding Client Certificates.";
-                ctx.load_verify_file(*GetOption<string>(m_options, configuration::TlsClientCAs));
+                ctx.load_verify_file(*GetOption<std::string>(m_options, configuration::TlsClientCAs));
               }
             }
           }
@@ -409,8 +409,8 @@ namespace mtconnect {
           if (HasOption(m_options, configuration::TlsCertificateChain) &&
               HasOption(m_options, configuration::TlsPrivateKey))
           {
-            auto serverPrivateKey = GetOption<string>(m_options, configuration::TlsPrivateKey);
-            auto serverCert = GetOption<string>(m_options, configuration::TlsCertificateChain);
+            auto serverPrivateKey = GetOption<std::string>(m_options, configuration::TlsPrivateKey);
+            auto serverCert = GetOption<std::string>(m_options, configuration::TlsCertificateChain);
             ctx.use_certificate_chain_file(*serverCert);
             ctx.use_private_key_file(*serverPrivateKey, boost::asio::ssl::context::pem);
           }
