@@ -28,9 +28,9 @@
 // adapter_pipeline.hpp defines source::adapter::Handler, and message_mapper.hpp
 // references bare `string`/`Handler`, so both must be visible before it is parsed.
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
-using namespace std;
 #include "mtconnect/pipeline/message_mapper.hpp"
 
+using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
 using namespace mtconnect::observation;
