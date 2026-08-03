@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,6 +36,8 @@ namespace mtconnect::ruby {
   public:
     static void initialize(mrb_state *mrb, RClass *module)
     {
+      using namespace std;
+
       auto transClass = mrb_define_class_under(mrb, module, "Transform", mrb->object_class);
       MRB_SET_INSTANCE_TT(transClass, MRB_TT_DATA);
       mrb_mod_cv_set(mrb, transClass, mrb_intern_check_cstr(mrb, "CONTINUE"),
@@ -150,7 +152,7 @@ namespace mtconnect::ruby {
           MRB_ARGS_OPT(1) | MRB_ARGS_BLOCK());
     }
 
-    RubyTransform(mrb_state *mrb, mrb_value self, const std::string &name, const string &guard)
+    RubyTransform(mrb_state *mrb, mrb_value self, const std::string &name, const std::string &guard)
       : Transform(name),
         m_self(self),
         m_method(mrb_intern_lit(mrb, "transform")),
@@ -248,7 +250,7 @@ namespace mtconnect::ruby {
         m_guard = GuardCls(RUN);
     }
 
-    using calldata = pair<RubyTransform *, EntityPtr>;
+    using calldata = std::pair<RubyTransform *, EntityPtr>;
 
     entity::EntityPtr operator()(entity::EntityPtr &&entity) override
     {
@@ -325,6 +327,11 @@ namespace mtconnect::ruby {
         {
           // auto str = mrb_any_to_s(mrb, rv);
           LOG(error) << "Error in transform: " << mrb_str_to_cstr(mrb, mrb_inspect(mrb, rv));
+          if (mrb->exc)
+          {
+            auto exc = mrb_funcall(mrb, mrb_obj_value(mrb->exc), "to_s", 0);
+            LOG(error) << "Error calling transform " << m_name << ": " << RSTRING_CSTR(mrb, exc);
+          }
           rv = mrb_nil_value();
         }
 

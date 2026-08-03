@@ -5,13 +5,37 @@ from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.build import can_run
 
+import os
+import io
+import re
 
 class MTConnectAgentTest(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     test_type = "explicit"
     
+    def tool_requires_version(self, package, version):
+        self.output.info(f"Checking version of {package} > {version}")
+        buf = io.StringIO()
+        command = f"{package} --version"
+        res = self.run(command, shell=True, stdout=buf)
+        self.output.info(f"Command: '{command}' returned {res}")
+        ver = [0, 0, 0]
+        if res == 0:
+            text = buf.getvalue()
+            self.output.debug(f"{command} returned:\n{text}")
+            ver = [int(d) for d in re.search(r"\d+\.\d+\.\d+", text).group(0).split('.')]
+            self.output.info(f"Version of {package} is {ver}")
+        
+        if ver < version:
+            ver_text = '.'.join([str(x) for x in version])
+            self.output.info(f"Old version of {package}, requesting tool {package}/{ver_text}")
+            self.tool_requires(f"{package}/{ver_text}")
+        else:
+            self.output.info(f"Using system version {package}: {ver}")
+        
+
     def build_requirements(self):
-        self.tool_requires("cmake/3.26.4")
+        self.tool_requires_version("cmake", [4, 3, 0])
         
     def requirements(self):
         self.requires(self.tested_reference_str)

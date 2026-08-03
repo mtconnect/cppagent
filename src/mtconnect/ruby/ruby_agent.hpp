@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,6 @@
 
 namespace mtconnect::ruby {
   using namespace mtconnect::device_model;
-  using namespace std;
 
   /// @brief Wrapper around the MTConnect Agent class
   struct RubyAgent
@@ -36,6 +35,8 @@ namespace mtconnect::ruby {
     /// @param[in] agent The agent
     static void initialize(mrb_state *mrb, RClass *module, Agent *agent)
     {
+      using namespace std;
+
       auto agentClass = mrb_define_class_under(mrb, module, "Agent", mrb->object_class);
       MRB_SET_INSTANCE_TT(agentClass, MRB_TT_DATA);
 

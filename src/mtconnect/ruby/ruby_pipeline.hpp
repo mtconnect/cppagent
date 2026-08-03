@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,12 +27,13 @@ namespace mtconnect::ruby {
   using namespace mtconnect;
   using namespace pipeline;
   using namespace entity;
-  using namespace std;
 
   struct RubyPipeline
   {
     static void initialize(mrb_state *mrb, RClass *module)
     {
+      using namespace std;
+
       auto pipelineClass = mrb_define_class_under(mrb, module, "Pipeline", mrb->object_class);
       MRB_SET_INSTANCE_TT(pipelineClass, MRB_TT_DATA);
 

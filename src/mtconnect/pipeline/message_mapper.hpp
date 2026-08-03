@@ -1,4 +1,4 @@
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +46,7 @@ namespace mtconnect::pipeline {
 
     EntityPtr operator()(entity::EntityPtr &&entity) override
     {
-      auto source = entity->maybeGet<string>("source");
+      auto source = entity->maybeGet<std::string>("source");
       auto data = std::dynamic_pointer_cast<DataMessage>(entity);
       if (data->m_dataItem)
       {
@@ -80,7 +80,7 @@ namespace mtconnect::pipeline {
         {
           // Try processing as shdr data
           auto entity = make_shared<Entity>(
-              "Data", Properties {{"VALUE", data->getValue()}, {"source", string("")}});
+              "Data", Properties {{"VALUE", data->getValue()}, {"source", std::string("")}});
           next(std::move(entity));
         }
         else
@@ -90,8 +90,21 @@ namespace mtconnect::pipeline {
             msg = *topic;
           else
             msg = "unknown topic";
-          LOG(error) << "Cannot find data item for topic: " << msg
-                     << " and data: " << data->getValue<std::string>();
+
+          // Render the value as a string in a type-safe way. The value is known to not
+          // be a string here, so convert a copy to avoid throwing on bad_variant_access.
+          std::string valueStr;
+          try
+          {
+            entity::Value v = data->getValue();
+            entity::ConvertValueToType(v, entity::ValueType::STRING);
+            valueStr = std::get<std::string>(v);
+          }
+          catch (...)
+          {
+            valueStr = "<non-string value>";
+          }
+          LOG(error) << "Cannot find data item for topic: " << msg << " and data: " << valueStr;
         }
         return nullptr;
       }

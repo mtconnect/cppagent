@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,6 +53,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <vector>
+#include <format>
 
 #include "mtconnect/agent.hpp"
 #include "mtconnect/configuration/config_options.hpp"
@@ -809,6 +810,10 @@ namespace mtconnect::configuration {
       throw;
     }
 
+    // Expand $VAR and ${VAR} references from sibling config values and the
+    // environment before any options are read.
+    expandConfigVariables(config);
+
     if (m_logChannels.empty())
     {
       configureLogger(config);
@@ -970,7 +975,19 @@ namespace mtconnect::configuration {
     // Make the PipelineContext
     m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
     m_pipelineContext->m_contract = m_agent->makePipelineContract();
-
+    if (!HasOption(options, configuration::SchemaVersion))
+    {
+      if (m_agent->getSchemaVersion())
+      {
+        options[configuration::SchemaVersion] = *m_agent->getSchemaVersion();
+      }
+      else
+      {
+        options[configuration::SchemaVersion] = std::format("{}.{}", std::to_string(AGENT_VERSION_MAJOR),
+                                                            std::to_string(AGENT_VERSION_MINOR));
+        
+      }
+    }
     loadSinks(config, options);
 
     m_agent->initialize(m_pipelineContext);

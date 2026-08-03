@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -272,6 +272,14 @@ namespace mtconnect {
       ///@param path the path to set for the config file directory
       void setConfigPath(const std::filesystem::path &path) { m_configPath = path; }
 
+      /// @brief Expand `$VAR` and `${VAR}` references in the config tree.
+      ///
+      /// Each value is resolved against sibling config values that precede it and,
+      /// failing that, against environment variables. Unresolved references are left
+      /// in place. Called by loadConfig() before any options are parsed.
+      /// @param config the parsed configuration tree to expand in place
+      void expandConfigVariables(boost::property_tree::ptree &config);
+
     protected:
       DevicePtr getDefaultDevice();
       void loadAdapters(const ptree &tree, const ConfigOptions &options);
@@ -348,8 +356,6 @@ namespace mtconnect {
               << "  " << p;
         }
       }
-
-      void expandConfigVariables(boost::property_tree::ptree &);
 
     protected:
       using text_sink = boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>;

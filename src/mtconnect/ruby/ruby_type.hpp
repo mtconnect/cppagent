@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,21 +30,21 @@ namespace mtconnect::ruby {
   using namespace device_model;
   using namespace data_item;
   using namespace entity;
-  using namespace std;
 
-  inline string stringFromRuby(mrb_state *mrb, mrb_value value)
+  inline std::string stringFromRuby(mrb_state *mrb, mrb_value value)
   {
+    using namespace std;
     if (mrb_string_p(value))
       return string(mrb_str_to_cstr(mrb, value));
     else if (mrb_type(value) == MRB_TT_SYMBOL)
     {
       mrb_sym sym = mrb_symbol(value);
-      return string(mrb_sym_name(mrb, sym));
+      return std::string(mrb_sym_name(mrb, sym));
     }
     else
     {
       mrb_value s = mrb_any_to_s(mrb, value);
-      return string(mrb_str_to_cstr(mrb, s));
+      return std::string(mrb_str_to_cstr(mrb, s));
     }
   }
 

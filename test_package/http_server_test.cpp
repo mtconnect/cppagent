@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -100,6 +100,8 @@ public:
     req.set(http::field::host, "localhost");
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
     req.set(http::field::content_type, contentType);
+    if (!m_accept.empty())
+      req.set(http::field::accept, m_accept);
     if (close)
       req.set(http::field::connection, "close");
     req.body() = body;
@@ -274,6 +276,7 @@ public:
   string m_boundary;
   map<string, string> m_fields;
   string m_contentType;
+  string m_accept;  // optional Accept header to send with the requests
 
   std::function<std::size_t(std::uint64_t, boost::string_view, boost::system::error_code&)>
       m_chunkHandler;
@@ -1010,4 +1013,88 @@ TEST_F(HttpServerTest, failure_when_tls_only)
   ASSERT_TRUE(m_client->m_done);
 
   EXPECT_EQ((unsigned)boost::beast::http::status::unauthorized, m_client->m_status);
+}
+
+/// @brief Add a routing exercising every parameter type and a documented path
+///        parameter so the swagger renderer touches all branches.
+static void addDocumentedRouting(Server* server)
+{
+  auto handler = [](SessionPtr, RequestPtr) -> bool { return true; };
+  Routing r {boost::beast::http::verb::get,
+             "/{device}/sample?s={string:foo}&i={integer:5}&u={unsigned_integer:7}"
+             "&d={double:1.5}&b={bool:true}&plain={string}",
+             handler};
+  r.document("Sample summary", "Sample description");
+  r.documentParameter("device", PATH, "the device name");
+  server->addRouting(r);
+}
+
+TEST_F(HttpServerTest, should_render_swagger_json_api)
+{
+  addDocumentedRouting(m_server.get());
+
+  start();
+  startClient();
+
+  // No Accept header and pretty defaulted to false -> compact JSON (Writer)
+  m_client->spawnRequest(http::verb::get, "/swagger");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(200, m_client->m_status);
+  EXPECT_EQ("application/json", m_client->m_contentType);
+
+  const auto& body = m_client->m_result;
+  EXPECT_NE(string::npos, body.find("\"openapi\""));
+  EXPECT_NE(string::npos, body.find("3.0.0"));
+  EXPECT_NE(string::npos, body.find("/{device}/sample"));
+  EXPECT_NE(string::npos, body.find("Sample summary"));
+  EXPECT_NE(string::npos, body.find("Sample description"));
+  EXPECT_NE(string::npos, body.find("the device name"));
+  // Parameter schema rendering for the various types
+  EXPECT_NE(string::npos, body.find("int64"));
+  EXPECT_NE(string::npos, body.find("uint64"));
+  EXPECT_NE(string::npos, body.find("boolean"));
+  // Defaults rendered from the variant visitor
+  EXPECT_NE(string::npos, body.find("foo"));
+  EXPECT_NE(string::npos, body.find("1.5"));
+}
+
+TEST_F(HttpServerTest, should_render_swagger_json_api_pretty)
+{
+  addDocumentedRouting(m_server.get());
+
+  start();
+  startClient();
+
+  // pretty=true -> PrettyWriter instantiation
+  m_client->spawnRequest(http::verb::get, "/swagger?pretty=true");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(200, m_client->m_status);
+  EXPECT_EQ("application/json", m_client->m_contentType);
+  EXPECT_NE(string::npos, m_client->m_result.find("\"openapi\""));
+  // Pretty output is indented with newlines
+  EXPECT_NE(string::npos, m_client->m_result.find("\n"));
+}
+
+TEST_F(HttpServerTest, should_render_swagger_html_when_accept_is_html)
+{
+  addDocumentedRouting(m_server.get());
+
+  start();
+  startClient();
+
+  m_client->m_accept = "text/html";
+  m_client->spawnRequest(http::verb::get, "/swagger");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(200, m_client->m_status);
+  EXPECT_EQ("text/html", m_client->m_contentType);
+  EXPECT_NE(string::npos, m_client->m_result.find("swagger-ui"));
+}
+
+TEST_F(HttpServerTest, allow_put_from_resolves_and_rejects_bad_host)
+{
+  // A valid host resolves and is added to the allow list
+  EXPECT_TRUE(m_server->allowPutFrom("127.0.0.1"));
+
+  // An unresolvable host (RFC 6761 reserved .invalid TLD) fails gracefully
+  EXPECT_FALSE(m_server->allowPutFrom("nonexistent.host.invalid"));
 }

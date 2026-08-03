@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -124,6 +124,12 @@ namespace mtconnect {
     m_printers["xml"] = make_unique<printer::XmlPrinter>(m_pretty, m_validation);
     m_printers["json"] = make_unique<printer::JsonPrinter>(jsonVersion, m_pretty, m_validation);
 
+    if (!m_schemaVersion)
+    {
+      m_xmlParser->parseFile(m_deviceXmlPath, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
+      m_schemaVersion = m_xmlParser->getSchemaVersion();
+    }
+    
     if (m_schemaVersion)
     {
       m_intSchemaVersion = IntSchemaVersion(*m_schemaVersion);

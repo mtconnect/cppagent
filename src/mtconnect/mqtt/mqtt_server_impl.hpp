@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,9 +32,6 @@
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/adapter/mqtt/mqtt_adapter.hpp"
-
-using namespace std;
-namespace asio = boost::asio;
 
 namespace mtconnect {
   using namespace observation;
@@ -340,14 +337,14 @@ namespace mtconnect {
             if (HasOption(m_options, configuration::TlsCertificatePassword))
             {
               ctx.set_password_callback(
-                  [this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
-                    return *GetOption<string>(m_options, configuration::TlsCertificatePassword);
+                  [this](size_t, boost::asio::ssl::context_base::password_purpose) -> std::string {
+                    return *GetOption<std::string>(m_options, configuration::TlsCertificatePassword);
                   });
             }
 
-            auto serverPrivateKey = GetOption<string>(m_options, configuration::TlsPrivateKey);
-            auto serverCert = GetOption<string>(m_options, configuration::TlsCertificateChain);
-            auto serverDHKey = GetOption<string>(m_options, configuration::TlsDHKey);
+            auto serverPrivateKey = GetOption<std::string>(m_options, configuration::TlsPrivateKey);
+            auto serverCert = GetOption<std::string>(m_options, configuration::TlsCertificateChain);
+            auto serverDHKey = GetOption<std::string>(m_options, configuration::TlsDHKey);
 
             ctx.use_certificate_chain_file(*serverCert);
             ctx.use_private_key_file(*serverPrivateKey, boost::asio::ssl::context::pem);
@@ -360,8 +357,8 @@ namespace mtconnect {
               ctx.set_verify_mode(boost::asio::ssl::verify_peer);
               if (HasOption(m_options, configuration::TlsClientCAs))
               {
-                LOG(info) << "Server: Adding Client Certificates.";
-                ctx.load_verify_file(*GetOption<string>(m_options, configuration::TlsClientCAs));
+                LOG(info) << "Server: Adding Client Certificates.";
+                ctx.load_verify_file(*GetOption<std::string>(m_options, configuration::TlsClientCAs));
               }
             }
           }
@@ -412,8 +409,8 @@ namespace mtconnect {
           if (HasOption(m_options, configuration::TlsCertificateChain) &&
               HasOption(m_options, configuration::TlsPrivateKey))
           {
-            auto serverPrivateKey = GetOption<string>(m_options, configuration::TlsPrivateKey);
-            auto serverCert = GetOption<string>(m_options, configuration::TlsCertificateChain);
+            auto serverPrivateKey = GetOption<std::string>(m_options, configuration::TlsPrivateKey);
+            auto serverCert = GetOption<std::string>(m_options, configuration::TlsCertificateChain);
             ctx.use_certificate_chain_file(*serverCert);
             ctx.use_private_key_file(*serverPrivateKey, boost::asio::ssl::context::pem);
           }

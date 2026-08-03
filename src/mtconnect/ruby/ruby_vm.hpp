@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@
 #pragma once
 
 #include "mtconnect/config.hpp"
+#include "mtconnect/logging.hpp"
 
 namespace mtconnect::ruby {
   class AGENT_LIB_API RubyVM
@@ -66,9 +67,7 @@ namespace mtconnect::ruby {
     {
       mrb_value msg;
       mrb_get_args(mrb, "S", &msg);
-      BOOST_LOG_STREAM_WITH_PARAMS(::boost::log::trivial::logger::get(),
-                                   (::boost::log::keywords::severity = level))
-          << mrb_str_to_cstr(mrb, msg);
+      BOOST_LOG_SEV(agent_logger::get(), level) <<  mrb_str_to_cstr(mrb, msg);
     }
 
     void defineLogger()

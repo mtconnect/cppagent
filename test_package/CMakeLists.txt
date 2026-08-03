@@ -286,6 +286,7 @@ add_agent_test(pipeline_edit FALSE pipeline)
 add_agent_test(mtconnect_xml_transform FALSE pipeline)
 add_agent_test(response_document FALSE pipeline)
 add_agent_test(json_mapping FALSE pipeline)
+add_agent_test(message_mapping FALSE pipeline)
 add_agent_test(observation_validation TRUE pipeline)
 add_agent_test(correct_timestamp TRUE pipeline)
 

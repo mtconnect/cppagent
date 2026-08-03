@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2025, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright 2009-2026, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -206,6 +206,44 @@ namespace {
 
     // TODO: Need to link to device to the adapter.
     // ASSERT_TRUE(device->m_preserveUuid);
+  }
+
+  TEST_F(ConfigTest, adapter_url_is_parsed_into_protocol_host_port_and_topics)
+  {
+    string str("Devices = " TEST_RESOURCE_DIR
+               "/samples/test_config.xml\n"
+               "Adapters { LinuxCNC {\n"
+               "Url = http://192.168.1.50:7878/LinuxCNC:Other\n"
+               "} }\n");
+    m_config->loadConfig(str);
+
+    const auto agent = m_config->getAgent();
+    ASSERT_TRUE(agent);
+    const auto source = agent->getSources().back();
+    ASSERT_TRUE(source);
+    const auto adapter = dynamic_pointer_cast<source::adapter::Adapter>(source);
+    ASSERT_TRUE(adapter);
+    const auto &opts = adapter->getOptions();
+
+    EXPECT_EQ("http", *GetOption<string>(opts, configuration::Protocol));
+    EXPECT_EQ("192.168.1.50", *GetOption<string>(opts, configuration::Host));
+    EXPECT_EQ(7878, *GetOption<int>(opts, configuration::Port));
+
+    auto topics = GetOption<StringList>(opts, configuration::Topics);
+    ASSERT_TRUE(topics);
+    ASSERT_EQ(2u, topics->size());
+    EXPECT_EQ("LinuxCNC", topics->front());
+    EXPECT_EQ("Other", topics->back());
+  }
+
+  TEST_F(ConfigTest, malformed_adapter_url_with_empty_host_is_rejected)
+  {
+    string str("Devices = " TEST_RESOURCE_DIR
+               "/samples/test_config.xml\n"
+               "Adapters { LinuxCNC {\n"
+               "Url = http:///LinuxCNC\n"  // no host
+               "} }\n");
+    ASSERT_ANY_THROW(m_config->loadConfig(str));
   }
 
   TEST_F(ConfigTest, default_preserve_uuid_is_applied_to_all_devices)
