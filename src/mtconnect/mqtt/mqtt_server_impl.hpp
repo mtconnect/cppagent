@@ -338,13 +338,13 @@ namespace mtconnect {
             {
               ctx.set_password_callback(
                   [this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
-                    return *GetOption<string>(m_options, configuration::TlsCertificatePassword);
+                    return *GetOption<std::string>(m_options, configuration::TlsCertificatePassword);
                   });
             }
 
-            auto serverPrivateKey = GetOption<string>(m_options, configuration::TlsPrivateKey);
-            auto serverCert = GetOption<string>(m_options, configuration::TlsCertificateChain);
-            auto serverDHKey = GetOption<string>(m_options, configuration::TlsDHKey);
+            auto serverPrivateKey = GetOption<std::string>(m_options, configuration::TlsPrivateKey);
+            auto serverCert = GetOption<std::string>(m_options, configuration::TlsCertificateChain);
+            auto serverDHKey = GetOption<std::string>(m_options, configuration::TlsDHKey);
 
             ctx.use_certificate_chain_file(*serverCert);
             ctx.use_private_key_file(*serverPrivateKey, boost::asio::ssl::context::pem);
