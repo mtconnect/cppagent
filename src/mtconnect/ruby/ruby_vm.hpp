@@ -66,9 +66,7 @@ namespace mtconnect::ruby {
     {
       mrb_value msg;
       mrb_get_args(mrb, "S", &msg);
-      BOOST_LOG_STREAM_WITH_PARAMS(::boost::log::trivial::logger::get(),
-                                   (::boost::log::keywords::severity = level))
-          << mrb_str_to_cstr(mrb, msg);
+      BOOST_LOG_SEV(agent_logger::get(), level) <<  mrb_str_to_cstr(mrb, msg);
     }
 
     void defineLogger()

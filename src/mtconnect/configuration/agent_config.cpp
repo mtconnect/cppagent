@@ -974,7 +974,18 @@ namespace mtconnect::configuration {
     // Make the PipelineContext
     m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
     m_pipelineContext->m_contract = m_agent->makePipelineContract();
+    if (!HasOption(options, configuration::SchemaVersion) &&
+        m_agent->getSchemaVersion())
+    {
+      options[configuration::SchemaVersion] = *m_agent->getSchemaVersion();
+    }
+    else
+    {
+      options[configuration::SchemaVersion] = std::format("{}.{}", std::to_string(AGENT_VERSION_MAJOR),
+        std::to_string(AGENT_VERSION_MINOR));
 
+    }
+    
     loadSinks(config, options);
 
     m_agent->initialize(m_pipelineContext);

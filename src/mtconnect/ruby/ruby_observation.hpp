@@ -207,4 +207,38 @@ namespace mtconnect::ruby {
           MRB_ARGS_REQ(1));
     }
   };
+
+  /// @struct RubyObservation
+  /// @remark Ruby Observation Wrapper
+  /// @code
+  /// class Observation -> mtconnect::observation::Observation
+  ///   def self.make(data_item, properties, timestamp = now) -> Observation::make(...)
+  ///   def initialize(data_item, properties, timestamp = now) -> Observation::make(...)
+  ///   def dup -> mtconnect::observation::Observation::copy()
+  ///   def data_item -> mtconnect::observation::Observation::getDataItem()
+  ///   def timestamp -> mtconnect::observation::Observation::getTimestamp()
+  /// end
+  ///
+  /// class Condition -> mtconnect::observation::Condition
+  ///   def level -> mtconnect::observation::Condition::getLevel()
+  ///   def level=(level) -> mtconnect::observation::Condition::setLevel(level)
+  /// end
+  /// @endcode
+  ///
+  /// @note Both `make` and `initialize` go through Observation::make, which
+  ///       decides whether the observation is unavailable before the object is
+  ///       built. Two things follow that are easy to trip over from ruby:
+  ///
+  ///       1. An `UNAVAILABLE` value marks the observation unavailable and is
+  ///          then erased, so the observation does not carry the literal text.
+  ///          The match is case insensitive, and it is the `level` property for
+  ///          a condition and `VALUE` for everything else.
+  ///       2. **Omitting the property has the same effect.** A condition with no
+  ///          `level`, or any other observation with no `VALUE`, is silently
+  ///          unavailable rather than an error. A transform that means to report
+  ///          a value and passes an empty properties hash by mistake produces an
+  ///          unavailable observation, not a failure, so the mistake shows up as
+  ///          missing data rather than as a raised exception.
+  ///
+  ///       See Observation::make in observation.cpp.
 }  // namespace mtconnect::ruby

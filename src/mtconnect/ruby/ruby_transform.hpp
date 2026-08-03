@@ -325,6 +325,11 @@ namespace mtconnect::ruby {
         {
           // auto str = mrb_any_to_s(mrb, rv);
           LOG(error) << "Error in transform: " << mrb_str_to_cstr(mrb, mrb_inspect(mrb, rv));
+          if (mrb->exc)
+          {
+            auto exc = mrb_funcall(mrb, mrb_obj_value(mrb->exc), "to_s", 0);
+            LOG(error) << "Error calling transform " << m_name << ": " << RSTRING_CSTR(mrb, exc);
+          }
           rv = mrb_nil_value();
         }
 
