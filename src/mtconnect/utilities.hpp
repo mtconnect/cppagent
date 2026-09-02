@@ -42,6 +42,7 @@
 #include <variant>
 #include <deque>
 #include <cstddef>
+#include <functional>
 
 #include "mtconnect/config.hpp"
 #include "mtconnect/logging.hpp"
@@ -1024,31 +1025,65 @@ namespace mtconnect {
 
   }  // namespace url
     
-  class FdMonitor {
+  /// @brief Current number of open file descriptors (handles on Windows) for this process
+  std::size_t openFdCount();
+
+  /// @brief Current resident set size (physical memory) of this process in bytes
+  std::size_t residentBytes();
+
+  /// @brief Tracks a resource metric over a sliding window and flags suspected leaks.
+  ///
+  /// Samples a caller-supplied metric (e.g. open fds or resident memory) on a timer,
+  /// keeps a high-water mark, and computes a least-squares slope over the window. The
+  /// metric is flagged `suspect` when it has risen steadily across a full window and is
+  /// currently at a new high. The growth threshold combines an absolute floor with a
+  /// fraction of the window mean so the same class works for small counts (fds) and
+  /// large magnitudes (bytes).
+  class TrendMonitor
+  {
   public:
-    explicit FdMonitor(std::size_t window = 30) : m_window(window) {}
-    
+    /// @brief a source that returns the current value of the metric
+    using Sampler = std::function<std::size_t()>;
+
+    /// @param sampler returns the current value of the metric
+    /// @param window number of samples to retain
+    /// @param absThreshold minimum slope (units/sample) to consider growth
+    /// @param relThreshold minimum slope as a fraction of the window mean to consider growth
+    explicit TrendMonitor(Sampler sampler, std::size_t window = 30, double absThreshold = 0.0,
+                          double relThreshold = 0.0)
+      : m_sampler(std::move(sampler)),
+        m_window(window),
+        m_absThreshold(absThreshold),
+        m_relThreshold(relThreshold)
+    {}
+
     // call on a timer (e.g. every 10–30s)
     struct Report { std::size_t m_current, m_highWater; double m_slope; bool m_suspect; };
-    
+
     Report sample() {
-      std::size_t n = openFdCount();
+      std::size_t n = m_sampler();
       m_highWater = std::max(m_highWater, n);
-      
+
       m_samples.push_back(n);
       if (m_samples.size() > m_window) m_samples.pop_front();
-      
+
       double s = slope();
       // suspect if steadily rising AND at a new high across the whole window
+      double threshold = std::max(m_absThreshold, m_relThreshold * mean());
       bool suspect = m_samples.size() == m_window
-                      && s > 0.5                       // fds gained per sample
+                      && s > threshold
                       && m_samples.back() == m_highWater;
       return { n, m_highWater, s, suspect };
     }
-    
+
   private:
-    static std::size_t openFdCount();
-    
+    double mean() const {
+      if (m_samples.empty()) return 0.0;
+      double sum = 0.0;
+      for (auto v : m_samples) sum += double(v);
+      return sum / double(m_samples.size());
+    }
+
     double slope() const {                 // least-squares over the window
       std::size_t m = m_samples.size();
       if (m < 2) return 0.0;
@@ -1060,8 +1095,22 @@ namespace mtconnect {
       double d = m*sxx - sx*sx;
       return d == 0.0 ? 0.0 : (m*sxy - sx*sy) / d;
     }
-    
+
+    Sampler m_sampler;
     std::size_t m_window, m_highWater = 0;
+    double m_absThreshold, m_relThreshold;
     std::deque<std::size_t> m_samples;
   };
+
+  /// @brief Monitor for open file descriptors. Growth of >0.5 fds/sample is suspect.
+  inline TrendMonitor makeFdMonitor(std::size_t window = 30)
+  {
+    return TrendMonitor(&openFdCount, window, 0.5, 0.0);
+  }
+
+  /// @brief Monitor for resident memory. Growth of >1% of the window mean per sample is suspect.
+  inline TrendMonitor makeMemoryMonitor(std::size_t window = 30)
+  {
+    return TrendMonitor(&residentBytes, window, 0.0, 0.01);
+  }
 }  // namespace mtconnect

@@ -427,8 +427,10 @@ namespace mtconnect {
       std::unique_ptr<python::Embedded> m_python;
 #endif
 
-      FdMonitor m_fdMonitor;
-      
+      TrendMonitor m_fdMonitor {makeFdMonitor()};
+      TrendMonitor m_memoryMonitor {makeMemoryMonitor()};
+
+
       HookManager<AgentConfiguration> m_afterAgentHooks;
       HookManager<AgentConfiguration> m_afterConfigHooks;
       HookManager<AgentConfiguration> m_beforeStartHooks;

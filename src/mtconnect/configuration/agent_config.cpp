@@ -403,16 +403,28 @@ namespace mtconnect::configuration {
     using namespace chrono_literals;
     
     using std::placeholders::_1;
-    
-    auto report = m_fdMonitor.sample();
-    LOG(info) << "Open file descriptors: Current: " << report.m_current
-              << ", high water: " << report.m_highWater
-              << ", slope: " << report.m_slope
-              << ", suspect: " << report.m_suspect;
-    
-    // m_current, m_highWater; double m_slope; bool m_suspect
-    m_monitorFilesTimer.expires_after(15s);
-    m_monitorFilesTimer.async_wait(boost::bind(&AgentConfiguration::monitorResources, this, _1));
+
+    if (ec == boost::asio::error::operation_aborted)
+    {
+      LOG(info) << "Monitor resources stopped";
+      return;
+    }
+
+    auto fd = m_fdMonitor.sample();
+    LOG(info) << "Open file descriptors: Current: " << fd.m_current
+              << ", high water: " << fd.m_highWater
+              << ", slope: " << fd.m_slope
+              << ", suspect: " << fd.m_suspect;
+
+    constexpr double MiB = 1024.0 * 1024.0;
+    auto mem = m_memoryMonitor.sample();
+    LOG(info) << "Resident memory (MiB): Current: " << (mem.m_current / MiB)
+              << ", high water: " << (mem.m_highWater / MiB)
+              << ", slope (bytes/sample): " << mem.m_slope
+              << ", suspect: " << mem.m_suspect;
+
+    m_monitorResourceTimer.expires_after(15s);
+    m_monitorResourceTimer.async_wait(boost::bind(&AgentConfiguration::monitorResources, this, _1));
   }
 
   int AgentConfiguration::start()
@@ -448,6 +460,7 @@ namespace mtconnect::configuration {
     LOG(info) << "Agent stopping";
     m_beforeStopHooks.exec(*this);
     m_monitorFilesTimer.cancel();
+    m_monitorResourceTimer.cancel();
     m_restart = false;
     if (m_agent)
       m_agent->stop();

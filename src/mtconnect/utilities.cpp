@@ -44,14 +44,21 @@
 #define _WINSOCKAPI_
 #include <windows.h>
 #include <winsock2.h>
+#include <psapi.h>
 
 #define DELTA_EPOCH_IN_MICROSECS 11644473600000000ull
 #endif
 
 #if defined(__linux__)
 #include <boost/filesystem.hpp>
+#include <fstream>
 #include <iterator>
-#else                       // macOS, *BSD
+#include <unistd.h>
+#elif defined(__APPLE__)
+#include <mach/mach.h>
+#include <unistd.h>
+#include <fcntl.h>
+#else                       // *BSD
 #include <unistd.h>
 #include <fcntl.h>
 #endif
@@ -301,7 +308,7 @@ namespace mtconnect {
     }
   }  // namespace url
   
-  std::size_t FdMonitor::openFdCount()
+  std::size_t openFdCount()
   {
 #if defined(_WIN32)
     // NOTE: counts ALL kernel handles (files, events, threads, mutexes...),
@@ -310,7 +317,7 @@ namespace mtconnect {
     if (!GetProcessHandleCount(GetCurrentProcess(), &n))
       return 0;
     return static_cast<std::size_t>(n);
-    
+
 #elif defined(__linux__)
     namespace fs = boost::filesystem;
     boost::system::error_code ec;
@@ -319,7 +326,7 @@ namespace mtconnect {
     // the iterator itself holds one fd open on the directory
     auto n = static_cast<std::size_t>(std::distance(it, end));
     return n ? n - 1 : 0;
-    
+
 #else
     // /proc may be absent; scan up to the soft limit.
     long maxfd = sysconf(_SC_OPEN_MAX);
@@ -328,6 +335,37 @@ namespace mtconnect {
     for (int fd = 0; fd < maxfd; ++fd)
       if (fcntl(fd, F_GETFD) != -1) ++n;
     return n;
+#endif
+  }
+
+  std::size_t residentBytes()
+  {
+#if defined(_WIN32)
+    // K32GetProcessMemoryInfo is exported from kernel32, so no psapi.lib link is needed.
+    PROCESS_MEMORY_COUNTERS pmc {};
+    if (!K32GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
+      return 0;
+    return static_cast<std::size_t>(pmc.WorkingSetSize);
+
+#elif defined(__APPLE__)
+    mach_task_basic_info_data_t info {};
+    mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
+    if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO,
+                  reinterpret_cast<task_info_t>(&info), &count) != KERN_SUCCESS)
+      return 0;
+    return static_cast<std::size_t>(info.resident_size);
+
+#elif defined(__linux__)
+    // /proc/self/statm: total resident shared text lib data dt; field 2 = resident pages
+    std::ifstream f("/proc/self/statm");
+    std::size_t total = 0, resident = 0;
+    if (!(f >> total >> resident)) return 0;
+    long pageSize = sysconf(_SC_PAGESIZE);
+    if (pageSize < 0) return 0;
+    return resident * static_cast<std::size_t>(pageSize);
+
+#else
+    return 0;
 #endif
   }
 
