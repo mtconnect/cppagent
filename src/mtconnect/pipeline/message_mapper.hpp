@@ -26,6 +26,7 @@
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/observation/observation.hpp"
+#include "mtconnect/source/adapter/adapter_pipeline.hpp"
 #include "shdr_tokenizer.hpp"
 #include "timestamp_extractor.hpp"
 #include "topic_mapper.hpp"
