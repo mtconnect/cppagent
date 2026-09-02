@@ -53,13 +53,10 @@
 #include <boost/filesystem.hpp>
 #include <fstream>
 #include <iterator>
-#include <unistd.h>
 #elif defined(__APPLE__)
 #include <mach/mach.h>
-#include <unistd.h>
 #include <fcntl.h>
 #else // not __linux__ or __APPLE__
-#include <unistd.h>
 #include <fcntl.h>
 #endif // __linux__ or __APPLE__
 #endif // _WINDOWS
