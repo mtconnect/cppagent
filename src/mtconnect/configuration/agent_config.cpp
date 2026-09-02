@@ -45,6 +45,7 @@
 #include <date/date.h>
 #include <errno.h>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -53,7 +54,6 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <vector>
-#include <format>
 
 #include "mtconnect/agent.hpp"
 #include "mtconnect/configuration/config_options.hpp"
@@ -79,7 +79,7 @@
 #if defined(_WINDOWS)
 #if WINVER < 0x0600
 #include "shlwapi.h"
-#define stat(P, B) (PathFileExists((const char *)P) ? 0 : -1)
+#define stat(P, B) (PathFileExists((const char*)P) ? 0 : -1)
 #endif
 #endif
 
@@ -104,7 +104,8 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp", logr::attributes::utc_cl
 namespace mtconnect::configuration {
 
   AgentConfiguration::AgentConfiguration()
-    : m_context {make_unique<AsyncContext>()}, m_monitorFilesTimer(m_context->get()),
+    : m_context {make_unique<AsyncContext>()},
+      m_monitorFilesTimer(m_context->get()),
       m_monitorResourceTimer(m_context->get())
   {
     NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
@@ -156,7 +157,7 @@ namespace mtconnect::configuration {
 #endif
   }
 
-  void AgentConfiguration::initialize(const boost::program_options::variables_map &options)
+  void AgentConfiguration::initialize(const boost::program_options::variables_map& options)
   {
     NAMED_SCOPE("AgentConfiguration::initialize");
 
@@ -205,11 +206,11 @@ namespace mtconnect::configuration {
       logPaths(LOG_LEVEL(fatal), m_configPaths);
       cerr << "Agent failed to load: Cannot find configuration file: '" << configFile
            << ", evaluated paths: " << std::endl;
-      for (auto &p : m_configPaths)
+      for (auto& p : m_configPaths)
         cerr << "  " << p << endl;
       usage(1);
     }
-    catch (std::exception &e)
+    catch (std::exception& e)
     {
       cerr << std::endl
            << "Agent failed to load: " << e.what() << " from " << m_configFile << std::endl;
@@ -236,7 +237,7 @@ namespace mtconnect::configuration {
 #endif
     m_context.reset();
 
-    for (auto &[channelName, logChannel] : m_logChannels)
+    for (auto& [channelName, logChannel] : m_logChannels)
       logChannel.m_logSink.reset();
 
     m_logChannels.clear();
@@ -335,7 +336,7 @@ namespace mtconnect::configuration {
         m_agent->stop();
 
         m_context->pause(
-            [this](AsyncContext &context) {
+            [this](AsyncContext& context) {
               m_agent.reset();
               m_configTime.reset();
               m_deviceTime.reset();
@@ -362,7 +363,7 @@ namespace mtconnect::configuration {
         LOG(warning) << "Monitor thread has detected change in devices files.";
         LOG(warning) << "... Reloading Devices File: " << m_devicesFile;
 
-        m_context->pause([this](AsyncContext &context) {
+        m_context->pause([this](AsyncContext& context) {
           if (!m_agent->reloadDevices(m_devicesFile))
           {
             m_configTime.emplace(m_configTime->min());
@@ -372,7 +373,8 @@ namespace mtconnect::configuration {
             using std::placeholders::_1;
 
             m_monitorFilesTimer.expires_after(100ms);
-            m_monitorFilesTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
+            m_monitorFilesTimer.async_wait(
+                boost::bind(&AgentConfiguration::monitorFiles, this, _1));
           }
           else
           {
@@ -396,12 +398,12 @@ namespace mtconnect::configuration {
     m_monitorFilesTimer.expires_after(m_monitorInterval);
     m_monitorFilesTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
   }
-  
+
   void AgentConfiguration::monitorResources(boost::system::error_code ec)
   {
     using namespace chrono;
     using namespace chrono_literals;
-    
+
     using std::placeholders::_1;
 
     if (ec == boost::asio::error::operation_aborted)
@@ -412,16 +414,14 @@ namespace mtconnect::configuration {
 
     auto fd = m_fdMonitor.sample();
     LOG(info) << "Open file descriptors: Current: " << fd.m_current
-              << ", high water: " << fd.m_highWater
-              << ", slope: " << fd.m_slope
+              << ", high water: " << fd.m_highWater << ", slope: " << fd.m_slope
               << ", suspect: " << fd.m_suspect;
 
     constexpr double MiB = 1024.0 * 1024.0;
     auto mem = m_memoryMonitor.sample();
     LOG(info) << "Resident memory (MiB): Current: " << (mem.m_current / MiB)
               << ", high water: " << (mem.m_highWater / MiB)
-              << ", slope (bytes/sample): " << mem.m_slope
-              << ", suspect: " << mem.m_suspect;
+              << ", slope (bytes/sample): " << mem.m_slope << ", suspect: " << mem.m_suspect;
 
     m_monitorResourceTimer.expires_after(15s);
     m_monitorResourceTimer.async_wait(boost::bind(&AgentConfiguration::monitorResources, this, _1));
@@ -434,7 +434,7 @@ namespace mtconnect::configuration {
       // Start the file monitor to check for changes to cfg or devices.
       LOG(debug) << "Waiting for monitor thread to exit to restart agent";
 
-      m_agent->beforeDeviceXmlUpdateHooks().add([this](Agent &agent) {
+      m_agent->beforeDeviceXmlUpdateHooks().add([this](Agent& agent) {
         LOG(info) << "Reseting device file time because agent updated the device XML file";
         m_deviceTime.reset();
       });
@@ -472,11 +472,11 @@ namespace mtconnect::configuration {
 
   void AgentConfiguration::setLoggingLevel(const logr::trivial::severity_level level)
   {
-    for (auto &[channelName, logChannel] : m_logChannels)
+    for (auto& [channelName, logChannel] : m_logChannels)
       logChannel.m_logLevel = level;
   }
 
-  static logr::trivial::severity_level StringToLogLevel(const std::string &level)
+  static logr::trivial::severity_level StringToLogLevel(const std::string& level)
   {
     using namespace logr::trivial;
     string_view lev(level.c_str());
@@ -485,7 +485,7 @@ namespace mtconnect::configuration {
 
     struct compare
     {
-      bool operator()(const string_view &s1, const string_view &s2) const
+      bool operator()(const string_view& s1, const string_view& s2) const
       {
         return boost::ilexicographical_compare(s1, s2);
       }
@@ -505,14 +505,14 @@ namespace mtconnect::configuration {
       return res->second;
   }
 
-  logr::trivial::severity_level AgentConfiguration::setLoggingLevel(const string &level)
+  logr::trivial::severity_level AgentConfiguration::setLoggingLevel(const string& level)
   {
     logr::trivial::severity_level l = StringToLogLevel(level);
     setLoggingLevel(l);
     return l;
   }
 
-  void AgentConfiguration::configureLogger(const ptree &config)
+  void AgentConfiguration::configureLogger(const ptree& config)
   {
     using namespace logr::trivial;
     namespace expr = logr::expressions;
@@ -541,14 +541,14 @@ namespace mtconnect::configuration {
   }
 
   void AgentConfiguration::configureLoggerChannel(
-      const std::string &channelName, const ptree &config,
+      const std::string& channelName, const ptree& config,
       std::optional<boost::log::basic_formatter<char>> formatter)
   {
     using namespace logr::trivial;
     namespace expr = logr::expressions;
     namespace kw = boost::log::keywords;
 
-    auto &logChannel = m_logChannels[channelName];
+    auto& logChannel = m_logChannels[channelName];
     if (logChannel.m_channelName == "")
       logChannel.m_channelName = channelName;
 
@@ -585,7 +585,7 @@ namespace mtconnect::configuration {
 
     if (m_isDebug || (output && (*output == "cout" || *output == "cerr")))
     {
-      ostream *out;
+      ostream* out;
       if (output && *output == "cerr")
         out = &std::cerr;
       else
@@ -635,13 +635,13 @@ namespace mtconnect::configuration {
       }
     }
 
-    auto &maxLogArchiveSize = logChannel.m_maxLogArchiveSize;
-    auto &logRotationSize = logChannel.m_logRotationSize;
-    auto &rotationLogInterval = logChannel.m_rotationLogInterval;
-    auto &logArchivePattern = logChannel.m_logArchivePattern;
-    auto &logDirectory = logChannel.m_logDirectory;
-    auto &archiveLogDirectory = logChannel.m_archiveLogDirectory;
-    auto &logFileName = logChannel.m_logFileName;
+    auto& maxLogArchiveSize = logChannel.m_maxLogArchiveSize;
+    auto& logRotationSize = logChannel.m_logRotationSize;
+    auto& rotationLogInterval = logChannel.m_rotationLogInterval;
+    auto& logArchivePattern = logChannel.m_logArchivePattern;
+    auto& logDirectory = logChannel.m_logDirectory;
+    auto& archiveLogDirectory = logChannel.m_archiveLogDirectory;
+    auto& logFileName = logChannel.m_logFileName;
 
     logRotationSize = 2 * 1024 * 1024;  // Default to 2MB for log rotation size
     maxLogArchiveSize = ConvertFileSize(options, "max_archive_size", maxLogArchiveSize);
@@ -737,8 +737,8 @@ namespace mtconnect::configuration {
     logr::core::get()->add_sink(sink);
   }
 
-  static std::string ExpandValue(const std::map<std::string, std::string> &values,
-                                 const std::string &s)
+  static std::string ExpandValue(const std::map<std::string, std::string>& values,
+                                 const std::string& s)
   {
     static std::regex pat("\\$(([A-Za-z0-9_]+)|\\{([^}]+)\\})");
     stringstream out;
@@ -785,7 +785,7 @@ namespace mtconnect::configuration {
   }
 
   static void ExpandValues(std::map<std::string, std::string> values,
-                           boost::property_tree::ptree &node)
+                           boost::property_tree::ptree& node)
   {
     if (auto value = node.get_value_optional<std::string>(); value->find('$') != std::string::npos)
     {
@@ -793,22 +793,22 @@ namespace mtconnect::configuration {
       node.put_value(expanded);
     }
 
-    for (auto &block : node)
+    for (auto& block : node)
     {
       ExpandValues(values, block.second);
-      const auto &value = block.second.get_value_optional<std::string>();
+      const auto& value = block.second.get_value_optional<std::string>();
       if (value && !value->empty())
         values[block.first] = *value;
     }
   }
 
-  void AgentConfiguration::expandConfigVariables(boost::property_tree::ptree &config)
+  void AgentConfiguration::expandConfigVariables(boost::property_tree::ptree& config)
   {
     std::map<std::string, std::string> values;
     ExpandValues(values, config);
   }
 
-  void AgentConfiguration::loadConfig(const std::string &text, FileFormat fmt)
+  void AgentConfiguration::loadConfig(const std::string& text, FileFormat fmt)
   {
     NAMED_SCOPE("AgentConfiguration::loadConfig");
 
@@ -837,12 +837,12 @@ namespace mtconnect::configuration {
           break;
       }
     }
-    catch (boost::property_tree::json_parser::json_parser_error &e)
+    catch (boost::property_tree::json_parser::json_parser_error& e)
     {
       cerr << "json file error: " << e.what() << " on line " << e.line() << endl;
       throw;
     }
-    catch (const std::exception &e)
+    catch (const std::exception& e)
     {
       cerr << "could not load config file: " << e.what() << endl;
       throw;
@@ -1023,9 +1023,8 @@ namespace mtconnect::configuration {
       }
       else
       {
-        options[configuration::SchemaVersion] = std::format("{}.{}", std::to_string(AGENT_VERSION_MAJOR),
-                                                            std::to_string(AGENT_VERSION_MINOR));
-        
+        options[configuration::SchemaVersion] = std::format(
+            "{}.{}", std::to_string(AGENT_VERSION_MAJOR), std::to_string(AGENT_VERSION_MINOR));
       }
     }
     loadSinks(config, options);
@@ -1053,7 +1052,7 @@ namespace mtconnect::configuration {
 #endif
   }
 
-  void parseUrl(ConfigOptions &options)
+  void parseUrl(ConfigOptions& options)
   {
     using namespace mtconnect::url;
     auto url = *GetOption<string>(options, configuration::Url);
@@ -1080,7 +1079,7 @@ namespace mtconnect::configuration {
     }
   }
 
-  void AgentConfiguration::loadAdapters(const pt::ptree &config, const ConfigOptions &options)
+  void AgentConfiguration::loadAdapters(const pt::ptree& config, const ConfigOptions& options)
   {
     using namespace source::adapter;
     using namespace pipeline;
@@ -1091,7 +1090,7 @@ namespace mtconnect::configuration {
     auto adapters = config.get_child_optional("Adapters");
     if (adapters)
     {
-      for (const auto &block : *adapters)
+      for (const auto& block : *adapters)
       {
         ConfigOptions adapterOptions = options;
 
@@ -1217,14 +1216,14 @@ namespace mtconnect::configuration {
   }
 
 #ifdef WITH_PYTHON
-  void AgentConfiguration::configurePython(const ptree &tree, ConfigOptions &options)
+  void AgentConfiguration::configurePython(const ptree& tree, ConfigOptions& options)
   {
     m_python = make_unique<python::Embedded>(m_agent.get(), options);
   }
 #endif
 
 #ifdef WITH_RUBY
-  void AgentConfiguration::configureRuby(const ptree &tree, ConfigOptions &options)
+  void AgentConfiguration::configureRuby(const ptree& tree, ConfigOptions& options)
   {
     ConfigOptions rubyOptions = options;
 
@@ -1242,14 +1241,14 @@ namespace mtconnect::configuration {
   }
 #endif
 
-  void AgentConfiguration::loadSinks(const ptree &config, ConfigOptions &options)
+  void AgentConfiguration::loadSinks(const ptree& config, ConfigOptions& options)
   {
     NAMED_SCOPE("AgentConfiguration::loadSinks");
 
     auto sinks = config.get_child_optional("Sinks");
     if (sinks)
     {
-      for (const auto &sinkBlock : *sinks)
+      for (const auto& sinkBlock : *sinks)
       {
         auto qname = entity::QName(sinkBlock.first);
         auto [factory, name] = qname.getPair();
@@ -1303,17 +1302,17 @@ namespace mtconnect::configuration {
     }
   }
 
-  void AgentConfiguration::loadPlugins(const ptree &plugins)
+  void AgentConfiguration::loadPlugins(const ptree& plugins)
   {
     NAMED_SCOPE("AgentConfiguration::loadPlugins");
 
-    for (const auto &plugin : plugins)
+    for (const auto& plugin : plugins)
     {
       loadPlugin(plugin.first, plugin.second);
     }
   }
 
-  bool AgentConfiguration::loadPlugin(const std::string &name, const ptree &plugin)
+  bool AgentConfiguration::loadPlugin(const std::string& name, const ptree& plugin)
   {
     NAMED_SCOPE("AgentConfiguration::loadPlugin");
 
@@ -1349,7 +1348,7 @@ namespace mtconnect::configuration {
         init(plugin, *this);
         return true;
       }
-      catch (exception &e)
+      catch (exception& e)
       {
         LOG(debug) << "Plugin " << name << " from " << path << " not found, Reason: " << e.what()
                    << ", trying next path if available.";

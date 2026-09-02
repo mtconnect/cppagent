@@ -61,8 +61,8 @@ namespace mtconnect::pipeline {
   class AGENT_LIB_API TopicMapper : public Transform
   {
   public:
-    TopicMapper(const TopicMapper &) = default;
-    TopicMapper(PipelineContextPtr context, const std::optional<std::string> &device = std::nullopt)
+    TopicMapper(const TopicMapper&) = default;
+    TopicMapper(PipelineContextPtr context, const std::optional<std::string>& device = std::nullopt)
       : Transform("TopicMapper"), m_context(context), m_defaultDeviceName(device)
     {
       m_guard = EntityNameGuard("Message", RUN);
@@ -80,7 +80,7 @@ namespace mtconnect::pipeline {
     /// If found, remember the mapping of the topic to the data item
     /// @param topic the topic
     /// @return
-    auto resolve(const std::string &topic)
+    auto resolve(const std::string& topic)
     {
       using namespace std;
       namespace algo = boost::algorithm;
@@ -115,7 +115,7 @@ namespace mtconnect::pipeline {
 
       if (!dataItem)
       {
-        for (auto &tok : path)
+        for (auto& tok : path)
         {
           device = m_context->m_contract->findDevice(tok);
           if (device)
@@ -124,7 +124,7 @@ namespace mtconnect::pipeline {
 
         if (device)
         {
-          for (auto &tok : path)
+          for (auto& tok : path)
           {
             dataItem = device->getDeviceDataItem(tok);
             if (dataItem)
@@ -140,10 +140,10 @@ namespace mtconnect::pipeline {
       return std::make_tuple(device, dataItem);
     }
 
-    EntityPtr operator()(entity::EntityPtr &&entity) override
+    EntityPtr operator()(entity::EntityPtr&& entity) override
     {
       PipelineMessagePtr result;
-      auto &body = entity->getValue<std::string>();
+      auto& body = entity->getValue<std::string>();
       auto c = body[0];
 
       DataItemPtr dataItem;

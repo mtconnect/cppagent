@@ -46,33 +46,33 @@ namespace mtconnect {
       auto handler = make_unique<Handler>();
 
       // Build the pipeline for an adapter
-      handler->m_connecting = [this](const std::string &id) {
+      handler->m_connecting = [this](const std::string& id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
                                           Properties {{"VALUE", "CONNECTING"s}, {"source", id}});
         run(std::move(entity));
       };
-      handler->m_connected = [this](const std::string &id) {
+      handler->m_connected = [this](const std::string& id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
                                           Properties {{"VALUE", "CONNECTED"s}, {"source", id}});
         run(std::move(entity));
       };
-      handler->m_disconnected = [this](const std::string &id) {
+      handler->m_disconnected = [this](const std::string& id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
                                           Properties {{"VALUE", "DISCONNECTED"s}, {"source", id}});
         run(std::move(entity));
       };
-      handler->m_processData = [this](const std::string &data, const std::string &source) {
+      handler->m_processData = [this](const std::string& data, const std::string& source) {
         auto entity = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", source}});
         run(std::move(entity));
       };
-      handler->m_processMessage = [this](const std::string &topic, const std::string &data,
-                                         const std::string &source) {
+      handler->m_processMessage = [this](const std::string& topic, const std::string& data,
+                                         const std::string& source) {
         auto entity = make_shared<Entity>(
             "Message", Properties {{"VALUE", data}, {"topic", topic}, {"source", source}});
         run(std::move(entity));
       };
-      handler->m_command = [this](const std::string &command, const std::string &value,
-                                  const std::string &source) {
+      handler->m_command = [this](const std::string& command, const std::string& value,
+                                  const std::string& source) {
         auto entity = make_shared<Entity>(
             "Command", Properties {{"command", command}, {"VALUE", value}, {"source", source}});
         run(std::move(entity));
@@ -81,7 +81,7 @@ namespace mtconnect {
       return handler;
     }
 
-    void AdapterPipeline::build(const ConfigOptions &options)
+    void AdapterPipeline::build(const ConfigOptions& options)
     {
       clear();
       m_options = options;

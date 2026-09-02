@@ -50,7 +50,7 @@ namespace mtconnect {
                           {"compositionId", false},
                           {"quality", ControlledVocab {"VALID", "INVALID", "UNVERIFIABLE"}, false},
                           {"deprecated", ValueType::BOOL, false}}),
-            [](const std::string &name, Properties &props) -> EntityPtr {
+            [](const std::string& name, Properties& props) -> EntityPtr {
               return make_shared<Observation>(name, props);
             });
 
@@ -66,47 +66,47 @@ namespace mtconnect {
 
         // regex(".+TimeSeries$")
         factory->registerFactory(
-            [](const std::string &name) { return name.ends_with("TimeSeries"); },
+            [](const std::string& name) { return name.ends_with("TimeSeries"); },
             Timeseries::getFactory());
-        factory->registerFactory([](const std::string &name) { return name.ends_with("DataSet"); },
+        factory->registerFactory([](const std::string& name) { return name.ends_with("DataSet"); },
                                  DataSetEvent::getFactory());
-        factory->registerFactory([](const std::string &name) { return name.ends_with("Table"); },
+        factory->registerFactory([](const std::string& name) { return name.ends_with("Table"); },
                                  TableEvent::getFactory());
         factory->registerFactory(
-            [](const std::string &name) { return name.starts_with("Condition:"); },
+            [](const std::string& name) { return name.starts_with("Condition:"); },
             Condition::getFactory());
         factory->registerFactory(
-            [](const std::string &name) {
+            [](const std::string& name) {
               return name.starts_with("Samples:") && name.ends_with(":3D");
             },
             ThreeSpaceSample::getFactory());
         factory->registerFactory(
-            [](const std::string &name) {
+            [](const std::string& name) {
               return name.starts_with("Events:") && name.ends_with(":3D");
             },
             ThreeSpaceSample::getFactory());
         factory->registerFactory(
-            [](const std::string &name) { return name.starts_with("Samples:"); },
+            [](const std::string& name) { return name.starts_with("Samples:"); },
             Sample::getFactory());
         factory->registerFactory(
-            [](const std::string &name) {
+            [](const std::string& name) {
               return name.starts_with("Events:") && name.ends_with(":DOUBLE");
             },
             DoubleEvent::getFactory());
         factory->registerFactory(
-            [](const std::string &name) {
+            [](const std::string& name) {
               return name.starts_with("Events:") && name.ends_with(":INT");
             },
             IntEvent::getFactory());
         factory->registerFactory(
-            [](const std::string &name) { return name.starts_with("Events:"); },
+            [](const std::string& name) { return name.starts_with("Events:"); },
             Event::getFactory());
       }
       return factory;
     }
 
-    ObservationPtr Observation::make(const DataItemPtr dataItem, const Properties &incompingProps,
-                                     const Timestamp &timestamp, entity::ErrorList &errors)
+    ObservationPtr Observation::make(const DataItemPtr dataItem, const Properties& incompingProps,
+                                     const Timestamp& timestamp, entity::ErrorList& errors)
     {
       NAMED_SCOPE("Observation");
 
@@ -153,7 +153,7 @@ namespace mtconnect {
       if (!ent)
       {
         LOG(warning) << "Could not parse properties for data item: " << dataItem->getId();
-        for (auto &e : errors)
+        for (auto& e : errors)
         {
           LOG(warning) << "   Error: " << e->what();
         }
@@ -181,7 +181,7 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Observation::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           return make_shared<Event>(name, props);
         });
         factory->addRequirements(
@@ -197,12 +197,12 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Observation::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           auto ent = make_shared<DataSetEvent>(name, props);
           auto v = ent->m_properties.find("VALUE");
           if (v != ent->m_properties.end())
           {
-            auto &ds = std::get<DataSet>(v->second);
+            auto& ds = std::get<DataSet>(v->second);
             ent->m_properties.insert_or_assign("count", int64_t(ds.size()));
           }
           return ent;
@@ -221,12 +221,12 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*DataSetEvent::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           auto ent = make_shared<TableEvent>(name, props);
           auto v = ent->m_properties.find("VALUE");
           if (v != ent->m_properties.end())
           {
-            auto &ds = std::get<DataSet>(v->second);
+            auto& ds = std::get<DataSet>(v->second);
             ent->m_properties.insert_or_assign("count", int64_t(ds.size()));
           }
           return ent;
@@ -244,7 +244,7 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Observation::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           return make_shared<DoubleEvent>(name, props);
         });
         factory->addRequirements(Requirements({{"resetTriggered", ValueType::USTRING, false},
@@ -261,7 +261,7 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Observation::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           return make_shared<IntEvent>(name, props);
         });
         factory->addRequirements(Requirements({{"resetTriggered", ValueType::USTRING, false},
@@ -278,7 +278,7 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Observation::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           return make_shared<Sample>(name, props);
         });
         factory->addRequirements(Requirements({{"sampleRate", ValueType::DOUBLE, false},
@@ -296,7 +296,7 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Sample::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           return make_shared<ThreeSpaceSample>(name, props);
         });
         factory->addRequirements(Requirements({{"VALUE", ValueType::VECTOR, 3, false}}));
@@ -310,12 +310,12 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Sample::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           auto ent = make_shared<Timeseries>(name, props);
           auto v = ent->m_properties.find("VALUE");
           if (v != ent->m_properties.end())
           {
-            auto &ts = std::get<entity::Vector>(v->second);
+            auto& ts = std::get<entity::Vector>(v->second);
             ent->m_properties.insert_or_assign("sampleCount", int64_t(ts.size()));
           }
           return ent;
@@ -333,7 +333,7 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Observation::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           auto cond = make_shared<Condition>(name, props);
           if (cond)
           {
@@ -368,7 +368,7 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Event::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           auto ent = make_shared<AssetEvent>(name, props);
           if (!ent->hasProperty("assetType") && !ent->hasValue())
           {
@@ -387,7 +387,7 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Event::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           return make_shared<DeviceEvent>(name, props);
         });
         factory->addRequirements(Requirements {{"hash", false}});
@@ -401,7 +401,7 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Event::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           return make_shared<Message>(name, props);
         });
         factory->addRequirements(Requirements({{"nativeCode", false}}));
@@ -415,7 +415,7 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Event::getFactory());
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           return make_shared<Alarm>(name, props);
         });
         factory->addRequirements(Requirements({{"code", false},
@@ -426,7 +426,7 @@ namespace mtconnect {
       return factory;
     }
 
-    bool Condition::replace(ConditionPtr &old, ConditionPtr &_new)
+    bool Condition::replace(ConditionPtr& old, ConditionPtr& _new)
     {
       if (!m_prev)
         return false;
@@ -453,7 +453,7 @@ namespace mtconnect {
       return n;
     }
 
-    ConditionPtr Condition::deepCopyAndRemove(ConditionPtr &old)
+    ConditionPtr Condition::deepCopyAndRemove(ConditionPtr& old)
     {
       if (this->getptr() == old)
       {

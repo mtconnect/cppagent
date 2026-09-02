@@ -91,7 +91,7 @@ namespace mtconnect::device_model::data_item {
   /// @brief Handle KILO and CUBIC prefixes to provide the correct scaling
   /// @param[in] unit the incoming unit
   /// @return the {scale,power} as a pair.
-  static pair<double, double> scaleAndPower(string_view &unit)
+  static pair<double, double> scaleAndPower(string_view& unit)
   {
     double power = 1.0, scale = 1.0;
 
@@ -131,8 +131,8 @@ namespace mtconnect::device_model::data_item {
   /// @param[in] from units from
   /// @param[in] to units to
   /// @return A units conversion object
-  std::unique_ptr<UnitConversion> UnitConversion::make(const std::string &from,
-                                                       const std::string &to)
+  std::unique_ptr<UnitConversion> UnitConversion::make(const std::string& from,
+                                                       const std::string& to)
   {
     if (from == to)
       return nullptr;
@@ -140,7 +140,7 @@ namespace mtconnect::device_model::data_item {
     string key(from);
     key = key.append("-").append(to);
 
-    const auto &conversion = m_conversions.find(string(key));
+    const auto& conversion = m_conversions.find(string(key));
     if (conversion != m_conversions.end())
       return make_unique<UnitConversion>(conversion->second);
 
@@ -185,7 +185,7 @@ namespace mtconnect::device_model::data_item {
           key = *si;
           key = key.append("-").append(*ti);
 
-          const auto &conversion = m_conversions.find(string(key));
+          const auto& conversion = m_conversions.find(string(key));
 
           // Check for no support units and not power or factor scaling.
           if (conversion == m_conversions.end() && factor == 1.0)

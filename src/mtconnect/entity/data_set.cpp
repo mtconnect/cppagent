@@ -39,18 +39,18 @@ namespace l = boost::lambda;
 
 #ifdef BOOST_SPIRIT_DEBUG
 namespace std {
-  static inline ostream &operator<<(ostream &s, const mtconnect::observation::DataSetEntry &t);
+  static inline ostream& operator<<(ostream& s, const mtconnect::observation::DataSetEntry& t);
 
-  static inline ostream &operator<<(ostream &s, const mtconnect::observation::DataSetValue &t)
+  static inline ostream& operator<<(ostream& s, const mtconnect::observation::DataSetValue& t)
   {
     using namespace mtconnect::observation;
-    visit(mtconnect::overloaded {[&s](const monostate &) { s << "NULL"; },
-                                 [&s](const std::string &st) { s << "string(" << st << ")"; },
-                                 [&s](const int64_t &i) { s << "int(" << i << ")"; },
-                                 [&s](const double &d) { s << "double(" << d << ")"; },
-                                 [&s](const TableRow &arg) {
+    visit(mtconnect::overloaded {[&s](const monostate&) { s << "NULL"; },
+                                 [&s](const std::string& st) { s << "string(" << st << ")"; },
+                                 [&s](const int64_t& i) { s << "int(" << i << ")"; },
+                                 [&s](const double& d) { s << "double(" << d << ")"; },
+                                 [&s](const TableRow& arg) {
                                    s << "{";
-                                   for (const auto &v : arg)
+                                   for (const auto& v : arg)
                                    {
                                      s << v << ", ";
                                    }
@@ -60,13 +60,13 @@ namespace std {
     return s;
   }
 
-  static inline ostream &operator<<(ostream &s, const mtconnect::observation::DataSetEntry &t)
+  static inline ostream& operator<<(ostream& s, const mtconnect::observation::DataSetEntry& t)
   {
     s << t.m_key << "=" << t.m_value << (t.m_removed ? ":removed" : "");
     return s;
   }
 
-  static inline ostream &operator<<(ostream &s, const mtconnect::observation::TableCell &t)
+  static inline ostream& operator<<(ostream& s, const mtconnect::observation::TableCell& t)
   {
     s << t.m_key << "=" << t.m_value;
     return s;
@@ -80,24 +80,24 @@ using namespace std;
 namespace mtconnect::entity {
   /// @brief Functions called when parsing data sets
   namespace DataSetParserActions {
-    inline static void add_entry_f(DataSet &ds, const DataSetEntry &entry) { ds.emplace(entry); }
+    inline static void add_entry_f(DataSet& ds, const DataSetEntry& entry) { ds.emplace(entry); }
 
     struct TableCellConverter
     {
-      TableCellConverter(TableCellValue &value) : m_value(value) {}
+      TableCellConverter(TableCellValue& value) : m_value(value) {}
 
-      void operator()(const TableRow &row) { LOG(error) << "Table row cannot recurse"; }
+      void operator()(const TableRow& row) { LOG(error) << "Table row cannot recurse"; }
 
       template <typename T>
-      void operator()(const T &v)
+      void operator()(const T& v)
       {
         m_value.emplace<T>(v);
       }
 
-      TableCellValue &m_value;
+      TableCellValue& m_value;
     };
 
-    inline static void add_cell_f(TableRow &row, const DataSetEntry &entry)
+    inline static void add_cell_f(TableRow& row, const DataSetEntry& entry)
     {
       TableCell cell(entry.m_key);
       cell.m_removed = entry.m_removed;
@@ -105,8 +105,8 @@ namespace mtconnect::entity {
       row.emplace(cell);
     }
 
-    inline static void make_entry_f(DataSetEntry &entry, const string &key,
-                                    const boost::optional<DataSetValue> &v)
+    inline static void make_entry_f(DataSetEntry& entry, const string& key,
+                                    const boost::optional<DataSetValue>& v)
     {
       entry.m_key = key;
       if (v && !holds_alternative<monostate>(*v))
@@ -114,8 +114,8 @@ namespace mtconnect::entity {
       else
         entry.m_removed = true;
     }
-    inline static void make_entry_f(DataSetEntry &entry, const string &key,
-                                    const boost::optional<TableRow> &v)
+    inline static void make_entry_f(DataSetEntry& entry, const string& key,
+                                    const boost::optional<TableRow>& v)
     {
       entry.m_key = key;
       if (v)
@@ -136,14 +136,14 @@ namespace mtconnect::entity {
   {
   protected:
     template <typename P, typename O, typename R>
-    void logError(P &params, O &obj, R &result)
+    void logError(P& params, O& obj, R& result)
     {
       using namespace boost::fusion;
 
-      auto &start = at_c<0>(params);
-      auto &end = at_c<1>(params);
+      auto& start = at_c<0>(params);
+      auto& end = at_c<1>(params);
       // auto &what = at_c<2>(params);
-      auto &expected = at_c<3>(params);
+      auto& expected = at_c<3>(params);
 
       std::string text(start, end);
 
@@ -222,11 +222,11 @@ namespace mtconnect::entity {
       using namespace boost::fusion;
 
       on_error<fail>(m_entry,
-                     [&](auto &params, auto &obj, auto &result) { logError(params, obj, result); });
+                     [&](auto& params, auto& obj, auto& result) { logError(params, obj, result); });
       on_error<fail>(m_tableEntry,
-                     [&](auto &params, auto &obj, auto &result) { logError(params, obj, result); });
+                     [&](auto& params, auto& obj, auto& result) { logError(params, obj, result); });
       on_error<fail>(m_start,
-                     [&](auto &params, auto &obj, auto &result) { logError(params, obj, result); });
+                     [&](auto& params, auto& obj, auto& result) { logError(params, obj, result); });
     }
 
   protected:
@@ -247,7 +247,7 @@ namespace mtconnect::entity {
     qi::rule<It, DataSetEntry()> m_tableEntry;
   };
 
-  bool DataSet::parse(const std::string &text, bool table)
+  bool DataSet::parse(const std::string& text, bool table)
   {
     using boost::spirit::ascii::space;
 

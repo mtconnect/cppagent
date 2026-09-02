@@ -30,7 +30,7 @@ namespace mtconnect {
 ///   stringizes `name`
 ///
 /// @param name name of configuration parameter
-#define DECLARE_CONFIGURATION(name) inline const char *name = #name;
+#define DECLARE_CONFIGURATION(name) inline const char* name = #name;
 
     /// @name Global Configuration Options
     ///@{

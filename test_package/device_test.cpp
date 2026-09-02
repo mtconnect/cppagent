@@ -27,7 +27,7 @@ using namespace device_model;
 using namespace data_item;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -116,7 +116,7 @@ TEST_F(DeviceTest, data_items_are_added_to_device_and_retrievable_in_order)
   m_devA->addDataItem(data1, errors);
   m_devA->addDataItem(data2, errors);
 
-  const auto &items = m_devA->getDataItems();
+  const auto& items = m_devA->getDataItems();
   ASSERT_EQ(2, items->size());
 
   ASSERT_TRUE(data1 == items->front());

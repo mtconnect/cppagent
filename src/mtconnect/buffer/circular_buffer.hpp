@@ -82,9 +82,9 @@ namespace mtconnect::buffer {
 
     /// @brief update the data item references when device model changes
     /// @param diMap the map of data item ids to new data item entities
-    void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
+    void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr>& diMap)
     {
-      for (auto &o : m_slidingBuffer)
+      for (auto& o : m_slidingBuffer)
       {
         if (o->isOrphan())
         {
@@ -97,7 +97,7 @@ namespace mtconnect::buffer {
       m_first.updateDataItems(diMap);
       m_latest.updateDataItems(diMap);
 
-      for (auto &cp : m_checkpoints)
+      for (auto& cp : m_checkpoints)
       {
         cp->updateDataItems(diMap);
       }
@@ -121,7 +121,7 @@ namespace mtconnect::buffer {
     ///
     /// @param observation the observation
     /// @return the sequence number of the observation
-    SequenceNumber_t addToBuffer(observation::ObservationPtr &observation)
+    SequenceNumber_t addToBuffer(observation::ObservationPtr& observation)
     {
       if (observation->isOrphan())
         return 0;
@@ -172,17 +172,17 @@ namespace mtconnect::buffer {
 
     /// @brief Get the checkpoint at the end of the circular buffer
     /// @return reference to the checkpoint
-    const Checkpoint &getLatest() const { return m_latest; }
+    const Checkpoint& getLatest() const { return m_latest; }
     /// @brief Get the checkpoint at the beginning of the circular buffer
     /// @return reference to the checkpoint
-    const Checkpoint &getFirst() const { return m_first; }
+    const Checkpoint& getFirst() const { return m_first; }
     auto getCheckpointFreq() const { return m_checkpointFreq; }
     auto getCheckpointCount() const { return m_checkpointCount; }
 
     /// @brief Check if observation is a duplicate by validating against the latest checkpoint
     /// @param[in] obs the observation to check
     /// @return `true` if the observation is a duplicate
-    const observation::ObservationPtr checkDuplicate(const observation::ObservationPtr &obs) const
+    const observation::ObservationPtr checkDuplicate(const observation::ObservationPtr& obs) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
       return m_latest.checkDuplicate(obs);
@@ -193,7 +193,7 @@ namespace mtconnect::buffer {
     /// @param filterSet the filter to apply to the new checkpoint
     /// @return a unique point to a new checkpoint
     std::unique_ptr<Checkpoint> getCheckpointAt(SequenceNumber_t at,
-                                                const FilterSetOpt &filterSet) const
+                                                const FilterSetOpt& filterSet) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
@@ -250,9 +250,9 @@ namespace mtconnect::buffer {
     /// @param[out] endOfBuffer `true` if the last sequence is at the end of the buffer
     /// @return unique pointer to a list of shared observation pointers
     std::unique_ptr<observation::ObservationList> getObservations(
-        int count, const FilterSetOpt &filterSet, const std::optional<SequenceNumber_t> start,
-        const std::optional<SequenceNumber_t> to, SequenceNumber_t &end, SequenceNumber_t &firstSeq,
-        bool &endOfBuffer) const
+        int count, const FilterSetOpt& filterSet, const std::optional<SequenceNumber_t> start,
+        const std::optional<SequenceNumber_t> to, SequenceNumber_t& end, SequenceNumber_t& firstSeq,
+        bool& endOfBuffer) const
     {
       auto results = std::make_unique<observation::ObservationList>();
 
@@ -292,10 +292,10 @@ namespace mtconnect::buffer {
       for (int added = 0; added < limit && i < max && i >= min; i += inc)
       {
         // Filter out according to if it exists in the list
-        auto &event = m_slidingBuffer[i];
+        auto& event = m_slidingBuffer[i];
         if (!event->isOrphan())
         {
-          const std::string &dataId = event->getDataItem()->getId();
+          const std::string& dataId = event->getDataItem()->getId();
           if (!filterSet || filterSet->count(dataId) > 0)
           {
             results->push_back(event);

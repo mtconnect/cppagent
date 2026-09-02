@@ -40,7 +40,7 @@ using namespace std::chrono_literals;
 using namespace mtconnect::sink::rest_sink;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -67,7 +67,7 @@ protected:
 TEST_F(PipelineDeliverTest, observation_is_delivered_to_circular_buffer_with_correct_values)
 {
   m_agentTestHelper->addAdapter();
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   auto seq = circ.getSequence();
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|100.0");
   ASSERT_EQ(seq + 1, circ.getSequence());
@@ -82,7 +82,7 @@ TEST_F(PipelineDeliverTest, duplicate_filter_suppresses_repeated_values_in_circu
 {
   ConfigOptions options {{configuration::FilterDuplicates, true}};
   m_agentTestHelper->addAdapter(options);
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   auto seq = circ.getSequence();
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|100.0");
   ASSERT_EQ(seq + 1, circ.getSequence());
@@ -106,7 +106,7 @@ TEST_F(PipelineDeliverTest, upcase_filter_converts_event_values_to_uppercase)
 {
   ConfigOptions options {{configuration::UpcaseDataItemValue, true}};
   m_agentTestHelper->addAdapter(options);
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   auto seq = circ.getSequence();
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|a01c7f30|active");
   ASSERT_EQ(seq + 1, circ.getSequence());

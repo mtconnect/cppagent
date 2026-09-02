@@ -23,6 +23,7 @@
 #include <boost/spirit/include/qi.hpp>
 
 #include <chrono>
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -35,31 +36,31 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <cstddef>
 
 #include "logging.hpp"
 
 // Don't include WinSock.h when processing <windows.h>
 #ifdef _WINDOWS
 #define _WINSOCKAPI_
+#include <psapi.h>
 #include <windows.h>
 #include <winsock2.h>
-#include <psapi.h>
 
 #define DELTA_EPOCH_IN_MICROSECS 11644473600000000ull
-#else // _WINDOWS
+#else  // _WINDOWS
 // Resource management required includes by OS
 #if defined(__linux__)
 #include <boost/filesystem.hpp>
+
 #include <fstream>
 #include <iterator>
 #elif defined(__APPLE__)
+#include <fcntl.h>
 #include <mach/mach.h>
+#else  // not __linux__ or __APPLE__
 #include <fcntl.h>
-#else // not __linux__ or __APPLE__
-#include <fcntl.h>
-#endif // __linux__ or __APPLE__
-#endif // _WINDOWS
+#endif  // __linux__ or __APPLE__
+#endif  // _WINDOWS
 
 using namespace std;
 using namespace std::chrono;
@@ -88,7 +89,7 @@ BOOST_FUSION_ADAPT_STRUCT(mtconnect::url::Url,
                                                                                       m_fragment))
 
 namespace mtconnect {
-  inline string::size_type insertPrefix(string &aPath, string::size_type &aPos,
+  inline string::size_type insertPrefix(string& aPath, string::size_type& aPos,
                                         const string aPrefix)
   {
     aPath.insert(aPos, aPrefix);
@@ -98,7 +99,7 @@ namespace mtconnect {
     return aPos;
   }
 
-  inline bool hasNamespace(const string &aPath, string::size_type aStart)
+  inline bool hasNamespace(const string& aPath, string::size_type aStart)
   {
     string::size_type len = aPath.length(), pos = aStart;
 
@@ -155,7 +156,7 @@ namespace mtconnect {
     return newPath;
   }
 
-  std::string GetBestHostAddress(boost::asio::io_context &context, bool onlyV4)
+  std::string GetBestHostAddress(boost::asio::io_context& context, bool onlyV4)
   {
     using namespace boost;
     using namespace asio;
@@ -173,9 +174,9 @@ namespace mtconnect {
     }
     else
     {
-      for (auto &res : results)
+      for (auto& res : results)
       {
-        const auto &ad = res.endpoint().address();
+        const auto& ad = res.endpoint().address();
         if (!ad.is_unspecified() && !ad.is_loopback() && (!onlyV4 || !ad.is_v6()))
         {
           auto ads {ad.to_string()};
@@ -289,7 +290,7 @@ namespace mtconnect {
       bool has_user_name = false;
     };
 
-    Url Url::parse(const std::string_view &url)
+    Url Url::parse(const std::string_view& url)
     {
       Url ast;
       UriGrammar<std::string_view::const_iterator> grammar;
@@ -305,7 +306,7 @@ namespace mtconnect {
       return ast;
     }
   }  // namespace url
-  
+
   std::size_t openFdCount()
   {
 #if defined(_WIN32)
@@ -320,7 +321,8 @@ namespace mtconnect {
     namespace fs = boost::filesystem;
     boost::system::error_code ec;
     fs::directory_iterator it("/proc/self/fd", ec), end;
-    if (ec) return 0;
+    if (ec)
+      return 0;
     // the iterator itself holds one fd open on the directory
     auto n = static_cast<std::size_t>(std::distance(it, end));
     return n ? n - 1 : 0;
@@ -328,10 +330,12 @@ namespace mtconnect {
 #else
     // /proc may be absent; scan up to the soft limit.
     long maxfd = sysconf(_SC_OPEN_MAX);
-    if (maxfd < 0) maxfd = 65536;
+    if (maxfd < 0)
+      maxfd = 65536;
     std::size_t n = 0;
     for (int fd = 0; fd < maxfd; ++fd)
-      if (fcntl(fd, F_GETFD) != -1) ++n;
+      if (fcntl(fd, F_GETFD) != -1)
+        ++n;
     return n;
 #endif
   }
@@ -348,8 +352,8 @@ namespace mtconnect {
 #elif defined(__APPLE__)
     mach_task_basic_info_data_t info {};
     mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
-    if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO,
-                  reinterpret_cast<task_info_t>(&info), &count) != KERN_SUCCESS)
+    if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>(&info),
+                  &count) != KERN_SUCCESS)
       return 0;
     return static_cast<std::size_t>(info.resident_size);
 
@@ -357,9 +361,11 @@ namespace mtconnect {
     // /proc/self/statm: total resident shared text lib data dt; field 2 = resident pages
     std::ifstream f("/proc/self/statm");
     std::size_t total = 0, resident = 0;
-    if (!(f >> total >> resident)) return 0;
+    if (!(f >> total >> resident))
+      return 0;
     long pageSize = sysconf(_SC_PAGESIZE);
-    if (pageSize < 0) return 0;
+    if (pageSize < 0)
+      return 0;
     return resident * static_cast<std::size_t>(pageSize);
 
 #else

@@ -42,7 +42,7 @@ namespace sys = boost::system;
 
 namespace mtconnect::source::adapter::shdr {
   // Connector public methods
-  Connector::Connector(asio::io_context::strand &strand, string server, unsigned int port,
+  Connector::Connector(asio::io_context::strand& strand, string server, unsigned int port,
                        seconds legacyTimeout, seconds reconnectInterval,
                        std::optional<std::chrono::milliseconds> heartbeat)
     : m_server(std::move(server)),
@@ -88,7 +88,7 @@ namespace mtconnect::source::adapter::shdr {
     return true;
   }
 
-  void Connector::resolved(const boost::system::error_code &ec,
+  void Connector::resolved(const boost::system::error_code& ec,
                            asio::ip::tcp::resolver::results_type results)
   {
     NAMED_SCOPE("Connector::resolved");
@@ -184,7 +184,7 @@ namespace mtconnect::source::adapter::shdr {
     asyncTryConnect();
   }
 
-  void Connector::connected(const boost::system::error_code &ec, const ip::tcp::endpoint &endpoint)
+  void Connector::connected(const boost::system::error_code& ec, const ip::tcp::endpoint& endpoint)
   {
     NAMED_SCOPE("Connector::connected");
 
@@ -272,7 +272,7 @@ namespace mtconnect::source::adapter::shdr {
     }
   }
 
-  void Connector::parseBuffer(const char *buffer)
+  void Connector::parseBuffer(const char* buffer)
   {
     std::ostream os(&m_incoming);
     os << buffer;
@@ -300,7 +300,7 @@ namespace mtconnect::source::adapter::shdr {
     });
   }
 
-  inline void Connector::processLine(const std::string &line)
+  inline void Connector::processLine(const std::string& line)
   {
     NAMED_SCOPE("Connector::processLine");
 
@@ -320,7 +320,7 @@ namespace mtconnect::source::adapter::shdr {
     }
   }
 
-  inline size_t rightTrimmedSize(const char *cp, const char *start)
+  inline size_t rightTrimmedSize(const char* cp, const char* start)
   {
     while (cp > start && isspace(*cp))
       cp--;
@@ -338,14 +338,14 @@ namespace mtconnect::source::adapter::shdr {
       return false;
 
     // Grab the beginning of the data buffer.
-    auto start = static_cast<const char *>(m_incoming.data().data());
+    auto start = static_cast<const char*>(m_incoming.data().data());
     auto len = m_incoming.data().size();
 
     LOG(trace) << "(" << m_server << ":" << m_port << ") " << len
                << " characters in incomming buffer";
 
     // Scan forward in the buffer for a \n
-    const char *eol = static_cast<const char *>(memchr(start, '\n', len));
+    const char* eol = static_cast<const char*>(memchr(start, '\n', len));
     size_t consumed = (eol == nullptr) ? 0 : eol - start + 1;
 
     // If there is no end of line, wait for more data.
@@ -377,7 +377,7 @@ namespace mtconnect::source::adapter::shdr {
     return m_incoming.size() > 0;
   }
 
-  void Connector::sendCommand(const string &command)
+  void Connector::sendCommand(const string& command)
   {
     NAMED_SCOPE("Connector::sendCommand");
 
@@ -412,7 +412,7 @@ namespace mtconnect::source::adapter::shdr {
     }
   }
 
-  void Connector::startHeartbeats(const string &arg)
+  void Connector::startHeartbeats(const string& arg)
   {
     NAMED_SCOPE("Connector::startHeartbeats");
 
@@ -470,7 +470,7 @@ namespace mtconnect::source::adapter::shdr {
         if (m_socket.is_open())
           m_socket.close();
       }
-      catch (exception &e)
+      catch (exception& e)
       {
         LOG(error) << "(Port:" << m_localPort << ")"
                    << "unexpected exception during close: " << e.what();

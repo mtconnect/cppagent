@@ -34,10 +34,10 @@ using namespace mtconnect::sink::rest_sink;
 namespace beast = boost::beast;
 namespace http = beast::http;
 
-void AgentTestHelper::makeRequest(const char *file, int line, boost::beast::http::verb verb,
-                                  const std::string &body,
-                                  const mtconnect::sink::rest_sink::QueryMap &aQueries,
-                                  const char *path, const char *accepts)
+void AgentTestHelper::makeRequest(const char* file, int line, boost::beast::http::verb verb,
+                                  const std::string& body,
+                                  const mtconnect::sink::rest_sink::QueryMap& aQueries,
+                                  const char* path, const char* accepts)
 {
   m_request = make_shared<Request>();
 
@@ -57,70 +57,70 @@ void AgentTestHelper::makeRequest(const char *file, int line, boost::beast::http
   m_dispatched = m_restService->getServer()->dispatch(m_session, m_request);
 }
 
-void AgentTestHelper::responseHelper(const char *file, int line, const QueryMap &aQueries,
-                                     xmlDocPtr *doc, const char *path, const char *accepts)
+void AgentTestHelper::responseHelper(const char* file, int line, const QueryMap& aQueries,
+                                     xmlDocPtr* doc, const char* path, const char* accepts)
 {
   makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
   *doc = xmlParseMemory(m_session->m_body.c_str(), int32_t(m_session->m_body.size()));
 }
 
-void AgentTestHelper::responseStreamHelper(const char *file, int line, const QueryMap &aQueries,
-                                           const char *path, const char *accepts)
+void AgentTestHelper::responseStreamHelper(const char* file, int line, const QueryMap& aQueries,
+                                           const char* path, const char* accepts)
 {
   makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
 }
 
-void AgentTestHelper::putResponseHelper(const char *file, int line, const string &body,
-                                        const QueryMap &aQueries, xmlDocPtr *doc, const char *path,
-                                        const char *accepts)
+void AgentTestHelper::putResponseHelper(const char* file, int line, const string& body,
+                                        const QueryMap& aQueries, xmlDocPtr* doc, const char* path,
+                                        const char* accepts)
 {
   makeRequest(file, line, http::verb::put, body, aQueries, path, accepts);
   if (m_session->m_mimeType.ends_with("xml"sv))
     *doc = xmlParseMemory(m_session->m_body.c_str(), int32_t(m_session->m_body.size()));
 }
 
-void AgentTestHelper::deleteResponseHelper(const char *file, int line, const QueryMap &aQueries,
-                                           xmlDocPtr *doc, const char *path, const char *accepts)
+void AgentTestHelper::deleteResponseHelper(const char* file, int line, const QueryMap& aQueries,
+                                           xmlDocPtr* doc, const char* path, const char* accepts)
 {
   makeRequest(file, line, http::verb::delete_, "", aQueries, path, accepts);
   if (m_session->m_mimeType.ends_with("xml"sv))
     *doc = xmlParseMemory(m_session->m_body.c_str(), int32_t(m_session->m_body.size()));
 }
 
-void AgentTestHelper::chunkStreamHelper(const char *file, int line, xmlDocPtr *doc)
+void AgentTestHelper::chunkStreamHelper(const char* file, int line, xmlDocPtr* doc)
 {
   *doc = xmlParseMemory(m_session->m_chunkBody.c_str(), int32_t(m_session->m_chunkBody.size()));
 }
 
-void AgentTestHelper::responseHelper(const char *file, int line, const QueryMap &aQueries,
-                                     nlohmann::json &doc, const char *path, const char *accepts)
+void AgentTestHelper::responseHelper(const char* file, int line, const QueryMap& aQueries,
+                                     nlohmann::json& doc, const char* path, const char* accepts)
 {
   makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
   doc = nlohmann::json::parse(m_session->m_body);
 }
 
-void AgentTestHelper::makeWebSocketRequest(const char *file, int line, const std::string &json,
-                                           xmlDocPtr *doc, std::string &id)
+void AgentTestHelper::makeWebSocketRequest(const char* file, int line, const std::string& json,
+                                           xmlDocPtr* doc, std::string& id)
 {
   m_dispatched = m_websocketSession->dispatch(json, id);
   parseResponse(file, line, doc, id);
 }
 
-void AgentTestHelper::makeWebSocketRequest(const char *file, int line, const std::string &json,
-                                           nlohmann::json &doc, std::string &id)
+void AgentTestHelper::makeWebSocketRequest(const char* file, int line, const std::string& json,
+                                           nlohmann::json& doc, std::string& id)
 {
   m_dispatched = m_websocketSession->dispatch(json, id);
   parseResponse(file, line, doc, id);
 }
 
-void AgentTestHelper::makeAsyncWebSocketRequest(const char *file, int line, const std::string &json,
-                                                std::string &id)
+void AgentTestHelper::makeAsyncWebSocketRequest(const char* file, int line, const std::string& json,
+                                                std::string& id)
 {
   m_dispatched = m_websocketSession->dispatch(json, id);
 }
 
-void AgentTestHelper::parseResponse(const char *file, int line, xmlDocPtr *doc,
-                                    const std::string &id)
+void AgentTestHelper::parseResponse(const char* file, int line, xmlDocPtr* doc,
+                                    const std::string& id)
 {
   auto response = m_websocketSession->getNextResponse(id);
   ASSERT_TRUE(response) << "No response for id " << id;
@@ -130,8 +130,8 @@ void AgentTestHelper::parseResponse(const char *file, int line, xmlDocPtr *doc,
   }
 }
 
-void AgentTestHelper::parseResponse(const char *file, int line, nlohmann::json &doc,
-                                    const std::string &id)
+void AgentTestHelper::parseResponse(const char* file, int line, nlohmann::json& doc,
+                                    const std::string& id)
 {
   auto response = m_websocketSession->getNextResponse(id);
   ASSERT_TRUE(response) << "No response for id " << id;

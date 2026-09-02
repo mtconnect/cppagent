@@ -72,7 +72,7 @@ namespace mtconnect {
             {"Relationships", ValueType::ENTITY_LIST, relationships, false},
             {"InitialValue", ValueType::STRING, false},
             {"ResetTrigger", false}});
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           auto ptr = make_shared<DataItem>(name, props);
           return dynamic_pointer_cast<Entity>(ptr);
         });
@@ -99,13 +99,13 @@ namespace mtconnect {
     }
 
     // DataItem public methods
-    DataItem::DataItem(const string &name, const Properties &props) : Entity(name, props)
+    DataItem::DataItem(const string& name, const Properties& props) : Entity(name, props)
     {
       NAMED_SCOPE("data_item");
 
-      static const char *samples = "Samples";
-      static const char *events = "Events";
-      static const char *condition = "Condition";
+      static const char* samples = "Samples";
+      static const char* events = "Events";
+      static const char* condition = "Condition";
 
       m_id = get<string>("id");
       m_name = maybeGet<string>("name");
@@ -127,7 +127,7 @@ namespace mtconnect {
       if (rep)
         m_representation = reps.find(*rep)->second;
 
-      auto &category = get<string>("category");
+      auto& category = get<string>("category");
 
       auto units = maybeGet<string>("units");
       if (units && units->ends_with("3D"))
@@ -184,14 +184,14 @@ namespace mtconnect {
       if (isCondition())
         m_observatonProperties.insert_or_assign("type", get<std::string>("type"));
 
-      if (const auto &cons = getList("Constraints"); cons && cons->size() == 1)
+      if (const auto& cons = getList("Constraints"); cons && cons->size() == 1)
       {
-        auto &con = cons->front();
+        auto& con = cons->front();
         if (con->getName() == "Value")
           m_constantValue = con->getValue<string>();
 
         // Check for legacy filters
-        for (auto &c : *cons)
+        for (auto& c : *cons)
         {
           if (c->getName() == "Filter")
           {
@@ -204,21 +204,21 @@ namespace mtconnect {
         }
       }
 
-      if (const auto &init = maybeGet<string>("InitialValue"); init)
+      if (const auto& init = maybeGet<string>("InitialValue"); init)
       {
         m_initialValue = *init;
       }
 
-      if (const auto &init = maybeGet<string>("InitialValue"); init)
+      if (const auto& init = maybeGet<string>("InitialValue"); init)
       {
         m_initialValue = *init;
       }
 
-      if (const auto &filters = getList("Filters"))
+      if (const auto& filters = getList("Filters"))
       {
-        for (auto &filter : *filters)
+        for (auto& filter : *filters)
         {
-          const auto &type = filter->get<string>("type");
+          const auto& type = filter->get<string>("type");
           if (type == "MINIMUM_DELTA")
             m_minimumDelta = filter->getValue<double>();
           else if (type == "PERIOD")
@@ -261,14 +261,14 @@ namespace mtconnect {
       }
     }
 
-    bool DataItem::hasName(const string &name) const
+    bool DataItem::hasName(const string& name) const
     {
       return m_id == name || (m_name && *m_name == name) || (m_source && *m_source == name) ||
              (m_originalId && *m_originalId == name);
     }
 
     // Sort by: Device, Component, Category, DataItem
-    bool DataItem::operator<(const DataItem &another) const
+    bool DataItem::operator<(const DataItem& another) const
     {
       auto component = m_component.lock();
       if (component == nullptr)
@@ -300,7 +300,7 @@ namespace mtconnect {
         return false;
     }
 
-    void DataItem::setConstantValue(const std::string &value)
+    void DataItem::setConstantValue(const std::string& value)
     {
       ErrorList errors;
       Properties url {{"VALUE", value}};
@@ -308,7 +308,7 @@ namespace mtconnect {
       if (!errors.empty())
       {
         LOG(error) << "Cannot set constant value for data item " << m_id << " to " << value;
-        for (auto &e : errors)
+        for (auto& e : errors)
           LOG(error) << e->what();
       }
       else

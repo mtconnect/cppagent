@@ -39,7 +39,7 @@ namespace mtconnect::source::adapter::agent_adapter {
   {
   public:
     using Next = std::function<bool()>;
-    using Failure = std::function<void(std::error_code &ec)>;
+    using Failure = std::function<void(std::error_code& ec)>;
     using UpdateAssets = std::function<void()>;
 
     /// @brief An HTTP Request wrapper
@@ -51,8 +51,8 @@ namespace mtconnect::source::adapter::agent_adapter {
       /// @param query The URL query parameters
       /// @param stream `true` if HTTP x-multipart-replace streaming is desired
       /// @param next Function to determine what to do on successful read
-      Request(const std::optional<std::string> &device, const std::string &operation,
-              const url::UrlQuery &query, bool stream, Next next)
+      Request(const std::optional<std::string>& device, const std::string& operation,
+              const url::UrlQuery& query, bool stream, Next next)
         : m_sourceDevice(device),
           m_operation(operation),
           m_query(query),
@@ -60,7 +60,7 @@ namespace mtconnect::source::adapter::agent_adapter {
           m_next(next)
       {}
 
-      Request(const Request &request) = default;
+      Request(const Request& request) = default;
 
       std::optional<std::string> m_sourceDevice;  ///< optional source device
       std::string m_operation;     ///< The REST operation (probe, current, sample, asset)
@@ -72,7 +72,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       /// @brief Given a url, get a formatted target for a given operation
       /// @param url The base url
       /// @return a string with a new URL path and query (for the GET)
-      auto getTarget(const url::Url &url)
+      auto getTarget(const url::Url& url)
       {
         return url.getTarget(m_sourceDevice, m_operation, m_query);
       }
@@ -91,20 +91,20 @@ namespace mtconnect::source::adapter::agent_adapter {
     /// @brief Method called with something fails
     /// @param ec the error code
     /// @param what descriptive message
-    virtual void failed(std::error_code ec, const char *what) = 0;
+    virtual void failed(std::error_code ec, const char* what) = 0;
     /// @brief close the connection
     virtual void close() = 0;
 
     /// @brief Make a request of the remote agent
     /// @param request the request
     /// @return `true` if successful
-    virtual bool makeRequest(const Request &request) = 0;
+    virtual bool makeRequest(const Request& request) = 0;
     ///@}
 
     /// @name Setters for session configuration
     ///@{
-    void setHandler(Handler *handler) { m_handler = handler; }
-    void setIdentity(const std::string &identity) { m_identity = identity; }
+    void setHandler(Handler* handler) { m_handler = handler; }
+    void setIdentity(const std::string& identity) { m_identity = identity; }
     void setFailed(Failure failed) { m_failed = std::move(failed); }
     void setUpdateAssets(UpdateAssets updateAssets) { m_updateAssets = std::move(updateAssets); }
     void setCloseConnectionAfterResponse(bool close) { m_closeConnectionAfterResponse = close; }
@@ -112,7 +112,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     ///@}
 
   protected:
-    Handler *m_handler = nullptr;                 ///< Pipeline handler for processing data
+    Handler* m_handler = nullptr;                 ///< Pipeline handler for processing data
     std::string m_identity;                       ///< Unique identity hash for this session
     Failure m_failed;                             ///< Callback invoked on connection failure
     UpdateAssets m_updateAssets;                  ///< Callback to trigger asset updates

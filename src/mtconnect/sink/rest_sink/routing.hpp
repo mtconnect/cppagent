@@ -46,7 +46,7 @@ namespace mtconnect::sink::rest_sink {
   public:
     using Function = std::function<bool(SessionPtr, RequestPtr)>;
 
-    Routing(const Routing &r) = default;
+    Routing(const Routing& r) = default;
     /// @brief Create a routing with a string
     ///
     /// Creates a routing with a regular expression from the string to match against the path
@@ -54,7 +54,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param[in] pattern the URI pattern to parse and match
     /// @param[in] function the function to call if matches
     /// @param[in] swagger `true` if swagger related
-    Routing(boost::beast::http::verb verb, const std::string &pattern, const Function function,
+    Routing(boost::beast::http::verb verb, const std::string& pattern, const Function function,
             bool swagger = false, std::optional<std::string> request = std::nullopt)
       : m_verb(verb), m_command(request), m_function(function), m_swagger(swagger)
     {
@@ -80,7 +80,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param[in] pattern the URI pattern to parse and match
     /// @param[in] function the function to call if matches
     /// @param[in] swagger `true` if swagger related
-    Routing(boost::beast::http::verb verb, const std::regex &pattern, const Function function,
+    Routing(boost::beast::http::verb verb, const std::regex& pattern, const Function function,
             bool swagger = false, std::optional<std::string> request = std::nullopt)
       : m_verb(verb),
         m_pattern(pattern),
@@ -93,7 +93,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief Added summary and description to the routing
     /// @param[in] summary optional summary
     /// @param[in] description optional description of the routing
-    Routing &document(std::optional<std::string> summary,
+    Routing& document(std::optional<std::string> summary,
                       std::optional<std::string> description = std::nullopt)
     {
       m_summary = summary;
@@ -104,13 +104,13 @@ namespace mtconnect::sink::rest_sink {
     /// @brief Added summary and description to the routing
     /// @param[in] summary optional summary
     /// @param[in] description optional description of the routing
-    Routing &documentParameter(const std::string &name, UrlPart part,
+    Routing& documentParameter(const std::string& name, UrlPart part,
                                std::optional<std::string> description)
     {
-      Parameter *param {nullptr};
+      Parameter* param {nullptr};
       if (part == PATH)
       {
-        for (auto &p : m_pathParameters)
+        for (auto& p : m_pathParameters)
         {
           if (p.m_name == name)
           {
@@ -121,11 +121,11 @@ namespace mtconnect::sink::rest_sink {
       }
       else
       {
-        for (auto &p : m_queryParameters)
+        for (auto& p : m_queryParameters)
         {
           if (p.m_name == name)
           {
-            param = const_cast<Parameter *>(&p);
+            param = const_cast<Parameter*>(&p);
             break;
           }
         }
@@ -139,9 +139,9 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief Document using common parameter documentation
     /// @param[in] docs common documentation for parameters
-    Routing &documentParameters(const ParameterDocList &docs)
+    Routing& documentParameters(const ParameterDocList& docs)
     {
-      for (const auto &doc : docs)
+      for (const auto& doc : docs)
       {
         documentParameter(doc.m_name, doc.m_part, doc.m_description);
       }
@@ -150,16 +150,16 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief Get the description of the REST call for Swagger
     /// @returns optional string if description is givem
-    const auto &getDescription() const { return m_description; }
+    const auto& getDescription() const { return m_description; }
     /// @brief Get the brief summary fo the REST call for Swagger
     /// @returns optional string if summary is givem
-    const auto &getSummary() const { return m_summary; }
+    const auto& getSummary() const { return m_summary; }
 
     /// @brief Get the list of path position in order
     /// @return the parameter list
-    const ParameterList &getPathParameters() const { return m_pathParameters; }
+    const ParameterList& getPathParameters() const { return m_pathParameters; }
     /// @brief get the unordered set of query parameters
-    const QuerySet &getQueryParameters() const { return m_queryParameters; }
+    const QuerySet& getQueryParameters() const { return m_queryParameters; }
 
     /// @brief run the session's request if this routing matches
     ///
@@ -196,7 +196,7 @@ namespace mtconnect::sink::rest_sink {
         {
           auto s = m.begin();
           s++;
-          for (auto &p : m_pathParameters)
+          for (auto& p : m_pathParameters)
           {
             if (s != m.end())
             {
@@ -207,7 +207,7 @@ namespace mtconnect::sink::rest_sink {
           }
 
           entity::EntityList errors;
-          for (auto &p : m_queryParameters)
+          for (auto& p : m_queryParameters)
           {
             auto q = request->m_query.find(p.m_name);
             if (q != request->m_query.end())
@@ -217,7 +217,7 @@ namespace mtconnect::sink::rest_sink {
                 auto v = convertValue(q->second, p.m_type);
                 request->m_parameters.emplace(make_pair(p.m_name, v));
               }
-              catch (ParameterError &e)
+              catch (ParameterError& e)
               {
                 std::string msg = std::string("query parameter '") + p.m_name + "': " + e.what();
 
@@ -254,7 +254,7 @@ namespace mtconnect::sink::rest_sink {
     {
       entity::EntityList errors;
       /// Just validate the types of the parameters
-      for (auto &p : m_pathParameters)
+      for (auto& p : m_pathParameters)
       {
         auto it = request->m_parameters.find(p.m_name);
         if (it != request->m_parameters.end())
@@ -271,7 +271,7 @@ namespace mtconnect::sink::rest_sink {
         }
       }
 
-      for (auto &p : m_queryParameters)
+      for (auto& p : m_queryParameters)
       {
         auto it = request->m_parameters.find(p.m_name);
         if (it != request->m_parameters.end())
@@ -301,7 +301,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief check if the routing's path pattern matches a given path (ignoring verb)
     /// @param[in] path the request path to test
     /// @return `true` if the path matches this routing's pattern
-    bool matchesPath(const std::string &path) const
+    bool matchesPath(const std::string& path) const
     {
       std::smatch m;
       return std::regex_match(path, m, m_pattern);
@@ -312,9 +312,9 @@ namespace mtconnect::sink::rest_sink {
     auto isSwagger() const { return m_swagger; }
 
     /// @brief Get the path component of the routing pattern
-    const auto &getPath() const { return m_path; }
+    const auto& getPath() const { return m_path; }
     /// @brief Get the routing `verb`
-    const auto &getVerb() const { return m_verb; }
+    const auto& getVerb() const { return m_verb; }
 
     /// @brief Check if the route is a catch-all (every path segment is a parameter)
     /// @returns `true` if all path segments are parameters (e.g. `/{device}`)
@@ -322,11 +322,11 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief Get the optional command associated with the routing
     /// @returns optional routing
-    const auto &getCommand() const { return m_command; }
+    const auto& getCommand() const { return m_command; }
 
     /// @brief Sets the command associated with this routing for use with websockets
     /// @param command the command
-    auto &command(const std::string &command)
+    auto& command(const std::string& command)
     {
       m_command = command;
       return *this;
@@ -349,7 +349,7 @@ namespace mtconnect::sink::rest_sink {
       }
 
       bool hasLiteral = false;
-      for (auto &p : parts)
+      for (auto& p : parts)
       {
         auto start = p.begin();
         auto end = p.end();
@@ -408,7 +408,7 @@ namespace mtconnect::sink::rest_sink {
       }
     }
 
-    void getTypeAndDefault(const std::string &type, Parameter &par)
+    void getTypeAndDefault(const std::string& type, Parameter& par)
     {
       std::string t(type);
       auto dp = t.find_first_of(':');
@@ -446,7 +446,7 @@ namespace mtconnect::sink::rest_sink {
       }
     }
 
-    ParameterValue convertValue(const std::string &s, ParameterType t) const
+    ParameterValue convertValue(const std::string& s, ParameterType t) const
     {
       switch (t)
       {
@@ -458,8 +458,8 @@ namespace mtconnect::sink::rest_sink {
 
         case DOUBLE:
         {
-          char *ep = nullptr;
-          const char *sp = s.c_str();
+          char* ep = nullptr;
+          const char* sp = s.c_str();
           double r = strtod(sp, &ep);
           if (ep == sp)
             throw ParameterError("cannot convert string '" + s + "' to double");
@@ -468,8 +468,8 @@ namespace mtconnect::sink::rest_sink {
 
         case INTEGER:
         {
-          char *ep = nullptr;
-          const char *sp = s.c_str();
+          char* ep = nullptr;
+          const char* sp = s.c_str();
           int32_t r = int32_t(strtoll(sp, &ep, 10));
           if (ep == sp)
             throw ParameterError("cannot convert string '" + s + "' to integer");
@@ -479,8 +479,8 @@ namespace mtconnect::sink::rest_sink {
 
         case UNSIGNED_INTEGER:
         {
-          char *ep = nullptr;
-          const char *sp = s.c_str();
+          char* ep = nullptr;
+          const char* sp = s.c_str();
           uint64_t r = strtoull(sp, &ep, 10);
           if (ep == sp)
             throw ParameterError("cannot convert string '" + s + "' to unsigned integer");
@@ -499,7 +499,7 @@ namespace mtconnect::sink::rest_sink {
       return ParameterValue();
     }
 
-    bool validateValueType(ParameterType t, ParameterValue &value)
+    bool validateValueType(ParameterType t, ParameterValue& value)
     {
       switch (t)
       {

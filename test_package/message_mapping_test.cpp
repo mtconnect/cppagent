@@ -27,8 +27,8 @@
 #include "mtconnect/pipeline/pipeline_context.hpp"
 // adapter_pipeline.hpp defines source::adapter::Handler, and message_mapper.hpp
 // references bare `string`/`Handler`, so both must be visible before it is parsed.
-#include "mtconnect/source/adapter/adapter_pipeline.hpp"
 #include "mtconnect/pipeline/message_mapper.hpp"
+#include "mtconnect/source/adapter/adapter_pipeline.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -39,7 +39,7 @@ using namespace device_model;
 using namespace data_item;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -48,11 +48,11 @@ int main(int argc, char *argv[])
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(std::map<string, DataItemPtr> &items, std::map<string, DevicePtr> &devices)
+  MockPipelineContract(std::map<string, DataItemPtr>& items, std::map<string, DevicePtr>& devices)
     : m_dataItems(items), m_devices(devices)
   {}
-  DevicePtr findDevice(const std::string &name) override { return m_devices[name]; }
-  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+  DevicePtr findDevice(const std::string& name) override { return m_devices[name]; }
+  DataItemPtr findDataItem(const std::string& device, const std::string& name) override
   {
     return m_dataItems[name];
   }
@@ -63,14 +63,14 @@ public:
   void deliverDevice(DevicePtr) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
-  void sourceFailed(const std::string &id) override {}
-  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
+  void deliverConnectStatus(entity::EntityPtr, const StringList&, bool) override {}
+  void sourceFailed(const std::string& id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr& obs) const override { return obs; }
   int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
   bool isValidating() const override { return false; }
 
-  std::map<string, DataItemPtr> &m_dataItems;
-  std::map<string, DevicePtr> &m_devices;
+  std::map<string, DataItemPtr>& m_dataItems;
+  std::map<string, DevicePtr>& m_devices;
 };
 
 /// @brief records every entity forwarded to it so tests can inspect what the
@@ -80,7 +80,7 @@ class CaptureTransform : public Transform
 {
 public:
   CaptureTransform() : Transform("CaptureTransform") { m_guard = TypeGuard<entity::Entity>(RUN); }
-  entity::EntityPtr operator()(entity::EntityPtr &&entity) override
+  entity::EntityPtr operator()(entity::EntityPtr&& entity) override
   {
     m_last = entity;
     m_count++;
@@ -109,13 +109,13 @@ protected:
     m_devices.clear();
   }
 
-  DataItemPtr makeDataItem(const std::string &device, const Properties &props)
+  DataItemPtr makeDataItem(const std::string& device, const Properties& props)
   {
     auto dev = m_devices.find(device);
     EXPECT_NE(m_devices.end(), dev) << "Cannot find device: " << device;
     if (dev == m_devices.end())
       return nullptr;
-    
+
     Properties ps(props);
     ErrorList errors;
     auto di = DataItem::make(ps, errors);
@@ -124,7 +124,7 @@ protected:
     return di;
   }
 
-  DevicePtr makeDevice(const std::string &name, const Properties &props)
+  DevicePtr makeDevice(const std::string& name, const Properties& props)
   {
     ErrorList errors;
     Properties ps(props);
@@ -134,7 +134,7 @@ protected:
     return d;
   }
 
-  std::shared_ptr<DataMessage> makeMessage(const Properties &props)
+  std::shared_ptr<DataMessage> makeMessage(const Properties& props)
   {
     Properties ps(props);
     return make_shared<DataMessage>("DataMessage", ps);

@@ -43,15 +43,15 @@ namespace mtconnect::pipeline {
   class AGENT_LIB_API MTConnectXmlTransform : public Transform
   {
   public:
-    MTConnectXmlTransform(const MTConnectXmlTransform &) = default;
+    MTConnectXmlTransform(const MTConnectXmlTransform&) = default;
 
     /// @brief Construct a transfor,
     /// @param context the pipeline context
     /// @param feedback a feedback object to pass back protocol info
     /// @param device an associated device
-    MTConnectXmlTransform(PipelineContextPtr context, XmlTransformFeedback &feedback,
-                          const std::optional<std::string> &device = std::nullopt,
-                          const std::optional<std::string> &uuid = std::nullopt)
+    MTConnectXmlTransform(PipelineContextPtr context, XmlTransformFeedback& feedback,
+                          const std::optional<std::string>& device = std::nullopt,
+                          const std::optional<std::string>& uuid = std::nullopt)
       : Transform("MTConnectXmlTransform"),
         m_context(context),
         m_defaultDevice(device),
@@ -61,13 +61,13 @@ namespace mtconnect::pipeline {
       m_guard = EntityNameGuard("Data", RUN);
     }
 
-    EntityPtr operator()(EntityPtr &&entity) override
+    EntityPtr operator()(EntityPtr&& entity) override
     {
       using namespace pipeline;
       using namespace entity;
       using namespace mtconnect::source;
 
-      const auto &data = entity->getValue<std::string>();
+      const auto& data = entity->getValue<std::string>();
       ResponseDocument rd;
       ResponseDocument::parse(data, rd, m_context, m_defaultDevice, m_uuid);
 
@@ -101,7 +101,7 @@ namespace mtconnect::pipeline {
       }
       else
       {
-        for (auto &entity : rd.m_entities)
+        for (auto& entity : rd.m_entities)
         {
           next(std::move(entity));
         }
@@ -113,6 +113,6 @@ namespace mtconnect::pipeline {
     PipelineContextPtr m_context;
     std::optional<std::string> m_defaultDevice;
     std::optional<std::string> m_uuid;
-    XmlTransformFeedback &m_feedback;
+    XmlTransformFeedback& m_feedback;
   };
 }  // namespace mtconnect::pipeline

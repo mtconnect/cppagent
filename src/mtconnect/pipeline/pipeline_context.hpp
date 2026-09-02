@@ -58,9 +58,9 @@ namespace mtconnect::pipeline {
     /// @param[in] name the name of the shared state
     /// @return a shared pointer to the shared state.
     template <typename T>
-    std::shared_ptr<T> getSharedState(const std::string &name)
+    std::shared_ptr<T> getSharedState(const std::string& name)
     {
-      auto &state = m_sharedState[name];
+      auto& state = m_sharedState[name];
       if (!state)
         state = std::make_shared<T>();
       return std::dynamic_pointer_cast<T>(state);

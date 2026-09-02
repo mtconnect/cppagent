@@ -64,7 +64,7 @@ namespace mtconnect::pipeline {
     ParserContext(PipelineContextPtr pipelineContext) : m_pipelineContext(pipelineContext) {}
 
     using Forward =
-        std::function<void(entity::EntityPtr &&entity)>;  //!< Lambda to send a completed entity
+        std::function<void(entity::EntityPtr&& entity)>;  //!< Lambda to send a completed entity
 
     /// @brief clear the current state
     void clear()
@@ -75,7 +75,7 @@ namespace mtconnect::pipeline {
     }
 
     /// @brief Get the data item for a device
-    DataItemPtr getDataItemForDevice(const std::string_view &sv)
+    DataItemPtr getDataItemForDevice(const std::string_view& sv)
     {
       DataItemPtr di;
       DevicePtr device;
@@ -103,20 +103,20 @@ namespace mtconnect::pipeline {
     }
 
     /// @brief get a device from the agent
-    DevicePtr getDevice(const std::string_view &name)
+    DevicePtr getDevice(const std::string_view& name)
     {
       return m_pipelineContext->m_contract->findDevice({name.data(), name.length()});
     }
 
     /// @brief set the timestamp
-    void setTimestamp(Timestamp &ts, optional<double> &duration)
+    void setTimestamp(Timestamp& ts, optional<double>& duration)
     {
       m_timestamp.emplace(ts);
       m_duration = duration;
     }
 
     /// @brief send a complete observation when the data item and props have values.
-    void send(DataItemPtr dataItem, entity::Properties &props)
+    void send(DataItemPtr dataItem, entity::Properties& props)
     {
       if (!m_timestamp)
       {
@@ -131,7 +131,7 @@ namespace mtconnect::pipeline {
         auto obs = observation::Observation::make(dataItem, props, *m_timestamp, errors);
         if (!errors.empty())
         {
-          for (auto &e : errors)
+          for (auto& e : errors)
           {
             LOG(warning) << "Error while parsing json: " << e->what();
           }
@@ -166,7 +166,7 @@ namespace mtconnect::pipeline {
       if (!m_timestamp)
         m_timestamp = DefaultNow();
 
-      for (auto &e : m_queue)
+      for (auto& e : m_queue)
       {
         send(e.first, e.second);
       }
@@ -191,7 +191,7 @@ namespace mtconnect::pipeline {
     ErrorHandler(int depth = 0) : m_depth(depth) {}
 
     bool Default() { return true; }
-    bool Key(const Ch *str, rj::SizeType length, bool copy) { return true; }
+    bool Key(const Ch* str, rj::SizeType length, bool copy) { return true; }
     bool StartObject()
     {
       m_depth++;
@@ -213,7 +213,7 @@ namespace mtconnect::pipeline {
       return true;
     }
 
-    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    bool operator()(rj::Reader& reader, rj::StringStream& buff)
     {
       LOG(warning) << "Consuming value due to error";
 
@@ -239,7 +239,7 @@ namespace mtconnect::pipeline {
   {
     using Ch = typename Encoding::Ch;
 
-    DataSetHandler(ST &set, optional<string> key, bool table = false) : m_set(set), m_table(table)
+    DataSetHandler(ST& set, optional<string> key, bool table = false) : m_set(set), m_table(table)
     {
       if (key)
       {
@@ -283,16 +283,16 @@ namespace mtconnect::pipeline {
       m_entry.m_value.template emplace<double>(d);
       return true;
     }
-    bool RawNumber(const Ch *str, rj::SizeType length, bool copy)
+    bool RawNumber(const Ch* str, rj::SizeType length, bool copy)
     {
       return String(str, length, copy);
     }
-    bool String(const Ch *str, rj::SizeType length, bool copy)
+    bool String(const Ch* str, rj::SizeType length, bool copy)
     {
       if (m_expectation != Expectation::VALUE)
         return false;
 
-      m_entry.m_value.template emplace<std::string>((const char *)str, length);
+      m_entry.m_value.template emplace<std::string>((const char*)str, length);
       return true;
     }
     bool StartObject()
@@ -312,11 +312,11 @@ namespace mtconnect::pipeline {
       // Table handler
       return true;
     }
-    bool Key(const Ch *str, rj::SizeType length, bool copy)
+    bool Key(const Ch* str, rj::SizeType length, bool copy)
     {
       // Check for resetTriggered
       m_expectation = Expectation::VALUE;
-      m_entry.m_key = std::string((const char *)str, length);
+      m_entry.m_key = std::string((const char*)str, length);
       return true;
     }
     bool EndObject(rj::SizeType memberCount)
@@ -327,7 +327,7 @@ namespace mtconnect::pipeline {
     bool StartArray() { return false; }
     bool EndArray(rj::SizeType elementCount) { return false; }
 
-    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    bool operator()(rj::Reader& reader, rj::StringStream& buff)
     {
       // Parse initial object
       if (m_expectation == Expectation::OBJECT &&
@@ -370,7 +370,7 @@ namespace mtconnect::pipeline {
             // For tables, recurse down to read the entry data set
             if constexpr (std::is_same_v<ET, DataSetEntry>)
             {
-              auto &row = m_entry.m_value.template emplace<TableRow>();
+              auto& row = m_entry.m_value.template emplace<TableRow>();
               DataSetHandler<TableRow, TableCell> handler(row, nullopt, false);
               auto success = handler(reader, buff);
               if (!success)
@@ -402,7 +402,7 @@ namespace mtconnect::pipeline {
       return true;
     }
 
-    ST &m_set;
+    ST& m_set;
     ET m_entry;
     optional<string> m_resetTriggered;
     bool m_table {false};
@@ -429,7 +429,7 @@ namespace mtconnect::pipeline {
   /// and field name.
   struct PropertiesHandler : rj::BaseReaderHandler<rj::UTF8<>, PropertiesHandler>
   {
-    PropertiesHandler(DataItemPtr dataItem, entity::Properties &props)
+    PropertiesHandler(DataItemPtr dataItem, entity::Properties& props)
       : m_props(props), m_dataItem(dataItem), m_key("VALUE"), m_expectation(Expectation::VALUE)
     {}
 
@@ -472,11 +472,11 @@ namespace mtconnect::pipeline {
         setValue(d);
       return true;
     }
-    bool RawNumber(const Ch *str, rj::SizeType length, bool copy)
+    bool RawNumber(const Ch* str, rj::SizeType length, bool copy)
     {
       return String(str, length, copy);
     }
-    bool String(const Ch *str, rj::SizeType length, bool copy)
+    bool String(const Ch* str, rj::SizeType length, bool copy)
     {
       setValue(string(str, length));
       return true;
@@ -487,7 +487,7 @@ namespace mtconnect::pipeline {
       m_depth++;
       if (m_dataItem->isTimeSeries() || m_dataItem->isThreeSpace())
       {
-        auto &value = m_props["VALUE"];
+        auto& value = m_props["VALUE"];
         m_vector = &value.emplace<Vector>();
         m_expectation = Expectation::VECTOR;
         return true;
@@ -516,7 +516,7 @@ namespace mtconnect::pipeline {
       }
     }
 
-    bool Key(const Ch *str, rj::SizeType length, bool copy)
+    bool Key(const Ch* str, rj::SizeType length, bool copy)
     {
       std::string_view sv(str, length);
       map<std::string_view, std::string_view>::const_iterator f, e;
@@ -579,7 +579,7 @@ namespace mtconnect::pipeline {
       return false;
     }
 
-    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    bool operator()(rj::Reader& reader, rj::StringStream& buff)
     {
       while (!reader.IterativeParseComplete() && !m_done)
       {
@@ -601,8 +601,8 @@ namespace mtconnect::pipeline {
           }
           else if (m_expectation == Expectation::DATA_SET)
           {
-            auto &value = m_props["VALUE"];
-            DataSet &set = value.emplace<DataSet>();
+            auto& value = m_props["VALUE"];
+            DataSet& set = value.emplace<DataSet>();
             DataSetHandler<DataSet, DataSetEntry> handler(set, m_key, m_dataItem->isTable());
             if (!handler(reader, buff))
               return false;
@@ -630,9 +630,9 @@ namespace mtconnect::pipeline {
       return true;
     }
 
-    entity::Properties &m_props;
+    entity::Properties& m_props;
     DataItemPtr m_dataItem;
-    Vector *m_vector {nullptr};
+    Vector* m_vector {nullptr};
     bool m_done {false};
     bool m_object {false};
     std::string m_key;
@@ -648,7 +648,7 @@ namespace mtconnect::pipeline {
       return false;
     }
 
-    bool String(const Ch *str, rj::SizeType length, bool copy)
+    bool String(const Ch* str, rj::SizeType length, bool copy)
     {
       std::string_view sv(str, length);
       std::optional<Timestamp> base;
@@ -659,7 +659,7 @@ namespace mtconnect::pipeline {
       return true;
     }
 
-    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    bool operator()(rj::Reader& reader, rj::StringStream& buff)
     {
       auto success = (!reader.IterativeParseComplete() &&
                       reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this));
@@ -672,21 +672,21 @@ namespace mtconnect::pipeline {
 
   struct AssetHandler : rj::BaseReaderHandler<rj::UTF8<>, TimestampHandler>
   {
-    AssetHandler(ParserContext &context) : m_context(context) {}
+    AssetHandler(ParserContext& context) : m_context(context) {}
     bool Default()
     {
       LOG(warning) << "Expecting an asset";
       return false;
     }
 
-    bool Key(const Ch *str, rj::SizeType length, bool copy)
+    bool Key(const Ch* str, rj::SizeType length, bool copy)
     {
       m_assetId = string(str, length);
       m_expectation = Expectation::ASSET;
       return true;
     }
 
-    bool String(const Ch *str, rj::SizeType length, bool copy)
+    bool String(const Ch* str, rj::SizeType length, bool copy)
     {
       using namespace mtconnect::asset;
       ErrorList errors;
@@ -697,7 +697,7 @@ namespace mtconnect::pipeline {
       if (!errors.empty())
       {
         LOG(warning) << "Errors while parsing json asset: ";
-        for (const auto &e : errors)
+        for (const auto& e : errors)
         {
           LOG(warning) << "  " << e->what();
         }
@@ -733,7 +733,7 @@ namespace mtconnect::pipeline {
       return true;
     }
 
-    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    bool operator()(rj::Reader& reader, rj::StringStream& buff)
     {
       // Consume start object
       if (m_expectation == Expectation::OBJECT)
@@ -769,7 +769,7 @@ namespace mtconnect::pipeline {
       return true;
     }
 
-    ParserContext &m_context;
+    ParserContext& m_context;
     Expectation m_expectation {Expectation::OBJECT};
     string m_assetId;
     bool m_done {false};
@@ -777,7 +777,7 @@ namespace mtconnect::pipeline {
 
   struct ObjectHandler : rj::BaseReaderHandler<rj::UTF8<>, ObjectHandler>
   {
-    ObjectHandler(ParserContext &context) : m_context(context) {}
+    ObjectHandler(ParserContext& context) : m_context(context) {}
     bool Default()
     {
       LOG(warning) << "Expecting a key";
@@ -785,7 +785,7 @@ namespace mtconnect::pipeline {
       return true;
     }
 
-    bool Key(const Ch *str, rj::SizeType length, bool copy)
+    bool Key(const Ch* str, rj::SizeType length, bool copy)
     {
       std::string_view sv(str, length);
       if (sv == "timestamp")
@@ -831,7 +831,7 @@ namespace mtconnect::pipeline {
       return true;
     }
 
-    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    bool operator()(rj::Reader& reader, rj::StringStream& buff)
     {
       while (!m_complete && !reader.IterativeParseComplete())
       {
@@ -931,7 +931,7 @@ namespace mtconnect::pipeline {
 
     optional<Timestamp> m_timestamp;
     optional<double> m_duration;
-    ParserContext &m_context;
+    ParserContext& m_context;
     bool m_complete {false};
     Expectation m_expectation {Expectation::KEY};
     DataItemPtr m_dataItem;
@@ -940,7 +940,7 @@ namespace mtconnect::pipeline {
 
   struct ArrayHandler : rj::BaseReaderHandler<rj::UTF8<>, ArrayHandler>
   {
-    ArrayHandler(ParserContext &context) : m_context(context) {}
+    ArrayHandler(ParserContext& context) : m_context(context) {}
     bool Default()
     {
       LOG(warning) << "Expecting an array of objects";
@@ -954,7 +954,7 @@ namespace mtconnect::pipeline {
       return true;
     }
 
-    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    bool operator()(rj::Reader& reader, rj::StringStream& buff)
     {
       while (!reader.IterativeParseComplete() && !m_complete)
       {
@@ -977,13 +977,13 @@ namespace mtconnect::pipeline {
     }
 
     Expectation m_expectation {Expectation::OBJECT};
-    ParserContext &m_context;
+    ParserContext& m_context;
     bool m_complete {false};
   };
 
   struct TopLevelHandler : rj::BaseReaderHandler<rj::UTF8<>, TopLevelHandler>
   {
-    TopLevelHandler(ParserContext &context) : m_context(context) {}
+    TopLevelHandler(ParserContext& context) : m_context(context) {}
     bool Default()
     {
       LOG(warning) << "Top level can only be an object or array";
@@ -1003,7 +1003,7 @@ namespace mtconnect::pipeline {
     }
     bool EndArray(rj::SizeType elementCount) { return true; }
 
-    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    bool operator()(rj::Reader& reader, rj::StringStream& buff)
     {
       while (!reader.IterativeParseComplete())
       {
@@ -1029,25 +1029,25 @@ namespace mtconnect::pipeline {
     }
 
     Expectation m_expectation {Expectation::NONE};
-    ParserContext &m_context;
+    ParserContext& m_context;
   };
 
   /// @brief Use rapidjson to parse the json content. If there is an error, output the text and
   /// log the error.
-  EntityPtr JsonMapper::operator()(entity::EntityPtr &&entity)
+  EntityPtr JsonMapper::operator()(entity::EntityPtr&& entity)
   {
     static const auto GetParseError = rj::GetParseError_En;
 
     auto source = entity->maybeGet<string>("source");
     auto json = std::dynamic_pointer_cast<JsonMessage>(entity);
     DevicePtr device = json->m_device.lock();
-    auto &body = entity->getValue<std::string>();
+    auto& body = entity->getValue<std::string>();
 
     rj::StringStream buff(body.c_str());
     rj::Reader reader;
     reader.IterativeParseInit();
     ParserContext context(m_context);
-    context.m_forward = [this](entity::EntityPtr &&entity) { next(std::move(entity)); };
+    context.m_forward = [this](entity::EntityPtr&& entity) { next(std::move(entity)); };
     context.m_source = source;
 
     TopLevelHandler handler(context);

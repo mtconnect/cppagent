@@ -41,7 +41,7 @@ using namespace mtconnect;
 using namespace mtconnect::sink::rest_sink;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -192,7 +192,7 @@ TEST_F(FileCacheTest, file_cache_should_compress_file_async)
   }
 }
 
-static inline void touch(const std::filesystem::path &file)
+static inline void touch(const std::filesystem::path& file)
 {
   namespace fs = std::filesystem;
   namespace ch = std::chrono;
@@ -267,9 +267,9 @@ TEST_F(FileCacheTest, should_find_mtconnect_schema_files_for_xsd_and_json)
   auto files = m_cache->registerDirectory("/myschemas", PROJECT_ROOT_DIR "/schemas", "2.7");
   ASSERT_EQ(8, files.size());
 
-  auto exists = [&files](const std::string &uri) -> std::optional<MTConnectSchema> {
+  auto exists = [&files](const std::string& uri) -> std::optional<MTConnectSchema> {
     auto it = std::find_if(files.begin(), files.end(),
-                           [&uri](const MTConnectSchema &s) { return s.m_uri == uri; });
+                           [&uri](const MTConnectSchema& s) { return s.m_uri == uri; });
     if (it != files.end())
     {
       return *it;

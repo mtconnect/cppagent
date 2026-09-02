@@ -46,7 +46,7 @@ using namespace mtconnect::observation;
 using namespace mtconnect::entity;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -71,9 +71,9 @@ protected:
     m_printer.reset();
   }
 
-  DataItemPtr getDataItem(const char *name)
+  DataItemPtr getDataItem(const char* name)
   {
-    for (auto &device : m_devices)
+    for (auto& device : m_devices)
     {
       auto di = device->getDeviceDataItem(name);
       if (di)
@@ -82,7 +82,7 @@ protected:
     return nullptr;
   }
 
-  void addObservationToCheckpoint(Checkpoint &checkpoint, const char *name, uint64_t sequence,
+  void addObservationToCheckpoint(Checkpoint& checkpoint, const char* name, uint64_t sequence,
                                   Properties props, Timestamp time = chrono::system_clock::now(),
                                   std::optional<double> duration = nullopt)
   {
@@ -99,7 +99,7 @@ protected:
     checkpoint.addObservation(event);
   }
 
-  void addObservationToList(ObservationList &list, const char *name, uint64_t sequence,
+  void addObservationToList(ObservationList& list, const char* name, uint64_t sequence,
                             Properties props, Timestamp time = chrono::system_clock::now(),
                             std::optional<double> duration = nullopt)
   {
@@ -130,7 +130,7 @@ Properties operator""_value(unsigned long long value)
 
 Properties operator""_value(long double value) { return Properties {{"VALUE", double(value)}}; }
 
-Properties operator""_value(const char *value, size_t s)
+Properties operator""_value(const char* value, size_t s)
 {
   return Properties {{"VALUE", string(value)}};
 }

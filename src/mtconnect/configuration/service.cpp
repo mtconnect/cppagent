@@ -73,8 +73,8 @@ namespace mtconnect {
     }
 
     boost::program_options::variables_map MTConnectService::parseOptions(
-        int argc, const char *argv[], boost::optional<std::string> &command,
-        boost::optional<std::string> &config)
+        int argc, const char* argv[], boost::optional<std::string>& command,
+        boost::optional<std::string>& config)
     {
       namespace po = boost::program_options;
       using namespace std;
@@ -146,13 +146,13 @@ namespace mtconnect {
     HANDLE g_hSvcStopEvent = nullptr;
 
     VOID WINAPI SvcCtrlHandler(DWORD);
-    VOID WINAPI SvcMain(DWORD, LPTSTR *);
+    VOID WINAPI SvcMain(DWORD, LPTSTR*);
 
     VOID ReportSvcStatus(DWORD, DWORD, DWORD);
-    VOID SvcInit(DWORD, LPTSTR *);
+    VOID SvcInit(DWORD, LPTSTR*);
     VOID SvcReportEvent(LPSTR);
 
-    static MTConnectService *g_service = nullptr;
+    static MTConnectService* g_service = nullptr;
 
     static void agent_termination_handler() {}
 
@@ -170,7 +170,7 @@ namespace mtconnect {
       }
     }
 
-    int MTConnectService::main(int argc, const char *argv[])
+    int MTConnectService::main(int argc, const char* argv[])
     {
       std::set_terminate(agent_termination_handler);
       PrintMTConnectAgentVersion();
@@ -235,13 +235,13 @@ namespace mtconnect {
           SvcReportEvent(LPSTR("StartServiceCtrlDispatcher"));
         }
       }
-      catch (std::exception &e)
+      catch (std::exception& e)
       {
         LOG(fatal) << "Agent top level exception: " << e.what();
         std::cerr << "Agent top level exception: " << e.what() << std::endl;
         res = 1;
       }
-      catch (std::string &s)
+      catch (std::string& s)
       {
         LOG(fatal) << "Agent top level exception: " << s;
         std::cerr << "Agent top level exception: " << s << std::endl;
@@ -367,7 +367,7 @@ namespace mtconnect {
         description.append(m_configFile.string());
       }
       SERVICE_DESCRIPTIONA serviceDescription = {0};
-      serviceDescription.lpDescription = const_cast<char *>(description.c_str());
+      serviceDescription.lpDescription = const_cast<char*>(description.c_str());
       ChangeServiceConfig2A(service, SERVICE_CONFIG_DESCRIPTION, &serviceDescription);
 
       CloseServiceHandle(service);
@@ -417,7 +417,7 @@ namespace mtconnect {
       RegCloseKey(mtc);
 
       auto cfgFile = m_configFile.string();
-      RegSetValueExA(agent, "ConfigurationFile", 0ul, REG_SZ, (const BYTE *)cfgFile.c_str(),
+      RegSetValueExA(agent, "ConfigurationFile", 0ul, REG_SZ, (const BYTE*)cfgFile.c_str(),
                      cfgFile.length() + 1);
       RegCloseKey(agent);
 
@@ -497,7 +497,7 @@ namespace mtconnect {
     // Return value:
     //   None.
     //
-    VOID WINAPI SvcMain(DWORD dwArgc, LPSTR *lpszArgv)
+    VOID WINAPI SvcMain(DWORD dwArgc, LPSTR* lpszArgv)
     {
       // Register the handler function for the service
       g_service->setName(lpszArgv[0]);
@@ -549,7 +549,7 @@ namespace mtconnect {
     // Return value:
     //   None
     //
-    VOID SvcInit(DWORD dwArgc, LPTSTR *lpszArgv)
+    VOID SvcInit(DWORD dwArgc, LPTSTR* lpszArgv)
     {
       // Get the real arguments from the registry
       char key[1024] = {0};
@@ -566,7 +566,7 @@ namespace mtconnect {
 
       BYTE configFile[2048] = {};
       DWORD len = sizeof(configFile) - 1ul, type(0ul);
-      res = RegQueryValueExA(agent, "ConfigurationFile", 0ul, &type, (BYTE *)configFile, &len);
+      res = RegQueryValueExA(agent, "ConfigurationFile", 0ul, &type, (BYTE*)configFile, &len);
       RegCloseKey(agent);
       agent = nullptr;
       if (res != ERROR_SUCCESS)
@@ -579,7 +579,7 @@ namespace mtconnect {
       boost::optional<std::string> command;
       boost::optional<std::string> config;
 
-      const char *argp[3] = {"agent", "run", (const char *)configFile};
+      const char* argp[3] = {"agent", "run", (const char*)configFile};
       auto options = g_service->parseOptions(3, argp, command, config);
       g_service->initialize(options);
 
@@ -806,7 +806,7 @@ namespace mtconnect {
       signal(SIGTERM, signal_handler);  // catch kill signal
     }
 
-    int MTConnectService::main(int argc, const char *argv[])
+    int MTConnectService::main(int argc, const char* argv[])
     {
       PrintMTConnectAgentVersion();
 

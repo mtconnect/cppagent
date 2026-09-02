@@ -38,7 +38,7 @@ using namespace mtconnect::source::adapter;
 using namespace entity;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -63,7 +63,7 @@ protected:
                                   m_agentTestHelper->m_agent->getDefaultDevice()->getName());
   }
 
-  Adapter *m_adapter {nullptr};
+  Adapter* m_adapter {nullptr};
   std::string m_agentId;
   DevicePtr m_device;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
@@ -73,7 +73,7 @@ TEST_F(AssetHashTest, should_assign_hash_when_receiving_asset)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   m_agentTestHelper->m_adapter->parseBuffer(
       R"("2021-02-01T12:00:00Z|@ASSET@|P1|FakeAsset|--multiline--AAAA
@@ -137,7 +137,7 @@ TEST_F(AssetHashTest, hash_should_change_when_doc_changes)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   m_agentTestHelper->m_adapter->parseBuffer(
       R"("2021-02-01T12:00:00Z|@ASSET@|P1|FakeAsset|--multiline--AAAA

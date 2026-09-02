@@ -34,7 +34,7 @@ using namespace std;
 
 namespace mtconnect {
   namespace entity {
-    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr f, bool required)
+    Requirement::Requirement(const std::string& name, ValueType type, FactoryPtr f, bool required)
       : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {
       NAMED_SCOPE("EntityRequirement");
@@ -46,7 +46,7 @@ namespace mtconnect {
       m_factory = f;
     }
 
-    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr f, int lower,
+    Requirement::Requirement(const std::string& name, ValueType type, FactoryPtr f, int lower,
                              int upper)
       : m_name(name), m_upperMultiplicity(upper), m_lowerMultiplicity(lower), m_type(type)
     {
@@ -57,7 +57,7 @@ namespace mtconnect {
       m_factory = f;
     }
 
-    bool Requirement::isMetBy(const Value &value) const
+    bool Requirement::isMetBy(const Value& value) const
     {
       // Is this a multiple entry
       if ((m_type == ValueType::ENTITY || m_type == ValueType::ENTITY_LIST))
@@ -80,7 +80,7 @@ namespace mtconnect {
         {
           const auto l = std::get<EntityList>(value);
           int count = 0;
-          for (const auto &e : l)
+          for (const auto& e : l)
           {
             if (matches(e->getName()))
               count++;
@@ -110,7 +110,7 @@ namespace mtconnect {
         }
         if (std::holds_alternative<std::string>(value))
         {
-          auto &v = std::get<std::string>(value);
+          auto& v = std::get<std::string>(value);
           if (m_pattern && !std::regex_match(v, *m_pattern))
           {
             throw PropertyError("Invalid value for '" + m_name + "': '" + v + "' is not allowed",
@@ -124,7 +124,7 @@ namespace mtconnect {
         }
         else if (std::holds_alternative<entity::Vector>(value))
         {
-          auto &v = std::get<entity::Vector>(value);
+          auto& v = std::get<entity::Vector>(value);
           if (m_size)
           {
             if (v.size() != *m_size)
@@ -162,24 +162,24 @@ namespace mtconnect {
       ValueConverter(ValueType type, bool table) : m_type(type), m_table(table) {}
 
       // ------------ Strings ----------------
-      void operator()(const string &arg, DataSet &t) { t.parse(arg, m_table); }
-      void operator()(const string &arg, int64_t &r)
+      void operator()(const string& arg, DataSet& t) { t.parse(arg, m_table); }
+      void operator()(const string& arg, int64_t& r)
       {
-        char *ep = nullptr;
-        const char *sp = arg.c_str();
+        char* ep = nullptr;
+        const char* sp = arg.c_str();
         r = strtoll(sp, &ep, 10);
         if (ep == sp)
           throw PropertyError("cannot convert string '" + arg + "' to integer");
       }
-      void operator()(const string &arg, double &r)
+      void operator()(const string& arg, double& r)
       {
-        char *ep = nullptr;
-        const char *sp = arg.c_str();
+        char* ep = nullptr;
+        const char* sp = arg.c_str();
         r = strtod(sp, &ep);
         if (ep == sp)
           throw PropertyError("cannot convert string '" + arg + "' to double");
       }
-      void operator()(const string &arg, Timestamp &ts)
+      void operator()(const string& arg, Timestamp& ts)
       {
         istringstream in(arg);
 
@@ -195,13 +195,13 @@ namespace mtconnect {
           date::from_stream(in, "%F", ts);
         }
       }
-      void operator()(const string &arg, Vector &r)
+      void operator()(const string& arg, Vector& r)
       {
         if (arg.empty())
           return;
 
-        char *np(nullptr);
-        const char *cp = arg.c_str();
+        char* np(nullptr);
+        const char* cp = arg.c_str();
 
         while (cp && *cp != '\0')
         {
@@ -224,8 +224,8 @@ namespace mtconnect {
         if (r.size() == 0)
           throw PropertyError("cannot convert string '" + arg + "' to vector");
       }
-      void operator()(const string &arg, bool &r) { r = arg == "true"; }
-      void operator()(const string &arg, string &r)
+      void operator()(const string& arg, bool& r) { r = arg == "true"; }
+      void operator()(const string& arg, string& r)
       {
         r = arg;
         if (m_type == ValueType::USTRING)
@@ -246,83 +246,83 @@ namespace mtconnect {
       }
 
       // ----------------- double
-      void operator()(const double arg, string &v) { v = format(arg); }
-      void operator()(const double arg, int64_t &v) { v = arg; }
-      void operator()(const double arg, bool &v) { v = arg != 0.0; }
-      void operator()(const double arg, Vector &v) { v.emplace_back(arg); }
-      void operator()(const double arg, Timestamp &v)
+      void operator()(const double arg, string& v) { v = format(arg); }
+      void operator()(const double arg, int64_t& v) { v = arg; }
+      void operator()(const double arg, bool& v) { v = arg != 0.0; }
+      void operator()(const double arg, Vector& v) { v.emplace_back(arg); }
+      void operator()(const double arg, Timestamp& v)
       {
         v = std::chrono::system_clock::from_time_t(arg);
       }
       template <typename T>
-      void operator()(const double arg, T &v)
+      void operator()(const double arg, T& v)
       {
         throw PropertyError("Cannot convert a double to a non-scalar");
       }
 
       // ------------ int 64
-      void operator()(const int64_t arg, string &v) { v = to_string(arg); }
-      void operator()(const int64_t arg, bool &v) { v = arg != 0; }
-      void operator()(const int64_t arg, double &v) { v = double(arg); }
-      void operator()(const int64_t arg, Vector &v) { v.emplace_back(double(arg)); }
-      void operator()(const int64_t arg, Timestamp &v)
+      void operator()(const int64_t arg, string& v) { v = to_string(arg); }
+      void operator()(const int64_t arg, bool& v) { v = arg != 0; }
+      void operator()(const int64_t arg, double& v) { v = double(arg); }
+      void operator()(const int64_t arg, Vector& v) { v.emplace_back(double(arg)); }
+      void operator()(const int64_t arg, Timestamp& v)
       {
         v = std::chrono::system_clock::from_time_t(arg);
       }
       template <typename T>
-      void operator()(const int64_t arg, T &v)
+      void operator()(const int64_t arg, T& v)
       {
         throw PropertyError("Cannot convert a int64 to a non-scalar");
       }
 
       // ----------- Vector
-      void operator()(const Vector &arg, string &v)
+      void operator()(const Vector& arg, string& v)
       {
         if (arg.size() > 0)
         {
           stringstream s;
-          for (auto &v : arg)
+          for (auto& v : arg)
             s << formatted(v) << ' ';
           v = string_view(s.str().c_str(), s.str().size() - 1);
         }
       }
       template <typename T>
-      void operator()(const Vector &arg, T &v)
+      void operator()(const Vector& arg, T& v)
       {
         throw PropertyError("Cannot convert a Vector to anything other than a string");
       }
 
       // ------------ Bool
-      void operator()(const bool arg, string &v) { v = arg ? "true" : "false"; }
-      void operator()(const bool arg, Vector &v) { v.emplace_back(arg); }
-      void operator()(const bool arg, int64_t &v) { v = arg; }
-      void operator()(const bool arg, double &v) { v = arg; }
+      void operator()(const bool arg, string& v) { v = arg ? "true" : "false"; }
+      void operator()(const bool arg, Vector& v) { v.emplace_back(arg); }
+      void operator()(const bool arg, int64_t& v) { v = arg; }
+      void operator()(const bool arg, double& v) { v = arg; }
       template <typename T>
-      void operator()(const bool arg, T &v)
+      void operator()(const bool arg, T& v)
       {
         throw PropertyError("Cannot convert a bool to a non-scalar");
       }
 
       // ------------ Timestamp
-      void operator()(const Timestamp &arg, string &v) { v = format(arg); }
-      void operator()(const Timestamp &arg, int64_t &v)
+      void operator()(const Timestamp& arg, string& v) { v = format(arg); }
+      void operator()(const Timestamp& arg, int64_t& v)
       {
         v = chrono::system_clock::to_time_t(arg);
       }
-      void operator()(const Timestamp &arg, double &v) { v = arg.time_since_epoch().count(); }
-      void operator()(const Timestamp &arg, Vector &v)
+      void operator()(const Timestamp& arg, double& v) { v = arg.time_since_epoch().count(); }
+      void operator()(const Timestamp& arg, Vector& v)
       {
         v.emplace_back(double(arg.time_since_epoch().count()));
       }
       template <typename T>
-      void operator()(const Timestamp &arg, T &)
+      void operator()(const Timestamp& arg, T&)
       {
         throw PropertyError("Cannot convert a Timestamp to a non-scalar");
       }
 
       // -- Catch all
       template <typename U, typename T>
-      void operator()(const U &arg, T &t)
+      void operator()(const U& arg, T& t)
       {
         stringstream s;
         s << "Cannot convert from " << typeid(U).name() << " to " << typeid(T).name();
@@ -334,7 +334,7 @@ namespace mtconnect {
       bool m_table;
     };
 
-    bool ConvertValueToType(Value &value, ValueType type, bool table)
+    bool ConvertValueToType(Value& value, ValueType type, bool table)
     {
       if (ValueType(value.index()) == type)
         return false;

@@ -36,7 +36,7 @@ namespace mtconnect {
                Requirement("timestamp", ValueType::TIMESTAMP, false), Requirement("hash", false),
                Requirement("Configuration", ValueType::ENTITY, Configuration::getFactory(), false),
                Requirement("removed", ValueType::BOOL, false)}),
-          [](const std::string &name, Properties &props) -> EntityPtr {
+          [](const std::string& name, Properties& props) -> EntityPtr {
             return make_shared<Asset>(name, props);
           });
 
@@ -51,7 +51,7 @@ namespace mtconnect {
       return asset;
     }
 
-    void Asset::registerAssetType(const std::string &type, FactoryPtr factory)
+    void Asset::registerAssetType(const std::string& type, FactoryPtr factory)
     {
       auto root = getRoot();
       root->registerFactory(type, factory);

@@ -45,7 +45,7 @@ using namespace mtconnect::asset;
 using namespace mtconnect::printer;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -83,7 +83,7 @@ TEST_F(ComponentParametersTest, should_parse_simple_parameter_set)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("PARAMS2", asset->getAssetId());
@@ -117,7 +117,7 @@ TEST_F(ComponentParametersTest, should_parse_simple_parameter_set)
   auto hash1 = entity->hash();
   entity->addHash();
 
-  auto &hv = entity->getProperty("hash");
+  auto& hv = entity->getProperty("hash");
   ASSERT_NE(size_t(ValueType::EMPTY), hv.index());
 
   auto hash2 = entity->hash();
@@ -165,7 +165,7 @@ TEST_F(ComponentParametersTest, should_parse_two_parameter_sets)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("PARAMS2", asset->getAssetId());

@@ -31,18 +31,18 @@ namespace mtconnect::entity {
   protected:
     struct PropertyVisitor
     {
-      PropertyVisitor(T &writer, JsonPrinter<T> &printer, std::optional<AutoJsonObject<T>> &obj,
-                      const EntityPtr &entity)
+      PropertyVisitor(T& writer, JsonPrinter<T>& printer, std::optional<AutoJsonObject<T>>& obj,
+                      const EntityPtr& entity)
         : m_obj(obj), m_printer(printer), m_entity(entity), m_writer(writer)
       {}
 
-      void operator()(const EntityPtr &arg)
+      void operator()(const EntityPtr& arg)
       {
         m_obj->Key(m_key->c_str());
         m_printer.printEntity(arg);
       }
 
-      void operator()(const EntityList &arg)
+      void operator()(const EntityList& arg)
       {
         bool isPropertyList = *m_key != "LIST";
         if (m_entity->hasListWithAttribute())
@@ -61,7 +61,7 @@ namespace mtconnect::entity {
         {
           m_obj->Key(m_key->str());
           AutoJsonArray ary(m_writer);
-          for (auto &ei : arg)
+          for (auto& ei : arg)
             m_printer.printEntity(ei);
         }
         else
@@ -70,42 +70,42 @@ namespace mtconnect::entity {
         }
       }
 
-      void operator()(const std::monostate &arg) {}
-      void operator()(const std::nullptr_t &arg) {}
+      void operator()(const std::monostate& arg) {}
+      void operator()(const std::nullptr_t& arg) {}
 
-      void operator()(const Vector &v)
+      void operator()(const Vector& v)
       {
         m_printer.printKey(*m_obj, *m_key);
         AutoJsonArray ary(m_writer);
-        for (auto &d : v)
+        for (auto& d : v)
           m_obj->Add(d);
       }
 
-      void operator()(const DataSet &v)
+      void operator()(const DataSet& v)
       {
         m_printer.printKey(*m_obj, *m_key);
         m_printer.print(v);
       }
 
-      void operator()(const Timestamp &v)
+      void operator()(const Timestamp& v)
       {
         m_printer.printKey(*m_obj, *m_key);
         m_printer.print(v);
       }
 
       template <typename A>
-      void operator()(const A &arg)
+      void operator()(const A& arg)
       {
         m_printer.printKey(*m_obj, *m_key);
         m_obj->Add(arg);
       }
 
-      std::optional<AutoJsonObject<T>> &m_obj;
-      JsonPrinter<T> &m_printer;
-      const EntityPtr &m_entity;
-      T &m_writer;
+      std::optional<AutoJsonObject<T>>& m_obj;
+      JsonPrinter<T>& m_printer;
+      const EntityPtr& m_entity;
+      T& m_writer;
 
-      const PropertyKey *m_key {nullptr};
+      const PropertyKey* m_key {nullptr};
     };
 
   public:
@@ -113,7 +113,7 @@ namespace mtconnect::entity {
     /// @param version the supported MTConnect serialization version
     /// - Version 1 has a repreated objects in arrays for collections of objects
     /// - Version 2 combines arrays of objects by type
-    JsonPrinter(T &writer, uint32_t version, bool includeHidden = false)
+    JsonPrinter(T& writer, uint32_t version, bool includeHidden = false)
       : m_version(version), m_writer(writer), m_includeHidden(includeHidden) {};
 
     /// @brief create a json object from an entity
@@ -140,7 +140,7 @@ namespace mtconnect::entity {
 
       PropertyVisitor visitor {m_writer, *this, obj, entity};
 
-      for (auto &prop : entity->getProperties())
+      for (auto& prop : entity->getProperties())
       {
         if (m_includeHidden || !entity->isHidden(prop.first))
         {
@@ -154,7 +154,7 @@ namespace mtconnect::entity {
     /// @param[in] list a list of EntityPtr objects
     /// @tparam T2 Type of iterable collection must contain Entity subclass
     template <typename T2>
-    void printEntityList(const T2 &list, bool embed = false)
+    void printEntityList(const T2& list, bool embed = false)
     {
       if (m_version == 1)
         printEntityList1(list);
@@ -172,10 +172,10 @@ namespace mtconnect::entity {
     /// @param[in] list a list of EntityPtr objects
     /// @tparam T2 Type of iterable collection must contain Entity subclass
     template <typename T2>
-    void printEntityList1(const T2 &list)
+    void printEntityList1(const T2& list)
     {
       AutoJsonArray ary(m_writer);
-      for (auto &ei : list)
+      for (auto& ei : list)
       {
         AutoJsonObject obj(m_writer);
         obj.Key(ei->getName());
@@ -191,12 +191,12 @@ namespace mtconnect::entity {
     /// @param[in] list a list of EntityPtr objects
     /// @tparam T2 Type of iterable collection must contain Entity subclass
     template <typename T2>
-    void printEntityList2(const T2 &list, bool embed = false)
+    void printEntityList2(const T2& list, bool embed = false)
     {
       AutoJsonObject obj(m_writer, !embed);
       // Sort the entities by name, use a string view so we don't copy
       std::multimap<std::string_view, EntityPtr> entities;
-      for (auto &e : list)
+      for (auto& e : list)
         entities.emplace(std::string_view(e->getName()), e);
 
       /// Group the entities by name
@@ -204,7 +204,7 @@ namespace mtconnect::entity {
       {
         auto next =
             std::upper_bound(it, entities.end(), it->first,
-                             [](const auto &a, const auto &b) { return a.compare(b.first) < 0; });
+                             [](const auto& a, const auto& b) { return a.compare(b.first) < 0; });
 
         obj.Key(it->first);
 
@@ -219,7 +219,7 @@ namespace mtconnect::entity {
     }
 
   protected:
-    void printKey(AutoJsonObject<T> &obj, const PropertyKey &key)
+    void printKey(AutoJsonObject<T>& obj, const PropertyKey& key)
     {
       if (key == "VALUE" || key == "RAW")
         obj.Key("value");
@@ -229,20 +229,20 @@ namespace mtconnect::entity {
 
     struct DataSetVisitor
     {
-      DataSetVisitor(T &writer, JsonPrinter &printer, AutoJsonObject<T> &obj)
+      DataSetVisitor(T& writer, JsonPrinter& printer, AutoJsonObject<T>& obj)
         : m_writer(writer), m_printer(printer), m_obj(obj)
       {}
 
-      void operator()(const std::monostate &) {}
-      void operator()(const std::string &st) { m_obj.AddPairs(*m_key, st); }
-      void operator()(const int64_t &i) { m_obj.AddPairs(*m_key, i); }
-      void operator()(const double &d) { m_obj.AddPairs(*m_key, d); }
-      void operator()(const TableRow &arg)
+      void operator()(const std::monostate&) {}
+      void operator()(const std::string& st) { m_obj.AddPairs(*m_key, st); }
+      void operator()(const int64_t& i) { m_obj.AddPairs(*m_key, i); }
+      void operator()(const double& d) { m_obj.AddPairs(*m_key, d); }
+      void operator()(const TableRow& arg)
       {
         AutoJsonObject<T> row(m_writer, *m_key);
         DataSetVisitor visitor(m_writer, m_printer, row);
 
-        for (auto &c : arg)
+        for (auto& c : arg)
         {
           if (c.m_removed)
           {
@@ -258,17 +258,17 @@ namespace mtconnect::entity {
         }
       }
 
-      T &m_writer;
-      JsonPrinter &m_printer;
-      AutoJsonObject<T> &m_obj;
-      const std::string *m_key {nullptr};
+      T& m_writer;
+      JsonPrinter& m_printer;
+      AutoJsonObject<T>& m_obj;
+      const std::string* m_key {nullptr};
     };
 
-    void print(const DataSet &set)
+    void print(const DataSet& set)
     {
       AutoJsonObject obj(m_writer);
       DataSetVisitor visitor(m_writer, *this, obj);
-      for (auto &e : set)
+      for (auto& e : set)
       {
         if (e.m_removed)
         {
@@ -283,11 +283,11 @@ namespace mtconnect::entity {
         }
       }
     }
-    void print(const Timestamp &t) { m_writer.String(format(t).c_str()); }
+    void print(const Timestamp& t) { m_writer.String(format(t).c_str()); }
 
   protected:
     uint32_t m_version;
-    T &m_writer;
+    T& m_writer;
     bool m_includeHidden {false};
   };
 
@@ -308,7 +308,7 @@ namespace mtconnect::entity {
     {
       using namespace rapidjson;
       StringBuffer output;
-      RenderJson(output, m_pretty, [&](auto &writer) {
+      RenderJson(output, m_pretty, [&](auto& writer) {
         JsonPrinter printer(writer, m_version, m_includeHidden);
         printer.printEntity(entity);
       });
@@ -327,7 +327,7 @@ namespace mtconnect::entity {
     {
       using namespace rapidjson;
       StringBuffer output;
-      RenderJson(output, m_pretty, [&](auto &writer) {
+      RenderJson(output, m_pretty, [&](auto& writer) {
         JsonPrinter printer(writer, m_version, m_includeHidden);
         printer.print(entity);
       });

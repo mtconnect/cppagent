@@ -26,13 +26,13 @@ namespace mtconnect {
     public:
       /// @brief Create an Mqtt server with an asio context
       /// @param ioc a boost asio context
-      MqttServer(boost::asio::io_context &ioc) : m_ioContext(ioc), m_port(1883) {}
+      MqttServer(boost::asio::io_context& ioc) : m_ioContext(ioc), m_port(1883) {}
 
       virtual ~MqttServer() = default;
 
       /// @brief Get the Mqtt url
       /// @return Mqtt url
-      const auto &getUrl() const { return m_url; }
+      const auto& getUrl() const { return m_url; }
 
       /// @brief get the bind port
       /// @return the port being bound
@@ -44,10 +44,10 @@ namespace mtconnect {
       /// @brief Shutdown the Mqtt server
       virtual void stop() = 0;
 
-      auto &getWill() { return m_will; }
+      auto& getWill() { return m_will; }
 
     protected:
-      boost::asio::io_context &m_ioContext;
+      boost::asio::io_context& m_ioContext;
       std::string m_url;
       uint16_t m_port;
       std::optional<mqtt::will> m_will;

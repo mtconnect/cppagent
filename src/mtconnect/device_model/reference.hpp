@@ -53,7 +53,7 @@ namespace mtconnect {
 
       /// @brief The Entity id this component is related to
       /// @return the `idRef` property
-      const entity::Value &getIdentity() const override { return getProperty("idRef"); }
+      const entity::Value& getIdentity() const override { return getProperty("idRef"); }
 
       static entity::FactoryPtr getFactory();
       static entity::FactoryPtr getRoot();
@@ -64,10 +64,10 @@ namespace mtconnect {
 
       /// @brief get component for a component reference
       /// @return shared pointer to the component
-      auto &getComponent() const { return m_component; }
+      auto& getComponent() const { return m_component; }
       /// @brief get data item for a data item reference
       /// @return shared pointer to the data item
-      auto &getDataItem() const { return m_dataItem; }
+      auto& getDataItem() const { return m_dataItem; }
       /// @brief get the reference type
       /// @return data item or component relationship type
       auto getReferenceType() const { return m_type; }

@@ -32,14 +32,14 @@ namespace mtconnect::pipeline {
       using namespace observation;
       m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Observation>(SKIP);
     }
-    entity::EntityPtr operator()(entity::EntityPtr &&entity) override
+    entity::EntityPtr operator()(entity::EntityPtr&& entity) override
     {
       using namespace observation;
       using namespace entity;
       auto sample = std::dynamic_pointer_cast<Sample>(entity);
       if (sample && !sample->isOrphan() && !sample->isUnavailable())
       {
-        auto &converter = sample->getDataItem()->getConverter();
+        auto& converter = sample->getDataItem()->getConverter();
         if (converter)
           converter->convertValue(sample->getValue());
       }

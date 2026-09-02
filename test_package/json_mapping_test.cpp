@@ -39,7 +39,7 @@ using namespace data_item;
 using namespace std;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -48,11 +48,11 @@ int main(int argc, char *argv[])
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(std::map<string, DataItemPtr> &items, std::map<string, DevicePtr> &devices)
+  MockPipelineContract(std::map<string, DataItemPtr>& items, std::map<string, DevicePtr>& devices)
     : m_dataItems(items), m_devices(devices)
   {}
-  DevicePtr findDevice(const std::string &name) override { return m_devices[name]; }
-  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+  DevicePtr findDevice(const std::string& name) override { return m_devices[name]; }
+  DataItemPtr findDataItem(const std::string& device, const std::string& name) override
   {
     return m_dataItems[name];
   }
@@ -63,14 +63,14 @@ public:
   void deliverDevice(DevicePtr) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
-  void sourceFailed(const std::string &id) override {}
-  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
+  void deliverConnectStatus(entity::EntityPtr, const StringList&, bool) override {}
+  void sourceFailed(const std::string& id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr& obs) const override { return obs; }
   int32_t getSchemaVersion() const override { return SCHEMA_VERSION(2, 3); };
   bool isValidating() const override { return false; }
 
-  std::map<string, DataItemPtr> &m_dataItems;
-  std::map<string, DevicePtr> &m_devices;
+  std::map<string, DataItemPtr>& m_dataItems;
+  std::map<string, DevicePtr>& m_devices;
 };
 
 class JsonMappingTest : public testing::Test
@@ -90,7 +90,7 @@ protected:
     m_devices.clear();
   }
 
-  DataItemPtr makeDataItem(const std::string &device, const Properties &props)
+  DataItemPtr makeDataItem(const std::string& device, const Properties& props)
   {
     auto dev = m_devices.find(device);
     if (dev == m_devices.end())
@@ -105,7 +105,7 @@ protected:
     if (errors.size() > 0)
     {
       cerr << "Errors occurred during make data item" << endl;
-      for (auto &e : errors)
+      for (auto& e : errors)
       {
         cerr << "    " << e->getEntity() << ": " << e->what() << endl;
       }
@@ -118,7 +118,7 @@ protected:
     return di;
   }
 
-  DevicePtr makeDevice(const std::string &name, const Properties &props)
+  DevicePtr makeDevice(const std::string& name, const Properties& props)
   {
     ErrorList errors;
     Properties ps(props);
@@ -135,7 +135,7 @@ protected:
   std::map<string, DevicePtr> m_devices;
 };
 
-inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
+inline DataSetEntry operator""_E(const char* c, std::size_t) { return DataSetEntry(c); }
 using namespace date::literals;
 
 /// @test verify the json mapper can map an object with a timestamp and a series of observations
@@ -628,7 +628,7 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
   ASSERT_EQ("VariableDataSet", obs->getName());
   ASSERT_EQ("a", obs->getDataItem()->getId());
 
-  auto &set1 = obs->getDataSet();
+  auto& set1 = obs->getDataSet();
   ASSERT_EQ(3, set1.size());
 
   auto dsi = set1.begin();
@@ -649,7 +649,7 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
   ASSERT_EQ("VariableDataSet", obs->getName());
   ASSERT_EQ("a", obs->getDataItem()->getId());
 
-  auto &set2 = obs->getDataSet();
+  auto& set2 = obs->getDataSet();
   ASSERT_EQ(3, set2.size());
 
   ASSERT_EQ("NEW", obs->get<string>("resetTriggered"));
@@ -672,7 +672,7 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
   ASSERT_EQ("VariableDataSet", obs->getName());
   ASSERT_EQ("a", obs->getDataItem()->getId());
 
-  auto &set3 = obs->getDataSet();
+  auto& set3 = obs->getDataSet();
   ASSERT_EQ(3, set3.size());
 
   dsi = set3.begin();
@@ -743,14 +743,14 @@ TEST_F(JsonMappingTest, should_parse_tables)
   ASSERT_EQ("WorkOffsetsTable", obs->getName());
   ASSERT_EQ("a", obs->getDataItem()->getId());
 
-  auto &set1 = obs->getDataSet();
+  auto& set1 = obs->getDataSet();
   ASSERT_EQ(2, set1.size());
   auto dsi = set1.begin();
 
   ASSERT_EQ("r1", dsi->m_key);
   ASSERT_TRUE(holds_alternative<TableRow>(dsi->m_value));
 
-  const auto &row1 = get<TableRow>(dsi->m_value);
+  const auto& row1 = get<TableRow>(dsi->m_value);
   ASSERT_EQ(1, row1.size());
 
   auto ri = row1.begin();
@@ -758,7 +758,7 @@ TEST_F(JsonMappingTest, should_parse_tables)
   ASSERT_EQ(123.45, get<double>(ri->m_value));
 
   dsi++;
-  const auto &row2 = get<TableRow>(dsi->m_value);
+  const auto& row2 = get<TableRow>(dsi->m_value);
   ASSERT_EQ(2, row2.size());
 
   ri = row2.begin();
@@ -775,7 +775,7 @@ TEST_F(JsonMappingTest, should_parse_tables)
   ASSERT_EQ("WorkOffsetsTable", obs->getName());
   ASSERT_EQ("a", obs->getDataItem()->getId());
 
-  auto &set2 = obs->getDataSet();
+  auto& set2 = obs->getDataSet();
   ASSERT_EQ(2, set2.size());
 
   ASSERT_EQ("NEW", obs->get<string>("resetTriggered"));
@@ -785,7 +785,7 @@ TEST_F(JsonMappingTest, should_parse_tables)
   ASSERT_EQ("r1", dsi->m_key);
   ASSERT_TRUE(holds_alternative<TableRow>(dsi->m_value));
 
-  const auto &row3 = get<TableRow>(dsi->m_value);
+  const auto& row3 = get<TableRow>(dsi->m_value);
   ASSERT_EQ(2, row3.size());
 
   ri = row3.begin();

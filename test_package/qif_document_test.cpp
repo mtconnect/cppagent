@@ -49,7 +49,7 @@ using namespace mtconnect::asset;
 using namespace mtconnect::printer;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -120,7 +120,7 @@ TEST_F(QIFDocumentTest, minimal_qif_definition)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("30d278e0-c150-013a-c34d-4e7f553bbb76", asset->getAssetId());
@@ -192,7 +192,7 @@ TEST_F(QIFDocumentTest, qif_document_is_round_tripped_to_xml)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   entity::XmlPrinter printer;
@@ -240,7 +240,7 @@ TEST_F(QIFDocumentTest, should_generate_json)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   entity::JsonEntityPrinter jsonPrinter(1, true);
@@ -331,7 +331,7 @@ TEST_F(QIFDocumentTest, should_parse_document_with_multiple_same_named_elements)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   auto qif = asset->get<EntityPtr>("QIFDocument");
@@ -339,10 +339,10 @@ TEST_F(QIFDocumentTest, should_parse_document_with_multiple_same_named_elements)
 
   auto product = qif->get<EntityPtr>("Product");
   ASSERT_TRUE(product);
-  auto &partSetList = product->getListProperty();
+  auto& partSetList = product->getListProperty();
   ASSERT_EQ(2, partSetList.size());
 
-  auto &partSet = *partSetList.begin();
+  auto& partSet = *partSetList.begin();
   ASSERT_EQ("2"s, partSet->get<string>("N"));
   auto parts = partSet->getListProperty();
   ASSERT_EQ(2, parts.size());

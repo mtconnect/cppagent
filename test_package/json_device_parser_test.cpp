@@ -34,7 +34,7 @@ using namespace mtconnect::device_model;
 using namespace mtconnect::device_model::data_item;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -495,7 +495,7 @@ TEST_F(JsonDeviceParserTest, should_parse_v1_device_with_description)
   auto device = parser.parseDevice(doc);
   ASSERT_TRUE(device);
 
-  auto &description = device->get<entity::EntityPtr>("Description");
+  auto& description = device->get<entity::EntityPtr>("Description");
   ASSERT_TRUE(description);
   ASSERT_EQ("ACME", description->get<string>("manufacturer"));
   ASSERT_EQ("X100", description->get<string>("model"));

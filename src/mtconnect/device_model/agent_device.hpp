@@ -39,7 +39,7 @@ namespace mtconnect {
       /// @brief Constructor that sets variables from an attribute map
       ///
       /// Should not be used directly, always create using the factory
-      AgentDevice(const std::string &name, entity::Properties &props);
+      AgentDevice(const std::string& name, entity::Properties& props);
       ~AgentDevice() override = default;
       static entity::FactoryPtr getFactory();
       static entity::FactoryPtr getRoot();
@@ -60,13 +60,13 @@ namespace mtconnect {
       /// @brief get the connection status data item for an addapter
       /// @param adapter the adapter name
       /// @return shared pointer to the data item
-      DataItemPtr getConnectionStatus(const std::string &adapter)
+      DataItemPtr getConnectionStatus(const std::string& adapter)
       {
         return getDeviceDataItem(adapter + "_connection_status");
       }
       /// @brief Get all the adapter components
       /// @return shared pointer to the adapters component
-      auto &getAdapters() { return m_adapters; }
+      auto& getAdapters() { return m_adapters; }
 
     protected:
       void addRequiredDataItems();

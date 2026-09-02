@@ -36,7 +36,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief Wrapper around a request with additional infomation required for a WebSocket request
     struct WebsocketRequest
     {
-      WebsocketRequest(const std::string &id) : m_requestId(id) {}
+      WebsocketRequest(const std::string& id) : m_requestId(id) {}
       std::string m_requestId;                               //! The id of the request
       std::optional<boost::asio::streambuf> m_streamBuffer;  //! The streambuffer used in responses
       Complete m_complete;       //! A complete function when the request has finished
@@ -47,7 +47,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief Create a request dispatcher
     /// @param httpRequest a copy of the incoming HTTP request
     /// @param dispatch the dispatch function to call
-    WebsocketRequestManager(RequestPtr &&httpRequest, Dispatch dispatch)
+    WebsocketRequestManager(RequestPtr&& httpRequest, Dispatch dispatch)
       : m_httpRequest(std::move(httpRequest)), m_dispatch(dispatch)
     {}
 
@@ -63,7 +63,7 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief Set the current request (used for testing).
     /// @param request the request that is owned by the manager
-    void setHttpRequest(RequestPtr &&request) { m_httpRequest = std::move(request); }
+    void setHttpRequest(RequestPtr&& request) { m_httpRequest = std::move(request); }
 
     /// @brief Get the current HTTP request
     /// @returns a pointer to the HTTP request
@@ -72,7 +72,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief Finds the request for a given id
     /// @param id the id to search for
     /// @returns a pointer to the request structure or null if it is not found
-    WebsocketRequest *findRequest(const std::string &id)
+    WebsocketRequest* findRequest(const std::string& id)
     {
       auto it = m_requests.find(id);
       if (it != m_requests.end())
@@ -88,7 +88,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief finds or creates a WebSocketRequest structure and return it.
     /// @param id the id of the request to create
     /// @returns a pointer to the new websocket request or the existing one.
-    WebsocketRequest *findOrCreateRequest(const std::string &id)
+    WebsocketRequest* findOrCreateRequest(const std::string& id)
     {
       auto res = m_requests.emplace(id, id);
       return &res.first->second;
@@ -97,7 +97,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief finds or creates a WebSocketRequest structure and return it.
     /// @param id the id of the request to create
     /// @returns a pointer to the new websocket request or the existing one.
-    WebsocketRequest *createRequest(const std::string &id)
+    WebsocketRequest* createRequest(const std::string& id)
     {
       auto it = m_requests.find(id);
       if (it == m_requests.end())
@@ -113,11 +113,11 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief Remove a request from the known requests
     /// @param id the id of the request to remove
-    void remove(const std::string &id) { m_requests.erase(id); }
+    void remove(const std::string& id) { m_requests.erase(id); }
 
     /// @brief Parse a JSON request buffer and create a new request ptr.
     /// @param buffer the text to parse
-    RequestPtr parse(const std::string &buffer)
+    RequestPtr parse(const std::string& buffer)
     {
       using namespace rapidjson;
       using namespace std;
@@ -160,12 +160,12 @@ namespace mtconnect::sink::rest_sink {
 #define __GOSave__ GetObject
 #undef GetObject
 #endif
-        const auto &object = doc.GetObject();
+        const auto& object = doc.GetObject();
 #ifdef __GOSave__
 #define GetObject __GOSave__
 #endif
 
-        for (auto &it : object)
+        for (auto& it : object)
         {
           switch (it.value.GetType())
           {
@@ -184,9 +184,9 @@ namespace mtconnect::sink::rest_sink {
               break;
             case rapidjson::kArrayType:
             {
-              const auto &array = it.value.GetArray();
+              const auto& array = it.value.GetArray();
               std::stringstream buf;
-              for (const auto &s : array)
+              for (const auto& s : array)
                 buf << s.GetString() << ";";
               string str = buf.str();
               str.erase(str.length() - 1);  // Remove last ;
@@ -226,7 +226,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param buffer the JSON request string
     /// @param outId optional pointer to a string to receive the request id
     /// @returns `true` if the dispatch was successful.
-    bool dispatch(SessionPtr session, const std::string &buffer, std::string *outId = nullptr)
+    bool dispatch(SessionPtr session, const std::string& buffer, std::string* outId = nullptr)
     {
       using namespace std;
 
@@ -238,7 +238,7 @@ namespace mtconnect::sink::rest_sink {
 
       if (request->m_parameters.count("id") > 0)
       {
-        auto &v = request->m_parameters["id"];
+        auto& v = request->m_parameters["id"];
         string id = visit(overloaded {[](monostate m) { return ""s; },
                                       [](auto v) { return boost::lexical_cast<string>(v); }},
                           v);
@@ -252,7 +252,7 @@ namespace mtconnect::sink::rest_sink {
                         "ERROR");
       }
 
-      auto &id = *(request->m_requestId);
+      auto& id = *(request->m_requestId);
 
       if (request->m_parameters.count("request") > 0)
       {
@@ -296,7 +296,7 @@ namespace mtconnect::sink::rest_sink {
         return m_dispatch(session, request);
       }
 
-      catch (RestError &re)
+      catch (RestError& re)
       {
         re.setRequestId(id);
         throw re;

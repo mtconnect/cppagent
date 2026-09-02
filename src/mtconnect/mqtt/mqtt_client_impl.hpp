@@ -52,14 +52,14 @@ namespace mtconnect {
     template <typename... Ts>
     using mqtt_tls_client_ws_ptr = decltype(mqtt::make_tls_async_client_ws(std::declval<Ts>()...));
 
-    using mqtt_client = mqtt_client_ptr<boost::asio::io_context &, std::string, std::uint16_t,
+    using mqtt_client = mqtt_client_ptr<boost::asio::io_context&, std::string, std::uint16_t,
                                         mqtt::protocol_version>;
-    using mqtt_tls_client = mqtt_tls_client_ptr<boost::asio::io_context &, std::string,
+    using mqtt_tls_client = mqtt_tls_client_ptr<boost::asio::io_context&, std::string,
                                                 std::uint16_t, mqtt::protocol_version>;
     using mqtt_tls_client_ws =
-        mqtt_tls_client_ws_ptr<boost::asio::io_context &, std::string, std::uint16_t, std::string,
+        mqtt_tls_client_ws_ptr<boost::asio::io_context&, std::string, std::uint16_t, std::string,
                                mqtt::protocol_version>;
-    using mqtt_client_ws = mqtt_client_ws_ptr<boost::asio::io_context &, std::string, std::uint16_t,
+    using mqtt_client_ws = mqtt_client_ws_ptr<boost::asio::io_context&, std::string, std::uint16_t,
                                               std::string, mqtt::protocol_version>;
 
     /// @brief The Mqtt Client Source
@@ -73,8 +73,8 @@ namespace mtconnect {
       /// - Port, defaults to 1883
       /// - MqttTls, defaults to false
       /// - MqttHost, defaults to LocalHost
-      MqttClientImpl(boost::asio::io_context &ioContext, const ConfigOptions &options,
-                     std::unique_ptr<ClientHandler> &&handler,
+      MqttClientImpl(boost::asio::io_context& ioContext, const ConfigOptions& options,
+                     std::unique_ptr<ClientHandler>&& handler,
                      const std::optional<std::string> willTopic = std::nullopt,
                      const std::optional<std::string> willPayload = std::nullopt)
         : MqttClient(ioContext, std::move(handler), willTopic, willPayload),
@@ -118,7 +118,7 @@ namespace mtconnect {
 
       ~MqttClientImpl() { stop(); }
 
-      Derived &derived() { return static_cast<Derived &>(*this); }
+      Derived& derived() { return static_cast<Derived&>(*this); }
 
       /// @brief Start the Mqtt Client
       bool start() override
@@ -247,7 +247,7 @@ namespace mtconnect {
       /// @brief Subscribe Topic to the Mqtt Client
       /// @param topic Subscribing to the topic
       /// @return boolean either topic sucessfully connected and subscribed
-      bool subscribe(const std::string &topic) override
+      bool subscribe(const std::string& topic) override
       {
         NAMED_SCOPE("MqttClientImpl::subscribe");
         if (!m_connected)
@@ -279,7 +279,7 @@ namespace mtconnect {
       /// @param topic Publishing to the topic
       /// @param payload Publishing to the payload
       /// @return boolean either topic sucessfully connected and published
-      bool publish(const std::string &topic, const std::string &payload, bool retain = true,
+      bool publish(const std::string& topic, const std::string& payload, bool retain = true,
                    QOS qos = QOS::at_least_once) override
       {
         NAMED_SCOPE("MqttClientImpl::publish");
@@ -328,7 +328,7 @@ namespace mtconnect {
       /// @param topic Publishing to the topic
       /// @param payload Publishing to the payload
       /// @return boolean either topic sucessfully connected and published
-      bool asyncPublish(const std::string &topic, const std::string &payload,
+      bool asyncPublish(const std::string& topic, const std::string& payload,
                         std::function<void(std::error_code)> callback, bool retain = true,
                         QOS qos = QOS::at_least_once) override
       {
@@ -397,7 +397,7 @@ namespace mtconnect {
         });
       }
 
-      void receive(mqtt::buffer &topic, mqtt::buffer &contents)
+      void receive(mqtt::buffer& topic, mqtt::buffer& contents)
       {
         if (m_handler && m_handler->m_receive)
           m_handler->m_receive(shared_from_this(), string(topic), string(contents));
@@ -432,7 +432,7 @@ namespace mtconnect {
         m_reconnectTimer.expires_after(m_connectInterval);
 
         m_reconnectTimer.async_wait(boost::asio::bind_executor(
-            derived().getClient()->get_executor(), [this](const boost::system::error_code &error) {
+            derived().getClient()->get_executor(), [this](const boost::system::error_code& error) {
               if (error != boost::asio::error::operation_aborted)
               {
                 LOG(info) << "MqttClientImpl::reconnect: reconnect now";
@@ -479,7 +479,7 @@ namespace mtconnect {
 
       /// @brief Get the Mqtt TCP Client
       /// @return pointer to the Mqtt TCP Client
-      auto &getClient()
+      auto& getClient()
       {
         if (!m_client)
         {
@@ -512,7 +512,7 @@ namespace mtconnect {
 
       /// @brief Get the Mqtt TLS Client
       /// @return pointer to the Mqtt TLS Client
-      auto &getClient()
+      auto& getClient()
       {
         if (!m_client)
         {
@@ -561,7 +561,7 @@ namespace mtconnect {
 
       /// @brief Get the Mqtt TLS WebSocket Client
       /// @return pointer to the Mqtt TLS WebSocket Client
-      auto &getClient()
+      auto& getClient()
       {
         if (!m_client)
         {
@@ -600,7 +600,7 @@ namespace mtconnect {
 
       /// @brief Get the Mqtt TLS WebSocket Client
       /// @return pointer to the Mqtt TLS WebSocket Client
-      auto &getClient()
+      auto& getClient()
       {
         if (!m_client)
         {

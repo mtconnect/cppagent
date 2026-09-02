@@ -38,7 +38,7 @@ using namespace mtconnect::source::adapter;
 using namespace entity;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -57,7 +57,7 @@ protected:
 
   void TearDown() override { m_agentTestHelper.reset(); }
 
-  Adapter *m_adapter {nullptr};
+  Adapter* m_adapter {nullptr};
   std::string m_agentId;
   DevicePtr m_device;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
@@ -67,7 +67,7 @@ TEST_F(SolidModelTest, device_solid_model_attributes_and_scale_are_parsed)
 {
   ASSERT_NE(nullptr, m_device);
 
-  auto &clc = m_device->get<EntityPtr>("Configuration");
+  auto& clc = m_device->get<EntityPtr>("Configuration");
   ASSERT_TRUE(clc);
   auto model = clc->get<EntityPtr>("SolidModel");
 
@@ -90,7 +90,7 @@ TEST_F(SolidModelTest, rotary_solid_model_with_transformation_and_references_is_
   ASSERT_NE(nullptr, m_device);
 
   auto rot = m_device->getComponentById("c");
-  auto &clc = rot->get<EntityPtr>("Configuration");
+  auto& clc = rot->get<EntityPtr>("Configuration");
   ASSERT_TRUE(clc);
   auto model = clc->get<EntityPtr>("SolidModel");
 

@@ -45,7 +45,7 @@ using namespace mtconnect::asset;
 using namespace mtconnect::printer;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -94,7 +94,7 @@ TEST_F(PartAssetTest, should_parse_a_part_archetype)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("PartArchetype", asset->getName());
@@ -167,7 +167,7 @@ TEST_F(PartAssetTest, process_archetype_can_have_multiple_customers)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
   ASSERT_EQ("PartArchetype", asset->getName());
 
@@ -211,7 +211,7 @@ TEST_F(PartAssetTest, customers_are_optional)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("PartArchetype", asset->getName());
@@ -253,7 +253,7 @@ TEST_F(PartAssetTest, should_generate_json)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("PartArchetype", asset->getName());
@@ -331,7 +331,7 @@ TEST_F(PartAssetTest, part_archetype_should_be_extensible)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("PartArchetype", asset->getName());
@@ -378,7 +378,7 @@ TEST_F(PartAssetTest, should_parse_a_part)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("Part", asset->getName());
@@ -451,7 +451,7 @@ TEST_F(PartAssetTest, part_identifiers_are_optional)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("Part", asset->getName());
@@ -488,7 +488,7 @@ TEST_F(PartAssetTest, part_identifiers_type_must_be_unique_or_group)
 
   auto it = errors.begin();
   {
-    auto error = dynamic_cast<PropertyError *>(it->get());
+    auto error = dynamic_cast<PropertyError*>(it->get());
     ASSERT_TRUE(error);
     EXPECT_EQ("Identifier(type): Invalid value for 'type': 'OTHER_IDENTIFIER' is not allowed"s,
               error->what());
@@ -533,7 +533,7 @@ TEST_F(PartAssetTest, part_should_be_extensible)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   auto workOrder = asset->get<EntityPtr>("WorkOrder");
@@ -573,7 +573,7 @@ TEST_F(PartAssetTest, part_should_generate_json)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   // Round trip test

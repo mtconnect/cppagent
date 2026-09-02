@@ -51,9 +51,9 @@ namespace mtconnect {
 
   namespace source::adapter::mqtt_adapter {
 
-    MqttAdapter::MqttAdapter(boost::asio::io_context &io,
+    MqttAdapter::MqttAdapter(boost::asio::io_context& io,
                              pipeline::PipelineContextPtr pipelineContext,
-                             const ConfigOptions &options, const boost::property_tree::ptree &block)
+                             const ConfigOptions& options, const boost::property_tree::ptree& block)
       : Adapter("MQTT", io, options),
         m_ioContext(io),
         m_strand(Source::m_strand),
@@ -121,8 +121,8 @@ namespace mtconnect {
         m_handler->m_disconnected(m_identity);
       };
 
-      clientHandler->m_receive = [this](shared_ptr<MqttClient> client, const std::string &topic,
-                                        const std::string &payload) {
+      clientHandler->m_receive = [this](shared_ptr<MqttClient> client, const std::string& topic,
+                                        const std::string& payload) {
         m_handler->m_processMessage(topic, payload, m_identity);
       };
 
@@ -163,7 +163,7 @@ namespace mtconnect {
         auto topics = GetOption<StringList>(m_options, configuration::Topics);
         if (topics)
         {
-          for (const auto &s : *topics)
+          for (const auto& s : *topics)
             identity << s;
         }
 
@@ -174,7 +174,7 @@ namespace mtconnect {
       m_pipeline.build(m_options);
     }
 
-    void MqttAdapter::loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options)
+    void MqttAdapter::loadTopics(const boost::property_tree::ptree& tree, ConfigOptions& options)
     {
       auto topics = tree.get_child_optional(configuration::Topics);
       if (topics)
@@ -187,7 +187,7 @@ namespace mtconnect {
         }
         else
         {
-          for (auto &f : *topics)
+          for (auto& f : *topics)
           {
             list.emplace_back(f.second.data());
           }
@@ -207,19 +207,19 @@ namespace mtconnect {
     ///
     /// </summary>
     /// <param name="factory"></param>
-    void MqttAdapter::registerFactory(SourceFactory &factory)
+    void MqttAdapter::registerFactory(SourceFactory& factory)
     {
       factory.registerFactory("mqtt",
-                              [](const std::string &name, boost::asio::io_context &io,
-                                 pipeline::PipelineContextPtr context, const ConfigOptions &options,
-                                 const boost::property_tree::ptree &block) -> source::SourcePtr {
+                              [](const std::string& name, boost::asio::io_context& io,
+                                 pipeline::PipelineContextPtr context, const ConfigOptions& options,
+                                 const boost::property_tree::ptree& block) -> source::SourcePtr {
                                 auto source =
                                     std::make_shared<MqttAdapter>(io, context, options, block);
                                 return source;
                               });
     }
 
-    const std::string &MqttAdapter::getHost() const { return m_host; }
+    const std::string& MqttAdapter::getHost() const { return m_host; }
 
     unsigned int MqttAdapter::getPort() const { return m_port; }
 
@@ -241,16 +241,16 @@ namespace mtconnect {
       LOG(info) << "MqttClientImpl::connect: subscribing to topics";
       if (topics)
       {
-        for (const auto &topic : *topics)
+        for (const auto& topic : *topics)
         {
           m_client->subscribe(topic);
         }
       }
     }
 
-    mtconnect::pipeline::Pipeline *MqttAdapter::getPipeline() { return &m_pipeline; }
+    mtconnect::pipeline::Pipeline* MqttAdapter::getPipeline() { return &m_pipeline; }
 
-    void MqttPipeline::build(const ConfigOptions &options)
+    void MqttPipeline::build(const ConfigOptions& options)
     {
       AdapterPipeline::build(options);
 

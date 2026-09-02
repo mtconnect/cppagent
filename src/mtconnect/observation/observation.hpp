@@ -58,15 +58,15 @@ namespace mtconnect::observation {
     /// @param[in] timestamp the timestamp
     /// @param[in,out] errors any errors that occurred when creating the observation
     /// @return shared pointer to the observations
-    static ObservationPtr make(const DataItemPtr dataItem, const entity::Properties &props,
-                               const Timestamp &timestamp, entity::ErrorList &errors);
+    static ObservationPtr make(const DataItemPtr dataItem, const entity::Properties& props,
+                               const Timestamp& timestamp, entity::ErrorList& errors);
 
     /// @brief utility method to copy the properties from a data item to a set of properties
     /// @param[in] dataItem the data item
     /// @param[out] props properties to recieve data item properties
-    static void setProperties(const DataItemPtr dataItem, entity::Properties &props)
+    static void setProperties(const DataItemPtr dataItem, entity::Properties& props)
     {
-      for (auto &prop : dataItem->getObservationProperties())
+      for (auto& prop : dataItem->getObservationProperties())
         props.emplace(prop);
     }
 
@@ -87,7 +87,7 @@ namespace mtconnect::observation {
 
     /// @brief update related data item when the device is updated
     /// @param[in] diMap a map of data item ids to data items
-    void updateDataItem(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
+    void updateDataItem(std::unordered_map<std::string, WeakDataItemPtr>& diMap)
     {
       auto old = m_dataItem.lock();
       auto ndi = diMap.find(old->getId());
@@ -99,7 +99,7 @@ namespace mtconnect::observation {
 
     /// @brief set the timestamp
     /// @param[in] ts the timestamp
-    void setTimestamp(const Timestamp &ts)
+    void setTimestamp(const Timestamp& ts)
     {
       m_timestamp = ts;
       setProperty("timestamp", m_timestamp);
@@ -137,7 +137,7 @@ namespace mtconnect::observation {
     /// compare by the data item and then by sequence number
     /// @param[in] another the other observation
     /// @return `true` if this observation is less than `another`
-    bool operator<(const Observation &another) const
+    bool operator<(const Observation& another) const
     {
       auto di = m_dataItem.lock();
       if (!di)
@@ -259,7 +259,7 @@ namespace mtconnect::observation {
 
     /// @brief set the level as a string
     /// @param[in] s the level
-    void setLevel(const std::string &s)
+    void setLevel(const std::string& s)
     {
       if (iequals("normal", s))
         setLevel(NORMAL);
@@ -330,7 +330,7 @@ namespace mtconnect::observation {
 
     /// @brief Get a list of all active conditions
     /// @param[out] list the list condtions
-    void getConditionList(ConditionList &list)
+    void getConditionList(ConditionList& list)
     {
       if (m_prev)
         m_prev->getConditionList(list);
@@ -341,7 +341,7 @@ namespace mtconnect::observation {
     /// @brief find a condition by code in the condition list
     /// @param[in] code te code
     /// @return shared pointer to the condition if found
-    ConditionPtr find(const std::string &code)
+    ConditionPtr find(const std::string& code)
     {
       if (m_code == code)
         return getptr();
@@ -355,7 +355,7 @@ namespace mtconnect::observation {
     /// @brief const find a condition by code in the condition list
     /// @param[in] code te code
     /// @return shared pointer to the condition if found
-    const ConditionPtr find(const std::string &code) const
+    const ConditionPtr find(const std::string& code) const
     {
       if (m_code == code)
         return std::dynamic_pointer_cast<Condition>(Entity::getptr());
@@ -370,18 +370,18 @@ namespace mtconnect::observation {
     /// @param[in] old the condition to be placed
     /// @param[in] _new the replacement condition
     /// @return `true` if the old condition was found
-    bool replace(ConditionPtr &old, ConditionPtr &_new);
+    bool replace(ConditionPtr& old, ConditionPtr& _new);
     /// @brief copy the condition and all conditions in the list
     /// @return a new shared condition pointer
     ConditionPtr deepCopy();
     /// @brief copy the condition and all conditions in the list removing one condition
     /// @param[in] old the condition to skip
     /// @return the new condition pointer
-    ConditionPtr deepCopyAndRemove(ConditionPtr &old);
+    ConditionPtr deepCopyAndRemove(ConditionPtr& old);
 
     /// @brief Get the code for the condition
     /// @return the code
-    const std::string &getCode() const { return m_code; }
+    const std::string& getCode() const { return m_code; }
     /// @brief get the condition level
     /// @return the level
     Level getLevel() const { return m_level; }
@@ -453,14 +453,14 @@ namespace mtconnect::observation {
     }
     /// @brief get the data set value
     /// @return the value
-    const entity::DataSet &getDataSet() const
+    const entity::DataSet& getDataSet() const
     {
-      const entity::Value &v = getValue();
+      const entity::Value& v = getValue();
       return std::get<entity::DataSet>(v);
     }
     /// @brief set the data set value and the count
     /// @param[in] set the data set
-    void setDataSet(const entity::DataSet &set)
+    void setDataSet(const entity::DataSet& set)
     {
       setValue(set);
       setProperty("count", int64_t(set.size()));
@@ -528,6 +528,6 @@ namespace mtconnect::observation {
     ObservationPtr copy() const override { return std::make_shared<Alarm>(*this); }
   };
 
-  using ObservationComparer = bool (*)(ObservationPtr &, ObservationPtr &);
-  inline bool ObservationCompare(ObservationPtr &aE1, ObservationPtr &aE2) { return *aE1 < *aE2; }
+  using ObservationComparer = bool (*)(ObservationPtr&, ObservationPtr&);
+  inline bool ObservationCompare(ObservationPtr& aE1, ObservationPtr& aE2) { return *aE1 < *aE2; }
 }  // namespace mtconnect::observation

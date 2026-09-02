@@ -36,7 +36,7 @@ namespace mtconnect::pipeline {
       /// @brief Construct a Last Observation
       /// @param p the amount of time in the period
       /// @param st the strand to use for the time
-      LastObservation(std::chrono::milliseconds p, boost::asio::io_context::strand &st)
+      LastObservation(std::chrono::milliseconds p, boost::asio::io_context::strand& st)
         : m_timer(st.context()), m_period(p)
       {}
 
@@ -69,14 +69,14 @@ namespace mtconnect::pipeline {
     /// @brief Construct a period filter with a context
     /// @param context the context
     /// @param st strand for the timer
-    PeriodFilter(PipelineContextPtr context, boost::asio::io_context::strand &st)
+    PeriodFilter(PipelineContextPtr context, boost::asio::io_context::strand& st)
       : Transform("PeriodFilter"),
         m_state(context->getSharedState<State>(m_name)),
         m_contract(context->m_contract.get()),
         m_strand(st)
     {
       using namespace observation;
-      constexpr static auto lambda = [](const Observation &s) {
+      constexpr static auto lambda = [](const Observation& s) {
         return bool(!s.isOrphan() && s.getDataItem()->getMinimumPeriod());
       };
       m_guard = LambdaGuard<Observation, TypeGuard<Event, Sample>>(lambda, RUN) ||
@@ -84,7 +84,7 @@ namespace mtconnect::pipeline {
     }
     ~PeriodFilter() override = default;
 
-    entity::EntityPtr operator()(entity::EntityPtr &&entity) override
+    entity::EntityPtr operator()(entity::EntityPtr&& entity) override
     {
       using namespace std;
       using namespace observation;
@@ -98,7 +98,7 @@ namespace mtconnect::pipeline {
           return EntityPtr();
 
         auto di = obs->getDataItem();
-        auto &id = di->getId();
+        auto& id = di->getId();
 
         if (obs->isUnavailable())
         {
@@ -132,20 +132,20 @@ namespace mtconnect::pipeline {
 
   protected:
     // Returns true if the observation is filtered.
-    bool filtered(LastObservation &last, const std::string &id, observation::ObservationPtr &obs)
+    bool filtered(LastObservation& last, const std::string& id, observation::ObservationPtr& obs)
     {
       using namespace std;
       using namespace chrono;
       using namespace observation;
 
-      const auto &ts = obs->getTimestamp();
+      const auto& ts = obs->getTimestamp();
 #ifdef DEBUG_PERIOD_FILTER
       std::cout << "<<<< Delta for obs at " << format(ts) << " is "
                 << duration_cast<milliseconds>(last.m_next - ts).count() << std::endl;
 #endif
 
       const auto start = last.m_next - last.m_period;
-      const auto &end = last.m_next;
+      const auto& end = last.m_next;
 
       if (ts < start)
       {
@@ -233,7 +233,7 @@ namespace mtconnect::pipeline {
       }
     }
 
-    void delayDelivery(LastObservation &last, const std::string &id)
+    void delayDelivery(LastObservation& last, const std::string& id)
     {
       using std::placeholders::_1;
       using namespace std;
@@ -280,7 +280,7 @@ namespace mtconnect::pipeline {
         auto lastIt = m_state->m_lastObservation.find(id);
         if (lastIt != m_state->m_lastObservation.end() && lastIt->second.m_observation)
         {
-          auto &last = lastIt->second;
+          auto& last = lastIt->second;
 
 #ifdef DEBUG_PERIOD_FILTER
           std::cout << "sendObservation: last timestamp is "
@@ -321,7 +321,7 @@ namespace mtconnect::pipeline {
 
   protected:
     std::shared_ptr<State> m_state;
-    PipelineContract *m_contract;
-    boost::asio::io_context::strand &m_strand;
+    PipelineContract* m_contract;
+    boost::asio::io_context::strand& m_strand;
   };
 }  // namespace mtconnect::pipeline

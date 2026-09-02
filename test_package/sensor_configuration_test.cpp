@@ -38,7 +38,7 @@ using namespace mtconnect::source::adapter;
 using namespace entity;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -57,7 +57,7 @@ protected:
 
   void TearDown() override { m_agentTestHelper.reset(); }
 
-  Adapter *m_adapter {nullptr};
+  Adapter* m_adapter {nullptr};
   std::string m_agentId;
   DevicePtr m_device {nullptr};
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
@@ -67,7 +67,7 @@ TEST_F(SensorConfigurationTest, sensor_configuration_channels_are_parsed_with_na
 {
   ASSERT_NE(nullptr, m_device);
 
-  auto &clc = m_device->get<EntityPtr>("Configuration");
+  auto& clc = m_device->get<EntityPtr>("Configuration");
   ASSERT_TRUE(clc);
   auto config = clc->get<EntityPtr>("SensorConfiguration");
 

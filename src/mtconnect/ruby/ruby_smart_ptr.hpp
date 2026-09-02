@@ -25,15 +25,15 @@ namespace mtconnect::ruby {
   {
     using SharedPtr = std::shared_ptr<T>;
 
-    AGENT_SYMBOL_VISIBLE static mrb_data_type *type()
+    AGENT_SYMBOL_VISIBLE static mrb_data_type* type()
     {
       static mrb_data_type s_type {nullptr, nullptr};
       if (s_type.struct_name == nullptr)
       {
         mruby_type = &s_type;
         s_type.struct_name = typeid(T).name();
-        s_type.dfree = [](mrb_state *mrb, void *p) {
-          auto sp = static_cast<SharedPtr *>(p);
+        s_type.dfree = [](mrb_state* mrb, void* p) {
+          auto sp = static_cast<SharedPtr*>(p);
           delete sp;
         };
       }
@@ -41,7 +41,7 @@ namespace mtconnect::ruby {
       return &s_type;
     }
 
-    static mrb_value wrap(mrb_state *mrb, const char *name, SharedPtr obj)
+    static mrb_value wrap(mrb_state* mrb, const char* name, SharedPtr obj)
     {
       if (!obj)
         return mrb_nil_value();
@@ -54,7 +54,7 @@ namespace mtconnect::ruby {
       return mrb_obj_value(wrapper);
     }
 
-    static mrb_value wrap(mrb_state *mrb, RClass *klass, SharedPtr obj)
+    static mrb_value wrap(mrb_state* mrb, RClass* klass, SharedPtr obj)
     {
       if (!obj)
         return mrb_nil_value();
@@ -64,9 +64,9 @@ namespace mtconnect::ruby {
       return mrb_obj_value(wrapper);
     }
 
-    static void replace(mrb_state *mrb, mrb_value self, SharedPtr obj)
+    static void replace(mrb_state* mrb, mrb_value self, SharedPtr obj)
     {
-      auto selfp = static_cast<SharedPtr *>(DATA_PTR(self));
+      auto selfp = static_cast<SharedPtr*>(DATA_PTR(self));
       if (selfp)
       {
         delete selfp;
@@ -74,22 +74,22 @@ namespace mtconnect::ruby {
       mrb_data_init(self, new SharedPtr(obj), type());
     }
 
-    static SharedPtr unwrap(mrb_state *mrb, mrb_value value)
+    static SharedPtr unwrap(mrb_state* mrb, mrb_value value)
     {
-      void *dp = mrb_data_get_ptr(mrb, value, type());
+      void* dp = mrb_data_get_ptr(mrb, value, type());
       if (dp != nullptr)
-        return *static_cast<SharedPtr *>(dp);
+        return *static_cast<SharedPtr*>(dp);
       else
         return nullptr;
     }
 
     template <typename U>
-    static std::shared_ptr<U> unwrap(mrb_state *mrb, mrb_value value)
+    static std::shared_ptr<U> unwrap(mrb_state* mrb, mrb_value value)
     {
-      void *dp = mrb_data_get_ptr(mrb, value, type());
+      void* dp = mrb_data_get_ptr(mrb, value, type());
       if (dp != nullptr)
       {
-        SharedPtr ptr(*static_cast<SharedPtr *>(dp));
+        SharedPtr ptr(*static_cast<SharedPtr*>(dp));
         return std::dynamic_pointer_cast<U>(ptr);
       }
       else
@@ -98,9 +98,9 @@ namespace mtconnect::ruby {
 
     static SharedPtr unwrap(mrb_value value)
     {
-      void *dp = DATA_PTR(value);
+      void* dp = DATA_PTR(value);
       if (dp != nullptr)
-        return *static_cast<SharedPtr *>(dp);
+        return *static_cast<SharedPtr*>(dp);
       else
         return nullptr;
     }
@@ -108,10 +108,10 @@ namespace mtconnect::ruby {
     template <typename U>
     static SharedPtr unwrap(mrb_value value)
     {
-      void *dp = DATA_PTR(value);
+      void* dp = DATA_PTR(value);
       if (dp != nullptr)
       {
-        std::shared_ptr<U> ptr(*static_cast<SharedPtr *>(dp));
+        std::shared_ptr<U> ptr(*static_cast<SharedPtr*>(dp));
         return std::dynamic_pointer_cast<U>(ptr);
       }
       else
@@ -119,18 +119,18 @@ namespace mtconnect::ruby {
     }
 
   private:
-    static mrb_data_type *mruby_type;
+    static mrb_data_type* mruby_type;
   };
 
   template <typename T>
-  mrb_data_type *MRubySharedPtr<T>::mruby_type = nullptr;
+  mrb_data_type* MRubySharedPtr<T>::mruby_type = nullptr;
 
   template <typename T>
   struct MRubyPtr
   {
-    using Ptr = T *;
+    using Ptr = T*;
 
-    AGENT_SYMBOL_VISIBLE static mrb_data_type *type()
+    AGENT_SYMBOL_VISIBLE static mrb_data_type* type()
     {
       static mrb_data_type s_type {nullptr, nullptr};
 
@@ -143,7 +143,7 @@ namespace mtconnect::ruby {
       return &s_type;
     }
 
-    static mrb_value wrap(mrb_state *mrb, const char *name, Ptr obj)
+    static mrb_value wrap(mrb_state* mrb, const char* name, Ptr obj)
     {
       if (obj == nullptr)
         return mrb_nil_value();
@@ -155,7 +155,7 @@ namespace mtconnect::ruby {
       return mrb_obj_value(wrapper);
     }
 
-    static mrb_value wrap(mrb_state *mrb, RClass *klass, Ptr obj)
+    static mrb_value wrap(mrb_state* mrb, RClass* klass, Ptr obj)
     {
       if (obj == nullptr)
         return mrb_nil_value();
@@ -164,12 +164,12 @@ namespace mtconnect::ruby {
       return mrb_obj_value(wrapper);
     }
 
-    static Ptr unwrap(mrb_state *mrb, mrb_value value)
+    static Ptr unwrap(mrb_state* mrb, mrb_value value)
     {
       return static_cast<Ptr>(mrb_data_get_ptr(mrb, value, type()));
     }
 
-    static void replace(mrb_state *mrb, mrb_value self, Ptr obj)
+    static void replace(mrb_state* mrb, mrb_value self, Ptr obj)
     {
       mrb_data_init(self, obj, type());
     }
@@ -177,26 +177,26 @@ namespace mtconnect::ruby {
     static Ptr unwrap(mrb_value value) { return static_cast<Ptr>(DATA_PTR(value)); }
 
   private:
-    static mrb_data_type *mruby_type;
+    static mrb_data_type* mruby_type;
   };
 
   template <typename T>
-  mrb_data_type *MRubyPtr<T>::mruby_type = nullptr;
+  mrb_data_type* MRubyPtr<T>::mruby_type = nullptr;
 
   template <typename T>
   struct MRubyUniquePtr
   {
     using UniquePtr = std::unique_ptr<T>;
 
-    AGENT_SYMBOL_VISIBLE static mrb_data_type *type()
+    AGENT_SYMBOL_VISIBLE static mrb_data_type* type()
     {
       static mrb_data_type s_type {nullptr, nullptr};
       if (s_type.struct_name == nullptr)
       {
         mruby_type = &s_type;
         s_type.struct_name = typeid(T).name();
-        s_type.dfree = [](mrb_state *mrb, void *p) {
-          auto sp = static_cast<UniquePtr *>(p);
+        s_type.dfree = [](mrb_state* mrb, void* p) {
+          auto sp = static_cast<UniquePtr*>(p);
           delete sp;
         };
       }
@@ -204,7 +204,7 @@ namespace mtconnect::ruby {
       return &s_type;
     }
 
-    static mrb_value wrap(mrb_state *mrb, const char *name, T *obj)
+    static mrb_value wrap(mrb_state* mrb, const char* name, T* obj)
     {
       if (!obj)
         return mrb_nil_value();
@@ -217,7 +217,7 @@ namespace mtconnect::ruby {
       return mrb_obj_value(wrapper);
     }
 
-    static mrb_value wrap(mrb_state *mrb, RClass *klass, T *obj)
+    static mrb_value wrap(mrb_state* mrb, RClass* klass, T* obj)
     {
       if (!obj)
         return mrb_nil_value();
@@ -227,9 +227,9 @@ namespace mtconnect::ruby {
       return mrb_obj_value(wrapper);
     }
 
-    static void replace(mrb_state *mrb, mrb_value self, UniquePtr obj)
+    static void replace(mrb_state* mrb, mrb_value self, UniquePtr obj)
     {
-      auto selfp = static_cast<UniquePtr *>(DATA_PTR(self));
+      auto selfp = static_cast<UniquePtr*>(DATA_PTR(self));
       if (selfp)
       {
         delete selfp;
@@ -237,23 +237,23 @@ namespace mtconnect::ruby {
       mrb_data_init(self, new UniquePtr(obj), type());
     }
 
-    static T *unwrap(mrb_state *mrb, mrb_value value)
+    static T* unwrap(mrb_state* mrb, mrb_value value)
     {
-      UniquePtr *ptr = static_cast<UniquePtr *>(mrb_data_get_ptr(mrb, value, type()));
+      UniquePtr* ptr = static_cast<UniquePtr*>(mrb_data_get_ptr(mrb, value, type()));
       return ptr->get();
     }
 
-    static T *unwrap(mrb_value value)
+    static T* unwrap(mrb_value value)
     {
-      UniquePtr *ptr = static_cast<UniquePtr *>(DATA_PTR(value));
+      UniquePtr* ptr = static_cast<UniquePtr*>(DATA_PTR(value));
       return ptr->get();
     }
 
   private:
-    static mrb_data_type *mruby_type;
+    static mrb_data_type* mruby_type;
   };
 
   template <typename T>
-  mrb_data_type *MRubyUniquePtr<T>::mruby_type = nullptr;
+  mrb_data_type* MRubyUniquePtr<T>::mruby_type = nullptr;
 
 }  // namespace mtconnect::ruby

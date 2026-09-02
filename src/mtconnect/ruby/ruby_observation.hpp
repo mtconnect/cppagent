@@ -27,11 +27,11 @@ namespace mtconnect::ruby {
 
   struct RubyObservation
   {
-    static RClass *m_eventClass;
-    static RClass *m_sampleClass;
-    static RClass *m_conditionClass;
+    static RClass* m_eventClass;
+    static RClass* m_sampleClass;
+    static RClass* m_conditionClass;
 
-    static void initialize(mrb_state *mrb, RClass *module)
+    static void initialize(mrb_state* mrb, RClass* module)
     {
       using namespace std;
       auto entityClass = mrb_class_get_under(mrb, module, "Entity");
@@ -49,7 +49,7 @@ namespace mtconnect::ruby {
 
       mrb_define_class_method(
           mrb, observationClass, "make",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             using namespace device_model::data_item;
 
             mrb_value di;
@@ -65,7 +65,7 @@ namespace mtconnect::ruby {
               ts = toRuby(mrb, time);
             }
 
-            struct RClass *klass;
+            struct RClass* klass;
             switch (dataItem->getCategory())
             {
               case DataItem::SAMPLE:
@@ -90,7 +90,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, observationClass, "initialize",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             using namespace device_model::data_item;
 
             mrb_value di;
@@ -116,7 +116,7 @@ namespace mtconnect::ruby {
             if (errors.size() > 0)
             {
               ostringstream str;
-              for (auto &e : errors)
+              for (auto& e : errors)
               {
                 str << e->what() << ", ";
               }
@@ -132,9 +132,9 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, observationClass, "dup",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             ObservationPtr old = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
-            RClass *klass = mrb_class(mrb, self);
+            RClass* klass = mrb_class(mrb, self);
 
             auto dup = old->copy();
             return MRubySharedPtr<Entity>::wrap(mrb, klass, dup);
@@ -144,7 +144,7 @@ namespace mtconnect::ruby {
                        mrb_intern_lit(mrb, "dup"));
       mrb_define_method(
           mrb, observationClass, "data_item",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             ObservationPtr obs = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
             if (obs->isOrphan())
               return mrb_nil_value();
@@ -155,7 +155,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, observationClass, "timestamp",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             ObservationPtr obs = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
             return toRuby(mrb, obs->getTimestamp());
           },
@@ -163,7 +163,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, m_conditionClass, "level",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             ObservationPtr obs = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
             auto cond = std::dynamic_pointer_cast<Condition>(obs);
             mrb_value level;
@@ -192,10 +192,10 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, m_conditionClass, "level=",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             ObservationPtr obs = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
             auto cond = std::dynamic_pointer_cast<Condition>(obs);
-            const char *arg = nullptr;
+            const char* arg = nullptr;
             mrb_get_args(mrb, "z!", &arg);
             if (arg == nullptr)
               return mrb_nil_value();

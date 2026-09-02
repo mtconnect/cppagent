@@ -48,7 +48,7 @@ using namespace mtconnect::buffer;
 using namespace mtconnect::asset;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -74,11 +74,11 @@ protected:
     m_parser.reset();
   }
 
-  AssetPtr parseAsset(const std::string &xml, entity::ErrorList &errors)
+  AssetPtr parseAsset(const std::string& xml, entity::ErrorList& errors)
   {
     auto entity = m_parser->parse(Asset::getRoot(), xml, errors);
     AssetPtr asset;
-    for (auto &error : errors)
+    for (auto& error : errors)
     {
       cout << error->what() << endl;
     }

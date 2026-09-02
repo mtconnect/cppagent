@@ -34,7 +34,7 @@ namespace mtconnect::sink::rest_sink {
   using ResponsePtr = std::unique_ptr<Response>;
   class Session;
   using SessionPtr = std::shared_ptr<Session>;
-  using ErrorFunction = std::function<void(SessionPtr, const RestError &error)>;
+  using ErrorFunction = std::function<void(SessionPtr, const RestError& error)>;
 
   using Dispatch = std::function<bool(SessionPtr, RequestPtr)>;
   using Complete = std::function<void()>;
@@ -57,20 +57,20 @@ namespace mtconnect::sink::rest_sink {
     /// @brief write the response to the client
     /// @param response the response
     /// @param complete optional completion callback
-    virtual void writeResponse(ResponsePtr &&response, Complete complete = nullptr) = 0;
+    virtual void writeResponse(ResponsePtr&& response, Complete complete = nullptr) = 0;
     /// @brief write a failure response to the client
     /// @param response the response
     /// @param complete optional completion callback
-    virtual void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) = 0;
+    virtual void writeFailureResponse(ResponsePtr&& response, Complete complete = nullptr) = 0;
     /// @brief begin streaming data to the client using x-multipart-replace
     /// @param mimeType the mime type of the response
     /// @param complete completion callback
-    virtual void beginStreaming(const std::string &mimeType, Complete complete,
+    virtual void beginStreaming(const std::string& mimeType, Complete complete,
                                 std::optional<std::string> requestId = std::nullopt) = 0;
     /// @brief write a chunk for a streaming session
     /// @param chunk the chunk to write
     /// @param complete a completion callback
-    virtual void writeChunk(const std::string &chunk, Complete complete,
+    virtual void writeChunk(const std::string& chunk, Complete complete,
                             std::optional<std::string> requestId = std::nullopt) = 0;
     /// @brief close the session
     virtual void close() = 0;
@@ -80,7 +80,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param status the HTTP status
     /// @param message the message
     /// @param ec an optional error code
-    virtual void fail(boost::beast::http::status status, const std::string &message,
+    virtual void fail(boost::beast::http::status status, const std::string& message,
                       boost::system::error_code ec = boost::system::error_code {})
     {
       NAMED_SCOPE("Session::fail");
@@ -105,17 +105,17 @@ namespace mtconnect::sink::rest_sink {
     /// @brief allow puts from a set of hosts
     /// @note also sets allow puts to `true`
     /// @param hosts set of hosts
-    void allowPutsFrom(std::set<boost::asio::ip::address> &hosts)
+    void allowPutsFrom(std::set<boost::asio::ip::address>& hosts)
     {
       m_allowPuts = true;
       m_allowPutsFrom = hosts;
     }
     /// @brief get the remote endpoint
     /// @return the asio tcp endpoint
-    auto &getRemote() const { return m_remote; }
+    auto& getRemote() const { return m_remote; }
     /// @brief set the request as unauthorized
     /// @param msg the rational message
-    void setUnauthorized(const std::string &msg)
+    void setUnauthorized(const std::string& msg)
     {
       m_message = msg;
       m_unauthorized = true;
@@ -127,9 +127,9 @@ namespace mtconnect::sink::rest_sink {
       m_observers.push_back(observer);
     }
 
-    bool cancelRequest(const std::string &requestId)
+    bool cancelRequest(const std::string& requestId)
     {
-      for (auto &obs : m_observers)
+      for (auto& obs : m_observers)
       {
         auto pobs = obs.lock();
         if (pobs && pobs->getRequestId() == requestId)

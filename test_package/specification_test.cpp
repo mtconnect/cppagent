@@ -39,7 +39,7 @@ using namespace entity;
 using namespace device_model;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -62,7 +62,7 @@ protected:
     m_component.reset();
   }
 
-  mtconnect::source::adapter::Adapter *m_adapter {nullptr};
+  mtconnect::source::adapter::Adapter* m_adapter {nullptr};
   ComponentPtr m_component;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
@@ -71,10 +71,10 @@ TEST_F(SpecificationTest, specification_attributes_and_limits_are_parsed_for_com
 {
   ASSERT_NE(nullptr, m_component);
 
-  auto &ent = m_component->get<EntityPtr>("Configuration");
+  auto& ent = m_component->get<EntityPtr>("Configuration");
   ASSERT_TRUE(ent);
 
-  const auto &specs = ent->getList("Specifications");
+  const auto& specs = ent->getList("Specifications");
   ASSERT_TRUE(specs);
   ASSERT_EQ(3, specs->size());
 
@@ -102,10 +102,10 @@ TEST_F(SpecificationTest, test_1_6_specification_without_id)
   auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   m_component = device->getComponentById("power");
 
-  auto &ent = m_component->get<EntityPtr>("Configuration");
+  auto& ent = m_component->get<EntityPtr>("Configuration");
   ASSERT_TRUE(ent);
 
-  const auto &specs = ent->getList("Specifications");
+  const auto& specs = ent->getList("Specifications");
   ASSERT_TRUE(specs);
   ASSERT_EQ(1, specs->size());
 
@@ -248,11 +248,11 @@ TEST_F(SpecificationTest, version_1_7_specification_values_including_limits_and_
 {
   ASSERT_NE(nullptr, m_component);
 
-  auto &ent = m_component->get<EntityPtr>("Configuration");
+  auto& ent = m_component->get<EntityPtr>("Configuration");
   ASSERT_TRUE(ent);
 
   // Get the second configuration.
-  const auto &specs = ent->getList("Specifications");
+  const auto& specs = ent->getList("Specifications");
   ASSERT_TRUE(specs);
   ASSERT_EQ(3, specs->size());
 
@@ -282,10 +282,10 @@ TEST_F(SpecificationTest, process_specification_with_spec_control_and_alarm_limi
 {
   ASSERT_NE(nullptr, m_component);
 
-  auto &ent = m_component->get<EntityPtr>("Configuration");
+  auto& ent = m_component->get<EntityPtr>("Configuration");
   ASSERT_TRUE(ent);
 
-  const auto &specs = ent->getList("Specifications");
+  const auto& specs = ent->getList("Specifications");
   ASSERT_TRUE(specs);
   ASSERT_EQ(3, specs->size());
   auto si = specs->begin();

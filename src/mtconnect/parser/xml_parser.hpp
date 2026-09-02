@@ -50,26 +50,26 @@ namespace mtconnect::parser {
     /// @param[in] aPath to the file
     /// @param[in] aPrinter the printer to obtain and set namespaces
     /// @returns a list of device pointers
-    std::list<device_model::DevicePtr> parseFile(const std::string &aPath,
-                                                 printer::XmlPrinter *aPrinter);
+    std::list<device_model::DevicePtr> parseFile(const std::string& aPath,
+                                                 printer::XmlPrinter* aPrinter);
     /// @brief Parses a single device fragment
     /// @param[in] deviceXml device xml of a single device
     /// @param[in] aPrinter the printer to obtain and set namespaces
     /// @returns a shared device pointer if successful
-    device_model::DevicePtr parseDevice(const std::string &deviceXml,
-                                        printer::XmlPrinter *aPrinter);
+    device_model::DevicePtr parseDevice(const std::string& deviceXml,
+                                        printer::XmlPrinter* aPrinter);
 
     /// @brief Just loads the document, assumed it has already been parsed before.
     /// @param aDoc the XML document to parse
-    void loadDocument(const std::string &aDoc);
+    void loadDocument(const std::string& aDoc);
     /// @brief get data items given a filter set and an xpath
     /// @param[out] filterSet a filter set to build
     /// @param[in] path the xpath
     /// @param[in] node an option node pointer to start from. defaults to the document root.
-    void getDataItems(FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
+    void getDataItems(FilterSet& filterSet, const std::string& path, xmlNodePtr node = nullptr);
     /// @brief get the schema version
     /// @return the version
-    const auto &getSchemaVersion() const { return m_schemaVersion; }
+    const auto& getSchemaVersion() const { return m_schemaVersion; }
 
   protected:
     // LibXML XML Doc

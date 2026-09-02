@@ -45,5 +45,5 @@ namespace mtconnect {
       ///       * SCHEMA_VERSION if deprecated
       extern Validation ControlledVocabularies;
     }  // namespace observations
-  }    // namespace validation
+  }  // namespace validation
 }  // namespace mtconnect

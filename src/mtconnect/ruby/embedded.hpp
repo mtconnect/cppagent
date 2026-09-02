@@ -37,13 +37,13 @@ namespace mtconnect {
     {
     public:
       /// @brief Create an embedded mruby instance
-      Embedded(configuration::AgentConfiguration *config, const ConfigOptions &options);
+      Embedded(configuration::AgentConfiguration* config, const ConfigOptions& options);
       ~Embedded();
 
     protected:
-      Agent *m_agent;
+      Agent* m_agent;
       ConfigOptions m_options;
-      boost::asio::io_context *m_context = nullptr;
+      boost::asio::io_context* m_context = nullptr;
       std::unique_ptr<RubyVM> m_rubyVM;
     };
   }  // namespace ruby

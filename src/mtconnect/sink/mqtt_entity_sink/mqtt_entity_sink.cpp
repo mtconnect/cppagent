@@ -590,5 +590,5 @@ namespace mtconnect {
       }
 
     }  // namespace mqtt_entity_sink
-  }    // namespace sink
+  }  // namespace sink
 }  // namespace mtconnect

@@ -49,5 +49,5 @@ namespace mtconnect {
         return sensorConfiguration;
       }
     }  // namespace configuration
-  }    // namespace device_model
+  }  // namespace device_model
 }  // namespace mtconnect

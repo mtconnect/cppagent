@@ -52,10 +52,10 @@ namespace mtconnect::pipeline {
     /// @param[in] context pipeline context
     /// @param[in] device optional device uuid
     /// @return `true` if successful
-    static bool parse(const std::string_view &content, ResponseDocument &doc,
+    static bool parse(const std::string_view& content, ResponseDocument& doc,
                       pipeline::PipelineContextPtr context,
-                      const std::optional<std::string> &device = std::nullopt,
-                      const std::optional<std::string> &uuid = std::nullopt);
+                      const std::optional<std::string>& device = std::nullopt,
+                      const std::optional<std::string>& uuid = std::nullopt);
 
     // Parsed data
     SequenceNumber_t m_next;           ///< Next sequence number

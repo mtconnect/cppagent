@@ -52,7 +52,7 @@ using status = boost::beast::http::status;
 namespace asio = boost::asio;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -60,13 +60,13 @@ int main(int argc, char *argv[])
 
 struct MockPipelineContract : public PipelineContract
 {
-  MockPipelineContract(DevicePtr &device) : m_device(device) {}
-  DevicePtr findDevice(const std::string &device) override
+  MockPipelineContract(DevicePtr& device) : m_device(device) {}
+  DevicePtr findDevice(const std::string& device) override
   {
     m_deviceName = device;
     return m_device;
   }
-  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+  DataItemPtr findDataItem(const std::string& device, const std::string& name) override
   {
     return m_device->getDeviceDataItem(name);
   }
@@ -81,9 +81,9 @@ struct MockPipelineContract : public PipelineContract
   int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &dev, bool flag) override {}
-  void sourceFailed(const std::string &id) override { m_failed = true; }
-  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
+  void deliverConnectStatus(entity::EntityPtr, const StringList& dev, bool flag) override {}
+  void sourceFailed(const std::string& id) override { m_failed = true; }
+  const ObservationPtr checkDuplicate(const ObservationPtr& obs) const override { return obs; }
   bool isValidating() const override { return false; }
 
   bool m_failed = false;
@@ -187,7 +187,7 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
   bool connecting = false;
   bool connected = false;
   ResponseDocument data;
-  handler->m_processData = [&](const string &d, const string &s) {};
+  handler->m_processData = [&](const string& d, const string& s) {};
   handler->m_connecting = [&](const string id) { connecting = true; };
   handler->m_connected = [&](const string id) { connected = true; };
 
@@ -228,7 +228,7 @@ TEST_F(AgentAdapterTest, should_get_current_from_agent)
   unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
 
   bool current = false;
-  handler->m_processData = [&](const string &d, const string &s) {
+  handler->m_processData = [&](const string& d, const string& s) {
     if (d.find("MTConnectStreams") != string::npos)
       current = true;
   };
@@ -265,7 +265,7 @@ TEST_F(AgentAdapterTest, should_get_assets_from_agent)
   unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
 
   bool assets = false;
-  handler->m_processData = [&](const string &d, const string &s) {
+  handler->m_processData = [&](const string& d, const string& s) {
     if (d.find("MTConnectAssets") != string::npos)
       assets = true;
   };
@@ -305,7 +305,7 @@ TEST_F(AgentAdapterTest, should_receive_sample)
 
   int rc = 0;
   ResponseDocument rd;
-  handler->m_processData = [&](const string &d, const string &s) {
+  handler->m_processData = [&](const string& d, const string& s) {
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
@@ -363,7 +363,7 @@ TEST_F(AgentAdapterTest, should_reconnect)
   int rc = 0;
   ResponseDocument rd;
   bool response = false;
-  handler->m_processData = [&](const string &d, const string &s) {
+  handler->m_processData = [&](const string& d, const string& s) {
     response = true;
 
     ResponseDocument::parse(d, rd, m_context);
@@ -431,7 +431,7 @@ TEST_F(AgentAdapterTest, should_reset_request_from_sequence_on_recovery)
   int rc = 0;
   ResponseDocument rd;
   bool response = false;
-  handler->m_processData = [&](const string &d, const string &s) {
+  handler->m_processData = [&](const string& d, const string& s) {
     response = true;
 
     ResponseDocument::parse(d, rd, m_context);
@@ -530,13 +530,13 @@ TEST_F(AgentAdapterTest, should_resync_with_current_when_instance_id_changes_on_
   // than resuming a `sample` from the now-stale sequence.
   vector<pair<string, string>> requests;
 
-  handler->m_processData = [&](const string &d, const string &s) {
+  handler->m_processData = [&](const string& d, const string& s) {
     rd.m_next = 0;
     rd.m_instanceId = 0;
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
-    if (auto &req = adapter->getStreamRequest())
+    if (auto& req = adapter->getStreamRequest())
     {
       string from;
       auto f = req->m_query.find("from");
@@ -656,7 +656,7 @@ TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
 
   int rc = 0;
   ResponseDocument rd;
-  handler->m_processData = [&](const string &d, const string &s) {
+  handler->m_processData = [&](const string& d, const string& s) {
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
@@ -716,7 +716,7 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
   bool recovering = false;
   bool response = false;
   ResponseDocument rd;
-  handler->m_processData = [&](const string &d, const string &s) {
+  handler->m_processData = [&](const string& d, const string& s) {
     rd.m_next = 0;
     rd.m_instanceId = 0;
     ResponseDocument::parse(d, rd, m_context);
@@ -812,7 +812,7 @@ TEST_F(AgentAdapterTest, should_map_device_name_and_uuid)
     }
   });
 
-  auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+  auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
 
   while (contract->m_observations.size() == 0)
   {
@@ -836,7 +836,7 @@ TEST_F(AgentAdapterTest, should_use_polling_when_option_is_set)
 
   int rc = 0;
   ResponseDocument rd;
-  handler->m_processData = [&](const string &d, const string &s) {
+  handler->m_processData = [&](const string& d, const string& s) {
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
@@ -919,7 +919,7 @@ TEST_F(AgentAdapterTest, should_connect_to_tls_agent)
   unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
 
   bool current = false;
-  handler->m_processData = [&](const string &d, const string &s) {
+  handler->m_processData = [&](const string& d, const string& s) {
     if (d.find("MTConnectStreams") != string::npos)
       current = true;
   };
@@ -959,7 +959,7 @@ TEST_F(AgentAdapterTest, should_create_device_when_option_supplied)
 
   int rc = 0;
   ResponseDocument rd;
-  handler->m_processData = [&](const string &d, const string &s) {
+  handler->m_processData = [&](const string& d, const string& s) {
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 

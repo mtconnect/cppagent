@@ -36,7 +36,7 @@ namespace mtconnect {
     public:
       XmlParser() = default;
       ~XmlParser() = default;
-      using xmlNodePtr = _xmlNode *;
+      using xmlNodePtr = _xmlNode*;
 
       /// @brief Parse an xmlNodePointer (libxml2) to an entity
       /// @param factory The factory to use to create the top level entity
@@ -44,7 +44,7 @@ namespace mtconnect {
       /// @param errors errors that occurred during the parsing
       /// @param parseNamespaces `true` if namespaces should be parsed
       /// @return a shared pointer to an entity if successful
-      static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors,
+      static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList& errors,
                                     bool parseNamespaces = true);
       /// @brief Parse a string document to an entity
       /// @param factory The factory to use to create the top level entity
@@ -52,7 +52,7 @@ namespace mtconnect {
       /// @param errors errors that occurred during the parsing
       /// @param parseNamespaces `true` if namespaces should be parsed
       /// @return a shared pointer to an entity if successful
-      static EntityPtr parse(FactoryPtr factory, const std::string &document, ErrorList &errors,
+      static EntityPtr parse(FactoryPtr factory, const std::string& document, ErrorList& errors,
                              bool parseNamespaces = true);
     };
   }  // namespace entity

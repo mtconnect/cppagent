@@ -35,7 +35,7 @@ using namespace std::literals;
 using WorkGuard = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -141,7 +141,7 @@ namespace mtconnect {
 
   TEST_F(ChangeObserverTest, observer_is_removed_from_signaler_when_destroyed)
   {
-    mtconnect::ChangeObserver *changeObserver = nullptr;
+    mtconnect::ChangeObserver* changeObserver = nullptr;
 
     {
       changeObserver = new mtconnect::ChangeObserver(*m_strand);
@@ -216,7 +216,7 @@ namespace mtconnect {
   {
   public:
     using AsyncObserver::AsyncObserver;
-    void fail(boost::beast::http::status status, const std::string &message) override
+    void fail(boost::beast::http::status status, const std::string& message) override
     {
       LOG(error) << message;
     };
@@ -299,7 +299,7 @@ namespace mtconnect {
         make_shared<MockObserver>(*m_strand, m_buffer, std::move(filter), 500ms, 1000ms)};
 
     auto expected = addObservations(3);
-    observer->observe(4, [this](const string &id) { return m_signalers[id].get(); });
+    observer->observe(4, [this](const string& id) { return m_signalers[id].get(); });
 
     bool called {false};
     observer->m_handler = [&](std::shared_ptr<AsyncObserver> obs) {
@@ -332,7 +332,7 @@ namespace mtconnect {
         make_shared<MockObserver>(*m_strand, m_buffer, std::move(filter), 250ms, 500ms)};
 
     addObservations(3);
-    observer->observe(2, [this](const string &id) { return m_signalers[id].get(); });
+    observer->observe(2, [this](const string& id) { return m_signalers[id].get(); });
 
     ASSERT_FALSE(observer->isEndOfBuffer());
 
@@ -374,7 +374,7 @@ namespace mtconnect {
         make_shared<MockObserver>(*m_strand, m_buffer, std::move(filter), 200ms, 500ms)};
 
     addObservations(3);
-    observer->observe(1, [this](const string &id) { return m_signalers[id].get(); });
+    observer->observe(1, [this](const string& id) { return m_signalers[id].get(); });
 
     ASSERT_FALSE(observer->isEndOfBuffer());
 
@@ -438,7 +438,7 @@ namespace mtconnect {
 
     addObservations(3);
 
-    observer->observe(4, [this](const string &id) { return m_signalers[id].get(); });
+    observer->observe(4, [this](const string& id) { return m_signalers[id].get(); });
 
     ASSERT_TRUE(observer->isEndOfBuffer());
 
@@ -473,7 +473,7 @@ namespace mtconnect {
 
     addObservations(3);
 
-    observer->observe(4, [this](const string &id) { return m_signalers[id].get(); });
+    observer->observe(4, [this](const string& id) { return m_signalers[id].get(); });
 
     ASSERT_TRUE(observer->isEndOfBuffer());
 

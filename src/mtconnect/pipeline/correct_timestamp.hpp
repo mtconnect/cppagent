@@ -31,7 +31,7 @@ namespace mtconnect::pipeline {
     };
 
   public:
-    CorrectTimestamp(const CorrectTimestamp &) = default;
+    CorrectTimestamp(const CorrectTimestamp&) = default;
     /// @brief Create a duplicate filter with shared state from the context
     /// @param context the context
     CorrectTimestamp(PipelineContextPtr context)
@@ -46,7 +46,7 @@ namespace mtconnect::pipeline {
     /// @brief check if the entity is a duplicate
     /// @param[in] entity the entity to check
     /// @return the result of the transform if not a duplicate or an empty entity
-    entity::EntityPtr operator()(entity::EntityPtr &&entity) override
+    entity::EntityPtr operator()(entity::EntityPtr&& entity) override
     {
       using namespace observation;
 
@@ -55,7 +55,7 @@ namespace mtconnect::pipeline {
         return entity::EntityPtr();
 
       auto di = obs->getDataItem();
-      auto &id = di->getId();
+      auto& id = di->getId();
       auto ts = obs->getTimestamp();
 
       std::lock_guard<TransformState> guard(*m_state);

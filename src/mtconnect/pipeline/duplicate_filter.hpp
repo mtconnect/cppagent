@@ -25,7 +25,7 @@ namespace mtconnect::pipeline {
   class AGENT_LIB_API DuplicateFilter : public Transform
   {
   public:
-    DuplicateFilter(const DuplicateFilter &) = default;
+    DuplicateFilter(const DuplicateFilter&) = default;
     /// @brief Create a duplicate filter with shared state from the context
     /// @param context the context
     DuplicateFilter(PipelineContextPtr context) : Transform("DuplicateFilter"), m_context(context)
@@ -37,7 +37,7 @@ namespace mtconnect::pipeline {
     /// @brief check if the entity is a duplicate
     /// @param[in] entity the entity to check
     /// @return the result of the transform if not a duplicate or an empty entity
-    entity::EntityPtr operator()(entity::EntityPtr &&entity) override
+    entity::EntityPtr operator()(entity::EntityPtr&& entity) override
     {
       using namespace observation;
 

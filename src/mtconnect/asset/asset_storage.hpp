@@ -78,18 +78,18 @@ namespace mtconnect {
       /// @param[in] id the assetId
       /// @param[in] time the timestamp for the removal
       /// @return shared pointer to the removed asset if found
-      virtual AssetPtr removeAsset(const std::string &id,
-                                   const std::optional<Timestamp> &time = std::nullopt) = 0;
+      virtual AssetPtr removeAsset(const std::string& id,
+                                   const std::optional<Timestamp>& time = std::nullopt) = 0;
       /// @brief Remove assets by device and type
       /// @param[out] list list of assets removed
       /// @param[in] device optional device to filter assets
       /// @param[in] type optional type to filter assets
       /// @param[in] time optional timestamp, defaults to now
       /// @return the number of assets removed
-      virtual size_t removeAll(AssetList &list,
+      virtual size_t removeAll(AssetList& list,
                                const std::optional<std::string> device = std::nullopt,
                                const std::optional<std::string> type = std::nullopt,
-                               const std::optional<Timestamp> &time = std::nullopt) = 0;
+                               const std::optional<Timestamp>& time = std::nullopt) = 0;
       ///@}
 
       /// @name Retrival
@@ -98,7 +98,7 @@ namespace mtconnect {
       /// @brief get an asset by its assetId
       /// @param[in] id the assetId
       /// @return shared point to the asset if found
-      virtual AssetPtr getAsset(const std::string &id) const = 0;
+      virtual AssetPtr getAsset(const std::string& id) const = 0;
       /// @brief get a list of assets with optional filters
       /// @param[out] list returned list of assets
       /// @param[in] max maximum number of assets to find
@@ -106,14 +106,14 @@ namespace mtconnect {
       /// @param[in] device optional device uuid to select
       /// @param[in] type optional type to select
       /// @return the number of assets found
-      virtual size_t getAssets(AssetList &list, size_t max, const bool active = true,
+      virtual size_t getAssets(AssetList& list, size_t max, const bool active = true,
                                const std::optional<std::string> device = std::nullopt,
                                const std::optional<std::string> type = std::nullopt) const = 0;
       /// @brief get a list of assets given a list of asset ids
       /// @param[out] list list of assets
       /// @param[in] ids assetIds to find
       /// @return the number of assets found
-      virtual size_t getAssets(AssetList &list, const std::list<std::string> &ids) const = 0;
+      virtual size_t getAssets(AssetList& list, const std::list<std::string>& ids) const = 0;
       ///@}
 
       /// @name Count related methods
@@ -124,24 +124,24 @@ namespace mtconnect {
       /// @param[in] type the type of asset
       /// @param[in] active `false` to skip removed assets
       /// @return the number of assets
-      virtual size_t getCountForDeviceAndType(const std::string &device, const std::string &type,
+      virtual size_t getCountForDeviceAndType(const std::string& device, const std::string& type,
                                               bool active = true) const = 0;
 
       /// @brief get count of a type of asset for all devices
       /// @param[in] type the type
       /// @param[in] active `false` to skip removed assets
       /// @return the number of assets
-      virtual size_t getCountForType(const std::string &type, bool active = true) const = 0;
+      virtual size_t getCountForType(const std::string& type, bool active = true) const = 0;
       /// @brief get count of all types of assets for a device
       /// @param[in] device the device uuid
       /// @param[in] active `false` to skip removed assets
       /// @return the number of assets
-      virtual size_t getCountForDevice(const std::string &device, bool active = true) const = 0;
+      virtual size_t getCountForDevice(const std::string& device, bool active = true) const = 0;
       /// @brief get the count by types for a device
       /// @param[in] device the device uuid
       /// @param[in] active `false` to skip removed assets
       /// @return a map of types and their counts
-      virtual TypeCount getCountsByTypeForDevice(const std::string &device,
+      virtual TypeCount getCountsByTypeForDevice(const std::string& device,
                                                  bool active = true) const = 0;
       ///@}
 

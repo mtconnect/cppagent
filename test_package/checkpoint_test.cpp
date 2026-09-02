@@ -35,13 +35,13 @@ using namespace std::literals;
 using namespace date::literals;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
 
-inline ConditionPtr Cond(ObservationPtr &ptr) { return dynamic_pointer_cast<Condition>(ptr); }
+inline ConditionPtr Cond(ObservationPtr& ptr) { return dynamic_pointer_cast<Condition>(ptr); }
 
 class CheckpointTest : public testing::Test
 {

@@ -33,7 +33,7 @@ namespace mtconnect::ruby {
     /// @param[in] mrb The ruby state
     /// @param[in] module Module to instantiate agent class
     /// @param[in] agent The agent
-    static void initialize(mrb_state *mrb, RClass *module, Agent *agent)
+    static void initialize(mrb_state* mrb, RClass* module, Agent* agent)
     {
       using namespace std;
 
@@ -47,7 +47,7 @@ namespace mtconnect::ruby {
 
       mrb_define_class_method(
           mrb, module, "agent",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto ivar = mrb_intern_cstr(mrb, "@agent");
             return mrb_iv_get(mrb, self, ivar);
           },
@@ -61,7 +61,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, sourceClass, "name",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto source = MRubySharedPtr<source::Source>::unwrap(mrb, self);
             return mrb_str_new_cstr(mrb, source->getName().c_str());
           },
@@ -69,7 +69,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, sourceClass, "pipeline",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto source = MRubySharedPtr<source::Source>::unwrap(mrb, self);
             return MRubyPtr<pipeline::Pipeline>::wrap(mrb, "Pipeline", source->getPipeline());
           },
@@ -77,11 +77,11 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, agentClass, "sources",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
             auto sources = mrb_ary_new(mrb);
 
-            for (auto &source : agent->getSources())
+            for (auto& source : agent->getSources())
             {
               auto obj = MRubySharedPtr<source::Source>::wrap(mrb, "Source", source);
               mrb_ary_push(mrb, sources, obj);
@@ -93,11 +93,11 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, agentClass, "sinks",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
             auto sinks = mrb_ary_new(mrb);
 
-            for (auto &sink : agent->getSinks())
+            for (auto& sink : agent->getSinks())
             {
               auto obj = MRubySharedPtr<sink::Sink>::wrap(mrb, "Sink", sink);
               mrb_ary_push(mrb, sinks, obj);
@@ -109,14 +109,14 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, agentClass, "devices",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
             auto devices = mrb_ary_new(mrb);
 
             auto mod = mrb_module_get(mrb, "MTConnect");
             auto klass = mrb_class_get_under(mrb, mod, "Device");
 
-            for (auto &device : agent->getDevices())
+            for (auto& device : agent->getDevices())
             {
               auto obj = MRubySharedPtr<entity::Entity>::wrap(mrb, klass, device);
               mrb_ary_push(mrb, devices, obj);
@@ -128,7 +128,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, agentClass, "default_device",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
             auto dev = agent->getDefaultDevice();
 
@@ -144,7 +144,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, agentClass, "data_item_for_device",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
             const char *name, *device;
             mrb_get_args(mrb, "zz", &device, &name);
@@ -166,9 +166,9 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, agentClass, "device",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
-            const char *name;
+            const char* name;
             mrb_get_args(mrb, "z", &name);
             auto device = agent->findDeviceByUUIDorName(name);
             if (device)

@@ -62,7 +62,7 @@ namespace mtconnect::parser {
   using namespace device_model;
   using namespace printer;
 
-  extern "C" void XMLCDECL agentXMLErrorFunc([[maybe_unused]] void *ctx, const char *msg, ...)
+  extern "C" void XMLCDECL agentXMLErrorFunc([[maybe_unused]] void* ctx, const char* msg, ...)
   {
     va_list args;
 
@@ -75,13 +75,13 @@ namespace mtconnect::parser {
     LOG(error) << "XML: " << buffer;
   }
 
-  static inline std::string getAttribute(xmlNodePtr node, const char *name)
+  static inline std::string getAttribute(xmlNodePtr node, const char* name)
   {
     auto value = xmlGetProp(node, BAD_CAST name);
     string res;
     if (value)
     {
-      res = (const char *)value;
+      res = (const char*)value;
       xmlFree(value);
     }
     return res;
@@ -89,12 +89,12 @@ namespace mtconnect::parser {
 
   XmlParser::XmlParser() { NAMED_SCOPE("xml.parser"); }
 
-  inline static bool isMTConnectUrn(const char *aUrn)
+  inline static bool isMTConnectUrn(const char* aUrn)
   {
     return !strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27u);
   }
 
-  std::list<DevicePtr> XmlParser::parseFile(const std::string &filePath, XmlPrinter *aPrinter)
+  std::list<DevicePtr> XmlParser::parseFile(const std::string& filePath, XmlPrinter* aPrinter)
   {
     using namespace boost::adaptors;
     using namespace boost::range;
@@ -129,7 +129,7 @@ namespace mtconnect::parser {
         THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
 
         // Get schema version from Devices.xml
-        string ns((const char *)root->ns->href);
+        string ns((const char*)root->ns->href);
         size_t colon = string::npos;
         if (ns.find_first_of("urn:mtconnect.org:MTConnectDevices") == 0 &&
             (colon = ns.find_last_of(':')) != string::npos)
@@ -159,7 +159,7 @@ namespace mtconnect::parser {
           string prefix;
 
           if (ns && ns->prefix)
-            prefix = (const char *)ns->prefix;
+            prefix = (const char*)ns->prefix;
 
           aPrinter->addDevicesNamespace(locationUrn, uri, prefix);
         }
@@ -174,12 +174,12 @@ namespace mtconnect::parser {
         {
           // Skip the standard namespaces for MTConnect and the w3c. Make sure we don't re-add the
           // schema location again.
-          if (!isMTConnectUrn((const char *)ns->href) &&
-              strncmp((const char *)ns->href, "http://www.w3.org/", 18u) != 0 &&
-              locationUrn != (const char *)ns->href && ns->prefix)
+          if (!isMTConnectUrn((const char*)ns->href) &&
+              strncmp((const char*)ns->href, "http://www.w3.org/", 18u) != 0 &&
+              locationUrn != (const char*)ns->href && ns->prefix)
           {
-            string urn = (const char *)ns->href;
-            string prefix = (const char *)ns->prefix;
+            string urn = (const char*)ns->href;
+            string prefix = (const char*)ns->prefix;
             aPrinter->addDevicesNamespace(urn, "", prefix);
           }
 
@@ -214,7 +214,7 @@ namespace mtconnect::parser {
 
           if (!errors.empty())
           {
-            for (auto &e : errors)
+            for (auto& e : errors)
             {
               if (device)
                 LOG(warning) << "When loading device " << device->get<string>("name")
@@ -230,7 +230,7 @@ namespace mtconnect::parser {
         xmlXPathFreeObject(devices);
       xmlXPathFreeContext(xpathCtx);
     }
-    catch (const string &e)
+    catch (const string& e)
     {
       if (devices)
         xmlXPathFreeObject(devices);
@@ -255,7 +255,7 @@ namespace mtconnect::parser {
     return deviceList;
   }
 
-  DevicePtr XmlParser::parseDevice(const std::string &deviceXml, printer::XmlPrinter *aPrinter)
+  DevicePtr XmlParser::parseDevice(const std::string& deviceXml, printer::XmlPrinter* aPrinter)
   {
     DevicePtr device;
     std::unique_lock lock(m_mutex);
@@ -306,7 +306,7 @@ namespace mtconnect::parser {
       entity::ErrorList errors;
       auto entity = entity::XmlParser::parseXmlNode(Device::getRoot(), deviceNode, errors);
 
-      for (auto &e : errors)
+      for (auto& e : errors)
       {
         if (entity)
           LOG(warning) << "When parsing device, a problem was skipped: " << e->what();
@@ -322,13 +322,13 @@ namespace mtconnect::parser {
       xmlFreeDoc(doc);
       doc = nullptr;
     }
-    catch (const runtime_error &e)
+    catch (const runtime_error& e)
     {
       if (doc)
         xmlFreeDoc(doc);
       LOG(error) << "Cannot parse device XML: " << e.what();
     }
-    catch (const string &e)
+    catch (const string& e)
     {
       if (doc)
         xmlFreeDoc(doc);
@@ -355,7 +355,7 @@ namespace mtconnect::parser {
     }
   }
 
-  void XmlParser::loadDocument(const std::string &doc)
+  void XmlParser::loadDocument(const std::string& doc)
   {
     std::unique_lock lock(m_mutex);
 
@@ -374,14 +374,14 @@ namespace mtconnect::parser {
                                                nullptr, XML_PARSE_NOBLANKS));
     }
 
-    catch (const string &e)
+    catch (const string& e)
     {
       LOG(fatal) << "Cannot parse XML document: " << e;
       throw FatalException("Cannot parse XML document: " + e);
     }
   }
 
-  void XmlParser::getDataItems(FilterSet &filterSet, const string &inputPath, xmlNodePtr node)
+  void XmlParser::getDataItems(FilterSet& filterSet, const string& inputPath, xmlNodePtr node)
   {
     std::shared_lock lock(m_mutex);
 
@@ -406,7 +406,7 @@ namespace mtconnect::parser {
         {
           if (ns->prefix)
           {
-            if (strncmp((const char *)ns->href, "urn:mtconnect.org:MTConnectDevices", 34u) != 0)
+            if (strncmp((const char*)ns->href, "urn:mtconnect.org:MTConnectDevices", 34u) != 0)
             {
               THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href));
             }

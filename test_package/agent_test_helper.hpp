@@ -59,7 +59,7 @@ namespace mtconnect {
         }
 
         void run() override {}
-        void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override
+        void writeResponse(ResponsePtr&& response, Complete complete = nullptr) override
         {
           m_code = response->m_status;
           if (response->m_file)
@@ -70,7 +70,7 @@ namespace mtconnect {
           if (complete)
             complete();
         }
-        void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override
+        void writeFailureResponse(ResponsePtr&& response, Complete complete = nullptr) override
         {
           if (m_streaming)
           {
@@ -81,14 +81,14 @@ namespace mtconnect {
             writeResponse(std::move(response), complete);
           }
         }
-        void beginStreaming(const std::string &mimeType, Complete complete,
+        void beginStreaming(const std::string& mimeType, Complete complete,
                             std::optional<std::string> requestId = std::nullopt) override
         {
           m_mimeType = mimeType;
           m_streaming = true;
           complete();
         }
-        void writeChunk(const std::string &chunk, Complete complete,
+        void writeChunk(const std::string& chunk, Complete complete,
                         std::optional<std::string> requestId = std::nullopt) override
         {
           m_chunkBody = chunk;
@@ -115,7 +115,7 @@ namespace mtconnect {
       public:
         using super = WebsocketSession<TestWebsocketSession>;
 
-        TestWebsocketSession(boost::asio::executor &&exec, RequestPtr &&request, Dispatch dispatch,
+        TestWebsocketSession(boost::asio::executor&& exec, RequestPtr&& request, Dispatch dispatch,
                              ErrorFunction func)
           : WebsocketSession(std::move(request), dispatch, func), m_executor(std::move(exec))
         {
@@ -129,7 +129,7 @@ namespace mtconnect {
 
         void run() override {}
 
-        void read(const std::string &json)
+        void read(const std::string& json)
         {
           if (!m_requestManager.dispatch(shared_ptr(), json))
           {
@@ -141,14 +141,14 @@ namespace mtconnect {
 
         bool isStreamOpen() { return m_isOpen; }
 
-        void sent(beast::error_code ec, std::size_t len, const std::string &id)
+        void sent(beast::error_code ec, std::size_t len, const std::string& id)
         {
           NAMED_SCOPE("WebsocketSession::sent");
           super::sent(ec, len, id);
           m_responsesSent[id]++;
         }
 
-        void asyncSend(WebsocketRequestManager::WebsocketRequest *request)
+        void asyncSend(WebsocketRequestManager::WebsocketRequest* request)
         {
           auto buffer = beast::buffers_to_string(request->m_streamBuffer->data());
 
@@ -159,20 +159,20 @@ namespace mtconnect {
                                                     0, request->m_requestId));
         }
 
-        auto &getExecutor() { return m_executor; }
+        auto& getExecutor() { return m_executor; }
 
-        bool dispatch(const std::string &buffer, std::string &id)
+        bool dispatch(const std::string& buffer, std::string& id)
         {
           return m_requestManager.dispatch(shared_ptr(), buffer, &id);
         }
 
-        bool hasResponse(const std::string &id) const
+        bool hasResponse(const std::string& id) const
         {
           const auto q = m_responses.find(id);
           return q != m_responses.end() && !q->second.empty();
         }
 
-        std::optional<std::string> getNextResponse(const std::string &id)
+        std::optional<std::string> getNextResponse(const std::string& id)
         {
           auto q = m_responses.find(id);
           if (q != m_responses.end() && !q->second.empty())
@@ -196,7 +196,7 @@ namespace mtconnect {
         boost::asio::executor m_executor;
       };
     }  // namespace rest_sink
-  }    // namespace sink
+  }  // namespace sink
 }  // namespace mtconnect
 
 namespace mhttp = mtconnect::sink::rest_sink;
@@ -206,7 +206,7 @@ namespace observe = mtconnect::observation;
 class AgentTestHelper
 {
 public:
-  using Hook = std::function<void(AgentTestHelper &)>;
+  using Hook = std::function<void(AgentTestHelper&)>;
 
   AgentTestHelper() : m_incomingIp("127.0.0.1"), m_strand(m_ioContext), m_socket(m_ioContext) {}
 
@@ -225,7 +225,7 @@ public:
   auto session() { return m_session; }
   auto websocketSession() { return m_websocketSession; }
 
-  void setAgentCreateHook(Hook &hook) { m_agentCreateHook = hook; }
+  void setAgentCreateHook(Hook& hook) { m_agentCreateHook = hook; }
 
   /// @brief Helper to get a response from the agent
   /// @param file The source file the request is made from
@@ -234,9 +234,9 @@ public:
   /// @param doc The returned document
   /// @param path The request path
   /// @param accepts The accepted mime type
-  void responseHelper(const char *file, int line,
-                      const mtconnect::sink::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
-                      const char *path, const char *accepts = "text/xml");
+  void responseHelper(const char* file, int line,
+                      const mtconnect::sink::rest_sink::QueryMap& aQueries, xmlDocPtr* doc,
+                      const char* path, const char* accepts = "text/xml");
 
   /// @brief Helper to get a streaming response from the agent
   /// @param file The source file the request is made from
@@ -244,9 +244,9 @@ public:
   /// @param aQueries The query parameters
   /// @param path The request path
   /// @param accepts The accepted mime type
-  void responseStreamHelper(const char *file, int line,
-                            const mtconnect::sink::rest_sink::QueryMap &aQueries, const char *path,
-                            const char *accepts = "text/xml");
+  void responseStreamHelper(const char* file, int line,
+                            const mtconnect::sink::rest_sink::QueryMap& aQueries, const char* path,
+                            const char* accepts = "text/xml");
 
   /// @brief Helper to get a json response from the agent
   /// @param file The source file the request is made from
@@ -255,9 +255,9 @@ public:
   /// @param doc The returned document
   /// @param path The request path
   /// @param accepts The accepted mime type
-  void responseHelper(const char *file, int line,
-                      const mtconnect::sink::rest_sink::QueryMap &aQueries, nlohmann::json &doc,
-                      const char *path, const char *accepts = "application/json");
+  void responseHelper(const char* file, int line,
+                      const mtconnect::sink::rest_sink::QueryMap& aQueries, nlohmann::json& doc,
+                      const char* path, const char* accepts = "application/json");
 
   /// @brief Helper to make a PUT request to the agent
   /// @param file The source file the request is made from
@@ -267,9 +267,9 @@ public:
   /// @param doc The returned document
   /// @param path The request path
   /// @param accepts The accepted mime type
-  void putResponseHelper(const char *file, int line, const std::string &body,
-                         const mtconnect::sink::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
-                         const char *path, const char *accepts = "text/xml");
+  void putResponseHelper(const char* file, int line, const std::string& body,
+                         const mtconnect::sink::rest_sink::QueryMap& aQueries, xmlDocPtr* doc,
+                         const char* path, const char* accepts = "text/xml");
 
   /// @brief Helper to make a POST request to the agent
   /// @param file The source file the request is made from
@@ -278,15 +278,15 @@ public:
   /// @param doc The returned document
   /// @param path The request path
   /// @param accepts The accepted mime type
-  void deleteResponseHelper(const char *file, int line,
-                            const mtconnect::sink::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
-                            const char *path, const char *accepts = "text/xml");
+  void deleteResponseHelper(const char* file, int line,
+                            const mtconnect::sink::rest_sink::QueryMap& aQueries, xmlDocPtr* doc,
+                            const char* path, const char* accepts = "text/xml");
 
   /// @brief Helper to get a chunked response from the agent
   /// @param file The source file the request is made from
   /// @param line The line number
   /// @param doc The returned document
-  void chunkStreamHelper(const char *file, int line, xmlDocPtr *doc);
+  void chunkStreamHelper(const char* file, int line, xmlDocPtr* doc);
 
   /// @brief Make a request to the agent
   /// @param file The source file the request is made from
@@ -296,9 +296,9 @@ public:
   /// @param aQueries The query parameters
   /// @param path The request path
   /// @param accepts The accepted mime type
-  void makeRequest(const char *file, int line, boost::beast::http::verb verb,
-                   const std::string &body, const mtconnect::sink::rest_sink::QueryMap &aQueries,
-                   const char *path, const char *accepts);
+  void makeRequest(const char* file, int line, boost::beast::http::verb verb,
+                   const std::string& body, const mtconnect::sink::rest_sink::QueryMap& aQueries,
+                   const char* path, const char* accepts);
 
   /// @brief Make a request using a json command to parse and dispatch
   /// @param file The source file the request is made from
@@ -306,8 +306,8 @@ public:
   /// @param json the request
   /// @param doc the returned document
   /// @param id the request id
-  void makeWebSocketRequest(const char *file, int line, const std::string &json, xmlDocPtr *doc,
-                            std::string &id);
+  void makeWebSocketRequest(const char* file, int line, const std::string& json, xmlDocPtr* doc,
+                            std::string& id);
 
   /// @brief Make a request using a json command to parse and dispatch
   /// @param file The source file the request is made from
@@ -315,30 +315,30 @@ public:
   /// @param json the request
   /// @param doc the returned document
   /// @param id the request id
-  void makeWebSocketRequest(const char *file, int line, const std::string &json,
-                            nlohmann::json &doc, std::string &id);
+  void makeWebSocketRequest(const char* file, int line, const std::string& json,
+                            nlohmann::json& doc, std::string& id);
 
   /// @brief Make a request and don't wait for a response
   /// @param file The source file the request is made from
   /// @param line The line number
   /// @param json the request
   /// @param id the request id
-  void makeAsyncWebSocketRequest(const char *file, int line, const std::string &json,
-                                 std::string &id);
+  void makeAsyncWebSocketRequest(const char* file, int line, const std::string& json,
+                                 std::string& id);
 
   /// @brief Parse an async respone
   /// @param file The source file the request is made from
   /// @param line The line number
   /// @param doc the returned document
   /// @param id the request id
-  void parseResponse(const char *file, int line, nlohmann::json &doc, const std::string &id);
+  void parseResponse(const char* file, int line, nlohmann::json& doc, const std::string& id);
 
   /// @brief Parse an async respone
   /// @param file The source file the request is made from
   /// @param line The line number
   /// @param doc the returned document
   /// @param id the request id
-  void parseResponse(const char *file, int line, xmlDocPtr *doc, const std::string &id);
+  void parseResponse(const char* file, int line, xmlDocPtr* doc, const std::string& id);
 
   auto getAgent() { return m_agent.get(); }
   std::shared_ptr<mhttp::RestService> getRestService()
@@ -366,10 +366,10 @@ public:
     return mqtt2;
   }
 
-  auto createAgent(const std::string &file, int bufferSize = 8, int maxAssets = 4,
-                   const std::string &version = "1.7", int checkpoint = 25, bool put = false,
+  auto createAgent(const std::string& file, int bufferSize = 8, int maxAssets = 4,
+                   const std::string& version = "1.7", int checkpoint = 25, bool put = false,
                    bool observe = true, const mtconnect::ConfigOptions ops = {},
-                   const boost::property_tree::ptree &config = {})
+                   const boost::property_tree::ptree& config = {})
   {
     using namespace mtconnect;
     using namespace mtconnect::pipeline;
@@ -404,7 +404,7 @@ public:
 
     auto sinkContract = m_agent->makeSinkContract();
     sinkContract->m_findDataFile =
-        [](const std::string &n) -> std::optional<std::filesystem::path> {
+        [](const std::string& n) -> std::optional<std::filesystem::path> {
       if (std::filesystem::exists(n))
       {
         return std::filesystem::path(n);
@@ -475,8 +475,8 @@ public:
     return m_agent.get();
   }
 
-  auto addAdapter(mtconnect::ConfigOptions options = {}, const std::string &host = "localhost",
-                  uint16_t port = 7878, const std::string &device = "")
+  auto addAdapter(mtconnect::ConfigOptions options = {}, const std::string& host = "localhost",
+                  uint16_t port = 7878, const std::string& device = "")
   {
     using namespace mtconnect;
     using namespace mtconnect::source::adapter;
@@ -494,8 +494,8 @@ public:
     return m_adapter;
   }
 
-  uint64_t addToBuffer(mtconnect::DataItemPtr di, const mtconnect::entity::Properties &shdr,
-                       const mtconnect::Timestamp &time)
+  uint64_t addToBuffer(mtconnect::DataItemPtr di, const mtconnect::entity::Properties& shdr,
+                       const mtconnect::Timestamp& time)
   {
     using namespace mtconnect;
     using namespace mtconnect::observation;
@@ -510,7 +510,7 @@ public:
   }
 
   template <typename Rep, typename Period>
-  bool waitFor(const std::chrono::duration<Rep, Period> &time, std::function<bool()> pred)
+  bool waitFor(const std::chrono::duration<Rep, Period>& time, std::function<bool()> pred)
   {
     std::decay_t<decltype(time)> run = time / 2;
     if (run > std::chrono::milliseconds(500))
@@ -536,7 +536,7 @@ public:
   }
 
   template <typename Rep, typename Period>
-  bool waitForResponseSent(const std::chrono::duration<Rep, Period> &time, const std::string &id)
+  bool waitForResponseSent(const std::chrono::duration<Rep, Period>& time, const std::string& id)
   {
     uint32_t initial = m_websocketSession->m_responsesSent[id];
     return waitFor(time, [this, initial, id]() -> bool {
@@ -558,7 +558,7 @@ public:
               << "------------------------" << std::endl;
   }
 
-  void printLastWSResponse(const std::string &id)
+  void printLastWSResponse(const std::string& id)
   {
     auto it = m_websocketSession->m_lastResponses.find(id);
     if (it != m_websocketSession->m_lastResponses.end())
@@ -568,12 +568,12 @@ public:
     }
   }
 
-  auto getResponseCount(const std::string &id)
+  auto getResponseCount(const std::string& id)
   {
     return m_websocketSession->m_responses[id].size();
   }
 
-  mhttp::Server *m_server {nullptr};
+  mhttp::Server* m_server {nullptr};
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
   std::shared_ptr<adpt::shdr::ShdrAdapter> m_adapter;
   std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> m_mqttService;

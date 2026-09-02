@@ -41,7 +41,7 @@ using namespace std::literals;
 using namespace std::chrono_literals;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -51,9 +51,9 @@ using WorkGuard = boost::asio::executor_work_guard<boost::asio::io_context::exec
 
 struct MockPipelineContract : public PipelineContract
 {
-  MockPipelineContract(std::map<string, DataItemPtr> &items) : m_dataItems(items) {}
-  DevicePtr findDevice(const std::string &device) override { return nullptr; }
-  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+  MockPipelineContract(std::map<string, DataItemPtr>& items) : m_dataItems(items) {}
+  DevicePtr findDevice(const std::string& device) override { return nullptr; }
+  DataItemPtr findDataItem(const std::string& device, const std::string& name) override
   {
     return m_dataItems[name];
   }
@@ -68,12 +68,12 @@ struct MockPipelineContract : public PipelineContract
   void deliverAssetCommand(entity::EntityPtr) override {}
   int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
-  void sourceFailed(const std::string &id) override {}
-  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
+  void deliverConnectStatus(entity::EntityPtr, const StringList&, bool) override {}
+  void sourceFailed(const std::string& id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr& obs) const override { return obs; }
   bool isValidating() const override { return false; }
 
-  std::map<string, DataItemPtr> &m_dataItems;
+  std::map<string, DataItemPtr>& m_dataItems;
 
   std::vector<ObservationPtr> m_observations;
 };
@@ -151,9 +151,9 @@ protected:
     return rate;
   }
 
-  auto &observations()
+  auto& observations()
   {
-    return static_cast<MockPipelineContract *>(m_context->m_contract.get())->m_observations;
+    return static_cast<MockPipelineContract*>(m_context->m_contract.get())->m_observations;
   }
 
   shared_ptr<ShdrTokenMapper> m_mapper;
@@ -205,7 +205,7 @@ TEST_F(PeriodFilterTest, test_simple_time_series)
 
   m_ioContext.run_for(1s);
 
-  auto &obs = observations();
+  auto& obs = observations();
   ASSERT_EQ(3, obs.size());
   ASSERT_EQ(1.0, obs[0]->getValue<double>());
   ASSERT_EQ(3.0, obs[1]->getValue<double>());
@@ -325,7 +325,7 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_cancel)
 
   m_ioContext.run_for(1s);
 
-  auto &obs = observations();
+  auto& obs = observations();
   ASSERT_EQ(4, obs.size());
   ASSERT_EQ(1.0, obs[0]->getValue<double>());
   ASSERT_EQ(2.0, obs[1]->getValue<double>());
@@ -362,7 +362,7 @@ TEST_F(PeriodFilterTest, deliver_after_delayed_delivery)
   // Deliver previous
   m_ioContext.run_for(750ms);
 
-  auto &obs = observations();
+  auto& obs = observations();
   {
     ASSERT_EQ(2, obs.size());
     ASSERT_EQ(1.0, obs[0]->getValue<double>());
@@ -458,7 +458,7 @@ TEST_F(PeriodFilterTest, streaming_observations_closely_packed)
   makeFilter();
 
   Timestamp now = chrono::system_clock::now();
-  auto &obs = observations();
+  auto& obs = observations();
 
   {
     auto os = observe({"a", "1"}, now + 100ms);
@@ -552,7 +552,7 @@ TEST_F(PeriodFilterTest, time_moving_backward)
 
   m_ioContext.run_for(1s);
 
-  auto &obs = observations();
+  auto& obs = observations();
   ASSERT_EQ(2, obs.size());
   ASSERT_EQ(1.0, obs[0]->getValue<double>());
   ASSERT_EQ(4.0, obs[1]->getValue<double>());
@@ -564,7 +564,7 @@ TEST_F(PeriodFilterTest, exact_period_spacing)
   makeFilter();
 
   Timestamp now = chrono::system_clock::now();
-  auto &obs = observations();
+  auto& obs = observations();
 
   {
     auto os = observe({"a", "1"}, now + 0ms);
@@ -597,7 +597,7 @@ TEST_F(PeriodFilterTest, streaming_observations_spaced_temporally)
   makeFilter();
 
   Timestamp now = chrono::system_clock::now();
-  auto &obs = observations();
+  auto& obs = observations();
 
   {
     auto os = observe({"a", "1"}, now + 100ms);
@@ -686,7 +686,7 @@ TEST_F(PeriodFilterTest, unavailable_behavior)
 
   Timestamp now = chrono::system_clock::now();
 
-  auto &obs = observations();
+  auto& obs = observations();
 
   {
     auto os = observe({"a", "UNAVAILABLE"}, now + 100ms);

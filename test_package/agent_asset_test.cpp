@@ -52,7 +52,7 @@ using namespace mtconnect::observation;
 using status = boost::beast::http::status;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -168,7 +168,7 @@ TEST_F(AgentAssetTest, should_handle_asset_buffer_and_buffer_limits)
   queries["device"] = "000";
   queries["type"] = "FakeAsset";
 
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
   ASSERT_EQ((unsigned int)0, storage->getCount());
@@ -380,7 +380,7 @@ TEST_F(AgentAssetTest, should_handle_asset_from_adapter_on_one_line)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   m_agentTestHelper->m_adapter->processData(
       "2021-02-01T12:00:00Z|@ASSET@|P1|FakeAsset|<FakeAsset assetId='P1'>TEST 1</FakeAsset>");
@@ -398,7 +398,7 @@ TEST_F(AgentAssetTest, should_handle_multiline_asset)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   m_agentTestHelper->m_adapter->parseBuffer(
       "2021-02-01T12:00:00Z|@ASSET@|P1|FakeAsset|--multiline--AAAA\n");
@@ -435,7 +435,7 @@ TEST_F(AgentAssetTest, should_handle_multiline_asset)
 TEST_F(AgentAssetTest, should_handle_bad_asset_from_adapter)
 {
   addAdapter();
-  const auto &storage = m_agentTestHelper->m_agent->getAssetStorage();
+  const auto& storage = m_agentTestHelper->m_agent->getAssetStorage();
 
   m_agentTestHelper->m_adapter->parseBuffer(
       "2021-02-01T12:00:00Z|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
@@ -452,7 +452,7 @@ TEST_F(AgentAssetTest, should_handle_asset_removal_from_REST_api)
   query["device"] = "LinuxCNC";
   query["type"] = "FakeAsset";
 
-  const auto &storage = m_agentTestHelper->m_agent->getAssetStorage();
+  const auto& storage = m_agentTestHelper->m_agent->getAssetStorage();
 
   ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
   ASSERT_EQ((unsigned int)0, storage->getCount());
@@ -543,7 +543,7 @@ TEST_F(AgentAssetTest, should_handle_asset_removal_from_adapter)
   addAdapter();
   QueryMap query;
   auto agent = m_agentTestHelper->getAgent();
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
@@ -647,7 +647,7 @@ TEST_F(AgentAssetTest, asset_id_is_zero_padded_when_prepend_id_prefix_is_used)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   m_agentTestHelper->m_adapter->processData(
       "2021-02-01T12:00:00Z|@ASSET@|@1|FakeAsset|<FakeAsset assetId='1'>TEST 1</FakeAsset>");
@@ -666,7 +666,7 @@ TEST_F(AgentAssetTest, should_remove_changed_asset)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
@@ -698,7 +698,7 @@ TEST_F(AgentAssetTest, should_remove_changed_observation_asset_in_2_6)
 
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
@@ -732,7 +732,7 @@ TEST_F(AgentAssetTest, should_remove_added_asset_observation_in_2_6)
 
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
@@ -762,7 +762,7 @@ TEST_F(AgentAssetTest, should_remove_asset_using_http_delete)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
   addAdapter();
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
@@ -815,7 +815,7 @@ TEST_F(AgentAssetTest, should_remove_all_assets)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
@@ -873,7 +873,7 @@ TEST_F(AgentAssetTest, probe_should_have_the_asset_counts)
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
   string body = "<FakeAsset assetId='P1'>TEST 1</FakeAsset>";
   QueryMap queries;
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   queries["device"] = "LinuxCNC";
   queries["type"] = "FakeAsset";
@@ -1037,7 +1037,7 @@ TEST_F(AgentAssetTest, asset_count_is_absent_from_probe_header_in_schema_2_0)
 
   string body = "<FakeAsset assetId='P1'>TEST 1</FakeAsset>";
   QueryMap queries;
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   queries["device"] = "LinuxCNC";
   queries["type"] = "FakeAsset";
@@ -1063,7 +1063,7 @@ TEST_F(AgentAssetTest, asset_count_tracks_additions_and_removals_per_type)
 
   string body1 = "<FakeAsset assetId='P1'>TEST 1</FakeAsset>";
   QueryMap queries;
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   queries["device"] = "LinuxCNC";
   queries["type"] = "FakeAsset";
@@ -1121,7 +1121,7 @@ TEST_F(AgentAssetTest, assets_endpoint_accepts_post_requests_for_asset_storage)
 
   string body = "<FakeAsset assetId='P1'>TEST 1</FakeAsset>";
   QueryMap queries;
-  const auto &storage = agent->getAssetStorage();
+  const auto& storage = agent->getAssetStorage();
 
   {
     PARSE_XML_RESPONSE_PUT("/assets", body, queries);

@@ -46,7 +46,7 @@ namespace mtconnect {
           if (name)
             topicName.append("[").append(*name).append("]");
 
-          auto *self = const_cast<Composition *>(this);
+          auto* self = const_cast<Composition*>(this);
           self->m_topicName.emplace(topicName);
         }
         return *m_topicName;

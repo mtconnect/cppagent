@@ -32,7 +32,7 @@ using namespace std;
 namespace mtconnect::entity {
   using namespace mtconnect::printer;
 
-  extern "C" void XMLCDECL entityXMLErrorFunc([[maybe_unused]] void *ctx, const char *msg, ...)
+  extern "C" void XMLCDECL entityXMLErrorFunc([[maybe_unused]] void* ctx, const char* msg, ...)
   {
     va_list args;
 
@@ -47,18 +47,18 @@ namespace mtconnect::entity {
 
   inline entity::QName nodeQName(xmlNodePtr node)
   {
-    entity::QName qname((const char *)node->name);
+    entity::QName qname((const char*)node->name);
 
     if (node->ns && node->ns->prefix &&
-        strncmp((const char *)node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34u))
+        strncmp((const char*)node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34u))
     {
-      qname.setNs((const char *)node->ns->prefix);
+      qname.setNs((const char*)node->ns->prefix);
     }
 
     return qname;
   }
 
-  inline void trim(string &s)
+  inline void trim(string& s)
   {
     auto beg = s.find_first_not_of(" \t\n");
     if (beg > 0)
@@ -81,7 +81,7 @@ namespace mtconnect::entity {
       auto count = xmlNodeDump(buf, child->doc, child, 0, 0);
       if (count > 0)
       {
-        str << (const char *)buf->content;
+        str << (const char*)buf->content;
       }
       xmlBufferFree(buf);
     }
@@ -92,14 +92,14 @@ namespace mtconnect::entity {
   }
 
   template <typename P, typename A>
-  static inline bool isType(const string &str, const P &parser, A &value)
+  static inline bool isType(const string& str, const P& parser, A& value)
   {
     std::string::const_iterator first(str.cbegin()), last(str.cend());
     return boost::spirit::qi::parse(first, last, parser, value) && first == last;
   }
 
   template <typename ST, typename VT>
-  static void parseDataSet(xmlNodePtr node, ST &dataSet, bool table, bool cell = false)
+  static void parseDataSet(xmlNodePtr node, ST& dataSet, bool table, bool cell = false)
   {
     for (xmlNodePtr child = node->children; child; child = child->next)
     {
@@ -113,13 +113,13 @@ namespace mtconnect::entity {
         {
           if (attr->type == XML_ATTRIBUTE_NODE)
           {
-            string name((const char *)attr->name);
+            string name((const char*)attr->name);
             if (name != "key")
             {
               throw EntityError("parseDataSet: Expecting ksy for data set Entry: " +
-                                string((const char *)node->name));
+                                string((const char*)node->name));
             }
-            key = string((const char *)attr->children->content);
+            key = string((const char*)attr->children->content);
             break;
           }
         }
@@ -132,13 +132,13 @@ namespace mtconnect::entity {
           {
             if constexpr (std::is_same_v<VT, DataSetValue>)
             {
-              TableRow &row = value.template emplace<TableRow>();
+              TableRow& row = value.template emplace<TableRow>();
               parseDataSet<TableRow, TableCellValue>(child, row, true, true);
             }
           }
           else if (valueNode->type == XML_TEXT_NODE)
           {
-            string text = ((const char *)valueNode->content);
+            string text = ((const char*)valueNode->content);
             trim(text);
 
             if (int64_t v; isType(text, boost::spirit::long_long, v))
@@ -164,12 +164,12 @@ namespace mtconnect::entity {
       else
       {
         throw EntityError("parseDataSet: Expecting Entry for data set: " +
-                          string((const char *)node->name));
+                          string((const char*)node->name));
       }
     }
   }
 
-  EntityPtr XmlParser::parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors,
+  EntityPtr XmlParser::parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList& errors,
                                     bool parseNamespaces)
   {
     auto qname = nodeQName(node);
@@ -184,7 +184,7 @@ namespace mtconnect::entity {
       }
 
       Properties properties;
-      EntityList *l {nullptr};
+      EntityList* l {nullptr};
       if (ef->isList())
       {
         l = &properties["LIST"].emplace<EntityList>();
@@ -194,10 +194,10 @@ namespace mtconnect::entity {
       {
         if (attr->type == XML_ATTRIBUTE_NODE)
         {
-          entity::QName qname((const char *)attr->name);
+          entity::QName qname((const char*)attr->name);
           if (attr->ns)
-            qname.setNs((const char *)attr->ns->prefix);
-          properties.insert({qname, string((const char *)attr->children->content)});
+            qname.setNs((const char*)attr->ns->prefix);
+          properties.insert({qname, string((const char*)attr->children->content)});
           if (!islower(qname.getName()[0]))
           {
             attrs.emplace(qname);
@@ -211,11 +211,11 @@ namespace mtconnect::entity {
         {
           string name;
           if (def->prefix)
-            name = {string("xmlns:") + (const char *)def->prefix};
+            name = {string("xmlns:") + (const char*)def->prefix};
           else
             name = "xmlns";
 
-          properties.insert({name, string((const char *)def->href)});
+          properties.insert({name, string((const char*)def->href)});
         }
       }
 
@@ -260,7 +260,7 @@ namespace mtconnect::entity {
             {
               if (child->children != nullptr && child->children->content != nullptr)
               {
-                string s((const char *)child->children->content);
+                string s((const char*)child->children->content);
                 trim(s);
                 if (!s.empty())
                   properties.insert({nodeQName(child), s});
@@ -295,7 +295,7 @@ namespace mtconnect::entity {
           }
           else if (child->type == XML_TEXT_NODE)
           {
-            string s((const char *)child->content);
+            string s((const char*)child->content);
             trim(s);
             if (!s.empty())
               properties.insert({"VALUE", s});
@@ -320,7 +320,7 @@ namespace mtconnect::entity {
         }
         return entity;
       }
-      catch (EntityError &e)
+      catch (EntityError& e)
       {
         e.setEntity(qname);
         errors.emplace_back(e.dup());
@@ -330,7 +330,7 @@ namespace mtconnect::entity {
     return nullptr;
   }
 
-  EntityPtr XmlParser::parse(FactoryPtr factory, const string &document, ErrorList &errors,
+  EntityPtr XmlParser::parse(FactoryPtr factory, const string& document, ErrorList& errors,
                              bool parseNamespaces)
   {
     NAMED_SCOPE("entity.xml_parser");
@@ -351,14 +351,14 @@ namespace mtconnect::entity {
         errors.emplace_back(new EntityError("Cannot parse document"));
     }
 
-    catch (const EntityError &e)
+    catch (const EntityError& e)
     {
       LOG(error) << "Cannot parse XML document: " << e.what();
       errors.emplace_back(e.dup());
       entity.reset();
     }
 
-    catch (const XmlError &e)
+    catch (const XmlError& e)
     {
       LOG(error) << "Cannot parse XML document: " << e.what();
       errors.emplace_back(new EntityError(e.what()));

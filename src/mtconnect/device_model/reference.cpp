@@ -40,7 +40,7 @@ namespace mtconnect {
       {
         auto reference =
             make_shared<Factory>(Requirements {{"idRef", true}, {"name", false}},
-                                 [](const std::string &name, Properties &ps) -> EntityPtr {
+                                 [](const std::string& name, Properties& ps) -> EntityPtr {
                                    auto r = make_shared<Reference>(name, ps);
                                    if (name == "ComponentRef")
                                      r->m_type = COMPONENT;

@@ -30,7 +30,7 @@ using namespace std;
 namespace mtconnect {
   using namespace observation;
   namespace pipeline {
-    inline bool unavailable(const string &str)
+    inline bool unavailable(const string& str)
     {
       const static string unavailable("UNAVAILABLE");
       return equal(str.cbegin(), str.cend(), unavailable.cbegin(), unavailable.cend(),
@@ -38,7 +38,7 @@ namespace mtconnect {
     }
 
     inline static std::pair<std::optional<std::string_view>, std::optional<std::string_view>>
-    splitPair(const std::string &key)
+    splitPair(const std::string& key)
     {
       string_view sv(key.c_str());
       auto c = sv.find(':');
@@ -52,7 +52,7 @@ namespace mtconnect {
     }
 
     inline static std::pair<std::string, std::optional<std::string>> splitKey(
-        const std::string &key)
+        const std::string& key)
     {
       auto c = key.find(':');
       if (c != string::npos)
@@ -83,7 +83,7 @@ namespace mtconnect {
     static entity::Requirements s_event {{"VALUE", false}};
     static entity::Requirements s_dataSet {{"VALUE", entity::ValueType::DATA_SET, false}};
 
-    static inline size_t firtNonWsColon(const string &token)
+    static inline size_t firtNonWsColon(const string& token)
     {
       auto len = token.size();
       for (size_t i = 0; i < len; i++)
@@ -97,8 +97,8 @@ namespace mtconnect {
       return string::npos;
     }
 
-    static inline std::string extractResetTrigger(const DataItemPtr dataItem, const string &token,
-                                                  Properties &properties)
+    static inline std::string extractResetTrigger(const DataItemPtr dataItem, const string& token,
+                                                  Properties& properties)
     {
       size_t pos;
       // Check for reset triggered
@@ -133,17 +133,17 @@ namespace mtconnect {
       }
     }
 
-    inline ObservationPtr zipProperties(const DataItemPtr dataItem, const Timestamp &timestamp,
-                                        const entity::Requirements &reqs,
-                                        TokenList::const_iterator &token,
-                                        const TokenList::const_iterator &end, ErrorList &errors,
+    inline ObservationPtr zipProperties(const DataItemPtr dataItem, const Timestamp& timestamp,
+                                        const entity::Requirements& reqs,
+                                        TokenList::const_iterator& token,
+                                        const TokenList::const_iterator& end, ErrorList& errors,
                                         int32_t schemaVersion, bool validation)
     {
       NAMED_SCOPE("zipProperties");
       Properties props;
       for (auto req = reqs.begin(); token != end && req != reqs.end(); token++, req++)
       {
-        const string &tok = *token;
+        const string& tok = *token;
 
         if (req->getName() == "VALUE" || req->getName() == "level")
         {
@@ -164,7 +164,7 @@ namespace mtconnect {
           req->convertType(value, dataItem->isTable());
           props.insert_or_assign(req->getName(), value);
         }
-        catch (entity::PropertyError &e)
+        catch (entity::PropertyError& e)
         {
           LOG(debug) << "Cannot convert value for data item id '" << dataItem->getId()
                      << "': " << *token << " - " << e.what();
@@ -203,11 +203,11 @@ namespace mtconnect {
       return Observation::make(dataItem, props, timestamp, errors);
     }
 
-    EntityPtr ShdrTokenMapper::mapTokensToDataItem(const Timestamp &timestamp,
-                                                   const std::optional<std::string> &source,
-                                                   TokenList::const_iterator &token,
-                                                   const TokenList::const_iterator &end,
-                                                   ErrorList &errors)
+    EntityPtr ShdrTokenMapper::mapTokensToDataItem(const Timestamp& timestamp,
+                                                   const std::optional<std::string>& source,
+                                                   TokenList::const_iterator& token,
+                                                   const TokenList::const_iterator& end,
+                                                   ErrorList& errors)
     {
       NAMED_SCOPE("DataItemMapper.ShdrTokenMapper.mapTokensToDataItem");
       auto key = *token++;
@@ -244,7 +244,7 @@ namespace mtconnect {
       //        LOG(trace) << "Mapped " << key;
       //      }
 
-      entity::Requirements *reqs {nullptr};
+      entity::Requirements* reqs {nullptr};
 
       // Extract the remaining tokens
       if ((dataItem->isDataSet() || dataItem->isTable()) &&
@@ -296,11 +296,11 @@ namespace mtconnect {
       return nullptr;
     }
 
-    EntityPtr ShdrTokenMapper::mapTokensToAsset(const Timestamp &timestamp,
-                                                const std::optional<std::string> &source,
-                                                TokenList::const_iterator &token,
-                                                const TokenList::const_iterator &end,
-                                                ErrorList &errors)
+    EntityPtr ShdrTokenMapper::mapTokensToAsset(const Timestamp& timestamp,
+                                                const std::optional<std::string>& source,
+                                                TokenList::const_iterator& token,
+                                                const TokenList::const_iterator& end,
+                                                ErrorList& errors)
     {
       using namespace mtconnect::asset;
       EntityPtr res;
@@ -330,7 +330,7 @@ namespace mtconnect {
         if (!errors.empty())
         {
           LOG(warning) << "Could not parse asset: " << body;
-          for (auto &e : errors)
+          for (auto& e : errors)
           {
             LOG(warning) << "    Message: " << e->what();
           }
@@ -369,7 +369,7 @@ namespace mtconnect {
       return res;
     }
 
-    EntityPtr ShdrTokenMapper::operator()(EntityPtr &&entity)
+    EntityPtr ShdrTokenMapper::operator()(EntityPtr&& entity)
     {
       NAMED_SCOPE("DataItemMapper.ShdrTokenMapper.operator");
       if (auto timestamped = std::dynamic_pointer_cast<Timestamped>(entity))
@@ -378,7 +378,7 @@ namespace mtconnect {
         auto res = std::make_shared<Observations>(*timestamped, TokenList {});
         EntityList entities;
 
-        auto &tokens = timestamped->m_tokens;
+        auto& tokens = timestamped->m_tokens;
         auto token = tokens.cbegin();
         auto end = tokens.end();
 
@@ -418,11 +418,11 @@ namespace mtconnect {
                 break;
             }
           }
-          catch (entity::EntityError &e)
+          catch (entity::EntityError& e)
           {
             LOG(error) << "Could not create observation: " << e.what();
           }
-          for (auto &e : errors)
+          for (auto& e : errors)
           {
             LOG(warning) << "Error while parsing tokens: " << e->what();
             for (auto it = start; it != token; it++)

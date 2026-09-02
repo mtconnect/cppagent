@@ -44,7 +44,7 @@ namespace mtconnect::observation {
   public:
     /// @brief Create a change observer that runs in a strand
     /// @param[in] strand the strand
-    ChangeObserver(boost::asio::io_context::strand &strand)
+    ChangeObserver(boost::asio::io_context::strand& strand)
       : m_strand(strand), m_timer(strand.context())
     {}
 
@@ -154,22 +154,22 @@ namespace mtconnect::observation {
     void clear();
 
   private:
-    boost::asio::io_context::strand &m_strand;
+    boost::asio::io_context::strand& m_strand;
     mutable std::recursive_mutex m_mutex;
     boost::asio::steady_timer m_timer;
 
-    std::vector<ChangeSignaler *> m_signalers;
+    std::vector<ChangeSignaler*> m_signalers;
     std::atomic<uint64_t> m_sequence {UINT64_MAX};
     bool m_noCancelOnSignal {false};
 
   protected:
     friend class ChangeSignaler;
-    void addSignaler(ChangeSignaler *sig)
+    void addSignaler(ChangeSignaler* sig)
     {
       std::unique_lock<std::recursive_mutex> lock(m_mutex);
       m_signalers.emplace_back(sig);
     }
-    bool removeSignaler(ChangeSignaler *sig)
+    bool removeSignaler(ChangeSignaler* sig)
     {
       std::lock_guard<std::recursive_mutex> lock(m_mutex);
       return std::erase(m_signalers, sig) > 0;
@@ -182,7 +182,7 @@ namespace mtconnect::observation {
   public:
     /// @brief add an observer to the list
     /// @param[in] observer an observer
-    void addObserver(ChangeObserver *observer)
+    void addObserver(ChangeObserver* observer)
     {
       std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
       m_observers.emplace_back(observer);
@@ -191,7 +191,7 @@ namespace mtconnect::observation {
     /// @brief remove an observer
     /// @param[in] observer an observer
     /// @return `true` if the observer was removed
-    bool removeObserver(ChangeObserver *observer)
+    bool removeObserver(ChangeObserver* observer)
     {
       std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
       std::erase(m_observers, observer);
@@ -200,7 +200,7 @@ namespace mtconnect::observation {
     /// @brief check if an observer is in the list
     /// @param[in] observer an observer
     /// @return `true` if the observer is in the list
-    bool hasObserver(ChangeObserver *observer) const
+    bool hasObserver(ChangeObserver* observer) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_observerMutex);
       auto foundPos = std::find(m_observers.begin(), m_observers.end(), observer);
@@ -225,7 +225,7 @@ namespace mtconnect::observation {
   protected:
     // Observer Lists
     mutable std::recursive_mutex m_observerMutex;
-    std::vector<ChangeObserver *> m_observers;
+    std::vector<ChangeObserver*> m_observers;
   };
 
   // -- Deferred ChangeObserver method definitions (need complete ChangeSignaler) --
@@ -263,13 +263,13 @@ namespace mtconnect::observation {
     virtual bool isRunning() = 0;
 
     /// @brief get the request id for webservices
-    const auto &getRequestId() const { return m_requestId; }
+    const auto& getRequestId() const { return m_requestId; }
 
     /// @brief sets the optional request id for webservices.
-    void setRequestId(const std::optional<std::string> &id) { m_requestId = id; }
+    void setRequestId(const std::optional<std::string>& id) { m_requestId = id; }
 
     /// @brief Get the interval
-    const auto &getInterval() const { return m_interval; }
+    const auto& getInterval() const { return m_interval; }
 
   protected:
     std::chrono::milliseconds m_interval {
@@ -295,7 +295,7 @@ namespace mtconnect::observation {
     using Handler = std::function<SequenceNumber_t(std::shared_ptr<AsyncObserver>)>;
 
     /// @brief Resolve a string to a change signaler
-    using Resolver = std::function<ChangeSignaler *(const std::string &id)>;
+    using Resolver = std::function<ChangeSignaler*(const std::string& id)>;
 
     /// @brief create async observer to manage data item callbacks
     /// @param strand the strand to handle the async actions
@@ -303,8 +303,8 @@ namespace mtconnect::observation {
     /// @param filter the data items to observe
     /// @param interval minimum amount of time to wait for observations
     /// @param heartbeat maximum amount of time to wait before sending a heartbeat
-    AsyncObserver(boost::asio::io_context::strand &strand,
-                  mtconnect::buffer::CircularBuffer &buffer, FilterSet &&filter,
+    AsyncObserver(boost::asio::io_context::strand& strand,
+                  mtconnect::buffer::CircularBuffer& buffer, FilterSet&& filter,
                   std::chrono::milliseconds interval, std::chrono::milliseconds heartbeat)
       : AsyncResponse(interval),
         m_heartbeat(heartbeat),
@@ -326,7 +326,7 @@ namespace mtconnect::observation {
     /// @param from optional starting point. If not specified, defaults to the beginning of the
     /// buffer
     /// @param resolver resolve an id to a signaler
-    void observe(const std::optional<SequenceNumber_t> &from, Resolver resolver);
+    void observe(const std::optional<SequenceNumber_t>& from, Resolver resolver);
 
     /// @brief handle the operation completion after the handler is called
     ///
@@ -350,7 +350,7 @@ namespace mtconnect::observation {
     }
 
     /// @brief abstract call to failure handler
-    virtual void fail(boost::beast::http::status status, const std::string &message) = 0;
+    virtual void fail(boost::beast::http::status status, const std::string& message) = 0;
 
     /// @brief Stop all timers and release resources.
     bool cancel() override
@@ -367,7 +367,7 @@ namespace mtconnect::observation {
 
     auto getSequence() const { return m_sequence; }
     auto isEndOfBuffer() const { return m_endOfBuffer; }
-    const auto &getFilter() const { return m_filter; }
+    const auto& getFilter() const { return m_filter; }
     ///@}
 
     mutable bool m_endOfBuffer {false};  //! Public indicator that we are at the end of the buffer
@@ -389,6 +389,6 @@ namespace mtconnect::observation {
     boost::asio::io_context::strand m_strand;      //! Strand to use for async dispatch
 
     ChangeObserver m_observer;                    //! the change observer
-    mtconnect::buffer::CircularBuffer &m_buffer;  //! reference to the circular buffer
+    mtconnect::buffer::CircularBuffer& m_buffer;  //! reference to the circular buffer
   };
 }  // namespace mtconnect::observation

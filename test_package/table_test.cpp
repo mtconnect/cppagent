@@ -44,7 +44,7 @@ using namespace chrono_literals;
 using namespace date::literals;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -80,8 +80,8 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
-inline TableCell operator""_C(const char *c, std::size_t) { return TableCell(c); }
+inline DataSetEntry operator""_E(const char* c, std::size_t) { return DataSetEntry(c); }
+inline TableCell operator""_C(const char* c, std::size_t) { return TableCell(c); }
 
 TEST_F(TableTest, data_item_is_identified_as_table_and_data_set_representation)
 {
@@ -98,7 +98,7 @@ TEST_F(TableTest, test_simple_table_formats)
   ASSERT_TRUE(s1.parse("abc={a=1 b=2.0 c='abc'}", true));
 
   ASSERT_EQ(1, s1.size());
-  const auto &abc1 = get<TableRow>(s1.find("abc"_E)->m_value);
+  const auto& abc1 = get<TableRow>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(3, abc1.size());
   ASSERT_EQ(1, get<int64_t>(abc1.find("a"_C)->m_value));
   ASSERT_EQ(2.0, get<double>(abc1.find("b"_C)->m_value));
@@ -111,7 +111,7 @@ TEST_F(TableTest, test_simple_table_formats_with_whitespace)
   ASSERT_TRUE(s1.parse("abc={ a=1 b=2.0 c='abc' }", true));
 
   ASSERT_EQ(1, s1.size());
-  const auto &abc1 = get<TableRow>(s1.find("abc"_E)->m_value);
+  const auto& abc1 = get<TableRow>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(3, abc1.size());
   ASSERT_EQ(1, get<int64_t>(abc1.find("a"_C)->m_value));
   ASSERT_EQ(2.0, get<double>(abc1.find("b"_C)->m_value));
@@ -124,7 +124,7 @@ TEST_F(TableTest, test_simple_table_formats_with_quotes)
   ASSERT_TRUE(s1.parse("abc=' a=1 b=2.0 c='abc''", true));
 
   ASSERT_EQ(1, s1.size());
-  const auto &abc1 = get<TableRow>(s1.find("abc"_E)->m_value);
+  const auto& abc1 = get<TableRow>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(3, abc1.size());
   ASSERT_EQ(1, get<int64_t>(abc1.find("a"_C)->m_value));
   ASSERT_EQ(2.0, get<double>(abc1.find("b"_C)->m_value));
@@ -137,7 +137,7 @@ TEST_F(TableTest, test_simple_table_formats_with_double_quotes)
   ASSERT_TRUE(s1.parse("abc=\" a=1 b=2.0 c='abc'\"", true));
 
   ASSERT_EQ(1, s1.size());
-  const auto &abc1 = get<TableRow>(s1.find("abc"_E)->m_value);
+  const auto& abc1 = get<TableRow>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(3, abc1.size());
   ASSERT_EQ(1, get<int64_t>(abc1.find("a"_C)->m_value));
   ASSERT_EQ(2.0, get<double>(abc1.find("b"_C)->m_value));
@@ -150,7 +150,7 @@ TEST_F(TableTest, test_simple_table_formats_with_nested_braces)
   ASSERT_TRUE(s1.parse("abc={ a=1 b=2.0 c={abc}}", true));
 
   ASSERT_EQ(1, s1.size());
-  const auto &abc1 = get<TableRow>(s1.find("abc"_E)->m_value);
+  const auto& abc1 = get<TableRow>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(3, abc1.size());
   ASSERT_EQ(1, get<int64_t>(abc1.find("a"_C)->m_value));
   ASSERT_EQ(2.0, get<double>(abc1.find("b"_C)->m_value));
@@ -163,7 +163,7 @@ TEST_F(TableTest, test_simple_table_formats_with_removed_key)
   s1.parse("abc={ a=1 b=2.0 c={abc} d= e}", true);
 
   ASSERT_EQ(1, s1.size());
-  const auto &abc1 = get<TableRow>(s1.find("abc"_E)->m_value);
+  const auto& abc1 = get<TableRow>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(5, abc1.size());
   ASSERT_EQ(1, get<int64_t>(abc1.find("a"_C)->m_value));
   ASSERT_EQ(2.0, get<double>(abc1.find("b"_C)->m_value));
@@ -178,7 +178,7 @@ TEST_F(TableTest, test_mulitple_entries)
   ASSERT_TRUE(s1.parse("abc={ a=1 b=2.0 c={abc} d= e} def={x=1.0 y=2.0}", true));
   ASSERT_EQ(2, s1.size());
 
-  const auto &abc = get<TableRow>(s1.find("abc"_E)->m_value);
+  const auto& abc = get<TableRow>(s1.find("abc"_E)->m_value);
   ASSERT_EQ(5, abc.size());
   ASSERT_EQ(1, get<int64_t>(abc.find("a"_C)->m_value));
   ASSERT_EQ(2.0, get<double>(abc.find("b"_C)->m_value));
@@ -186,7 +186,7 @@ TEST_F(TableTest, test_mulitple_entries)
   ASSERT_TRUE(abc.find("d"_C)->m_removed);
   ASSERT_TRUE(abc.find("e"_C)->m_removed);
 
-  const auto &def = get<TableRow>(s1.find("def"_E)->m_value);
+  const auto& def = get<TableRow>(s1.find("def"_E)->m_value);
   ASSERT_EQ(2, def.size());
   ASSERT_EQ(1.0, get<double>(def.find("x"_C)->m_value));
   ASSERT_EQ(2.0, get<double>(def.find("y"_C)->m_value));
@@ -231,19 +231,19 @@ TEST_F(TableTest, initial_table_set_parses_rows_with_multiple_cells)
   ASSERT_EQ(3, set1.size());
   ASSERT_EQ(3, ce->get<int64_t>("count"));
 
-  const auto &g531 = get<TableRow>(set1.find("G53.1"_E)->m_value);
+  const auto& g531 = get<TableRow>(set1.find("G53.1"_E)->m_value);
   ASSERT_EQ((size_t)3, g531.size());
   ASSERT_EQ(1.0, get<double>(g531.find("X"_C)->m_value));
   ASSERT_EQ(2.0, get<double>(g531.find("Y"_C)->m_value));
   ASSERT_EQ(3.0, get<double>(g531.find("Z"_C)->m_value));
 
-  const auto &g532 = get<TableRow>(set1.find("G53.2"_E)->m_value);
+  const auto& g532 = get<TableRow>(set1.find("G53.2"_E)->m_value);
   ASSERT_EQ((size_t)3, g532.size());
   ASSERT_EQ(4.0, get<double>(g532.find("X"_C)->m_value));
   ASSERT_EQ(5.0, get<double>(g532.find("Y"_C)->m_value));
   ASSERT_EQ(6.0, get<double>(g532.find("Z"_C)->m_value));
 
-  const auto &g533 = get<TableRow>(set1.find("G53.3"_E)->m_value);
+  const auto& g533 = get<TableRow>(set1.find("G53.3"_E)->m_value);
   ASSERT_EQ((size_t)4, g533.size());
   ASSERT_EQ(7.0, get<double>(g533.find("X"_C)->m_value));
   ASSERT_EQ(8.0, get<double>(g533.find("Y"_C)->m_value));
@@ -329,7 +329,7 @@ TEST_F(TableTest, json_current_response_includes_table_rows_with_nested_cell_val
     ASSERT_EQ(4_S, streams.size());
 
     json stream;
-    for (auto &s : streams)
+    for (auto& s : streams)
     {
       auto id = s.at("/ComponentStream/componentId"_json_pointer);
       ASSERT_TRUE(id.is_string());
@@ -344,7 +344,7 @@ TEST_F(TableTest, json_current_response_includes_table_rows_with_nested_cell_val
     auto events = stream.at("/ComponentStream/Events"_json_pointer);
     ASSERT_TRUE(events.is_array());
     json offsets;
-    for (auto &o : events)
+    for (auto& o : events)
     {
       ASSERT_TRUE(o.is_object());
       auto v = o.begin().key();
@@ -385,7 +385,7 @@ TEST_F(TableTest, json_current_response_handles_string_values_with_spaces_in_cel
     ASSERT_EQ(4_S, streams.size());
 
     json stream;
-    for (auto &s : streams)
+    for (auto& s : streams)
     {
       auto id = s.at("/ComponentStream/componentId"_json_pointer);
       ASSERT_TRUE(id.is_string());
@@ -400,7 +400,7 @@ TEST_F(TableTest, json_current_response_handles_string_values_with_spaces_in_cel
     auto events = stream.at("/ComponentStream/Events"_json_pointer);
     ASSERT_TRUE(events.is_array());
     json offsets;
-    for (auto &o : events)
+    for (auto& o : events)
     {
       ASSERT_TRUE(o.is_object());
       auto v = o.begin().key();

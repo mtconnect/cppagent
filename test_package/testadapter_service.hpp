@@ -32,9 +32,9 @@ namespace mtconnect {
   class adapter_plugin_test : public source::Source
   {
   public:
-    adapter_plugin_test(const std::string &name, boost::asio::io_context &io,
-                        pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options,
-                        const boost::property_tree::ptree &block)
+    adapter_plugin_test(const std::string& name, boost::asio::io_context& io,
+                        pipeline::PipelineContextPtr pipelineContext, const ConfigOptions& options,
+                        const boost::property_tree::ptree& block)
       : Source(name, io), m_pipeline(pipelineContext, m_strand)
 
     {
@@ -51,22 +51,22 @@ namespace mtconnect {
     void stop() override { m_pipeline.clear(); }
 
     // Factory method
-    static source::SourcePtr create(const std::string &name, boost::asio::io_context &io,
+    static source::SourcePtr create(const std::string& name, boost::asio::io_context& io,
                                     pipeline::PipelineContextPtr pipelineContext,
-                                    const ConfigOptions &options,
-                                    const boost::property_tree::ptree &block)
+                                    const ConfigOptions& options,
+                                    const boost::property_tree::ptree& block)
     {
       return std::make_shared<adapter_plugin_test>(name, io, pipelineContext, options, block);
     }
 
-    static void register_factory(const boost::property_tree::ptree &block,
-                                 configuration::AgentConfiguration &config)
+    static void register_factory(const boost::property_tree::ptree& block,
+                                 configuration::AgentConfiguration& config)
     {
       config.getSourceFactory().registerFactory("adapter_plugin_test",
                                                 &adapter_plugin_test::create);
     }
 
-    Pipeline *getPipeline() override { return &m_pipeline; }
+    Pipeline* getPipeline() override { return &m_pipeline; }
 
   protected:
     source::adapter::AdapterPipeline m_pipeline;

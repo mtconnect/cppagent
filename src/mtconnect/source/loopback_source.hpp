@@ -33,12 +33,12 @@ namespace mtconnect::source {
     /// @brief Create a loopback pipeline
     /// @param[in] context pipeline context
     /// @param[in] st boost asio strand
-    LoopbackPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)
+    LoopbackPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand& st)
       : pipeline::Pipeline(context, st)
     {}
     /// @brief build the pipeline
     /// @param options configuration options
-    void build(const ConfigOptions &options) override;
+    void build(const ConfigOptions& options) override;
 
   protected:
     ConfigOptions m_options;
@@ -53,8 +53,8 @@ namespace mtconnect::source {
     /// @param io boost asio strand
     /// @param pipelineContext pipeline context
     /// @param options loopback source options
-    LoopbackSource(const std::string &name, boost::asio::io_context::strand &io,
-                   pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options)
+    LoopbackSource(const std::string& name, boost::asio::io_context::strand& io,
+                   pipeline::PipelineContextPtr pipelineContext, const ConfigOptions& options)
       : Source(name, io), m_pipeline(pipelineContext, Source::m_strand)
     {
       m_pipeline.build(options);
@@ -70,7 +70,7 @@ namespace mtconnect::source {
       return true;
     }
     void stop() override { m_pipeline.clear(); }
-    pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
+    pipeline::Pipeline* getPipeline() override { return &m_pipeline; }
 
     /// @brief send an observation running it through the pipeline
     /// @param observation the observation
@@ -99,12 +99,12 @@ namespace mtconnect::source {
     /// @param value simple string value
     /// @param timestamp optional observation timestamp
     /// @return the sequence number
-    SequenceNumber_t receive(DataItemPtr dataItem, const std::string &value,
+    SequenceNumber_t receive(DataItemPtr dataItem, const std::string& value,
                              std::optional<Timestamp> timestamp = std::nullopt);
     /// @brief create and send an observation with shdr through the pipeline
     /// @param shdr shdr pipe deliminated text
     /// @return the sequence number
-    SequenceNumber_t receive(const std::string &shdr);
+    SequenceNumber_t receive(const std::string& shdr);
 
     /// @brief receives a device and sends it to the sinks
     /// @param device the device to be received
@@ -122,14 +122,14 @@ namespace mtconnect::source {
     /// @param time optional asset timestamp
     /// @param[out] errors errors if any occurred
     /// @return shared pointer to the asset
-    asset::AssetPtr receiveAsset(DevicePtr device, const std::string &document,
-                                 const std::optional<std::string> &id,
-                                 const std::optional<std::string> &type,
-                                 const std::optional<std::string> &time, entity::ErrorList &errors);
+    asset::AssetPtr receiveAsset(DevicePtr device, const std::string& document,
+                                 const std::optional<std::string>& id,
+                                 const std::optional<std::string>& type,
+                                 const std::optional<std::string>& time, entity::ErrorList& errors);
     /// @brief set a remove asset command through the pipeline
     /// @param device optional device
     /// @param id the asset id
-    void removeAsset(const std::optional<std::string> device, const std::string &id);
+    void removeAsset(const std::optional<std::string> device, const std::string& id);
 
   protected:
     LoopbackPipeline m_pipeline;

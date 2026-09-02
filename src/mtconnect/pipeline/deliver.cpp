@@ -35,7 +35,7 @@ namespace mtconnect {
   using namespace entity;
 
   namespace pipeline {
-    EntityPtr DeliverObservation::operator()(entity::EntityPtr &&entity)
+    EntityPtr DeliverObservation::operator()(entity::EntityPtr&& entity)
     {
       using namespace observation;
       auto o = std::dynamic_pointer_cast<Observation>(entity);
@@ -100,7 +100,7 @@ namespace mtconnect {
           double avg = delta + exp(-(dt.count() / 60.0)) * (m_lastAvg - delta);
           LOG(debug) << *m_dataItem << " - Average for last 1 minutes: " << (avg / dt.count());
           LOG(debug) << *m_dataItem
-                    << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
+                     << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
 
           m_last = count;
           if (avg != m_lastAvg)
@@ -125,7 +125,7 @@ namespace mtconnect {
       }
     }
 
-    EntityPtr DeliverAsset::operator()(entity::EntityPtr &&entity)
+    EntityPtr DeliverAsset::operator()(entity::EntityPtr&& entity)
     {
       auto a = std::dynamic_pointer_cast<asset::Asset>(entity);
       if (!a)
@@ -139,7 +139,7 @@ namespace mtconnect {
       return entity;
     }
 
-    EntityPtr DeliverDevice::operator()(entity::EntityPtr &&entity)
+    EntityPtr DeliverDevice::operator()(entity::EntityPtr&& entity)
     {
       auto d = std::dynamic_pointer_cast<device_model::Device>(entity);
       if (!d)
@@ -152,11 +152,11 @@ namespace mtconnect {
       return entity;
     }
 
-    EntityPtr DeliverDevices::operator()(entity::EntityPtr &&entity)
+    EntityPtr DeliverDevices::operator()(entity::EntityPtr&& entity)
     {
       auto entities = entity->getValue<EntityList>();
       std::list<DevicePtr> devices;
-      for (auto &entity : entities)
+      for (auto& entity : entities)
       {
         auto device = std::dynamic_pointer_cast<device_model::Device>(entity);
         if (device)
@@ -169,19 +169,19 @@ namespace mtconnect {
       return entity;
     }
 
-    entity::EntityPtr DeliverConnectionStatus::operator()(entity::EntityPtr &&entity)
+    entity::EntityPtr DeliverConnectionStatus::operator()(entity::EntityPtr&& entity)
     {
       m_contract->deliverConnectStatus(entity, m_devices, m_autoAvailable);
       return entity;
     }
 
-    entity::EntityPtr DeliverAssetCommand::operator()(entity::EntityPtr &&entity)
+    entity::EntityPtr DeliverAssetCommand::operator()(entity::EntityPtr&& entity)
     {
       m_contract->deliverAssetCommand(entity);
       return entity;
     }
 
-    entity::EntityPtr DeliverCommand::operator()(entity::EntityPtr &&entity)
+    entity::EntityPtr DeliverCommand::operator()(entity::EntityPtr&& entity)
     {
       if (m_defaultDevice)
         entity->setProperty("device", *m_defaultDevice);

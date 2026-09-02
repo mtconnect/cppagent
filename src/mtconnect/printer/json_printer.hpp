@@ -32,24 +32,24 @@ namespace mtconnect::printer {
 
     std::string printErrors(
         const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-        const entity::EntityList &list, bool pretty = false,
+        const entity::EntityList& list, bool pretty = false,
         const std::optional<std::string> requestId = std::nullopt) const override;
 
     std::string printProbe(
         const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
         const unsigned int assetBufferSize, const unsigned int assetCount,
-        const std::list<DevicePtr> &devices, const std::map<std::string, size_t> *count = nullptr,
+        const std::list<DevicePtr>& devices, const std::map<std::string, size_t>* count = nullptr,
         bool includeHidden = false, bool pretty = false,
         const std::optional<std::string> requestId = std::nullopt) const override;
 
     std::string printSample(
         const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-        const uint64_t firstSeq, const uint64_t lastSeq, observation::ObservationList &results,
+        const uint64_t firstSeq, const uint64_t lastSeq, observation::ObservationList& results,
         bool pretty = false,
         const std::optional<std::string> requestId = std::nullopt) const override;
     std::string printAssets(
         const uint64_t anInstanceId, const unsigned int bufferSize, const unsigned int assetCount,
-        const asset::AssetList &asset, bool pretty = false,
+        const asset::AssetList& asset, bool pretty = false,
         const std::optional<std::string> requestId = std::nullopt) const override;
     std::string mimeType() const override { return "application/mtconnect+json"; }
 
@@ -57,36 +57,36 @@ namespace mtconnect::printer {
 
     /// @brief Add JSON Schema location for Devices Document
     /// @param url The url referencing the schema
-    void setDevicesSchema(const std::string &url) { m_devicesSchema = url; }
+    void setDevicesSchema(const std::string& url) { m_devicesSchema = url; }
 
     /// @brief Add JSON Schema location for Streams Document
     /// @param url The url referencing the schema
-    void setStreamsSchema(const std::string &url) { m_streamsSchema = url; }
+    void setStreamsSchema(const std::string& url) { m_streamsSchema = url; }
 
     /// @brief Add JSON Schema location for Assets Document
     /// @param url The url referencing the schema
-    void setAssetsSchema(const std::string &url) { m_assetsSchema = url; }
+    void setAssetsSchema(const std::string& url) { m_assetsSchema = url; }
 
     /// @brief Add JSON Schema location for Errors Document
     /// @param url The url referencing the schema
     /// @param location the file location of the schema file
-    void setErrorSchema(const std::string &url) { m_errorSchema = url; }
+    void setErrorSchema(const std::string& url) { m_errorSchema = url; }
 
     /// @brief Get the JSON Schema url for the Devices Document
     /// @returns The url if the schema is set, otherwise `std::nullopt`
-    const auto &getDevicesSchema() const { return m_devicesSchema; }
+    const auto& getDevicesSchema() const { return m_devicesSchema; }
 
     /// @brief Get the JSON Schema url for the Streams Document
     /// @returns The url if the schema is set, otherwise `std::nullopt`
-    const auto &getStreamsSchema() const { return m_streamsSchema; }
+    const auto& getStreamsSchema() const { return m_streamsSchema; }
 
     /// @brief Get the JSON Schema url for the Assets Document
     /// @returns The url if the schema is set, otherwise `std::nullopt`
-    const auto &getAssetsSchema() const { return m_assetsSchema; }
+    const auto& getAssetsSchema() const { return m_assetsSchema; }
 
     /// @brief Get the JSON Schema url for the Error Document
     /// @returns The url if the schema is set, otherwise `std::nullopt`
-    const auto &getErrorSchema() const { return m_errorSchema; }
+    const auto& getErrorSchema() const { return m_errorSchema; }
 
   protected:
     std::optional<std::string> m_devicesSchema;

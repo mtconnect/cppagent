@@ -30,7 +30,7 @@ namespace mtconnect::ruby {
 
   struct RubyPipeline
   {
-    static void initialize(mrb_state *mrb, RClass *module)
+    static void initialize(mrb_state* mrb, RClass* module)
     {
       using namespace std;
 
@@ -42,15 +42,15 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, pipelineClass, "find",
-          [](mrb_state *mrb, mrb_value self) {
-            const char *name;
+          [](mrb_state* mrb, mrb_value self) {
+            const char* name;
             TransformPtr transform;
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "z", &name);
 
             auto transforms = pipeline->find(name);
             mrb_value ary = mrb_ary_new_capa(mrb, transforms.size());
-            for (auto &trans : transforms)
+            for (auto& trans : transforms)
             {
               mrb_ary_push(mrb, ary,
                            MRubySharedPtr<Transform>::wrap(mrb, "Transform", trans.second));
@@ -62,8 +62,8 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, pipelineClass, "splice_before",
-          [](mrb_state *mrb, mrb_value self) {
-            const char *name;
+          [](mrb_state* mrb, mrb_value self) {
+            const char* name;
             TransformPtr transform;
             mrb_value trans;
 
@@ -86,8 +86,8 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, pipelineClass, "splice_after",
-          [](mrb_state *mrb, mrb_value self) {
-            const char *name;
+          [](mrb_state* mrb, mrb_value self) {
+            const char* name;
             mrb_value trans;
 
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
@@ -109,8 +109,8 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, pipelineClass, "first_after",
-          [](mrb_state *mrb, mrb_value self) {
-            const char *name;
+          [](mrb_state* mrb, mrb_value self) {
+            const char* name;
             mrb_value trans;
 
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
@@ -132,8 +132,8 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, pipelineClass, "last_after",
-          [](mrb_state *mrb, mrb_value self) {
-            const char *name;
+          [](mrb_state* mrb, mrb_value self) {
+            const char* name;
             mrb_value trans;
 
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
@@ -155,8 +155,8 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, pipelineClass, "remove",
-          [](mrb_state *mrb, mrb_value self) {
-            const char *name;
+          [](mrb_state* mrb, mrb_value self) {
+            const char* name;
 
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "z", &name);
@@ -170,8 +170,8 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, pipelineClass, "replace",
-          [](mrb_state *mrb, mrb_value self) {
-            const char *name;
+          [](mrb_state* mrb, mrb_value self) {
+            const char* name;
             mrb_value trans;
 
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
@@ -192,8 +192,8 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, pipelineClass, "run",
-          [](mrb_state *mrb, mrb_value self) {
-            EntityPtr *entity;
+          [](mrb_state* mrb, mrb_value self) {
+            EntityPtr* entity;
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "d", &entity, MRubySharedPtr<Entity>::type());
 
@@ -206,7 +206,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, pipelineClass, "context",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             return MRubySharedPtr<PipelineContext>::wrap(mrb, "PipelineContext",
                                                          pipeline->getContext());
@@ -223,7 +223,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, pipelineClass, "context",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             return MRubySharedPtr<PipelineContext>::wrap(mrb, "PipelineContext",
                                                          pipeline->getContext());

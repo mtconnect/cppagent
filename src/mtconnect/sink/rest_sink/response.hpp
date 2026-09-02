@@ -44,8 +44,8 @@ namespace mtconnect {
       /// @param[in] status the status
       /// @param[in] body the body of the response
       /// @param[in] mimeType the mime type of the response
-      Response(status status = status::ok, const std::string &body = "",
-               const std::string &mimeType = "text/xml")
+      Response(status status = status::ok, const std::string& body = "",
+               const std::string& mimeType = "text/xml")
         : m_status(status), m_body(body), m_mimeType(mimeType), m_expires(0)
       {}
       /// @brief Create a response with a status and a cached file

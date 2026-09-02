@@ -40,13 +40,13 @@ using namespace mtconnect::parser;
 using namespace mtconnect::sink::rest_sink;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
 
-Properties operator""_value(const char *value, size_t s)
+Properties operator""_value(const char* value, size_t s)
 {
   return Properties {{"VALUE", string(value)}};
 }
@@ -70,19 +70,19 @@ protected:
     m_printer = nullptr;
   }
 
-  mtconnect::parser::XmlParser *m_config {nullptr};
-  mtconnect::printer::XmlPrinter *m_printer {nullptr};
+  mtconnect::parser::XmlParser* m_config {nullptr};
+  mtconnect::printer::XmlPrinter* m_printer {nullptr};
   std::list<mtconnect::DevicePtr> m_devices;
 
   // Construct a component event and set it as the data item's latest event
-  ObservationPtr addEventToCheckpoint(Checkpoint &checkpoint, const char *name, uint64_t sequence,
-                                      const Properties &props);
+  ObservationPtr addEventToCheckpoint(Checkpoint& checkpoint, const char* name, uint64_t sequence,
+                                      const Properties& props);
 
-  ObservationPtr newEvent(const char *name, uint64_t sequence, const Properties &props);
+  ObservationPtr newEvent(const char* name, uint64_t sequence, const Properties& props);
 };
 
-ObservationPtr XmlPrinterTest::newEvent(const char *name, uint64_t sequence,
-                                        const Properties &props)
+ObservationPtr XmlPrinterTest::newEvent(const char* name, uint64_t sequence,
+                                        const Properties& props)
 {
   // Make sure the data item is there
   const auto device = m_devices.front();
@@ -97,8 +97,8 @@ ObservationPtr XmlPrinterTest::newEvent(const char *name, uint64_t sequence,
   return o;
 }
 
-ObservationPtr XmlPrinterTest::addEventToCheckpoint(Checkpoint &checkpoint, const char *name,
-                                                    uint64_t sequence, const Properties &props)
+ObservationPtr XmlPrinterTest::addEventToCheckpoint(Checkpoint& checkpoint, const char* name,
+                                                    uint64_t sequence, const Properties& props)
 {
   auto event = newEvent(name, sequence, props);
   checkpoint.addObservation(event);
@@ -887,9 +887,9 @@ TEST_F(XmlPrinterTest, StreamsStyle)
   PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
 
   xmlNodePtr pi = doc->children;
-  ASSERT_EQ(string("xml-stylesheet"), string((const char *)pi->name));
+  ASSERT_EQ(string("xml-stylesheet"), string((const char*)pi->name));
   ASSERT_EQ(string("type=\"text/xsl\" href=\"/styles/Streams.xsl\""),
-            string((const char *)pi->content));
+            string((const char*)pi->content));
 
   m_printer->setStreamStyle("");
 }
@@ -901,9 +901,9 @@ TEST_F(XmlPrinterTest, DevicesStyle)
   PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
 
   xmlNodePtr pi = doc->children;
-  ASSERT_EQ(string("xml-stylesheet"), string((const char *)pi->name));
+  ASSERT_EQ(string("xml-stylesheet"), string((const char*)pi->name));
   ASSERT_EQ(string("type=\"text/xsl\" href=\"/styles/Devices.xsl\""),
-            string((const char *)pi->content));
+            string((const char*)pi->content));
 
   m_printer->setDevicesStyle("");
 }
@@ -916,9 +916,9 @@ TEST_F(XmlPrinterTest, ErrorStyle)
   PARSE_XML(m_printer->printError(123, 9999, 1, error, true));
 
   xmlNodePtr pi = doc->children;
-  ASSERT_EQ(string("xml-stylesheet"), string((const char *)pi->name));
+  ASSERT_EQ(string("xml-stylesheet"), string((const char*)pi->name));
   ASSERT_EQ(string("type=\"text/xsl\" href=\"/styles/Error.xsl\""),
-            string((const char *)pi->content));
+            string((const char*)pi->content));
 
   m_printer->setErrorStyle("");
 }

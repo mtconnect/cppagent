@@ -64,14 +64,14 @@ namespace mtconnect::ruby {
   using namespace std::literals;
   using namespace observation;
 
-  RClass *RubyObservation::m_eventClass;
-  RClass *RubyObservation::m_sampleClass;
-  RClass *RubyObservation::m_conditionClass;
+  RClass* RubyObservation::m_eventClass;
+  RClass* RubyObservation::m_sampleClass;
+  RClass* RubyObservation::m_conditionClass;
 
   std::recursive_mutex RubyVM::m_mutex;
-  RubyVM *RubyVM::m_vm = nullptr;
+  RubyVM* RubyVM::m_vm = nullptr;
 
-  static mrb_value LoadModule(mrb_state *mrb, mrb_value &filename)
+  static mrb_value LoadModule(mrb_state* mrb, mrb_value& filename)
   {
     auto fname = RSTRING_CSTR(mrb, filename);
     int ai = mrb_gc_arena_save(mrb);
@@ -119,8 +119,8 @@ namespace mtconnect::ruby {
     }
   }
 
-  Embedded::Embedded(mtconnect::configuration::AgentConfiguration *config,
-                     const ConfigOptions &options)
+  Embedded::Embedded(mtconnect::configuration::AgentConfiguration* config,
+                     const ConfigOptions& options)
     : m_agent(config->getAgent()), m_options(options)
   {
     using namespace std::filesystem;
@@ -173,14 +173,14 @@ namespace mtconnect::ruby {
         else
         {
           LOG(info) << "Resolved module path: " << file;
-          FILE *fp = nullptr;
+          FILE* fp = nullptr;
           try
           {
             int save = mrb_gc_arena_save(mrb);
             mrb_value file = mrb_str_new_cstr(mrb, modulePath->string().c_str());
             mrb_bool state = false;
             mrb_value res = mrb_protect(
-                mrb, [](mrb_state *mrb, mrb_value filename) { return LoadModule(mrb, filename); },
+                mrb, [](mrb_state* mrb, mrb_value filename) { return LoadModule(mrb, filename); },
                 file, &state);
             mrb_gc_arena_restore(mrb, save);
             if (mrb_false_p(res))

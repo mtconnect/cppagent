@@ -49,7 +49,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief Create a cached file from another file specifying the mime type
     /// @param file the file to copy
     /// @param mime the new mime type
-    CachedFile(const CachedFile &file, const std::string &mime)
+    CachedFile(const CachedFile& file, const std::string& mime)
       : m_size(file.m_size),
         m_mimeType(mime),
         m_path(file.m_path),
@@ -67,7 +67,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param buffer a pointer to the buffer
     /// @param size the buffer size
     /// @param mime the mime type
-    CachedFile(const char *buffer, size_t size, const std::string &mime)
+    CachedFile(const char* buffer, size_t size, const std::string& mime)
       : m_buffer(nullptr), m_size(size), m_mimeType(mime)
     {
       allocate(m_size);
@@ -83,7 +83,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param mime the mime type of the file
     /// @param cached `true` if the buffer should be allocated
     /// @param size optional size; if 0, size of will be determined from the operating system
-    CachedFile(const std::filesystem::path &path, const std::string &mime, bool cached = true,
+    CachedFile(const std::filesystem::path& path, const std::string& mime, bool cached = true,
                size_t size = 0)
       : m_buffer(nullptr), m_mimeType(mime), m_path(path), m_cached(cached)
     {
@@ -109,7 +109,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief Clone a CachedFile
     /// @param file the file
     /// @return this
-    CachedFile &operator=(const CachedFile &file)
+    CachedFile& operator=(const CachedFile& file)
     {
       m_cached = file.m_cached;
       m_path = file.m_path;
@@ -128,11 +128,11 @@ namespace mtconnect::sink::rest_sink {
       if (m_buffer != nullptr)
         free(m_buffer);
       m_size = size;
-      m_buffer = static_cast<char *>(malloc(m_size + 1));
+      m_buffer = static_cast<char*>(malloc(m_size + 1));
       memset(m_buffer, 0, m_size + 1);
     }
 
-    char *m_buffer {nullptr};
+    char* m_buffer {nullptr};
     size_t m_size {0};
     std::string m_mimeType;
     std::filesystem::path m_path;

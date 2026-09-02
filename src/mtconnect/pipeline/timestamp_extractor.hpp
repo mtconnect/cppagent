@@ -32,9 +32,9 @@ namespace mtconnect::pipeline {
   {
   public:
     using Tokens::Tokens;
-    Timestamped(const Timestamped &ts) = default;
-    Timestamped(const Tokens &ptr) : Tokens(ptr) {}
-    Timestamped(const Timestamped &ts, TokenList list)
+    Timestamped(const Timestamped& ts) = default;
+    Timestamped(const Tokens& ptr) : Tokens(ptr) {}
+    Timestamped(const Timestamped& ts, TokenList list)
       : Tokens(ts, list), m_timestamp(ts.m_timestamp), m_duration(ts.m_duration)
     {}
     ~Timestamped() = default;
@@ -54,7 +54,7 @@ namespace mtconnect::pipeline {
 
   static auto inline DefaultNow = []() -> Timestamp { return std::chrono::system_clock::now(); };
 
-  inline std::optional<double> GetDuration(std::string_view &timestamp)
+  inline std::optional<double> GetDuration(std::string_view& timestamp)
   {
     std::optional<double> duration;
 
@@ -63,7 +63,7 @@ namespace mtconnect::pipeline {
     {
       auto read = pos + 1;
       auto dur {timestamp.substr(read)};
-      char *end {nullptr};
+      char* end {nullptr};
       duration = std::strtod(dur.data(), &end);
       if (end == 0)
         duration.reset();
@@ -77,10 +77,10 @@ namespace mtconnect::pipeline {
   /// @brief Parse a token with a timestamp and return the timestamp
   /// @param token the string with a 8601 timestamp
   /// @returns a Timestamp
-  inline std::pair<Timestamp, std::optional<double>> ParseTimestamp(const std::string_view &token,
+  inline std::pair<Timestamp, std::optional<double>> ParseTimestamp(const std::string_view& token,
                                                                     bool relative,
-                                                                    std::optional<Timestamp> &base,
-                                                                    Microseconds &offset,
+                                                                    std::optional<Timestamp>& base,
+                                                                    Microseconds& offset,
                                                                     Now now = DefaultNow)
   {
     using namespace std;
@@ -120,7 +120,7 @@ namespace mtconnect::pipeline {
     double off;
     if (!has_t)
     {
-      char *end {0};
+      char* end {0};
       off = std::strtod(timestamp.data(), &end);
       if (end == timestamp.data())
       {
@@ -160,7 +160,7 @@ namespace mtconnect::pipeline {
   class AGENT_LIB_API ExtractTimestamp : public Transform
   {
   public:
-    ExtractTimestamp(const ExtractTimestamp &) = default;
+    ExtractTimestamp(const ExtractTimestamp&) = default;
     /// @brief Construct a timestamp extractor
     /// @param relativeTime `true` if using realtive time stamps
     ExtractTimestamp(bool relativeTime)
@@ -170,7 +170,7 @@ namespace mtconnect::pipeline {
     }
     ~ExtractTimestamp() override = default;
 
-    EntityPtr operator()(entity::EntityPtr &&ptr) override
+    EntityPtr operator()(entity::EntityPtr&& ptr) override
     {
       TimestampedPtr res;
       std::optional<std::string> token;
@@ -197,7 +197,7 @@ namespace mtconnect::pipeline {
       return next(res);
     }
 
-    void extractTimestamp(const std::string &token, TimestampedPtr &ts)
+    void extractTimestamp(const std::string& token, TimestampedPtr& ts)
     {
       auto [timestamp, duration] =
           ParseTimestamp(token, m_relativeTime, m_base, m_offset,
@@ -222,10 +222,10 @@ namespace mtconnect::pipeline {
   {
   public:
     IgnoreTimestamp() : ExtractTimestamp("IgnoreTimestamp") {}
-    IgnoreTimestamp(const IgnoreTimestamp &) = default;
+    IgnoreTimestamp(const IgnoreTimestamp&) = default;
     ~IgnoreTimestamp() override = default;
 
-    EntityPtr operator()(entity::EntityPtr &&ptr) override
+    EntityPtr operator()(entity::EntityPtr&& ptr) override
     {
       TimestampedPtr res;
       std::optional<std::string> token;

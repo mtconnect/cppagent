@@ -48,7 +48,7 @@ using namespace mtconnect::asset;
 using namespace mtconnect::printer;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -94,7 +94,7 @@ TEST_F(FixtureTest, minimal_fixture_definition)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("7ae770f0-c11e-013a-c34c-4e7f553bbb76", asset->getAssetId());

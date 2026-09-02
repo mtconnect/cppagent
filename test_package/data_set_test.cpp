@@ -36,7 +36,7 @@ using namespace mtconnect::sink::rest_sink;
 using namespace mtconnect::buffer;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -77,7 +77,7 @@ using namespace std::literals;
 using namespace chrono_literals;
 using namespace date::literals;
 
-inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
+inline DataSetEntry operator""_E(const char* c, std::size_t) { return DataSetEntry(c); }
 
 TEST_F(DataSetTest, data_item_is_identified_as_data_set_representation)
 {
@@ -170,7 +170,7 @@ TEST_F(DataSetTest, parser_with_big_data_set)
   using namespace std::filesystem;
   path p(TEST_RESOURCE_DIR "/big_data_set.txt");
   auto size = std::filesystem::file_size(p);
-  char *buffer = (char *)malloc(size + 1);
+  char* buffer = (char*)malloc(size + 1);
   auto file = std::fopen(p.string().c_str(), "r");
   size = std::fread(buffer, 1, size, file);
   buffer[size] = '\0';
@@ -480,7 +480,7 @@ TEST_F(DataSetTest, current_at_sequence_reconstructs_data_set_state_at_given_poi
   using namespace mtconnect::sink::rest_sink;
   m_agentTestHelper->addAdapter();
 
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   auto seq = circ.getSequence();
 
   m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
@@ -575,12 +575,12 @@ TEST_F(DataSetTest, removed_keys_are_deleted_from_checkpoint_data_set)
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
 
-  auto &ds = ce2->getValue<DataSet>();
+  auto& ds = ce2->getValue<DataSet>();
   ASSERT_TRUE(ds.find("a"_E)->m_removed);
   ASSERT_TRUE(ds.find("c"_E)->m_removed);
 
   auto ce3 = m_checkpoint->getObservation("v1");
-  auto &map1 = ce3->getValue<DataSet>();
+  auto& map1 = ce3->getValue<DataSet>();
   ASSERT_EQ(3, map1.size());
 
   ASSERT_EQ(2, get<int64_t>(map1.find("b"_E)->m_value));
@@ -781,7 +781,7 @@ TEST_F(DataSetTest, json_current_response_includes_data_set_entries_with_typed_v
     ASSERT_EQ(4_S, streams.size());
 
     json stream;
-    for (auto &s : streams)
+    for (auto& s : streams)
     {
       auto id = s.at("/ComponentStream/componentId"_json_pointer);
       ASSERT_TRUE(id.is_string());
@@ -796,7 +796,7 @@ TEST_F(DataSetTest, json_current_response_includes_data_set_entries_with_typed_v
     auto events = stream.at("/ComponentStream/Events"_json_pointer);
     ASSERT_TRUE(events.is_array());
     json offsets;
-    for (auto &o : events)
+    for (auto& o : events)
     {
       ASSERT_TRUE(o.is_object());
       auto v = o.begin().key();

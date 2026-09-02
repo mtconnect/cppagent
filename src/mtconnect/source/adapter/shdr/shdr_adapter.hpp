@@ -49,19 +49,19 @@ namespace mtconnect {
       /// @param[in] pipelineContext pipeline context
       /// @param[in] options configuration options
       /// @param[in] block additional configuration options not in options
-      ShdrAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext,
-                  const ConfigOptions &options, const boost::property_tree::ptree &block);
-      ShdrAdapter(const ShdrAdapter &) = delete;
+      ShdrAdapter(boost::asio::io_context& io, pipeline::PipelineContextPtr pipelineContext,
+                  const ConfigOptions& options, const boost::property_tree::ptree& block);
+      ShdrAdapter(const ShdrAdapter&) = delete;
 
       /// @brief Factory registration method associate this source with `shdr`
       /// @param[in] factory the source factory
-      static void registerFactory(SourceFactory &factory)
+      static void registerFactory(SourceFactory& factory)
       {
         factory.registerFactory(
             "shdr",
-            [](const std::string &name, boost::asio::io_context &io,
-               pipeline::PipelineContextPtr context, const ConfigOptions &options,
-               const boost::property_tree::ptree &block) -> source::SourcePtr {
+            [](const std::string& name, boost::asio::io_context& io,
+               pipeline::PipelineContextPtr context, const ConfigOptions& options,
+               const boost::property_tree::ptree& block) -> source::SourcePtr {
               auto source = std::make_shared<ShdrAdapter>(io, context, options, block);
               return source;
             });
@@ -72,12 +72,12 @@ namespace mtconnect {
 
       /// @brief The termination text when collecting multi-line data
       /// @return the termination text
-      auto &getTerminator() const { return m_terminator; }
+      auto& getTerminator() const { return m_terminator; }
 
       /// @name Source interface
       ///@{
-      void processData(const std::string &data) override;
-      void protocolCommand(const std::string &data) override;
+      void processData(const std::string& data) override;
+      void protocolCommand(const std::string& data) override;
 
       // Method called when connection is lost.
       void connecting() override
@@ -110,18 +110,18 @@ namespace mtconnect {
 
       /// @name Agent Device methods
       ///@{
-      const std::string &getHost() const override { return m_server; }
+      const std::string& getHost() const override { return m_server; }
       unsigned int getPort() const override { return m_port; }
-      pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
+      pipeline::Pipeline* getPipeline() override { return &m_pipeline; }
       ///@}
 
       /// @brief Change the options for the adapter
       /// @param[in] options the set of options
-      void setOptions(const ConfigOptions &options) override
+      void setOptions(const ConfigOptions& options) override
       {
         bool changed = false;
 
-        for (auto &o : options)
+        for (auto& o : options)
         {
           auto it = m_options.find(o.first);
           if (it == m_options.end() || it->second != o.second)
@@ -140,7 +140,7 @@ namespace mtconnect {
       }
 
     protected:
-      void forwardData(const std::string &data)
+      void forwardData(const std::string& data)
       {
         if (data[0] == '*')
           protocolCommand(data);

@@ -25,7 +25,7 @@
 extern "C"
 {
   using xmlTextWriter = struct _xmlTextWriter;
-  using xmlTextWriterPtr = xmlTextWriter *;
+  using xmlTextWriterPtr = xmlTextWriter*;
 }
 
 namespace mtconnect {
@@ -41,7 +41,7 @@ namespace mtconnect {
       /// @param entity the entity
       /// @param namespaces a set of namespaces to use in the document
       void print(xmlTextWriterPtr writer, const EntityPtr entity,
-                 const std::unordered_set<std::string> &namespaces);
+                 const std::unordered_set<std::string>& namespaces);
 
     protected:
       bool m_includeHidden {false};

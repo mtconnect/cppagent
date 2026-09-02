@@ -60,8 +60,8 @@ namespace mtconnect::sink::rest_sink {
   namespace fs = std::filesystem;
 
   // Register a file
-  MTConnectSchemaList FileCache::registerDirectory(const string &uri, const fs::path &pathName,
-                                                   const string &version)
+  MTConnectSchemaList FileCache::registerDirectory(const string& uri, const fs::path& pathName,
+                                                   const string& version)
   {
     MTConnectSchemaList namespaces;
 
@@ -84,7 +84,7 @@ namespace mtconnect::sink::rest_sink {
       {
         fs::path baseUri(uri, fs::path::format::generic_format);
 
-        for (auto &file : fs::directory_iterator(path))
+        for (auto& file : fs::directory_iterator(path))
         {
           string name = (file.path().filename()).string();
           fs::path uri = baseUri / name;
@@ -103,9 +103,9 @@ namespace mtconnect::sink::rest_sink {
     return namespaces;
   }
 
-  std::optional<MTConnectSchema> FileCache::registerFile(const std::string &uri,
-                                                         const fs::path &path,
-                                                         const std::string &version)
+  std::optional<MTConnectSchema> FileCache::registerFile(const std::string& uri,
+                                                         const fs::path& path,
+                                                         const std::string& version)
   {
     optional<MTConnectSchema> ns;
 
@@ -149,9 +149,9 @@ namespace mtconnect::sink::rest_sink {
     return ns;
   }
 
-  CachedFilePtr FileCache::redirect(const std::string &name, const Directory &dir)
+  CachedFilePtr FileCache::redirect(const std::string& name, const Directory& dir)
   {
-    static const char *body = R"(<html>
+    static const char* body = R"(<html>
 <head><title>301 Moved Permanently</title></head>
 <body>
 <center><h1>301 Moved Permanently</h1></center>
@@ -166,7 +166,7 @@ namespace mtconnect::sink::rest_sink {
     return file;
   }
 
-  void FileCache::compressFile(CachedFilePtr file, boost::asio::io_context *context)
+  void FileCache::compressFile(CachedFilePtr file, boost::asio::io_context* context)
   {
     NAMED_SCOPE("FileCache::compressFile")
 
@@ -222,7 +222,7 @@ namespace mtconnect::sink::rest_sink {
         if (future.get())
           file->m_pathGz.emplace(zipped);
       }
-      catch (std::runtime_error &e)
+      catch (std::runtime_error& e)
       {
         LOG(error) << "Error occurred compressing: " << e.what();
       }
@@ -247,11 +247,11 @@ namespace mtconnect::sink::rest_sink {
     }
   }
 
-  CachedFilePtr FileCache::findFileInDirectories(const std::string &name)
+  CachedFilePtr FileCache::findFileInDirectories(const std::string& name)
   {
     namespace fs = std::filesystem;
 
-    for (const auto &dir : m_directories)
+    for (const auto& dir : m_directories)
     {
       if (name.starts_with(dir.first))
       {
@@ -291,9 +291,9 @@ namespace mtconnect::sink::rest_sink {
     return nullptr;
   }
 
-  CachedFilePtr FileCache::getFile(const std::string &name,
+  CachedFilePtr FileCache::getFile(const std::string& name,
                                    const std::optional<std::string> acceptEncoding,
-                                   boost::asio::io_context *context)
+                                   boost::asio::io_context* context)
   {
     namespace fs = std::filesystem;
 
@@ -365,8 +365,8 @@ namespace mtconnect::sink::rest_sink {
     return nullptr;
   }
 
-  void FileCache::addDirectory(const std::string &uri, const std::string &pathName,
-                               const std::string &index)
+  void FileCache::addDirectory(const std::string& uri, const std::string& pathName,
+                               const std::string& index)
   {
     fs::path path(pathName);
     if (fs::exists(path))

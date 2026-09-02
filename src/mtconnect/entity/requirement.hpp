@@ -93,43 +93,43 @@ namespace mtconnect::entity {
   /// @param type the target type
   /// @param table special treatment if a table (data sets of data set)
   /// @return `true` if conversion was successful
-  bool AGENT_LIB_API ConvertValueToType(Value &value, ValueType type, bool table = false);
+  bool AGENT_LIB_API ConvertValueToType(Value& value, ValueType type, bool table = false);
 
   /// @brief Error class when an error occurred
   class AGENT_LIB_API EntityError : public std::logic_error
   {
   public:
-    explicit EntityError(const std::string &s, const std::string &e = "")
+    explicit EntityError(const std::string& s, const std::string& e = "")
       : std::logic_error(s), m_entity(e)
     {}
 
-    explicit EntityError(const char *s, const std::string &e = "")
+    explicit EntityError(const char* s, const std::string& e = "")
       : std::logic_error(s), m_entity(e)
     {}
 
-    EntityError(const EntityError &o) noexcept : std::logic_error(o), m_entity(o.m_entity) {}
+    EntityError(const EntityError& o) noexcept : std::logic_error(o), m_entity(o.m_entity) {}
     ~EntityError() override = default;
 
     /// @brief an error related to an entity
     /// @return the error text
-    virtual const char *what() const noexcept override
+    virtual const char* what() const noexcept override
     {
       if (m_text.empty())
       {
-        auto *t = const_cast<EntityError *>(this);
+        auto* t = const_cast<EntityError*>(this);
         t->m_text = m_entity + ": " + std::logic_error::what();
       }
       return m_text.c_str();
     }
     /// @brief set the entity text
     /// @param[in] s the entity text
-    void setEntity(const std::string &s)
+    void setEntity(const std::string& s)
     {
       m_text.clear();
       m_entity = s;
     }
-    virtual EntityError *dup() const noexcept { return new EntityError(*this); }
-    const std::string &getEntity() const { return m_entity; }
+    virtual EntityError* dup() const noexcept { return new EntityError(*this); }
+    const std::string& getEntity() const { return m_entity; }
 
   protected:
     std::string m_text;
@@ -140,34 +140,34 @@ namespace mtconnect::entity {
   class AGENT_LIB_API PropertyError : public EntityError
   {
   public:
-    explicit PropertyError(const std::string &s, const std::string &p = "",
-                           const std::string &e = "")
+    explicit PropertyError(const std::string& s, const std::string& p = "",
+                           const std::string& e = "")
       : EntityError(s, e), m_property(p)
     {}
 
-    explicit PropertyError(const char *s, const std::string &p = "", const std::string &e = "")
+    explicit PropertyError(const char* s, const std::string& p = "", const std::string& e = "")
       : EntityError(s, e), m_property(p)
     {}
 
-    PropertyError(const PropertyError &o) noexcept : EntityError(o), m_property(o.m_property) {}
+    PropertyError(const PropertyError& o) noexcept : EntityError(o), m_property(o.m_property) {}
     ~PropertyError() override = default;
 
-    virtual const char *what() const noexcept override
+    virtual const char* what() const noexcept override
     {
       if (m_text.empty())
       {
-        auto *t = const_cast<PropertyError *>(this);
+        auto* t = const_cast<PropertyError*>(this);
         t->m_text = m_entity + "(" + m_property + "): " + std::logic_error::what();
       }
       return m_text.c_str();
     }
-    void setProperty(const std::string &p)
+    void setProperty(const std::string& p)
     {
       m_text.clear();
       m_property = p;
     }
-    EntityError *dup() const noexcept override { return new PropertyError(*this); }
-    const std::string &getProperty() const { return m_property; }
+    EntityError* dup() const noexcept override { return new PropertyError(*this); }
+    const std::string& getProperty() const { return m_property; }
 
   protected:
     std::string m_property;
@@ -179,7 +179,7 @@ namespace mtconnect::entity {
   struct Matcher
   {
     virtual ~Matcher() = default;
-    virtual bool matches(const std::string &s) const = 0;
+    virtual bool matches(const std::string& s) const = 0;
   };
 
   using MatcherPtr = std::weak_ptr<Matcher>;
@@ -196,14 +196,14 @@ namespace mtconnect::entity {
     /// @param name the property key
     /// @param type the data type
     /// @param required `true` if the property is required
-    Requirement(const std::string &name, ValueType type, bool required = true)
+    Requirement(const std::string& name, ValueType type, bool required = true)
       : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {}
     /// @brief property requirement with a type that can be optional
     /// @param name the property key
     /// @param required `true` if the property is required
     /// @param type the data type defaulted to `STRING`
-    Requirement(const std::string &name, bool required, ValueType type = ValueType::STRING)
+    Requirement(const std::string& name, bool required, ValueType type = ValueType::STRING)
       : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {}
     /// @brief property that can occur mode than once
@@ -211,7 +211,7 @@ namespace mtconnect::entity {
     /// @param type they data type
     /// @param lower a lower bound occurrence
     /// @param upper an upper bound occurrence
-    Requirement(const std::string &name, ValueType type, int lower, int upper)
+    Requirement(const std::string& name, ValueType type, int lower, int upper)
       : m_name(name), m_upperMultiplicity(upper), m_lowerMultiplicity(lower), m_type(type)
     {}
     /// @brief property with required vector size
@@ -219,7 +219,7 @@ namespace mtconnect::entity {
     /// @param type the data type
     /// @param size the size of the value
     /// @param required `true` if the property is required
-    Requirement(const std::string &name, ValueType type, int size, bool required = true)
+    Requirement(const std::string& name, ValueType type, int size, bool required = true)
       : m_name(name),
         m_upperMultiplicity(1),
         m_lowerMultiplicity(required ? 1 : 0),
@@ -231,33 +231,33 @@ namespace mtconnect::entity {
     /// @param type the data type. `ENTITY` or `ENTITY_LIST`
     /// @param o the entity factory
     /// @param required `true` if the property is required
-    Requirement(const std::string &name, ValueType type, FactoryPtr o, bool required = true);
+    Requirement(const std::string& name, ValueType type, FactoryPtr o, bool required = true);
     /// @brief property requirement for an entity or entity list
     /// @param name the property key
     /// @param type the data type. `ENTITY` or `ENTITY_LIST`
     /// @param o the entity factory
     /// @param lower lower bound for multiplicity
     /// @param upper upper bound for multiplicity
-    Requirement(const std::string &name, ValueType type, FactoryPtr o, int lower, int upper);
+    Requirement(const std::string& name, ValueType type, FactoryPtr o, int lower, int upper);
     /// @brief property requirement for a string value that must match a controlled vocabulary
     /// @param name the property key
     /// @param vocab the set of possible values
     /// @param required `true` if the property is required
-    Requirement(const std::string &name, const ControlledVocab &vocab, bool required = true)
+    Requirement(const std::string& name, const ControlledVocab& vocab, bool required = true)
       : m_name(name),
         m_upperMultiplicity(1),
         m_lowerMultiplicity(required ? 1 : 0),
         m_type(ValueType::STRING)
     {
       m_vocabulary.emplace();
-      for (auto &s : vocab)
+      for (auto& s : vocab)
         m_vocabulary->emplace(s);
     }
     /// @brief propery requirement where the text must match a regex pattern
     /// @param name the property key
     /// @param pattern the regex
     /// @param required `true` if the property is required
-    Requirement(const std::string &name, const std::regex &pattern, bool required = true)
+    Requirement(const std::string& name, const std::regex& pattern, bool required = true)
       : m_name(name),
         m_upperMultiplicity(1),
         m_lowerMultiplicity(required ? 1 : 0),
@@ -266,8 +266,8 @@ namespace mtconnect::entity {
     {}
 
     Requirement() = default;
-    Requirement(const Requirement &o) = default;
-    Requirement &operator=(const Requirement &o) = default;
+    Requirement(const Requirement& o) = default;
+    Requirement& operator=(const Requirement& o) = default;
     ~Requirement() = default;
 
     /// @brief gets required state
@@ -287,22 +287,22 @@ namespace mtconnect::entity {
     std::optional<int> getSize() const { return m_size; }
     /// @brief gets the matcher
     /// @return the matcher
-    const auto &getMatcher() const { return m_matcher; }
+    const auto& getMatcher() const { return m_matcher; }
     /// @brief sets the matcher for this requirement
     /// @param[in] m a shared pointer to the matcher
     void setMatcher(MatcherPtr m) { m_matcher = m; }
     /// @brief gets the name of the requirement
     /// @return the name for the property key
-    const std::string &getName() const { return m_name; }
+    const std::string& getName() const { return m_name; }
     /// @brief gets the value type for the requirement
     /// @return the value type
     ValueType getType() const { return m_type; }
     /// @brief gets the factory for elements and element lists
     /// @return the factory
-    auto &getFactory() const { return m_factory; }
+    auto& getFactory() const { return m_factory; }
     /// @brief sets the factory for an entity and entity list
     /// @param f the factory
-    void setFactory(FactoryPtr &f) { m_factory = f; }
+    void setFactory(FactoryPtr& f) { m_factory = f; }
     /// @brief  set the multiplicity
     /// @param lower the upper multiplicity
     /// @param upper the lower multiplicity
@@ -318,13 +318,13 @@ namespace mtconnect::entity {
     /// @param v the value
     /// @param table if this is a table conversion
     /// @return `true` if it is successful
-    bool convertType(Value &v, bool table = false) const
+    bool convertType(Value& v, bool table = false) const
     {
       try
       {
         return ConvertValueToType(v, m_type, table);
       }
-      catch (PropertyError &e)
+      catch (PropertyError& e)
       {
         e.setProperty(m_name);
         throw;
@@ -337,11 +337,11 @@ namespace mtconnect::entity {
     /// @brief does a value meet the requirement
     /// @param value the value
     /// @return `true` if the requirement is met
-    bool isMetBy(const Value &value) const;
+    bool isMetBy(const Value& value) const;
     /// @brief checks if a string matches the requirement
     /// @param s the string to check
     /// @return `true` if it matches
-    bool matches(const std::string &s) const
+    bool matches(const std::string& s) const
     {
       if (auto m = m_matcher.lock())
       {

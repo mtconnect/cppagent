@@ -31,14 +31,14 @@ namespace mtconnect::configuration {
   class AGENT_LIB_API AsyncContext
   {
   public:
-    using SyncCallback = std::function<void(AsyncContext &context)>;
+    using SyncCallback = std::function<void(AsyncContext& context)>;
     using WorkGuard = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
 
     /// @brief creates an asio context and a guard to prevent it from
     ///        stopping
     AsyncContext() { m_guard.emplace(m_context.get_executor()); }
     /// @brief removes the copy constructor
-    AsyncContext(const AsyncContext &) = delete;
+    AsyncContext(const AsyncContext&) = delete;
     ~AsyncContext() {}
 
     /// @brief is the context running
@@ -53,11 +53,11 @@ namespace mtconnect::configuration {
     void removeGuard() { m_guard.reset(); }
 
     /// @brief get the boost asio context reference
-    auto &get() { return m_context; }
+    auto& get() { return m_context; }
 
     /// @brief operator() returns a reference to the io context
     /// @return the io context
-    operator boost::asio::io_context &() { return m_context; }
+    operator boost::asio::io_context&() { return m_context; }
 
     /// @brief sets the number of theads for asio thread pool
     /// @param[in] threads number of threads
@@ -82,13 +82,13 @@ namespace mtconnect::configuration {
                 m_context.run();
               }
 
-              catch (FatalException &e)
+              catch (FatalException& e)
               {
                 LOG(fatal) << "Fatal exception occurred: " << e.what();
                 stop(false);
                 m_exitCode = 1;
               }
-              catch (std::exception &e)
+              catch (std::exception& e)
               {
                 LOG(fatal) << "Uncaught exception occurred: " << e.what();
                 stop(false);
@@ -102,7 +102,7 @@ namespace mtconnect::configuration {
               }
             }));
           }
-          auto &first = m_workers.front();
+          auto& first = m_workers.front();
           while (m_running && !m_paused)
           {
             if (!first.try_join_for(boost::chrono::seconds(5)) && !m_running)
@@ -112,7 +112,7 @@ namespace mtconnect::configuration {
             }
           }
 
-          for (auto &w : m_workers)
+          for (auto& w : m_workers)
           {
             w.join();
           }
@@ -134,13 +134,13 @@ namespace mtconnect::configuration {
         } while (m_running);
       }
 
-      catch (FatalException &e)
+      catch (FatalException& e)
       {
         LOG(fatal) << "Fatal exception occurred: " << e.what();
         stop(false);
         m_exitCode = 1;
       }
-      catch (std::exception &e)
+      catch (std::exception& e)
       {
         LOG(fatal) << "Uncaught exception occurred: " << e.what();
         stop(false);
@@ -195,7 +195,7 @@ namespace mtconnect::configuration {
 
     /// @brief io_context::run_for
     template <typename Rep, typename Period>
-    auto run_for(const std::chrono::duration<Rep, Period> &rel_time)
+    auto run_for(const std::chrono::duration<Rep, Period>& rel_time)
     {
       return m_context.run_for(rel_time);
     }
@@ -208,14 +208,14 @@ namespace mtconnect::configuration {
 
     /// @brief io_context::run_one_for
     template <typename Rep, typename Period>
-    auto run_one_for(const std::chrono::duration<Rep, Period> &rel_time)
+    auto run_one_for(const std::chrono::duration<Rep, Period>& rel_time)
     {
       return m_context.run_one_for(rel_time);
     }
 
     /// @brief io_context::run_one_until
     template <typename Clock, typename Duration>
-    auto run_one_until(const std::chrono::time_point<Clock, Duration> &abs_time)
+    auto run_one_until(const std::chrono::time_point<Clock, Duration>& abs_time)
     {
       return m_context.run_one_for(abs_time);
     }
@@ -229,7 +229,7 @@ namespace mtconnect::configuration {
     /// @}
 
   private:
-    void operator=(const AsyncContext &) {}
+    void operator=(const AsyncContext&) {}
 
   protected:
     boost::asio::io_context m_context;

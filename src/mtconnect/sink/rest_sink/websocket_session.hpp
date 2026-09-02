@@ -45,7 +45,7 @@ namespace mtconnect::sink::rest_sink {
   protected:
     struct Message
     {
-      Message(const std::string &body, Complete &complete, const std::string &requestId)
+      Message(const std::string& body, Complete& complete, const std::string& requestId)
         : m_body(body), m_complete(complete), m_requestId(requestId)
       {}
 
@@ -55,17 +55,17 @@ namespace mtconnect::sink::rest_sink {
     };
 
   public:
-    WebsocketSession(RequestPtr &&request, Dispatch dispatch, ErrorFunction func)
+    WebsocketSession(RequestPtr&& request, Dispatch dispatch, ErrorFunction func)
       : Session(dispatch, func), m_requestManager(std::move(request), dispatch)
     {}
 
     /// @brief Session cannot be copied.
-    WebsocketSession(const WebsocketSession &) = delete;
+    WebsocketSession(const WebsocketSession&) = delete;
     ~WebsocketSession() = default;
 
-    Derived &derived() { return static_cast<Derived &>(*this); }
+    Derived& derived() { return static_cast<Derived&>(*this); }
 
-    auto &getRequestManager() { return m_requestManager; }
+    auto& getRequestManager() { return m_requestManager; }
 
     void close() override
     {
@@ -94,7 +94,7 @@ namespace mtconnect::sink::rest_sink {
       closeStream();
     }
 
-    void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override
+    void writeResponse(ResponsePtr&& response, Complete complete = nullptr) override
     {
       NAMED_SCOPE("WebsocketSession::writeResponse");
       if (!response->m_requestId)
@@ -106,13 +106,13 @@ namespace mtconnect::sink::rest_sink {
       writeChunk(response->m_body, complete, response->m_requestId);
     }
 
-    void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override
+    void writeFailureResponse(ResponsePtr&& response, Complete complete = nullptr) override
     {
       NAMED_SCOPE("WebsocketSession::writeFailureResponse");
       writeChunk(response->m_body, complete, response->m_requestId);
     }
 
-    void beginStreaming(const std::string &mimeType, Complete complete,
+    void beginStreaming(const std::string& mimeType, Complete complete,
                         std::optional<std::string> requestId = std::nullopt) override
     {
       if (requestId)
@@ -139,7 +139,7 @@ namespace mtconnect::sink::rest_sink {
       }
     }
 
-    void writeChunk(const std::string &chunk, Complete complete,
+    void writeChunk(const std::string& chunk, Complete complete,
                     std::optional<std::string> requestId = std::nullopt) override
     {
       NAMED_SCOPE("WebsocketSession::writeChunk");
@@ -172,7 +172,7 @@ namespace mtconnect::sink::rest_sink {
     }
 
   protected:
-    void send(const std::string body, Complete complete, const std::string &requestId)
+    void send(const std::string body, Complete complete, const std::string& requestId)
     {
       NAMED_SCOPE("WebsocketSession::send");
 
@@ -198,7 +198,7 @@ namespace mtconnect::sink::rest_sink {
       }
     }
 
-    void sent(beast::error_code ec, std::size_t len, const std::string &id)
+    void sent(beast::error_code ec, std::size_t len, const std::string& id)
     {
       NAMED_SCOPE("WebsocketSession::sent");
 
@@ -245,7 +245,7 @@ namespace mtconnect::sink::rest_sink {
         // Check for queued messages
         if (m_messageQueue.size() > 0)
         {
-          auto &msg = m_messageQueue.front();
+          auto& msg = m_messageQueue.front();
           send(msg.m_body, msg.m_complete, msg.m_requestId);
           m_messageQueue.pop_front();
         }
@@ -270,18 +270,18 @@ namespace mtconnect::sink::rest_sink {
     using RequestMessage = boost::beast::http::request<boost::beast::http::string_body>;
     using super = WebsocketSession<Derived>;
 
-    WebsocketSessionImpl(RequestPtr &&request, RequestMessage &&msg, Dispatch dispatch,
+    WebsocketSessionImpl(RequestPtr&& request, RequestMessage&& msg, Dispatch dispatch,
                          ErrorFunction func)
       : super(std::move(request), dispatch, func), m_msg(std::move(msg))
     {}
 
     /// @brief Session cannot be copied.
-    WebsocketSessionImpl(const WebsocketSessionImpl &) = delete;
+    WebsocketSessionImpl(const WebsocketSessionImpl&) = delete;
     ~WebsocketSessionImpl() = default;
 
     /// @brief get this as the `Derived` type
     /// @return the subclass
-    Derived &derived() { return static_cast<Derived &>(*this); }
+    Derived& derived() { return static_cast<Derived&>(*this); }
 
     bool isStreamOpen() { return derived().stream().is_open(); }
 
@@ -297,7 +297,7 @@ namespace mtconnect::sink::rest_sink {
 
       // Set a decorator to change the Server of the handshake
       derived().stream().set_option(
-          websocket::stream_base::decorator([](websocket::response_type &res) {
+          websocket::stream_base::decorator([](websocket::response_type& res) {
             res.set(http::field::server, GetAgentVersion() + " MTConnectAgent");
           }));
 
@@ -327,7 +327,7 @@ namespace mtconnect::sink::rest_sink {
           beast::bind_front_handler(&WebsocketSessionImpl::onRead, derived().shared_ptr()));
     }
 
-    void asyncSend(WebsocketRequestManager::WebsocketRequest *request)
+    void asyncSend(WebsocketRequestManager::WebsocketRequest* request)
     {
       NAMED_SCOPE("WebsocketSessionImpl::asyncSend");
 
@@ -335,7 +335,7 @@ namespace mtconnect::sink::rest_sink {
 
       auto ref = derived().shared_ptr();
 
-      auto &requestId = request->m_requestId;
+      auto& requestId = request->m_requestId;
       derived().stream().text(derived().stream().got_text());
       derived().stream().async_write(
           request->m_streamBuffer->data(),
@@ -375,7 +375,7 @@ namespace mtconnect::sink::rest_sink {
         }
       }
 
-      catch (RestError &re)
+      catch (RestError& re)
       {
         auto id = re.getRequestId();
         if (!id)
@@ -388,7 +388,7 @@ namespace mtconnect::sink::rest_sink {
         super::m_errorFunction(derived().shared_ptr(), re);
       }
 
-      catch (std::logic_error &le)
+      catch (std::logic_error& le)
       {
         std::stringstream txt;
         txt << super::getRemote().address() << ": Logic Error: " << le.what();
@@ -420,7 +420,7 @@ namespace mtconnect::sink::rest_sink {
   public:
     using Stream = beast::websocket::stream<beast::tcp_stream>;
 
-    PlainWebsocketSession(beast::tcp_stream &&stream, RequestPtr &&request, RequestMessage &&msg,
+    PlainWebsocketSession(beast::tcp_stream&& stream, RequestPtr&& request, RequestMessage&& msg,
                           Dispatch dispatch, ErrorFunction func)
       : WebsocketSessionImpl(std::move(request), std::move(msg), dispatch, func),
         m_stream(std::move(stream))
@@ -439,7 +439,7 @@ namespace mtconnect::sink::rest_sink {
         m_stream.close(beast::websocket::close_code::none);
     }
 
-    auto &stream() { return m_stream; }
+    auto& stream() { return m_stream; }
 
     /// @brief Get a pointer cast as an Websocket Session
     /// @return shared pointer to an Websocket session
@@ -458,8 +458,8 @@ namespace mtconnect::sink::rest_sink {
   public:
     using Stream = beast::websocket::stream<beast::ssl_stream<beast::tcp_stream>>;
 
-    TlsWebsocketSession(beast::ssl_stream<beast::tcp_stream> &&stream, RequestPtr &&request,
-                        RequestMessage &&msg, Dispatch dispatch, ErrorFunction func)
+    TlsWebsocketSession(beast::ssl_stream<beast::tcp_stream>&& stream, RequestPtr&& request,
+                        RequestMessage&& msg, Dispatch dispatch, ErrorFunction func)
       : WebsocketSessionImpl(std::move(request), std::move(msg), dispatch, func),
         m_stream(std::move(stream))
     {
@@ -471,7 +471,7 @@ namespace mtconnect::sink::rest_sink {
         close();
     }
 
-    auto &stream() { return m_stream; }
+    auto& stream() { return m_stream; }
 
     void closeStream() override
     {

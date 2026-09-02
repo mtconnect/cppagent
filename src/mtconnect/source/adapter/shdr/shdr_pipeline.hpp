@@ -28,10 +28,10 @@ namespace mtconnect::source::adapter::shdr {
     /// @brief Create a pipeline for the SHDR Adapter
     /// @param context the pipeline context
     /// @param st boost asio strand for this source
-    ShdrPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)
+    ShdrPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand& st)
       : AdapterPipeline(context, st)
     {}
 
-    void build(const ConfigOptions &options) override;
+    void build(const ConfigOptions& options) override;
   };
 }  // namespace mtconnect::source::adapter::shdr

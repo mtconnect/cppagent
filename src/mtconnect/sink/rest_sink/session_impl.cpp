@@ -53,7 +53,7 @@ namespace mtconnect::sink::rest_sink {
 
   inline unsigned char hex(unsigned char x) { return x + (x > 9 ? ('A' - 10) : '0'); }
 
-  const string urlencode(const string &s)
+  const string urlencode(const string& s)
   {
     ostringstream os;
     for (const auto ci : s)
@@ -114,7 +114,7 @@ namespace mtconnect::sink::rest_sink {
     return result.str();
   }
 
-  void parseQueries(string qp, map<string, string> &queries)
+  void parseQueries(string qp, map<string, string>& queries)
   {
     vector<boost::iterator_range<string::iterator>> toks;
     algo::split(toks, qp, boost::is_any_of("&"));
@@ -132,7 +132,7 @@ namespace mtconnect::sink::rest_sink {
     }
   }
 
-  string parseUrl(string url, map<string, string> &queries)
+  string parseUrl(string url, map<string, string>& queries)
   {
     auto pos = url.find('?');
     if (pos != string::npos)
@@ -196,8 +196,8 @@ namespace mtconnect::sink::rest_sink {
       return;
     }
 
-    auto &msg = m_parser->get();
-    const auto &remote = m_remote;
+    auto& msg = m_parser->get();
+    const auto& remote = m_remote;
 
     // Check for put, post, or delete (allow OPTIONS for CORS preflight)
     if (msg.method() == http::verb::put || msg.method() == http::verb::post ||
@@ -294,7 +294,7 @@ namespace mtconnect::sink::rest_sink {
   }
 
   template <class Derived>
-  void SessionImpl<Derived>::beginStreaming(const std::string &mimeType, Complete complete,
+  void SessionImpl<Derived>::beginStreaming(const std::string& mimeType, Complete complete,
                                             std::optional<std::string> requestId)
   {
     NAMED_SCOPE("SessionImpl::beginStreaming");
@@ -321,7 +321,7 @@ namespace mtconnect::sink::rest_sink {
     res->set(field::content_type, "multipart/mixed;boundary=" + m_boundary);
     res->set(field::expires, "-1");
     res->set(field::cache_control, "no-cache, no-store, max-age=0");
-    for (const auto &f : m_fields)
+    for (const auto& f : m_fields)
     {
       res->set(f.first, f.second);
     }
@@ -333,7 +333,7 @@ namespace mtconnect::sink::rest_sink {
   }
 
   template <class Derived>
-  void SessionImpl<Derived>::writeChunk(const std::string &body, Complete complete,
+  void SessionImpl<Derived>::writeChunk(const std::string& body, Complete complete,
                                         std::optional<std::string> requestId)
   {
     NAMED_SCOPE("SessionImpl::writeChunk");
@@ -368,7 +368,7 @@ namespace mtconnect::sink::rest_sink {
 
   template <class Derived>
   template <typename Message>
-  void SessionImpl<Derived>::addHeaders(const Response &response, Message &res)
+  void SessionImpl<Derived>::addHeaders(const Response& response, Message& res)
   {
     res->set(http::field::server, "MTConnectAgent");
     auto now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
@@ -383,7 +383,7 @@ namespace mtconnect::sink::rest_sink {
       res->set(http::field::cache_control, "no-store, max-age=0");
     }
     res->set(http::field::content_type, response.m_mimeType);
-    for (const auto &f : m_fields)
+    for (const auto& f : m_fields)
     {
       res->set(f.first, f.second);
     }
@@ -391,14 +391,14 @@ namespace mtconnect::sink::rest_sink {
     {
       res->set(http::field::location, *response.m_location);
     }
-    for (const auto &f : response.m_fields)
+    for (const auto& f : response.m_fields)
     {
       res->set(f.first, f.second);
     }
   }
 
   template <class Derived>
-  void SessionImpl<Derived>::writeResponse(ResponsePtr &&responsePtr, Complete complete)
+  void SessionImpl<Derived>::writeResponse(ResponsePtr&& responsePtr, Complete complete)
   {
     NAMED_SCOPE("SessionImpl::writeResponse");
 
@@ -449,7 +449,7 @@ namespace mtconnect::sink::rest_sink {
     }
     else
     {
-      const char *bp;
+      const char* bp;
       size_t size;
       if (m_outgoing->m_file)
       {
@@ -478,7 +478,7 @@ namespace mtconnect::sink::rest_sink {
   }
 
   template <class Derived>
-  void SessionImpl<Derived>::writeFailureResponse(ResponsePtr &&response, Complete complete)
+  void SessionImpl<Derived>::writeFailureResponse(ResponsePtr&& response, Complete complete)
   {
     if (m_streaming)
     {
@@ -491,7 +491,7 @@ namespace mtconnect::sink::rest_sink {
     }
   }
 
-  SessionPtr HttpSession::upgradeToWebsocket(RequestMessage &&msg)
+  SessionPtr HttpSession::upgradeToWebsocket(RequestMessage&& msg)
   {
     return std::make_shared<PlainWebsocketSession>(std::move(m_stream), std::move(m_request),
                                                    std::move(msg), m_dispatch, m_errorFunction);
@@ -508,8 +508,8 @@ namespace mtconnect::sink::rest_sink {
     /// @param list the header fieldlist
     /// @param dispatch dispatch function
     /// @param error error function
-    HttpsSession(boost::beast::tcp_stream &&socket, boost::asio::ssl::context &context,
-                 boost::beast::flat_buffer &&buffer, const FieldList &list, Dispatch dispatch,
+    HttpsSession(boost::beast::tcp_stream&& socket, boost::asio::ssl::context& context,
+                 boost::beast::flat_buffer&& buffer, const FieldList& list, Dispatch dispatch,
                  ErrorFunction error)
       : SessionImpl<HttpsSession>(std::move(buffer), list, dispatch, error),
         m_stream(std::move(socket), context)
@@ -530,7 +530,7 @@ namespace mtconnect::sink::rest_sink {
     }
     /// @brief close this session
     virtual ~HttpsSession() { close(); }
-    auto &stream() { return m_stream; }
+    auto& stream() { return m_stream; }
 
     void run() override
     {
@@ -572,7 +572,7 @@ namespace mtconnect::sink::rest_sink {
     }
 
     /// @brief Upgrade the current connection to a websocket connection.
-    SessionPtr upgradeToWebsocket(RequestMessage &&msg)
+    SessionPtr upgradeToWebsocket(RequestMessage&& msg)
     {
       return std::make_shared<TlsWebsocketSession>(std::move(m_stream), std::move(m_request),
                                                    std::move(msg), m_dispatch, m_errorFunction);
@@ -602,7 +602,7 @@ namespace mtconnect::sink::rest_sink {
   };
 
   template <class Derived>
-  void SessionImpl<Derived>::upgrade(RequestMessage &&msg)
+  void SessionImpl<Derived>::upgrade(RequestMessage&& msg)
   {
     LOG(debug) << "Upgrading session to websockets";
     derived().upgradeToWebsocket(std::move(msg))->run();

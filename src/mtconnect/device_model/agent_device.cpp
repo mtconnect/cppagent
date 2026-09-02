@@ -36,7 +36,7 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(*Device::getFactory());
-        factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& ps) -> EntityPtr {
           auto dev = make_shared<AgentDevice>("Agent"s, ps);
           dev->initialize();
           return dev;
@@ -54,7 +54,7 @@ namespace mtconnect {
       return factory;
     }
 
-    AgentDevice::AgentDevice(const std::string &name, entity::Properties &props)
+    AgentDevice::AgentDevice(const std::string& name, entity::Properties& props)
       : Device(name, props)
     {
       NAMED_SCOPE("agent_device");
@@ -62,7 +62,7 @@ namespace mtconnect {
       m_adapters = Component::make("Adapters", {{"id", "__adapters__"s}}, errors);
       if (!errors.empty())
       {
-        for (auto &e : errors)
+        for (auto& e : errors)
         {
           LOG(fatal) << "Cannot create AgentDevice: " << e->what();
         }

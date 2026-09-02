@@ -45,7 +45,7 @@ using namespace mtconnect::asset;
 using namespace mtconnect::printer;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -111,7 +111,7 @@ TEST_F(ProcessAssetTest, should_parse_a_process_archetype)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("ProcessArchetype", asset->getName());
@@ -257,7 +257,7 @@ TEST_F(ProcessAssetTest, process_archetype_can_have_multiple_routings)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   auto routings = asset->getList("Routings");
@@ -329,7 +329,7 @@ TEST_F(ProcessAssetTest, process_steps_can_be_optional)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   auto routings = asset->getList("Routings");
@@ -374,7 +374,7 @@ TEST_F(ProcessAssetTest, process_archetype_must_have_at_least_one_routing)
 
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(1, errors.size());
-  auto error = dynamic_cast<PropertyError *>(errors.front().get());
+  auto error = dynamic_cast<PropertyError*>(errors.front().get());
 
   ASSERT_EQ("ProcessArchetype(Routings): Property Routings is required and not provided"s,
             error->what());
@@ -408,7 +408,7 @@ TEST_F(ProcessAssetTest, process_archetype_routing_must_have_a_process_step)
 
   auto it = errors.begin();
   {
-    auto error = dynamic_cast<PropertyError *>(it->get());
+    auto error = dynamic_cast<PropertyError*>(it->get());
     ASSERT_TRUE(error);
     EXPECT_EQ("Routing(ProcessStep): Property ProcessStep is required and not provided"s,
               error->what());
@@ -426,7 +426,7 @@ TEST_F(ProcessAssetTest, process_archetype_routing_must_have_a_process_step)
 
   it++;
   {
-    auto error = dynamic_cast<PropertyError *>(it->get());
+    auto error = dynamic_cast<PropertyError*>(it->get());
     ASSERT_TRUE(error);
     EXPECT_EQ(
         "Routings(Routing): Entity list requirement Routing must have at least 1 entries, 0 found"s,
@@ -445,7 +445,7 @@ TEST_F(ProcessAssetTest, process_archetype_routing_must_have_a_process_step)
 
   it++;
   {
-    auto error = dynamic_cast<PropertyError *>(it->get());
+    auto error = dynamic_cast<PropertyError*>(it->get());
     ASSERT_TRUE(error);
     EXPECT_EQ("ProcessArchetype(Routings): Property Routings is required and not provided"s,
               error->what());
@@ -480,7 +480,7 @@ TEST_F(ProcessAssetTest, activity_can_have_a_sequence_precedence_and_be_optional
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   auto routings = asset->getList("Routings");
@@ -743,7 +743,7 @@ TEST_F(ProcessAssetTest, process_can_only_have_one_routings)
 
   auto it = errors.begin();
   {
-    auto error = dynamic_cast<PropertyError *>(it->get());
+    auto error = dynamic_cast<PropertyError*>(it->get());
     ASSERT_TRUE(error);
     EXPECT_EQ(
         "Routings(Routing): Entity list requirement Routing must have at least 1 and no more than 1 entries, 2 found"s,
@@ -762,7 +762,7 @@ TEST_F(ProcessAssetTest, process_can_only_have_one_routings)
 
   it++;
   {
-    auto error = dynamic_cast<PropertyError *>(it->get());
+    auto error = dynamic_cast<PropertyError*>(it->get());
     ASSERT_TRUE(error);
     EXPECT_EQ("Process(Routings): Property Routings is required and not provided"s, error->what());
     EXPECT_EQ("Process", error->getEntity());

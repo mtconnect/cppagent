@@ -38,10 +38,10 @@ namespace mtconnect {
     struct PropertyKey : public QName
     {
       using QName::QName;
-      PropertyKey(const PropertyKey &s) : QName(s) {}
-      PropertyKey(const std::string &s) : QName(s) {}
-      PropertyKey(const std::string &&s) : QName(s) {}
-      PropertyKey(const char *s) : QName(s) {}
+      PropertyKey(const PropertyKey& s) : QName(s) {}
+      PropertyKey(const std::string& s) : QName(s) {}
+      PropertyKey(const std::string&& s) : QName(s) {}
+      PropertyKey(const char* s) : QName(s) {}
 
       /// @brief clears marks for this property
       void clearMark() const { m_mark = false; }
@@ -66,7 +66,7 @@ namespace mtconnect {
     /// @param[in] props the set of properties
     /// @return the property value or std::nullopt
     template <typename T>
-    inline std::optional<T> OptionallyGet(const std::string &key, const Properties &props)
+    inline std::optional<T> OptionallyGet(const std::string& key, const Properties& props)
     {
       auto p = props.find(key);
       if (p != props.end())
@@ -89,13 +89,13 @@ namespace mtconnect {
       Entity() {}
       /// @brief Create an entity with a name
       /// @param name entity name
-      Entity(const std::string &name) : m_name(name) {}
+      Entity(const std::string& name) : m_name(name) {}
       /// @brief Create an entity with a name and property set
       /// @param name entity name
       /// @param props entity properties
-      Entity(const std::string &name, const Properties &props) : m_name(name), m_properties(props)
+      Entity(const std::string& name, const Properties& props) : m_name(name), m_properties(props)
       {}
-      Entity(const Entity &entity)
+      Entity(const Entity& entity)
         : m_name(entity.m_name), m_properties(entity.m_properties), m_order(entity.m_order)
       {
         if (entity.m_attributes)
@@ -105,19 +105,19 @@ namespace mtconnect {
 
       /// @brief Get a shared pointer
       /// @return shared pointer to the entity
-      EntityPtr getptr() const { return const_cast<Entity *>(this)->shared_from_this(); }
+      EntityPtr getptr() const { return const_cast<Entity*>(this)->shared_from_this(); }
 
       /// @brief method to return the entities identity. defaults to `id`.
       /// @return the identity
-      virtual const entity::Value &getIdentity() const { return getProperty("id"); }
+      virtual const entity::Value& getIdentity() const { return getProperty("id"); }
 
       /// @brief create unique ids recursively
       /// @param[in,out] idMap  old entity id to new entity id map
       /// @param[in] sha the root sha1
       /// @returns optional string value of the new id
       virtual std::optional<std::string> createUniqueId(
-          std::unordered_map<std::string, std::string> &idMap,
-          const boost::uuids::detail::sha1 &sha1);
+          std::unordered_map<std::string, std::string>& idMap,
+          const boost::uuids::detail::sha1& sha1);
 
       /// @brief update all id references to the new ids recursively
       /// @param[in] idMap map of old ids to new ids
@@ -147,17 +147,17 @@ namespace mtconnect {
       ///
       /// This may be extended to include a property set in the future.
       /// @returns `true` if the property is hidden
-      bool isHidden(const std::string &name) const { return name == "originalId"; }
+      bool isHidden(const std::string& name) const { return name == "originalId"; }
       /// @brief get the name of the entity
       /// @return name
-      const auto &getName() const { return m_name; }
+      const auto& getName() const { return m_name; }
       /// @brief get a const reference to the properties
       /// @return properties
-      const Properties &getProperties() const { return m_properties; }
+      const Properties& getProperties() const { return m_properties; }
       /// @brief get a property for a ley
       /// @param n the key
       /// @return The property or a Value with std::monstate() if not found
-      const Value &getProperty(const std::string &n) const
+      const Value& getProperty(const std::string& n) const
       {
         static Value noValue {std::monostate()};
         auto it = m_properties.find(n);
@@ -169,17 +169,17 @@ namespace mtconnect {
       /// @brief set a property
       /// @param key property key
       /// @param v property value
-      virtual void setProperty(const std::string &key, const Value &v)
+      virtual void setProperty(const std::string& key, const Value& v)
       {
         m_properties.insert_or_assign(key, v);
       }
       /// @brief set a property using a key/value pair
       /// @param property the key/value pair
-      void setProperty(const Property &property) { setProperty(property.first, property.second); }
+      void setProperty(const Property& property) { setProperty(property.first, property.second); }
       /// @brief check if a propery exists
       /// @param n the key
       /// @return `true` if the property exists
-      bool hasProperty(const std::string &n) const
+      bool hasProperty(const std::string& n) const
       {
         return m_properties.find(n) != m_properties.end();
       }
@@ -188,14 +188,14 @@ namespace mtconnect {
       bool hasValue() const { return hasProperty("VALUE"); }
       /// @brief set the name to a string
       /// @param name the name
-      void setName(const std::string &name) { m_name = name; }
+      void setName(const std::string& name) { m_name = name; }
       /// @brief set the name as a qname
       /// @param name the qname
-      void setQName(const std::string &name) { m_name.setQName(name); }
+      void setQName(const std::string& name) { m_name.setQName(name); }
       /// @brief apply function f to the property if it exists
       /// @param name the key
       /// @param f the lambda to be called if the property exists
-      void applyTo(const std::string &name, std::function<void(Value &v)> f)
+      void applyTo(const std::string& name, std::function<void(Value& v)> f)
       {
         auto p = m_properties.find(name);
         if (p != m_properties.end())
@@ -203,11 +203,11 @@ namespace mtconnect {
       }
       /// @brief apply a function to a `VALUE` property
       /// @param f the function
-      void applyToValue(std::function<void(Value &v)> f) { applyTo("VALUE", f); }
+      void applyToValue(std::function<void(Value& v)> f) { applyTo("VALUE", f); }
 
       /// @brief get the `VALUE` property if it exists, Value is mutable
       /// @return `VALUE` property
-      Value &getValue()
+      Value& getValue()
       {
         thread_local Value null;
         null = std::monostate {};
@@ -218,7 +218,7 @@ namespace mtconnect {
           return null;
       }
       /// @brief get a const reference to the `VALUE` property
-      const Value &getValue() const { return getProperty("VALUE"); }
+      const Value& getValue() const { return getProperty("VALUE"); }
       /// @brief get the entity with a list property if it exists
       ///
       /// This is a convience method that gets the property by name. If the property is an
@@ -226,14 +226,14 @@ namespace mtconnect {
       ///
       /// @param name the key for the list
       /// @return the entity list or std::nullopt
-      std::optional<EntityList> getList(const std::string &name) const
+      std::optional<EntityList> getList(const std::string& name) const
       {
-        auto &v = getProperty(name);
-        auto *p = std::get_if<EntityPtr>(&v);
+        auto& v = getProperty(name);
+        auto* p = std::get_if<EntityPtr>(&v);
         if (p)
         {
-          auto &lv = (*p)->getProperty("LIST");
-          auto *l = std::get_if<EntityList>(&lv);
+          auto& lv = (*p)->getProperty("LIST");
+          auto* l = std::get_if<EntityList>(&lv);
           if (l)
             return *l;
         }
@@ -243,14 +243,14 @@ namespace mtconnect {
 
       /// @brief Get the LIST property if it exists from an entity
       /// @returns a reference to the entity list. Returns an empty list if it does not exist.
-      const EntityList &getListProperty() const
+      const EntityList& getListProperty() const
       {
         static EntityList null;
 
         auto p = m_properties.find("LIST");
         if (p != m_properties.end())
         {
-          auto *l = std::get_if<EntityList>(&p->second);
+          auto* l = std::get_if<EntityList>(&p->second);
           if (l)
             return *l;
         }
@@ -259,7 +259,7 @@ namespace mtconnect {
 
       /// @brief Get the LIST property if it exists from an entity
       /// @returns a reference to the entity list. Returns an empty list if it does not exist.
-      EntityList &getListProperty()
+      EntityList& getListProperty()
       {
         thread_local EntityList null;
         null.clear();
@@ -267,7 +267,7 @@ namespace mtconnect {
         auto p = m_properties.find("LIST");
         if (p != m_properties.end())
         {
-          auto *l = std::get_if<EntityList>(&p->second);
+          auto* l = std::get_if<EntityList>(&p->second);
           if (l)
             return *l;
         }
@@ -280,20 +280,20 @@ namespace mtconnect {
       /// @param entity entity to add
       /// @param errors errors if add fails
       /// @return `true` if successful
-      bool addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
-                     ErrorList &errors);
+      bool addToList(const std::string& name, FactoryPtr factory, EntityPtr entity,
+                     ErrorList& errors);
       /// @brief Remove an entity from an entity list
       /// @param name the key for the entity list
       /// @param entity the entity to remove
       /// @return `true` if successful
-      bool removeFromList(const std::string &name, EntityPtr entity);
+      bool removeFromList(const std::string& name, EntityPtr entity);
 
       /// @brief sets the `VALUE` property
       /// @param v the value
-      void setValue(const Value &v) { setProperty("VALUE", v); }
+      void setValue(const Value& v) { setProperty("VALUE", v); }
       /// @brief remove a property
       /// @param name the key
-      void erase(const std::string &name) { m_properties.erase(name); }
+      void erase(const std::string& name) { m_properties.erase(name); }
 
       /// @brief get a property for a key
       /// @tparam T the type of the property
@@ -301,7 +301,7 @@ namespace mtconnect {
       /// @return the value as type T
       /// @throws `std::bad_variant_access` if incorrect type
       template <typename T>
-      const T &get(const std::string &name) const
+      const T& get(const std::string& name) const
       {
         return std::get<T>(getProperty(name));
       }
@@ -311,7 +311,7 @@ namespace mtconnect {
       /// @return the value as type T
       /// @throws `std::bad_variant_access` if incorrect type
       template <typename T>
-      const T &getValue() const
+      const T& getValue() const
       {
         return std::get<T>(getValue());
       }
@@ -322,7 +322,7 @@ namespace mtconnect {
       /// @return the value of the property as type T or nullopt
       /// @throws `std::bad_variant_access` if incorrect type
       template <typename T>
-      const std::optional<T> maybeGet(const std::string &name) const
+      const std::optional<T> maybeGet(const std::string& name) const
       {
         return OptionallyGet<T>(name, m_properties);
       }
@@ -348,11 +348,11 @@ namespace mtconnect {
       /// @brief get an iterator to the property
       /// @param[in] name the key
       /// @return an iterator to the property
-      auto find(const std::string &name) { return m_properties.find(name); }
+      auto find(const std::string& name) { return m_properties.find(name); }
       /// @brief erase a propery using an iterator
       /// @param[in] it an iterator pointing to the propery
       /// @return the iterator after erase
-      auto erase(Properties::iterator &it) { return m_properties.erase(it); }
+      auto erase(Properties::iterator& it) { return m_properties.erase(it); }
       /// @brief tells the entity which properties are attributes for XML generation
       /// @param[in] a the attributes
       void setAttributes(AttributeSet a)
@@ -362,7 +362,7 @@ namespace mtconnect {
       }
       /// @brief get the attributes for XML generation
       /// @return attribute set
-      const auto &getAttributes() const
+      const auto& getAttributes() const
       {
         static AttributeSet empty;
         if (m_attributes)
@@ -374,7 +374,7 @@ namespace mtconnect {
       /// @brief checks if two entity models are different–does a deep analysis
       /// @param other the other entity to check
       /// @return `true` if the entities are different
-      bool different(const Entity &other) const;
+      bool different(const Entity& other) const;
 
       /// @brief cover method for entity comparison
       /// @param other the other entity to check
@@ -384,12 +384,12 @@ namespace mtconnect {
       /// @brief compare two entities for equality
       /// @param other the other entity
       /// @return `true` if they have equal name and properties
-      bool operator==(const Entity &other) const { return !different(other); }
+      bool operator==(const Entity& other) const { return !different(other); }
 
       /// @brief compare two entities for inequality
       /// @param other the other entity
       /// @return `true` if they have unequal name and properties
-      bool operator!=(const Entity &other) const { return different(other); }
+      bool operator!=(const Entity& other) const { return different(other); }
 
       /// @brief update this entity to be the same as other
       /// @param other the other entity
@@ -433,8 +433,8 @@ namespace mtconnect {
       /// @brief Computes the sha1 hash of the entity skipping properties in `skip`
       /// @param[in,out] sha1 The boost sha1 accumulator
       /// @param[in] skip A set of parameters to skip–not recursive
-      void hash(boost::uuids::detail::sha1 &sha1,
-                const boost::unordered_set<std::string> &skip) const;
+      void hash(boost::uuids::detail::sha1& sha1,
+                const boost::unordered_set<std::string>& skip) const;
 
       /// @brief The virtual method that covers `hash(boost::uuids::detail::sha1&,
       /// boost::unordered_set<std::string> skip)`
@@ -443,7 +443,7 @@ namespace mtconnect {
       /// {"hash", "timestamp"} that should not be included in the unique hash of the entity.
       ///
       /// @param[in,out] sha1 The boost sha1 accumulator
-      virtual void hash(boost::uuids::detail::sha1 &sha1) const
+      virtual void hash(boost::uuids::detail::sha1& sha1) const
       {
         // Default do not skip anything, subclasses add skipped
         // parameters.
@@ -451,7 +451,7 @@ namespace mtconnect {
         hash(sha1, skip);
       }
 
-      Value &getProperty_(const std::string &name)
+      Value& getProperty_(const std::string& name)
       {
         thread_local Value noValue {std::monostate()};
         noValue = std::monostate {};
@@ -473,16 +473,16 @@ namespace mtconnect {
     /// @brief variant visitor to compare two entity parameter values for equality
     struct ValueEqualVisitor
     {
-      ValueEqualVisitor(const Value &t) : m_this(t) {}
+      ValueEqualVisitor(const Value& t) : m_this(t) {}
 
-      bool operator()(const EntityPtr &other)
+      bool operator()(const EntityPtr& other)
       {
         return *std::get<EntityPtr>(m_this) == *(other.get());
       }
 
-      bool operator()(const EntityList &other)
+      bool operator()(const EntityList& other)
       {
-        const auto &list = std::get<EntityList>(m_this);
+        const auto& list = std::get<EntityList>(m_this);
         if (list.size() != other.size())
           return false;
 
@@ -493,7 +493,7 @@ namespace mtconnect {
           {
             auto id = (*it)->getIdentity();
             auto oit =
-                boost::find_if(other, [&id](const auto &e) { return id == e->getIdentity(); });
+                boost::find_if(other, [&id](const auto& e) { return id == e->getIdentity(); });
             if (oit == other.end() || *(it->get()) != *(oit->get()))
               return false;
           }
@@ -511,16 +511,16 @@ namespace mtconnect {
       }
 
       template <class T>
-      bool operator()(const T &other)
+      bool operator()(const T& other)
       {
         return std::get<T>(m_this) == other;
       }
 
     private:
-      const Value &m_this;
+      const Value& m_this;
     };
 
-    inline bool operator==(const Value &v1, const Value &v2)
+    inline bool operator==(const Value& v1, const Value& v2)
     {
       if (v1.index() != v2.index())
         return false;
@@ -528,9 +528,9 @@ namespace mtconnect {
       return std::visit(ValueEqualVisitor(v1), v2);
     }
 
-    inline bool operator!=(const Value &v1, const Value &v2) { return !(v1 == v2); }
+    inline bool operator!=(const Value& v1, const Value& v2) { return !(v1 == v2); }
 
-    inline bool Entity::different(const Entity &other) const
+    inline bool Entity::different(const Entity& other) const
     {
       if (m_name != other.m_name)
         return true;
@@ -552,22 +552,22 @@ namespace mtconnect {
     /// @brief variant visitor to merge two entities
     struct ValueMergeVisitor
     {
-      ValueMergeVisitor(Value &t, const std::set<std::string> protect)
+      ValueMergeVisitor(Value& t, const std::set<std::string> protect)
         : m_this(t), m_protect(protect)
       {}
 
-      bool operator()(const EntityPtr &other)
+      bool operator()(const EntityPtr& other)
       {
         return std::get<EntityPtr>(m_this)->reviseTo(other, m_protect);
       }
 
-      bool mergeRemainder(EntityList &list, EntityList &revised, bool changed)
+      bool mergeRemainder(EntityList& list, EntityList& revised, bool changed)
       {
         if (changed)
         {
-          for (auto &o : list)
+          for (auto& o : list)
           {
-            const auto &id = o->getIdentity();
+            const auto& id = o->getIdentity();
             if (std::holds_alternative<std::string>(id))
             {
               auto s = std::get<std::string>(id);
@@ -578,8 +578,8 @@ namespace mtconnect {
         }
         else
         {
-          changed = std::any_of(list.begin(), list.end(), [this](const auto &o) {
-            const auto &id = o->getIdentity();
+          changed = std::any_of(list.begin(), list.end(), [this](const auto& o) {
+            const auto& id = o->getIdentity();
             if (std::holds_alternative<std::string>(id))
             {
               auto s = std::get<std::string>(id);
@@ -595,17 +595,17 @@ namespace mtconnect {
         return changed;
       }
 
-      bool operator()(const EntityList &other)
+      bool operator()(const EntityList& other)
       {
         bool changed = false;
         auto list = std::get<EntityList>(m_this);
 
         EntityList revised;
-        for (const auto &o : other)
+        for (const auto& o : other)
         {
-          if (const auto &id = o->getIdentity(); !std::holds_alternative<std::monostate>(id))
+          if (const auto& id = o->getIdentity(); !std::holds_alternative<std::monostate>(id))
           {
-            auto it = boost::find_if(list, [&id](auto &e) { return e->getIdentity() == id; });
+            auto it = boost::find_if(list, [&id](auto& e) { return e->getIdentity() == id; });
             LOG(trace) << " ... Merging " << o->getName() << " with identity: ";
             if (std::holds_alternative<std::string>(id))
               LOG(trace) << std::get<std::string>(id);
@@ -631,7 +631,7 @@ namespace mtconnect {
           {
             LOG(trace) << " ... Merging " << o->getName() << " with no identity";
 
-            auto it = boost::find_if(list, [&o](auto &e) { return *(o.get()) == *(e.get()); });
+            auto it = boost::find_if(list, [&o](auto& e) { return *(o.get()) == *(e.get()); });
 
             if (it != list.end())
             {
@@ -660,7 +660,7 @@ namespace mtconnect {
       }
 
       template <class T>
-      bool operator()(const T &other)
+      bool operator()(const T& other)
       {
         if (std::get<T>(m_this) != other)
         {
@@ -674,7 +674,7 @@ namespace mtconnect {
       }
 
     private:
-      Value &m_this;
+      Value& m_this;
       std::set<std::string> m_protect;
     };
 
@@ -689,7 +689,7 @@ namespace mtconnect {
       }
 
       std::vector<PropertyKey> removed;
-      for (auto &[key, value] : m_properties)
+      for (auto& [key, value] : m_properties)
       {
         auto op = other->m_properties.find(key);
         if (op != other->m_properties.end())
@@ -717,7 +717,7 @@ namespace mtconnect {
         }
       }
 
-      for (auto &key : removed)
+      for (auto& key : removed)
       {
         m_properties.erase(key);
       }
@@ -730,20 +730,20 @@ namespace mtconnect {
     {
       /// @brief constructor
       /// @param os the output stream
-      StreamOutputVisitor(std::ostream &os) : m_os(os) {}
+      StreamOutputVisitor(std::ostream& os) : m_os(os) {}
 
-      void operator()(const std::monostate &) { m_os << "null"; }
+      void operator()(const std::monostate&) { m_os << "null"; }
 
-      void operator()(const EntityPtr &entity)
+      void operator()(const EntityPtr& entity)
       {
-        const auto &id = entity->getIdentity();
+        const auto& id = entity->getIdentity();
         m_os << "Entity(" << entity->getName() << ":";
         StreamOutputVisitor visitor(m_os);
         std::visit(visitor, id);
         m_os << ")";
       }
 
-      void operator()(const EntityList &list)
+      void operator()(const EntityList& list)
       {
         m_os << "EntityList[";
         for (auto e : list)
@@ -755,14 +755,14 @@ namespace mtconnect {
         m_os << "]";
       }
 
-      void operator()(const DataSet &dataSet) { m_os << "DataSet(" << dataSet.size() << " items)"; }
+      void operator()(const DataSet& dataSet) { m_os << "DataSet(" << dataSet.size() << " items)"; }
 
-      void operator()(const QName &qname) { m_os << qname.str(); }
+      void operator()(const QName& qname) { m_os << qname.str(); }
 
-      void operator()(const Vector &vec)
+      void operator()(const Vector& vec)
       {
         m_os << "Vector[";
-        for (const auto &v : vec)
+        for (const auto& v : vec)
         {
           m_os << v << " ";
         }
@@ -770,18 +770,18 @@ namespace mtconnect {
       }
 
       template <typename T>
-      void operator()(const T &value)
+      void operator()(const T& value)
       {
         m_os << value;
       }
 
-      std::ostream &m_os;
+      std::ostream& m_os;
     };
 
     /// @brief output operator for Value
     /// @param os the output stream
     /// @param v the Value to output
-    inline std::ostream &operator<<(std::ostream &os, const Value &v)
+    inline std::ostream& operator<<(std::ostream& os, const Value& v)
     {
       StreamOutputVisitor visitor(os);
       std::visit(visitor, v);
@@ -791,7 +791,7 @@ namespace mtconnect {
     /// @brief output operator for Value
     /// @param os the output stream
     /// @param v the Value to output
-    inline std::ostream &operator<<(std::ostream &os, const EntityPtr &v)
+    inline std::ostream& operator<<(std::ostream& os, const EntityPtr& v)
     {
       StreamOutputVisitor visitor(os);
       visitor(v);
