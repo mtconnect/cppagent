@@ -47,8 +47,8 @@
 #include <psapi.h>
 
 #define DELTA_EPOCH_IN_MICROSECS 11644473600000000ull
-#endif
-
+#else // _WINDOWS
+// Resource management required includes by OS
 #if defined(__linux__)
 #include <boost/filesystem.hpp>
 #include <fstream>
@@ -58,10 +58,11 @@
 #include <mach/mach.h>
 #include <unistd.h>
 #include <fcntl.h>
-#else                       // *BSD
+#else // not __linux__ or __APPLE__
 #include <unistd.h>
 #include <fcntl.h>
-#endif
+#endif // __linux__ or __APPLE__
+#endif // _WINDOWS
 
 using namespace std;
 using namespace std::chrono;
