@@ -12,7 +12,7 @@ build_type=Release
 shared=True
 
 [platform_tool_requires]
-cmake/4.3.1
+cmake/>4.3
 
 [replace_tool_requires]
-cmake/*: cmake/4.3.1
+cmake/*: cmake/>4.3

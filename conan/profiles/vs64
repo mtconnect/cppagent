@@ -9,7 +9,7 @@ compiler.runtime_type=Release
 build_type=Release
 
 [platform_tool_requires]
-cmake/4.3
+cmake/>4.3
 
 [replace_tool_requires]
-cmake/*: cmake/4.3
+cmake/*: cmake/>4.3
