@@ -81,7 +81,7 @@ namespace mtconnect::entity {
       auto count = xmlNodeDump(buf, child->doc, child, 0, 0);
       if (count > 0)
       {
-        str << (const char*)buf->content;
+        str << string((const char*)xmlBufferContent(buf), xmlBufferLength(buf));
       }
       xmlBufferFree(buf);
     }
