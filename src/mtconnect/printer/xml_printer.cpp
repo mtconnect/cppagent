@@ -51,8 +51,8 @@ namespace mtconnect::printer {
     NAMED_SCOPE("xml.printer");
   }
 
-  void XmlPrinter::addDevicesNamespace(const std::string &urn, const std::string &location,
-                                       const std::string &prefix)
+  void XmlPrinter::addDevicesNamespace(const std::string& urn, const std::string& location,
+                                       const std::string& prefix)
   {
     pair<string, SchemaNamespace> item;
     item.second.mUrn = urn;
@@ -66,7 +66,7 @@ namespace mtconnect::printer {
 
   void XmlPrinter::clearDevicesNamespaces() { m_devicesNamespaces.clear(); }
 
-  string XmlPrinter::getDevicesUrn(const std::string &prefix)
+  string XmlPrinter::getDevicesUrn(const std::string& prefix)
   {
     auto ns = m_devicesNamespaces.find(prefix);
     if (ns != m_devicesNamespaces.end())
@@ -75,7 +75,7 @@ namespace mtconnect::printer {
       return "";
   }
 
-  string XmlPrinter::getDevicesLocation(const std::string &prefix)
+  string XmlPrinter::getDevicesLocation(const std::string& prefix)
   {
     auto ns = m_devicesNamespaces.find(prefix);
     if (ns != m_devicesNamespaces.end())
@@ -84,8 +84,8 @@ namespace mtconnect::printer {
       return "";
   }
 
-  void XmlPrinter::addErrorNamespace(const std::string &urn, const std::string &location,
-                                     const std::string &prefix)
+  void XmlPrinter::addErrorNamespace(const std::string& urn, const std::string& location,
+                                     const std::string& prefix)
   {
     pair<string, SchemaNamespace> item;
     item.second.mUrn = urn;
@@ -99,7 +99,7 @@ namespace mtconnect::printer {
 
   void XmlPrinter::clearErrorNamespaces() { m_errorNamespaces.clear(); }
 
-  string XmlPrinter::getErrorUrn(const std::string &prefix)
+  string XmlPrinter::getErrorUrn(const std::string& prefix)
   {
     auto ns = m_errorNamespaces.find(prefix);
     if (ns != m_errorNamespaces.end())
@@ -108,7 +108,7 @@ namespace mtconnect::printer {
       return "";
   }
 
-  string XmlPrinter::getErrorLocation(const std::string &prefix)
+  string XmlPrinter::getErrorLocation(const std::string& prefix)
   {
     auto ns = m_errorNamespaces.find(prefix);
     if (ns != m_errorNamespaces.end())
@@ -117,8 +117,8 @@ namespace mtconnect::printer {
       return "";
   }
 
-  void XmlPrinter::addStreamsNamespace(const std::string &urn, const std::string &location,
-                                       const std::string &prefix)
+  void XmlPrinter::addStreamsNamespace(const std::string& urn, const std::string& location,
+                                       const std::string& prefix)
   {
     pair<string, SchemaNamespace> item;
     item.second.mUrn = urn;
@@ -132,7 +132,7 @@ namespace mtconnect::printer {
 
   void XmlPrinter::clearStreamsNamespaces() { m_streamsNamespaces.clear(); }
 
-  string XmlPrinter::getStreamsUrn(const std::string &prefix)
+  string XmlPrinter::getStreamsUrn(const std::string& prefix)
   {
     auto ns = m_streamsNamespaces.find(prefix);
     if (ns != m_streamsNamespaces.end())
@@ -141,7 +141,7 @@ namespace mtconnect::printer {
       return "";
   }
 
-  string XmlPrinter::getStreamsLocation(const std::string &prefix)
+  string XmlPrinter::getStreamsLocation(const std::string& prefix)
   {
     auto ns = m_streamsNamespaces.find(prefix);
     if (ns != m_streamsNamespaces.end())
@@ -150,8 +150,8 @@ namespace mtconnect::printer {
       return "";
   }
 
-  void XmlPrinter::addAssetsNamespace(const std::string &urn, const std::string &location,
-                                      const std::string &prefix)
+  void XmlPrinter::addAssetsNamespace(const std::string& urn, const std::string& location,
+                                      const std::string& prefix)
   {
     pair<string, SchemaNamespace> item;
     item.second.mUrn = urn;
@@ -165,7 +165,7 @@ namespace mtconnect::printer {
 
   void XmlPrinter::clearAssetsNamespaces() { m_assetNamespaces.clear(); }
 
-  string XmlPrinter::getAssetsUrn(const std::string &prefix)
+  string XmlPrinter::getAssetsUrn(const std::string& prefix)
   {
     auto ns = m_assetNamespaces.find(prefix);
     if (ns != m_assetNamespaces.end())
@@ -174,7 +174,7 @@ namespace mtconnect::printer {
       return "";
   }
 
-  string XmlPrinter::getAssetsLocation(const std::string &prefix)
+  string XmlPrinter::getAssetsLocation(const std::string& prefix)
   {
     auto ns = m_assetNamespaces.find(prefix);
     if (ns != m_assetNamespaces.end())
@@ -183,16 +183,16 @@ namespace mtconnect::printer {
       return "";
   }
 
-  void XmlPrinter::setStreamStyle(const std::string &style) { m_streamsStyle = style; }
+  void XmlPrinter::setStreamStyle(const std::string& style) { m_streamsStyle = style; }
 
-  void XmlPrinter::setDevicesStyle(const std::string &style) { m_devicesStyle = style; }
+  void XmlPrinter::setDevicesStyle(const std::string& style) { m_devicesStyle = style; }
 
-  void XmlPrinter::setErrorStyle(const std::string &style) { m_errorStyle = style; }
+  void XmlPrinter::setErrorStyle(const std::string& style) { m_errorStyle = style; }
 
-  void XmlPrinter::setAssetsStyle(const std::string &style) { m_assetStyle = style; }
+  void XmlPrinter::setAssetsStyle(const std::string& style) { m_assetStyle = style; }
 
   std::string XmlPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
-                                      const uint64_t nextSeq, const entity::EntityList &list,
+                                      const uint64_t nextSeq, const entity::EntityList& list,
                                       bool pretty, const std::optional<std::string> requestId) const
   {
     string ret;
@@ -209,7 +209,7 @@ namespace mtconnect::printer {
         entity::XmlPrinter printer;
 
         auto version = IntSchemaVersion(*m_schemaVersion);
-        for (auto &e : list)
+        for (auto& e : list)
         {
           entity::EntityPtr err {e};
           if (version < SCHEMA_VERSION(2, 6))
@@ -225,7 +225,7 @@ namespace mtconnect::printer {
       // Cleanup
       ret = writer.getContent();
     }
-    catch (const XmlError &error)
+    catch (const XmlError& error)
     {
       LOG(error) << "printError: " << error.what();
     }
@@ -239,8 +239,8 @@ namespace mtconnect::printer {
 
   string XmlPrinter::printProbe(const uint64_t instanceId, const unsigned int bufferSize,
                                 const uint64_t nextSeq, const unsigned int assetBufferSize,
-                                const unsigned int assetCount, const list<DevicePtr> &deviceList,
-                                const std::map<std::string, size_t> *count, bool includeHidden,
+                                const unsigned int assetCount, const list<DevicePtr>& deviceList,
+                                const std::map<std::string, size_t>* count, bool includeHidden,
                                 bool pretty, const std::optional<std::string> requestId) const
   {
     string ret;
@@ -256,14 +256,14 @@ namespace mtconnect::printer {
         AutoElement devices(writer, "Devices");
         entity::XmlPrinter printer(includeHidden);
 
-        for (auto &device : deviceList)
+        for (auto& device : deviceList)
           printer.print(writer, device, m_deviceNsSet);
       }
       closeElement(writer);  // MTConnectDevices
 
       ret = writer.getContent();
     }
-    catch (const XmlError &error)
+    catch (const XmlError& error)
     {
       LOG(error) << "printProbe: " << error.what();
     }
@@ -287,7 +287,7 @@ namespace mtconnect::printer {
 
       ret = writer.getContent();
     }
-    catch (const XmlError &error)
+    catch (const XmlError& error)
     {
       LOG(error) << "printProbe: " << error.what();
     }
@@ -301,7 +301,7 @@ namespace mtconnect::printer {
 
   string XmlPrinter::printSample(const uint64_t instanceId, const unsigned int bufferSize,
                                  const uint64_t nextSeq, const uint64_t firstSeq,
-                                 const uint64_t lastSeq, ObservationList &observations, bool pretty,
+                                 const uint64_t lastSeq, ObservationList& observations, bool pretty,
                                  const std::optional<std::string> requestId) const
   {
     string ret;
@@ -326,13 +326,13 @@ namespace mtconnect::printer {
           {
             AutoElement categoryElement(writer);
 
-            for (auto &observation : observations)
+            for (auto& observation : observations)
             {
               if (!observation->isOrphan())
               {
-                const auto &dataItem = observation->getDataItem();
-                const auto &component = dataItem->getComponent();
-                const auto &device = component->getDevice();
+                const auto& dataItem = observation->getDataItem();
+                const auto& component = dataItem->getComponent();
+                const auto& device = component->getDevice();
 
                 if (deviceElement.key() != device->getId())
                 {
@@ -369,7 +369,7 @@ namespace mtconnect::printer {
 
       ret = writer.getContent();
     }
-    catch (const XmlError &error)
+    catch (const XmlError& error)
     {
       LOG(error) << "printSample: " << error.what();
     }
@@ -382,7 +382,7 @@ namespace mtconnect::printer {
   }
 
   string XmlPrinter::printAssets(const uint64_t instanceId, const unsigned int bufferSize,
-                                 const unsigned int assetCount, const AssetList &asset, bool pretty,
+                                 const unsigned int assetCount, const AssetList& asset, bool pretty,
                                  const std::optional<std::string> requestId) const
   {
     string ret;
@@ -396,7 +396,7 @@ namespace mtconnect::printer {
         AutoElement ele(writer, "Assets");
         entity::XmlPrinter printer;
 
-        for (const auto &asset : asset)
+        for (const auto& asset : asset)
         {
           printer.print(writer, asset, m_assetNsSet);
         }
@@ -404,7 +404,7 @@ namespace mtconnect::printer {
 
       ret = writer.getContent();
     }
-    catch (const XmlError &error)
+    catch (const XmlError& error)
     {
       LOG(error) << "printAssets: " << error.what();
     }
@@ -426,7 +426,7 @@ namespace mtconnect::printer {
                               const uint64_t instanceId, const unsigned int bufferSize,
                               const unsigned int assetBufferSize, const unsigned int assetCount,
                               const uint64_t nextSeq, const uint64_t firstSeq,
-                              const uint64_t lastSeq, const map<string, size_t> *count,
+                              const uint64_t lastSeq, const map<string, size_t>* count,
                               const std::optional<std::string> requestId) const
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, nullptr, "UTF-8", nullptr));
@@ -434,7 +434,7 @@ namespace mtconnect::printer {
     // TODO: Cache the locations and header attributes.
     // Write the root element
     string xmlType, style;
-    const map<string, SchemaNamespace> *namespaces;
+    const map<string, SchemaNamespace>* namespaces;
 
     switch (aType)
     {
@@ -494,7 +494,7 @@ namespace mtconnect::printer {
     string mtcLocation;
 
     // Add in the other namespaces if they exist
-    for (const auto &ns : *namespaces)
+    for (const auto& ns : *namespaces)
     {
       // Skip the mtconnect ns (always m)
       if (ns.first != "m")
@@ -538,7 +538,7 @@ namespace mtconnect::printer {
     // Create the header
     AutoElement header(writer, "Header");
 
-    addAttribute(writer, "creationTime", getCurrentTime(GMT));
+    addAttribute(writer, "creationTime", getCurrentTime(GMT_UV_SEC));
 
     addAttribute(writer, "sender", m_senderName);
     addAttribute(writer, "instanceId", instanceId);
@@ -584,7 +584,7 @@ namespace mtconnect::printer {
     {
       AutoElement ele(writer, "AssetCounts");
 
-      for (const auto &pair : *count)
+      for (const auto& pair : *count)
       {
         addSimpleElement(writer, "AssetCount", to_string(pair.second), {{"assetType", pair.first}});
       }

@@ -129,5 +129,5 @@ namespace mtconnect {
         std::mutex m_queueMutex;
       };
     }  // namespace mqtt_entity_sink
-  }    // namespace sink
+  }  // namespace sink
 }  // namespace mtconnect

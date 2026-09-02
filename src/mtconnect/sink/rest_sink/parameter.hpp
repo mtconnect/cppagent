@@ -61,16 +61,16 @@ namespace mtconnect::sink::rest_sink {
     /// @param n the name of the parameter
     /// @param t the parameter type. defaults to STRING
     /// @param p path or query portion of the URI
-    Parameter(const std::string &n, ParameterType t = STRING, UrlPart p = PATH)
+    Parameter(const std::string& n, ParameterType t = STRING, UrlPart p = PATH)
       : m_name(n), m_type(t), m_part(p)
     {}
-    Parameter(const std::string_view &n, ParameterType t = STRING, UrlPart p = PATH)
+    Parameter(const std::string_view& n, ParameterType t = STRING, UrlPart p = PATH)
       : m_name(n), m_type(t), m_part(p)
     {}
-    Parameter(const Parameter &o) = default;
+    Parameter(const Parameter& o) = default;
 
     /// @brief to support std::set interface
-    bool operator<(const Parameter &o) const { return m_name < o.m_name; }
+    bool operator<(const Parameter& o) const { return m_name < o.m_name; }
 
     const std::string getTypeName() const
     {
@@ -125,11 +125,11 @@ namespace mtconnect::sink::rest_sink {
     }
 
     /// @brief Helper to convert a ParameterValue to a string
-    static std::string toString(const ParameterValue &v)
+    static std::string toString(const ParameterValue& v)
     {
       using namespace std::string_literals;
-      return std::visit(overloaded {[](const std::monostate &) { return "none"s; },
-                                    [](const std::string &s) { return s; },
+      return std::visit(overloaded {[](const std::monostate&) { return "none"s; },
+                                    [](const std::string& s) { return s; },
                                     [](int32_t i) { return std::to_string(i); },
                                     [](uint64_t i) { return std::to_string(i); },
                                     [](double d) { return std::to_string(d); },
@@ -154,7 +154,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param[in] part part of the URL: `PATH` or `QUERY`
     /// @param[in] summary brief description of the parameter
     /// @param[in] description detailed description of the parameter
-    ParameterDoc(const std::string &name, UrlPart part,
+    ParameterDoc(const std::string& name, UrlPart part,
                  const std::optional<std::string> description)
       : m_name(name), m_part(part), m_description(description)
     {}

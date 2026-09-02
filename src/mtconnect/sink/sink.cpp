@@ -21,10 +21,10 @@
 
 namespace mtconnect {
   namespace sink {
-    SinkPtr SinkFactory::make(const std::string &factoryName, const std::string &sinkName,
-                              boost::asio::io_context &io, SinkContractPtr &&contract,
-                              const ConfigOptions &options,
-                              const boost::property_tree::ptree &block)
+    SinkPtr SinkFactory::make(const std::string& factoryName, const std::string& sinkName,
+                              boost::asio::io_context& io, SinkContractPtr&& contract,
+                              const ConfigOptions& options,
+                              const boost::property_tree::ptree& block)
     {
       auto factory = m_factories.find(factoryName);
       if (factory != m_factories.end())

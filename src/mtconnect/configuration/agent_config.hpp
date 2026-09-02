@@ -78,7 +78,7 @@ namespace mtconnect {
         UNKNOWN
       };
 
-      using InitializationFn = void(const boost::property_tree::ptree &, AgentConfiguration &);
+      using InitializationFn = void(const boost::property_tree::ptree&, AgentConfiguration&);
       using InitializationFunction = boost::function<InitializationFn>;
 
       using ptree = boost::property_tree::ptree;
@@ -92,16 +92,16 @@ namespace mtconnect {
 
       /// @brief Get the callback manager after the agent is created
       /// @return the callback manager
-      auto &afterAgentHooks() { return m_afterAgentHooks; }
+      auto& afterAgentHooks() { return m_afterAgentHooks; }
       /// @brief Get the callback manager after the config has completed
       /// @return the callback manager
-      auto &afterConfigHooks() { return m_afterConfigHooks; }
+      auto& afterConfigHooks() { return m_afterConfigHooks; }
       /// @brief Get the callback manager after the agent is started
       /// @return the callback manager
-      auto &beforeStartHooks() { return m_beforeStartHooks; }
+      auto& beforeStartHooks() { return m_beforeStartHooks; }
       /// @brief Get the callback manager after the agent is stopped
       /// @return the callback manager
-      auto &beforeStopHooks() { return m_beforeStopHooks; }
+      auto& beforeStopHooks() { return m_beforeStopHooks; }
       ///@}
 
       /// @brief stops the agent. Used in daemons.
@@ -111,34 +111,34 @@ namespace mtconnect {
       int start() override;
       /// @brief initializes the configuration of the agent from the command line parameters
       /// @param[in] options command line parameters
-      void initialize(const boost::program_options::variables_map &options) override;
+      void initialize(const boost::program_options::variables_map& options) override;
 
       /// @brief  Configure the logger with the config node from the config file
       /// @param channelName the log channel name
       /// @param config the configuration node
       /// @param formatter optional custom message format
       void configureLoggerChannel(
-          const std::string &channelName, const ptree &config,
+          const std::string& channelName, const ptree& config,
           std::optional<boost::log::basic_formatter<char>> formatter = std::nullopt);
 
       /// @brief  Configure the agent logger with the config node from the config file
       /// @param config the configuration node
-      void configureLogger(const ptree &config);
+      void configureLogger(const ptree& config);
 
       /// @brief load a configuration text
       /// @param[in] text the configuration text loaded from a file
       /// @param[in] fmt the file format, can be MTCONNECT, JSON, or XML
-      void loadConfig(const std::string &text, FileFormat fmt = MTCONNECT);
+      void loadConfig(const std::string& text, FileFormat fmt = MTCONNECT);
 
       /// @brief assign the agent associated with this configuration
       /// @param[in] agent the agent the configuration will take ownership of
-      void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
+      void setAgent(std::unique_ptr<Agent>& agent) { m_agent = std::move(agent); }
       /// @brief get the agent associated with the configuration
-      Agent *getAgent() const { return m_agent.get(); }
+      Agent* getAgent() const { return m_agent.get(); }
       /// @brief get the boost asio io context
-      auto &getContext() { return m_context->get(); }
+      auto& getContext() { return m_context->get(); }
       /// @brief get a pointer to the async io manager
-      auto &getAsyncContext() { return *m_context.get(); }
+      auto& getAsyncContext() { return *m_context.get(); }
 
       /// @brief sets the path for the working directory to the current path
       void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
@@ -147,10 +147,10 @@ namespace mtconnect {
       ///@{
       /// @brief get the factory for creating sinks
       /// @return the factory
-      auto &getSinkFactory() { return m_sinkFactory; }
+      auto& getSinkFactory() { return m_sinkFactory; }
       /// @brief get the factory for creating sources
       /// @return the factory
-      auto &getSourceFactory() { return m_sourceFactory; }
+      auto& getSourceFactory() { return m_sourceFactory; }
       ///@}
 
       /// @brief get the pipeline context for this configuration
@@ -161,45 +161,45 @@ namespace mtconnect {
       ///@{
       /// @brief gets the boost log sink
       /// @return boost log sink
-      const auto &getLoggerSink(const std::string &channelName = "agent")
+      const auto& getLoggerSink(const std::string& channelName = "agent")
       {
         return m_logChannels[channelName].m_logSink;
       }
       /// @brief gets the log directory
       /// @return log directory
-      const auto &getLogDirectory(const std::string &channelName = "agent")
+      const auto& getLogDirectory(const std::string& channelName = "agent")
       {
         return m_logChannels[channelName].m_logDirectory;
       }
       /// @brief get the logging file name
       /// @return log file name
-      const auto &getLogFileName(const std::string &channelName = "agent")
+      const auto& getLogFileName(const std::string& channelName = "agent")
       {
         return m_logChannels[channelName].m_logFileName;
       }
       /// @brief for log rolling, get the log archive pattern
       /// @return log archive pattern
-      const auto &getLogArchivePattern(const std::string &channelName = "agent")
+      const auto& getLogArchivePattern(const std::string& channelName = "agent")
       {
         return m_logChannels[channelName].m_logArchivePattern;
       }
 
       /// @brief gets the archive log directory
       /// @return log directory
-      const auto &getArchiveLogDirectory(const std::string &channelName = "agent")
+      const auto& getArchiveLogDirectory(const std::string& channelName = "agent")
       {
         return m_logChannels[channelName].m_archiveLogDirectory;
       }
 
       /// @brief Get the maximum size of all the log files
       /// @return the maximum size of all log files
-      auto getLogRotationSize(const std::string &channelName = "agent")
+      auto getLogRotationSize(const std::string& channelName = "agent")
       {
         return m_logChannels[channelName].m_logRotationSize;
       }
       /// @brief the maximum size of a log file when it triggers rolling over
       /// @return the maxumum site of a log file
-      auto getMaxLogArchiveSize(const std::string &channelName = "agent")
+      auto getMaxLogArchiveSize(const std::string& channelName = "agent")
       {
         return m_logChannels[channelName].m_maxLogArchiveSize;
       }
@@ -211,13 +211,13 @@ namespace mtconnect {
       /// - `NEVER`
       ///
       /// @return the log file interval
-      auto getRotationLogInterval(const std::string &channelName = "agent")
+      auto getRotationLogInterval(const std::string& channelName = "agent")
       {
         return m_logChannels[channelName].m_rotationLogInterval;
       }
       /// @brief Get the current log level
       /// @return log level
-      auto getLogLevel(const std::string &channelName = "agent")
+      auto getLogLevel(const std::string& channelName = "agent")
       {
         return m_logChannels[channelName].m_logLevel;
       }
@@ -228,14 +228,14 @@ namespace mtconnect {
       /// @brief Set the logging level as a string
       /// @param level the new logging level
       /// @return the logging level
-      boost::log::trivial::severity_level setLoggingLevel(const std::string &level);
+      boost::log::trivial::severity_level setLoggingLevel(const std::string& level);
 
-      std::optional<std::filesystem::path> findConfigFile(const std::string &file)
+      std::optional<std::filesystem::path> findConfigFile(const std::string& file)
       {
         return findFile(m_configPaths, file);
       }
 
-      std::optional<std::filesystem::path> findDataFile(const std::string &file)
+      std::optional<std::filesystem::path> findDataFile(const std::string& file)
       {
         return findFile(m_dataPaths, file);
       }
@@ -246,11 +246,11 @@ namespace mtconnect {
       {
         auto contract = m_agent->makeSinkContract();
         contract->m_findConfigFile =
-            [this](const std::string &n) -> std::optional<std::filesystem::path> {
+            [this](const std::string& n) -> std::optional<std::filesystem::path> {
           return findConfigFile(n);
         };
         contract->m_findDataFile =
-            [this](const std::string &n) -> std::optional<std::filesystem::path> {
+            [this](const std::string& n) -> std::optional<std::filesystem::path> {
           return findDataFile(n);
         };
         return contract;
@@ -258,19 +258,19 @@ namespace mtconnect {
 
       /// @brief add a path to the config paths
       /// @param path the path to add
-      void addConfigPath(const std::filesystem::path &path) { addPathBack(m_configPaths, path); }
+      void addConfigPath(const std::filesystem::path& path) { addPathBack(m_configPaths, path); }
 
       /// @brief add a path to the data paths
       /// @param path the path to add
-      void addDataPath(const std::filesystem::path &path) { addPathBack(m_dataPaths, path); }
+      void addDataPath(const std::filesystem::path& path) { addPathBack(m_dataPaths, path); }
 
       /// @brief add a path to the plugin paths
       /// @param path the path to add
-      void addPluginPath(const std::filesystem::path &path) { addPathBack(m_pluginPaths, path); }
+      void addPluginPath(const std::filesystem::path& path) { addPathBack(m_pluginPaths, path); }
 
       ///@brief set the config path for testing
       ///@param path the path to set for the config file directory
-      void setConfigPath(const std::filesystem::path &path) { m_configPath = path; }
+      void setConfigPath(const std::filesystem::path& path) { m_configPath = path; }
 
       /// @brief Expand `$VAR` and `${VAR}` references in the config tree.
       ///
@@ -278,30 +278,31 @@ namespace mtconnect {
       /// failing that, against environment variables. Unresolved references are left
       /// in place. Called by loadConfig() before any options are parsed.
       /// @param config the parsed configuration tree to expand in place
-      void expandConfigVariables(boost::property_tree::ptree &config);
+      void expandConfigVariables(boost::property_tree::ptree& config);
 
     protected:
       DevicePtr getDefaultDevice();
-      void loadAdapters(const ptree &tree, const ConfigOptions &options);
-      void loadSinks(const ptree &sinks, ConfigOptions &options);
+      void loadAdapters(const ptree& tree, const ConfigOptions& options);
+      void loadSinks(const ptree& sinks, ConfigOptions& options);
 
 #ifdef WITH_PYTHON
-      void configurePython(const ptree &tree, ConfigOptions &options);
+      void configurePython(const ptree& tree, ConfigOptions& options);
 #endif
 #ifdef WITH_RUBY
-      void configureRuby(const ptree &tree, ConfigOptions &options);
+      void configureRuby(const ptree& tree, ConfigOptions& options);
 #endif
 
-      void loadPlugins(const ptree &tree);
-      bool loadPlugin(const std::string &name, const ptree &tree);
+      void loadPlugins(const ptree& tree);
+      bool loadPlugin(const std::string& name, const ptree& tree);
       void monitorFiles(boost::system::error_code ec);
+      void monitorResources(boost::system::error_code ec);
       void scheduleMonitorTimer();
 
     protected:
-      std::optional<std::filesystem::path> findFile(const std::list<std::filesystem::path> &paths,
+      std::optional<std::filesystem::path> findFile(const std::list<std::filesystem::path>& paths,
                                                     const std::string file)
       {
-        for (const auto &path : paths)
+        for (const auto& path : paths)
         {
           auto tst = path / file;
           std::error_code ec;
@@ -322,7 +323,7 @@ namespace mtconnect {
         return std::nullopt;
       }
 
-      void addPathBack(std::list<std::filesystem::path> &paths, std::filesystem::path path)
+      void addPathBack(std::list<std::filesystem::path>& paths, std::filesystem::path path)
       {
         std::error_code ec;
         auto con {std::filesystem::canonical(path, ec)};
@@ -335,7 +336,7 @@ namespace mtconnect {
           LOG(debug) << "Cannot find path: " << path << ", " << ec.message() << ", skipping...";
       }
 
-      void addPathFront(std::list<std::filesystem::path> &paths, std::filesystem::path path)
+      void addPathFront(std::list<std::filesystem::path>& paths, std::filesystem::path path)
       {
         std::error_code ec;
         auto con {std::filesystem::canonical(path, ec)};
@@ -347,9 +348,9 @@ namespace mtconnect {
       }
 
       template <typename T>
-      void logPaths(T lvl, const std::list<std::filesystem::path> &paths)
+      void logPaths(T lvl, const std::list<std::filesystem::path>& paths)
       {
-        for (const auto &p : paths)
+        for (const auto& p : paths)
         {
           BOOST_LOG_STREAM_WITH_PARAMS(::boost::log::trivial::logger::get(),
                                        (::boost::log::keywords::severity = lvl))
@@ -400,11 +401,13 @@ namespace mtconnect {
       std::list<std::filesystem::path> m_pluginPaths;
 
       // File monitoring
-      boost::asio::steady_timer m_monitorTimer;
+      boost::asio::steady_timer m_monitorFilesTimer;
+      boost::asio::steady_timer m_monitorResourceTimer;
       bool m_monitorFiles = false;
       std::chrono::seconds m_monitorInterval;
       std::chrono::seconds m_monitorDelay;
       bool m_restart = false;
+      bool m_monitorResources {false};
       std::optional<std::filesystem::file_time_type> m_configTime;
       std::optional<std::filesystem::file_time_type> m_deviceTime;
 
@@ -415,7 +418,7 @@ namespace mtconnect {
       int m_workerThreadCount {1};
 
       // Reference to the global logger
-      boost::log::trivial::logger_type *m_logger {nullptr};
+      boost::log::trivial::logger_type* m_logger {nullptr};
 
 #ifdef WITH_RUBY
       std::unique_ptr<ruby::Embedded> m_ruby;
@@ -423,6 +426,9 @@ namespace mtconnect {
 #ifdef WITH_PYTHON
       std::unique_ptr<python::Embedded> m_python;
 #endif
+
+      TrendMonitor m_fdMonitor {makeFdMonitor()};
+      TrendMonitor m_memoryMonitor {makeMemoryMonitor()};
 
       HookManager<AgentConfiguration> m_afterAgentHooks;
       HookManager<AgentConfiguration> m_afterConfigHooks;

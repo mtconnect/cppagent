@@ -48,7 +48,7 @@ using namespace mtconnect::source::adapter;
 using namespace mtconnect::asset;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -104,7 +104,7 @@ TEST_F(CuttingToolTest, minimal_cutting_tool_archetype_is_parsed)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("CAT", get<string>(entity->getProperty("toolId")));
@@ -163,7 +163,7 @@ TEST_F(CuttingToolTest, cutting_tool_archetype_measurements_are_parsed)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("CAT", get<string>(entity->getProperty("toolId")));
@@ -238,7 +238,7 @@ TEST_F(CuttingToolTest, cutting_tool_archetype_cutting_items_are_parsed)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("CAT", get<string>(entity->getProperty("toolId")));
@@ -357,7 +357,7 @@ TEST_F(CuttingToolTest, minimal_cutting_tool_is_parsed)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("CAT", get<string>(entity->getProperty("toolId")));
@@ -460,7 +460,7 @@ TEST_F(CuttingToolTest, cutting_tool_measurements_without_value_fails_validation
 
 TEST_F(CuttingToolTest, cutting_tool_with_simple_cutting_items_is_loaded_via_adapter)
 {
-  auto printer = dynamic_cast<printer::XmlPrinter *>(m_agentTestHelper->m_agent->getPrinter("xml"));
+  auto printer = dynamic_cast<printer::XmlPrinter*>(m_agentTestHelper->m_agent->getPrinter("xml"));
   ASSERT_TRUE(printer != nullptr);
 
   printer->clearAssetsNamespaces();
@@ -525,7 +525,7 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("123456", get<string>(entity->getProperty("toolId")));
@@ -539,7 +539,7 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
   auto itemList = lifeCycle->getList("CuttingItems");
   ASSERT_EQ(1, itemList->size());
 
-  auto &item = *itemList->begin();
+  auto& item = *itemList->begin();
   ASSERT_EQ("1", get<string>(item->getProperty("indices")));
 
   auto life = get<EntityList>(item->getProperty("ItemLife"));
@@ -666,7 +666,7 @@ TEST_F(CuttingToolTest, test_extended_cutting_tool_with_json_v2)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   entity::JsonEntityPrinter jprinter(2, true);

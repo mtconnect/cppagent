@@ -43,12 +43,12 @@ namespace mtconnect::ruby {
   /// @param[in] mrb the mruby state
   /// @param[in] value the data set value
   /// @returns an mruby value
-  inline mrb_value toRuby(mrb_state *mrb, const TableCellValue &value)
+  inline mrb_value toRuby(mrb_state* mrb, const TableCellValue& value)
   {
     mrb_value rv;
 
-    rv = visit(overloaded {[](const std::monostate &v) -> mrb_value { return mrb_nil_value(); },
-                           [mrb](const std::string &v) -> mrb_value {
+    rv = visit(overloaded {[](const std::monostate& v) -> mrb_value { return mrb_nil_value(); },
+                           [mrb](const std::string& v) -> mrb_value {
                              return mrb_str_new_cstr(mrb, v.c_str());
                            },
                            [mrb](const int64_t v) -> mrb_value { return mrb_int_value(mrb, v); },
@@ -65,12 +65,12 @@ namespace mtconnect::ruby {
   /// @param[in] mrb the mruby state
   /// @param[in] value the data set
   /// @returns an mruby value
-  inline mrb_value toRuby(mrb_state *mrb, const TableRow &set)
+  inline mrb_value toRuby(mrb_state* mrb, const TableRow& set)
   {
     mrb_value hash = mrb_hash_new(mrb);
-    for (const auto &entry : set)
+    for (const auto& entry : set)
     {
-      const auto &value = (entry.m_value);
+      const auto& value = (entry.m_value);
 
       mrb_sym k = mrb_intern_cstr(mrb, entry.m_key.c_str());
       mrb_value v = toRuby(mrb, value);
@@ -85,15 +85,15 @@ namespace mtconnect::ruby {
   /// @param[in] mrb the mruby state
   /// @param[in] value the data set value
   /// @returns an mruby value
-  inline mrb_value toRuby(mrb_state *mrb, const DataSetValue &value)
+  inline mrb_value toRuby(mrb_state* mrb, const DataSetValue& value)
   {
     mrb_value rv;
 
-    rv = visit(overloaded {[](const std::monostate &v) -> mrb_value { return mrb_nil_value(); },
-                           [mrb](const std::string &v) -> mrb_value {
+    rv = visit(overloaded {[](const std::monostate& v) -> mrb_value { return mrb_nil_value(); },
+                           [mrb](const std::string& v) -> mrb_value {
                              return mrb_str_new_cstr(mrb, v.c_str());
                            },
-                           [mrb](const entity::TableRow &v) -> mrb_value { return toRuby(mrb, v); },
+                           [mrb](const entity::TableRow& v) -> mrb_value { return toRuby(mrb, v); },
                            [mrb](const int64_t v) -> mrb_value { return mrb_int_value(mrb, v); },
                            [mrb](const double v) -> mrb_value { return mrb_float_value(mrb, v); }},
                value);
@@ -108,12 +108,12 @@ namespace mtconnect::ruby {
   /// @param[in] mrb the mruby state
   /// @param[in] value the data set
   /// @returns an mruby value
-  inline mrb_value toRuby(mrb_state *mrb, const DataSet &set)
+  inline mrb_value toRuby(mrb_state* mrb, const DataSet& set)
   {
     mrb_value hash = mrb_hash_new(mrb);
-    for (const auto &entry : set)
+    for (const auto& entry : set)
     {
-      const auto &value = (entry.m_value);
+      const auto& value = (entry.m_value);
 
       mrb_sym k = mrb_intern_cstr(mrb, entry.m_key.c_str());
       mrb_value v = toRuby(mrb, value);
@@ -128,7 +128,7 @@ namespace mtconnect::ruby {
   /// @param[in] mrb mruby state
   /// @param[in] value the hash value to convert
   /// @returns true if succesful
-  inline bool tableRowCellValueFromRuby(mrb_state *mrb, mrb_value value, TableCellValue &tcv)
+  inline bool tableRowCellValueFromRuby(mrb_state* mrb, mrb_value value, TableCellValue& tcv)
   {
     using namespace std;
 
@@ -160,15 +160,15 @@ namespace mtconnect::ruby {
   }
 
   /// @brief convert a ruby hash table to a table row
-  inline void tableRowFromRuby(mrb_state *mrb, mrb_value value, TableRow &row)
+  inline void tableRowFromRuby(mrb_state* mrb, mrb_value value, TableRow& row)
   {
     using namespace std;
 
     auto hash = mrb_hash_ptr(value);
     mrb_hash_foreach(
         mrb, hash,
-        [](mrb_state *mrb, mrb_value key, mrb_value val, void *data) {
-          TableRow *row = static_cast<TableRow *>(data);
+        [](mrb_state* mrb, mrb_value key, mrb_value val, void* data) {
+          TableRow* row = static_cast<TableRow*>(data);
           string k = stringFromRuby(mrb, key);
           TableCellValue tcv;
           if (tableRowCellValueFromRuby(mrb, val, tcv))
@@ -183,7 +183,7 @@ namespace mtconnect::ruby {
   /// @param[in] mrb mruby state
   /// @param[in] value the hash value to convert
   /// @returns true if succesful
-  inline bool dataSetValueFromRuby(mrb_state *mrb, mrb_value value, DataSetValue &dsv)
+  inline bool dataSetValueFromRuby(mrb_state* mrb, mrb_value value, DataSetValue& dsv)
   {
     using namespace std;
 
@@ -226,14 +226,14 @@ namespace mtconnect::ruby {
   /// @param[in] mrb mruby state
   /// @param[in] value the hash value to convert
   /// @param[out] dataSet the data set to populate
-  inline void dataSetFromRuby(mrb_state *mrb, mrb_value value, DataSet &dataSet)
+  inline void dataSetFromRuby(mrb_state* mrb, mrb_value value, DataSet& dataSet)
   {
     using namespace std;
     auto hash = mrb_hash_ptr(value);
     mrb_hash_foreach(
         mrb, hash,
-        [](mrb_state *mrb, mrb_value key, mrb_value val, void *data) {
-          DataSet *dataSet = static_cast<DataSet *>(data);
+        [](mrb_state* mrb, mrb_value key, mrb_value val, void* data) {
+          DataSet* dataSet = static_cast<DataSet*>(data);
           string k = stringFromRuby(mrb, key);
           DataSetValue dsv;
           if (dataSetValueFromRuby(mrb, val, dsv))
@@ -248,7 +248,7 @@ namespace mtconnect::ruby {
   /// @param[in] mrb mruby state
   /// @param[in] value  the mruby typed value
   /// @returns an Entity Value
-  inline Value valueFromRuby(mrb_state *mrb, mrb_value value)
+  inline Value valueFromRuby(mrb_state* mrb, mrb_value value)
   {
     Value res;
 
@@ -302,11 +302,11 @@ namespace mtconnect::ruby {
         if (mrb_type(values[0]) == MRB_TT_FIXNUM || mrb_type(values[0]) == MRB_TT_FLOAT)
         {
           res.emplace<Vector>();
-          Vector &out = get<Vector>(res);
+          Vector& out = get<Vector>(res);
 
           for (int i = 0; i < size; i++)
           {
-            mrb_value &v = values[i];
+            mrb_value& v = values[i];
             auto t = mrb_type(v);
             if (t == MRB_TT_FIXNUM)
               out.emplace_back((double)mrb_integer(v));
@@ -325,10 +325,10 @@ namespace mtconnect::ruby {
           auto klass = mrb_class_get_under(mrb, mod, "Entity");
 
           res.emplace<EntityList>();
-          EntityList &list = get<EntityList>(res);
+          EntityList& list = get<EntityList>(res);
           for (int i = 0; i < size; i++)
           {
-            mrb_value &v = values[i];
+            mrb_value& v = values[i];
             if (mrb_type(v) == MRB_TT_DATA)
             {
               if (mrb_obj_is_kind_of(mrb, value, klass))
@@ -380,36 +380,38 @@ namespace mtconnect::ruby {
   /// @param[in] mrb MRuby state
   /// @param[in] value Value to convert
   /// @return MRuby value
-  inline mrb_value toRuby(mrb_state *mrb, const Value &value)
+  inline mrb_value toRuby(mrb_state* mrb, const Value& value)
   {
     mrb_value res = visit(
         overloaded {
-            [](const std::monostate &) -> mrb_value { return mrb_nil_value(); },
-            [](const std::nullptr_t &) -> mrb_value { return mrb_nil_value(); },
+            [](const std::monostate&) -> mrb_value { return mrb_nil_value(); },
+            [](const std::nullptr_t&) -> mrb_value { return mrb_nil_value(); },
 
             // Not handled yet
-            [mrb](const EntityPtr &entity) -> mrb_value {
+            [mrb](const EntityPtr& entity) -> mrb_value {
               return MRubySharedPtr<Entity>::wrap(mrb, "Entity", entity);
             },
-            [mrb](const EntityList &list) -> mrb_value {
+            [mrb](const EntityList& list) -> mrb_value {
               mrb_value ary = mrb_ary_new_capa(mrb, list.size());
 
-              for (auto &e : list)
+              for (auto& e : list)
                 mrb_ary_push(mrb, ary, MRubySharedPtr<Entity>::wrap(mrb, "Entity", e));
 
               return ary;
             },
-            [mrb](const entity::DataSet &v) -> mrb_value { return toRuby(mrb, v); },
+            [mrb](const entity::DataSet& v) -> mrb_value { return toRuby(mrb, v); },
 
             // Handled types
-            [mrb](const entity::Vector &v) -> mrb_value {
+            [mrb](const entity::Vector& v) -> mrb_value {
               mrb_value ary = mrb_ary_new_capa(mrb, v.size());
-              for (auto &f : v)
+              for (auto& f : v)
                 mrb_ary_push(mrb, ary, mrb_float_value(mrb, f));
               return ary;
             },
-            [mrb](const Timestamp &v) -> mrb_value { return toRuby(mrb, v); },
-            [mrb](const std::string &arg) -> mrb_value { return mrb_str_new_cstr(mrb, arg.c_str()); },
+            [mrb](const Timestamp& v) -> mrb_value { return toRuby(mrb, v); },
+            [mrb](const std::string& arg) -> mrb_value {
+              return mrb_str_new_cstr(mrb, arg.c_str());
+            },
             [](const bool arg) -> mrb_value { return mrb_bool_value(static_cast<mrb_bool>(arg)); },
             [mrb](const double arg) -> mrb_value { return mrb_float_value(mrb, arg); },
             [mrb](const int64_t arg) -> mrb_value { return mrb_int_value(mrb, arg); }},
@@ -424,7 +426,7 @@ namespace mtconnect::ruby {
   ///   If Hash, then convert to MTConnect properties, otherwise set the Properties VALUE
   /// @param[out] props converted properties
   /// @return `true` if successful
-  inline bool fromRuby(mrb_state *mrb, mrb_value value, Properties &props)
+  inline bool fromRuby(mrb_state* mrb, mrb_value value, Properties& props)
   {
     if (mrb_type(value) != MRB_TT_HASH)
     {
@@ -436,8 +438,8 @@ namespace mtconnect::ruby {
       auto hash = mrb_hash_ptr(value);
       mrb_hash_foreach(
           mrb, hash,
-          [](mrb_state *mrb, mrb_value key, mrb_value val, void *data) {
-            Properties *props = static_cast<Properties *>(data);
+          [](mrb_state* mrb, mrb_value key, mrb_value val, void* data) {
+            Properties* props = static_cast<Properties*>(data);
             std::string k = stringFromRuby(mrb, key);
             auto v = valueFromRuby(mrb, val);
 
@@ -455,10 +457,10 @@ namespace mtconnect::ruby {
   /// @param[in] mrb MRuby state
   /// @param[in] props  properties
   /// @return mruby Hash representing the properties
-  inline mrb_value toRuby(mrb_state *mrb, const Properties &props)
+  inline mrb_value toRuby(mrb_state* mrb, const Properties& props)
   {
     mrb_value hash = mrb_hash_new(mrb);
-    for (auto &[key, value] : props)
+    for (auto& [key, value] : props)
     {
       mrb_sym k = mrb_intern_cstr(mrb, key.c_str());
       mrb_value v = toRuby(mrb, value);
@@ -473,15 +475,15 @@ namespace mtconnect::ruby {
   struct RubyEntity
   {
     /// @brief Create Ruby Entity class and method wrappers
-    static void initialize(mrb_state *mrb, RClass *module)
+    static void initialize(mrb_state* mrb, RClass* module)
     {
       auto entityClass = mrb_define_class_under(mrb, module, "Entity", mrb->object_class);
       MRB_SET_INSTANCE_TT(entityClass, MRB_TT_DATA);
 
       mrb_define_method(
           mrb, entityClass, "initialize",
-          [](mrb_state *mrb, mrb_value self) {
-            const char *name;
+          [](mrb_state* mrb, mrb_value self) {
+            const char* name;
             mrb_value properties;
             mrb_get_args(mrb, "zo", &name, &properties);
 
@@ -497,28 +499,28 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, entityClass, "name",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto entity = MRubySharedPtr<Entity>::unwrap(self);
             return mrb_str_new_cstr(mrb, entity->getName().c_str());
           },
           MRB_ARGS_NONE());
       mrb_define_method(
           mrb, entityClass, "hash",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto entity = MRubySharedPtr<Entity>::unwrap(self);
             return mrb_str_new_cstr(mrb, entity->hash().c_str());
           },
           MRB_ARGS_NONE());
       mrb_define_method(
           mrb, entityClass, "value",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto entity = MRubySharedPtr<Entity>::unwrap(self);
             return toRuby(mrb, entity->getValue());
           },
           MRB_ARGS_NONE());
       mrb_define_method(
           mrb, entityClass, "value=",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto entity = MRubySharedPtr<Entity>::unwrap(self);
             mrb_value value;
             mrb_get_args(mrb, "o", &value);
@@ -529,7 +531,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, entityClass, "properties",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto entity = MRubySharedPtr<Entity>::unwrap(self);
             auto props = entity->getProperties();
 
@@ -538,9 +540,9 @@ namespace mtconnect::ruby {
           MRB_ARGS_NONE());
       mrb_define_method(
           mrb, entityClass, "[]",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto entity = MRubySharedPtr<Entity>::unwrap(self);
-            const char *key;
+            const char* key;
 
             mrb_get_args(mrb, "z", &key);
 
@@ -554,9 +556,9 @@ namespace mtconnect::ruby {
           MRB_ARGS_REQ(1));
       mrb_define_method(
           mrb, entityClass, "[]=",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto entity = MRubySharedPtr<Entity>::unwrap(self);
-            const char *key;
+            const char* key;
             mrb_value value;
             mrb_get_args(mrb, "zo", &key, &value);
 
@@ -571,16 +573,16 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, componentClass, "children",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto comp = MRubySharedPtr<Entity>::unwrap<Component>(mrb, self);
             mrb_value ary = mrb_ary_new(mrb);
-            const auto &list = comp->getChildren();
+            const auto& list = comp->getChildren();
             if (list)
             {
               auto mod = mrb_module_get(mrb, "MTConnect");
               auto klass = mrb_class_get_under(mrb, mod, "Component");
 
-              for (const auto &c : *list)
+              for (const auto& c : *list)
               {
                 ComponentPtr cmp = dynamic_pointer_cast<Component>(c);
                 if (cmp)
@@ -593,16 +595,16 @@ namespace mtconnect::ruby {
           MRB_ARGS_NONE());
       mrb_define_method(
           mrb, componentClass, "data_items",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto comp = MRubySharedPtr<Entity>::unwrap<Component>(mrb, self);
             mrb_value ary = mrb_ary_new(mrb);
-            const auto &list = comp->getDataItems();
+            const auto& list = comp->getDataItems();
             if (list)
             {
               auto mod = mrb_module_get(mrb, "MTConnect");
               auto klass = mrb_class_get_under(mrb, mod, "DataItem");
 
-              for (const auto &c : *list)
+              for (const auto& c : *list)
               {
                 DataItemPtr di = dynamic_pointer_cast<DataItem>(c);
                 if (di)
@@ -616,9 +618,9 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, componentClass, "uuid",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto comp = MRubySharedPtr<Entity>::unwrap<Component>(mrb, self);
-            auto &uuid = comp->getUuid();
+            auto& uuid = comp->getUuid();
             if (uuid)
               return mrb_str_new_cstr(mrb, uuid->c_str());
             else
@@ -631,9 +633,9 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, deviceClass, "data_item",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto dev = MRubySharedPtr<Entity>::unwrap<Device>(mrb, self);
-            const char *name;
+            const char* name;
             mrb_get_args(mrb, "z", &name);
 
             auto di = dev->getDeviceDataItem(name);
@@ -649,7 +651,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, dataItemClass, "name",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
             if (di->getName())
               return mrb_str_new_cstr(mrb, (*di->getName()).c_str());
@@ -659,44 +661,44 @@ namespace mtconnect::ruby {
           MRB_ARGS_NONE());
       mrb_define_method(
           mrb, dataItemClass, "observation_name",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
             return mrb_str_new_cstr(mrb, di->getObservationName().c_str());
           },
           MRB_ARGS_NONE());
       mrb_define_method(
           mrb, dataItemClass, "id",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
             return mrb_str_new_cstr(mrb, di->getId().c_str());
           },
           MRB_ARGS_NONE());
       mrb_define_method(
           mrb, dataItemClass, "type",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
             return mrb_str_new_cstr(mrb, di->getType().c_str());
           },
           MRB_ARGS_NONE());
       mrb_define_method(
           mrb, dataItemClass, "sub_type",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
             return mrb_str_new_cstr(mrb, di->getSubType().c_str());
           },
           MRB_ARGS_NONE());
       mrb_define_method(
           mrb, dataItemClass, "topic",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
             return mrb_str_new_cstr(mrb, di->getTopic().c_str());
           },
           MRB_ARGS_NONE());
       mrb_define_method(
           mrb, dataItemClass, "topic=",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
-            char *val;
+            char* val;
             mrb_get_args(mrb, "z", &val);
 
             di->setTopic(val);
@@ -709,8 +711,8 @@ namespace mtconnect::ruby {
       MRB_SET_INSTANCE_TT(tokensClass, MRB_TT_DATA);
       mrb_define_method(
           mrb, tokensClass, "initialize",
-          [](mrb_state *mrb, mrb_value self) {
-            const char *name;
+          [](mrb_state* mrb, mrb_value self) {
+            const char* name;
             mrb_value properties;
             mrb_get_args(mrb, "zo", &name, &properties);
 
@@ -726,11 +728,11 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, tokensClass, "tokens",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto tokens = MRubySharedPtr<Entity>::unwrap<pipeline::Tokens>(mrb, self);
 
             mrb_value ary = mrb_ary_new(mrb);
-            for (auto &token : tokens->m_tokens)
+            for (auto& token : tokens->m_tokens)
             {
               mrb_ary_push(mrb, ary, mrb_str_new_cstr(mrb, token.c_str()));
             }
@@ -740,7 +742,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, tokensClass, "tokens=",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto tokens = MRubySharedPtr<Entity>::unwrap<pipeline::Tokens>(mrb, self);
             mrb_value ary;
             mrb_get_args(mrb, "A", &ary);
@@ -762,8 +764,8 @@ namespace mtconnect::ruby {
       MRB_SET_INSTANCE_TT(timestampedClass, MRB_TT_DATA);
       mrb_define_method(
           mrb, timestampedClass, "initialize",
-          [](mrb_state *mrb, mrb_value self) {
-            const char *name;
+          [](mrb_state* mrb, mrb_value self) {
+            const char* name;
             mrb_value properties;
             mrb_get_args(mrb, "zo", &name, &properties);
 
@@ -779,7 +781,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, tokensClass, "timestamp",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto ts = MRubySharedPtr<Entity>::unwrap<pipeline::Timestamped>(mrb, self);
 
             return toRuby(mrb, ts->m_timestamp);
@@ -788,7 +790,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, tokensClass, "timestamp=",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto ts = MRubySharedPtr<Entity>::unwrap<pipeline::Timestamped>(mrb, self);
             mrb_value val;
             mrb_get_args(mrb, "o", &val);
@@ -801,7 +803,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, tokensClass, "duration",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto ts = MRubySharedPtr<Entity>::unwrap<pipeline::Timestamped>(mrb, self);
             if (ts->m_duration)
               return mrb_float_value(mrb, *(ts->m_duration));
@@ -812,7 +814,7 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, tokensClass, "duration=",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto ts = MRubySharedPtr<Entity>::unwrap<pipeline::Timestamped>(mrb, self);
             mrb_float val;
             mrb_get_args(mrb, "f", &val);

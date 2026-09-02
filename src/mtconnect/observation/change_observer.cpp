@@ -22,7 +22,7 @@
 using namespace std;
 
 namespace mtconnect::observation {
-  void AsyncObserver::observe(const std::optional<SequenceNumber_t> &from, Resolver resolver)
+  void AsyncObserver::observe(const std::optional<SequenceNumber_t>& from, Resolver resolver)
   {
     using std::placeholders::_1;
 
@@ -39,7 +39,7 @@ namespace mtconnect::observation {
     // This object will automatically clean up all the observer from the
     // signalers in an exception proof manor.
     // Add observers
-    for (const auto &item : m_filter)
+    for (const auto& item : m_filter)
     {
       auto cs = resolver(item);
       if (cs)

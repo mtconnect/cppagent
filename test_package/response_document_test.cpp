@@ -37,7 +37,7 @@ using namespace date::literals;
 using namespace std::literals;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -47,8 +47,8 @@ class MockPipelineContract : public PipelineContract
 {
 public:
   MockPipelineContract(DevicePtr device) : m_device(device) {}
-  DevicePtr findDevice(const std::string &) override { return m_device; }
-  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+  DevicePtr findDevice(const std::string&) override { return m_device; }
+  DataItemPtr findDataItem(const std::string& device, const std::string& name) override
   {
     return m_device->getDeviceDataItem(name);
   }
@@ -60,9 +60,9 @@ public:
   void deliverAssetCommand(entity::EntityPtr) override {}
   int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
-  void sourceFailed(const std::string &id) override {}
-  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
+  void deliverConnectStatus(entity::EntityPtr, const StringList&, bool) override {}
+  void sourceFailed(const std::string& id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr& obs) const override { return obs; }
   bool isValidating() const override { return false; }
 
   DevicePtr m_device;
@@ -202,7 +202,7 @@ TEST_F(ResponseDocumentTest, should_parse_data_sets)
 
   ent++;
   ASSERT_EQ(4, (*ent)->get<int64_t>("count"));
-  const auto &ds = (*ent)->getValue<DataSet>();
+  const auto& ds = (*ent)->getValue<DataSet>();
   ASSERT_EQ(4, ds.size());
 
   auto dse = ds.begin();
@@ -283,14 +283,14 @@ TEST_F(ResponseDocumentTest, should_parse_tables)
   ASSERT_TRUE(obs->isUnavailable());
 
   ent++;
-  const auto &ds = (*ent)->getValue<DataSet>();
+  const auto& ds = (*ent)->getValue<DataSet>();
   ASSERT_EQ(4, ds.size());
 
   auto dse = ds.begin();
   ASSERT_EQ("W1", dse->m_key);
   ASSERT_FALSE(dse->m_removed);
 
-  const auto &v1 = get<TableRow>(dse->m_value);
+  const auto& v1 = get<TableRow>(dse->m_value);
   ASSERT_EQ(3, v1.size());
 
   auto v1i = v1.begin();
@@ -307,7 +307,7 @@ TEST_F(ResponseDocumentTest, should_parse_tables)
   ASSERT_EQ("W2", dse->m_key);
   ASSERT_FALSE(dse->m_removed);
 
-  const auto &v2 = get<TableRow>(dse->m_value);
+  const auto& v2 = get<TableRow>(dse->m_value);
   ASSERT_EQ(3, v2.size());
 
   auto v2i = v2.begin();
@@ -324,7 +324,7 @@ TEST_F(ResponseDocumentTest, should_parse_tables)
   ASSERT_EQ("W3", dse->m_key);
   ASSERT_FALSE(dse->m_removed);
 
-  const auto &v3 = get<TableRow>(dse->m_value);
+  const auto& v3 = get<TableRow>(dse->m_value);
   ASSERT_EQ(3, v3.size());
 
   auto v3i = v3.begin();
@@ -353,7 +353,7 @@ TEST_F(ResponseDocumentTest, should_parse_assets)
   str.seekg(0, std::ios_base::end);
   size_t size = str.tellg();
   str.seekg(0);
-  char *buffer = new char[size + 1];
+  char* buffer = new char[size + 1];
   memset(buffer, 0, size);
   str.read(buffer, size);
   buffer[size] = '\0';
@@ -404,7 +404,7 @@ TEST_F(ResponseDocumentTest, should_parse_legacy_error)
   ResponseDocument::parse(data, *m_doc, m_context);
 
   ASSERT_EQ(1, m_doc->m_errors.size());
-  auto &error = m_doc->m_errors.front();
+  auto& error = m_doc->m_errors.front();
   ASSERT_EQ("OUT_OF_RANGE", error.m_code);
   ASSERT_EQ("'at' must be greater than 4871368", error.m_message);
 }

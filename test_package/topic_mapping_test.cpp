@@ -35,7 +35,7 @@ using namespace data_item;
 using namespace std;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -44,11 +44,11 @@ int main(int argc, char *argv[])
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(std::map<string, DataItemPtr> &items, std::map<string, DevicePtr> &devices)
+  MockPipelineContract(std::map<string, DataItemPtr>& items, std::map<string, DevicePtr>& devices)
     : m_dataItems(items), m_devices(devices)
   {}
-  DevicePtr findDevice(const std::string &name) override { return m_devices[name]; }
-  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+  DevicePtr findDevice(const std::string& name) override { return m_devices[name]; }
+  DataItemPtr findDataItem(const std::string& device, const std::string& name) override
   {
     return m_dataItems[name];
   }
@@ -60,13 +60,13 @@ public:
   void deliverAssetCommand(entity::EntityPtr) override {}
   int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
-  void sourceFailed(const std::string &id) override {}
-  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
+  void deliverConnectStatus(entity::EntityPtr, const StringList&, bool) override {}
+  void sourceFailed(const std::string& id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr& obs) const override { return obs; }
   bool isValidating() const override { return false; }
 
-  std::map<string, DataItemPtr> &m_dataItems;
-  std::map<string, DevicePtr> &m_devices;
+  std::map<string, DataItemPtr>& m_dataItems;
+  std::map<string, DevicePtr>& m_devices;
 };
 
 class TopicMappingTest : public testing::Test
@@ -86,7 +86,7 @@ protected:
     m_devices.clear();
   }
 
-  DataItemPtr makeDataItem(const std::string &device, const Properties &props)
+  DataItemPtr makeDataItem(const std::string& device, const Properties& props)
   {
     auto dev = m_devices.find(device);
     if (dev == m_devices.end())
@@ -105,7 +105,7 @@ protected:
     return di;
   }
 
-  DevicePtr makeDevice(const std::string &name, const Properties &props)
+  DevicePtr makeDevice(const std::string& name, const Properties& props)
   {
     ErrorList errors;
     Properties ps(props);
@@ -118,13 +118,13 @@ protected:
 
   /// @brief add a data item to a device WITHOUT registering it in the
   ///        findDataItem lookup map (forces resolution via the device scan path)
-  DataItemPtr makeDeviceOnlyDataItem(const std::string &device, const Properties &props)
+  DataItemPtr makeDeviceOnlyDataItem(const std::string& device, const Properties& props)
   {
     auto dev = m_devices.find(device);
     EXPECT_NE(m_devices.end(), dev) << "Cannot find device: " << device;
     if (dev == m_devices.end())
       return nullptr;
-    
+
     Properties ps(props);
     ErrorList errors;
     auto di = DataItem::make(ps, errors);
@@ -133,7 +133,7 @@ protected:
   }
 
   /// @brief build a TopicMapper with the given default device, bound to a pass-through
-  std::shared_ptr<TopicMapper> makeMapper(const std::string &defaultDevice = "")
+  std::shared_ptr<TopicMapper> makeMapper(const std::string& defaultDevice = "")
   {
     auto m = make_shared<TopicMapper>(m_context, defaultDevice);
     m->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
@@ -141,7 +141,7 @@ protected:
   }
 
   /// @brief run a message body (and optional topic) through a mapper
-  PipelineMessagePtr map(std::shared_ptr<TopicMapper> &mapper, const std::string &body,
+  PipelineMessagePtr map(std::shared_ptr<TopicMapper>& mapper, const std::string& body,
                          std::optional<std::string> topic = std::nullopt)
   {
     Properties props {{"VALUE", body}};
@@ -157,7 +157,7 @@ protected:
   std::map<string, DevicePtr> m_devices;
 };
 
-inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
+inline DataSetEntry operator""_E(const char* c, std::size_t) { return DataSetEntry(c); }
 
 TEST_F(TopicMappingTest, should_find_data_item_for_topic)
 {

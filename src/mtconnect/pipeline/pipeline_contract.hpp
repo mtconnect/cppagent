@@ -67,12 +67,12 @@ namespace mtconnect {
       /// @brief Find a device by name or uuid
       /// @param[in] device device name or uuid
       /// @return shared pointer to the device if found
-      virtual DevicePtr findDevice(const std::string &device) = 0;
+      virtual DevicePtr findDevice(const std::string& device) = 0;
       /// @brief Find a data item for a device by name.
       /// @param[in] device name or uuid of the device
       /// @param[in] name name or id of the data item
       /// @return shared pointer to the data item if found
-      virtual DataItemPtr findDataItem(const std::string &device, const std::string &name) = 0;
+      virtual DataItemPtr findDataItem(const std::string& device, const std::string& name) = 0;
       /// @brief get the current schema version as an integer
       /// @returns the schema version as an integer [major * 100 + minor] as a 32bit integer.
       virtual int32_t getSchemaVersion() const = 0;
@@ -104,18 +104,18 @@ namespace mtconnect {
       /// @param[in]  status the status of the source
       /// @param[in] devices a list of known devices
       /// @param[in] autoAvailable if the connection status should change availability
-      virtual void deliverConnectStatus(entity::EntityPtr status, const StringList &devices,
+      virtual void deliverConnectStatus(entity::EntityPtr status, const StringList& devices,
                                         bool autoAvailable) = 0;
       /// @brief The source is no longer viable, do not try to reconnect
       /// @param[in] identity the identity of the source
-      virtual void sourceFailed(const std::string &identity) = 0;
+      virtual void sourceFailed(const std::string& identity) = 0;
 
       /// @brief Check the observation with the current cache to determine if this is a
       /// duplicate
       /// @param[in] obs the observation to check
       /// @returns `obs` if it is not a duplicate, `nullptr` if it is. The observation
       /// may be modified if the observation needs to be subset.
-      virtual const ObservationPtr checkDuplicate(const ObservationPtr &obs) const = 0;
+      virtual const ObservationPtr checkDuplicate(const ObservationPtr& obs) const = 0;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

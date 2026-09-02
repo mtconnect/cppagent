@@ -36,7 +36,7 @@ using namespace device_model;
 using namespace data_item;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -56,7 +56,7 @@ protected:
       m_devices =
           m_xmlParser->parseFile(TEST_RESOURCE_DIR "/samples/test_config.xml", printer.get());
     }
-    catch (exception &)
+    catch (exception&)
     {
       FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR
              << " /test/resources/samples/test_config.xml";
@@ -72,7 +72,7 @@ protected:
     }
   }
 
-  parser::XmlParser *m_xmlParser {nullptr};
+  parser::XmlParser* m_xmlParser {nullptr};
   std::list<DevicePtr> m_devices;
 };
 
@@ -102,19 +102,19 @@ TEST_F(XmlParserTest, parse_file_returns_devices_with_description_and_data_items
   const auto device = m_devices.front();
 
   // Check for Description
-  auto &description = device->get<EntityPtr>("Description");
+  auto& description = device->get<EntityPtr>("Description");
   ASSERT_TRUE(description);
   ASSERT_EQ((string) "Linux CNC Device", description->getValue<string>());
 
   list<DataItemPtr> dataItems;
-  const auto &dataItemsMap = device->getDeviceDataItems();
+  const auto& dataItemsMap = device->getDeviceDataItems();
 
-  for (auto const &mapItem : dataItemsMap)
+  for (auto const& mapItem : dataItemsMap)
     dataItems.emplace_back(mapItem.lock());
 
   bool hasExec = false, hasZcom = false;
 
-  for (auto const &dataItem : dataItems)
+  for (auto const& dataItem : dataItems)
   {
     if (dataItem->getId() == "p5" && dataItem->getName() == "execution")
       hasExec = true;
@@ -132,7 +132,7 @@ TEST_F(XmlParserTest, data_item_with_condition_category_is_parsed)
   ASSERT_EQ((size_t)1, m_devices.size());
 
   const auto device = m_devices.front();
-  const auto &dataItemsMap = device->getDeviceDataItems();
+  const auto& dataItemsMap = device->getDeviceDataItems();
   const auto item = dataItemsMap.find("clc")->lock();
   ASSERT_TRUE(item);
 
@@ -190,7 +190,7 @@ TEST_F(XmlParserTest, get_data_items_supports_extended_namespace_prefixes)
     m_xmlParser = new parser::XmlParser();
     m_xmlParser->parseFile(TEST_RESOURCE_DIR "/samples/extension.xml", printer.get());
   }
-  catch (exception &)
+  catch (exception&)
   {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR
            << "/test/resources/samples/extension.xml";
@@ -219,7 +219,7 @@ TEST_F(XmlParserTest, parse_file_with_extended_schema_loads_namespaced_component
     m_xmlParser = new parser::XmlParser();
     m_devices = m_xmlParser->parseFile(TEST_RESOURCE_DIR "/samples/extension.xml", printer.get());
   }
-  catch (exception &)
+  catch (exception&)
   {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR
            << "/test/resources/samples/extension.xml";
@@ -230,7 +230,7 @@ TEST_F(XmlParserTest, parse_file_with_extended_schema_loads_namespaced_component
   const auto device = m_devices.front();
 
   // Check for Description
-  auto &description = device->get<EntityPtr>("Description");
+  auto& description = device->get<EntityPtr>("Description");
   ASSERT_TRUE(description);
   ASSERT_EQ((string) "Extended Schema.", description->getValue<string>());
 
@@ -268,9 +268,9 @@ TEST_F(XmlParserTest, component_configuration_property_is_present)
   ASSERT_TRUE(dev);
 
   EntityPtr power;
-  const auto &children = dev->getChildren();
+  const auto& children = dev->getChildren();
 
-  for (auto const &iter : *children)
+  for (auto const& iter : *children)
   {
     if (iter->get<string>("name") == "power")
       power = iter;
@@ -305,7 +305,7 @@ TEST_F(XmlParserTest, data_item_minimum_delta_filter_is_parsed_from_1_3_schema)
     m_devices =
         m_xmlParser->parseFile(TEST_RESOURCE_DIR "/samples/filter_example_1.3.xml", printer.get());
   }
-  catch (exception &)
+  catch (exception&)
   {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR
            << "/test/resources/samples/filter_example_1.3.xml";
@@ -333,7 +333,7 @@ TEST_F(XmlParserTest, data_item_minimum_delta_and_period_filters_are_parsed)
     m_devices =
         m_xmlParser->parseFile(TEST_RESOURCE_DIR "/samples/filter_example.xml", printer.get());
   }
-  catch (exception &)
+  catch (exception&)
   {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR
            << "/test/resources/samples/filter_example.xml";
@@ -366,7 +366,7 @@ TEST_F(XmlParserTest, component_data_item_and_component_references_are_resolved)
     m_devices =
         m_xmlParser->parseFile(TEST_RESOURCE_DIR "/samples/reference_example.xml", printer.get());
   }
-  catch (exception &)
+  catch (exception&)
   {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR
            << "/test/resources/samples/reference_example.xml";
@@ -429,7 +429,7 @@ TEST_F(XmlParserTest, data_item_source_has_data_item_id_and_component_id)
     m_devices =
         m_xmlParser->parseFile(TEST_RESOURCE_DIR "/samples/reference_example.xml", printer.get());
   }
-  catch (exception &)
+  catch (exception&)
   {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR
            << "/test/resources/samples/reference_example.xml";
@@ -459,13 +459,13 @@ TEST_F(XmlParserTest, data_item_relationships_contain_type_and_id_ref)
   m_devices =
       m_xmlParser->parseFile(TEST_RESOURCE_DIR "/samples/relationship_test.xml", printer.get());
 
-  const auto &device = m_devices.front();
-  const auto &dataItemsMap = device->getDeviceDataItems();
+  const auto& device = m_devices.front();
+  const auto& dataItemsMap = device->getDeviceDataItems();
 
   const auto item1 = dataItemsMap.find("xlc")->lock();
   ASSERT_TRUE(item1 != nullptr);
 
-  const auto &relations = item1->getList("Relationships");
+  const auto& relations = item1->getList("Relationships");
   ASSERT_TRUE(relations);
 
   ASSERT_EQ((size_t)2, relations->size());
@@ -485,7 +485,7 @@ TEST_F(XmlParserTest, data_item_relationships_contain_type_and_id_ref)
   const auto item2 = dataItemsMap.find("xlcpl")->lock();
   ASSERT_TRUE(item2 != nullptr);
 
-  const auto &relations2 = item2->getList("Relationships");
+  const auto& relations2 = item2->getList("Relationships");
 
   ASSERT_EQ((size_t)1, relations2->size());
 

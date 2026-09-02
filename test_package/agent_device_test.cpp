@@ -45,7 +45,7 @@ namespace sys = boost::system;
 namespace config = mtconnect::configuration;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -159,7 +159,7 @@ TEST_F(AgentDeviceTest, should_have_device_added_in_buffer)
 {
   auto agent = m_agentTestHelper->getAgent();
   auto device = agent->findDeviceByUUIDorName("000");
-  auto &circ = agent->getCircularBuffer();
+  auto& circ = agent->getCircularBuffer();
   ASSERT_TRUE(device);
   auto uuid = *device->getUuid();
   ASSERT_EQ("000", uuid);

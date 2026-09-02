@@ -53,8 +53,8 @@ namespace mtconnect {
         /// @param contract the Sink Contract from the agent
         /// @param options configuration options
         /// @param config additional configuration options if specified directly as a sink
-        MqttService(boost::asio::io_context &context, sink::SinkContractPtr &&contract,
-                    const ConfigOptions &options, const boost::property_tree::ptree &config);
+        MqttService(boost::asio::io_context& context, sink::SinkContractPtr&& contract,
+                    const ConfigOptions& options, const boost::property_tree::ptree& config);
 
         ~MqttService() = default;
 
@@ -71,7 +71,7 @@ namespace mtconnect {
         ///
         /// @param observation shared pointer to the observation
         /// @return `true` if the publishing was successful
-        bool publish(observation::ObservationPtr &observation) override;
+        bool publish(observation::ObservationPtr& observation) override;
 
         /// @brief Receive an asset
         /// @param asset shared point to the asset
@@ -94,7 +94,7 @@ namespace mtconnect {
 
         /// @brief Register the Sink factory to create this sink
         /// @param factory
-        static void registerFactory(SinkFactory &factory);
+        static void registerFactory(SinkFactory& factory);
 
         /// @brief gets a Mqtt Client
         /// @return MqttClient
@@ -105,15 +105,15 @@ namespace mtconnect {
         bool isConnected() { return m_client && m_client->isConnected(); }
 
       protected:
-        const FilterSet &filterForDevice(const DevicePtr &device)
+        const FilterSet& filterForDevice(const DevicePtr& device)
         {
           auto filter = m_filters.find(*(device->getUuid()));
           if (filter == m_filters.end())
           {
             auto pos = m_filters.emplace(*(device->getUuid()), FilterSet());
             filter = pos.first;
-            auto &set = filter->second;
-            for (const auto &wdi : device->getDeviceDataItems())
+            auto& set = filter->second;
+            for (const auto& wdi : device->getDeviceDataItems())
             {
               const auto di = wdi.lock();
               if (di)
@@ -123,7 +123,7 @@ namespace mtconnect {
           return filter->second;
         }
 
-        std::string formatTopic(const std::string &topic, const DevicePtr device,
+        std::string formatTopic(const std::string& topic, const DevicePtr device,
                                 const std::string defaultUuid = "Unknown")
         {
           std::string uuid;
@@ -152,7 +152,7 @@ namespace mtconnect {
           return formatted;
         }
 
-        std::string getTopic(const std::string &option, int maxTopicDepth)
+        std::string getTopic(const std::string& option, int maxTopicDepth)
         {
           auto topic {std::get<std::string>(m_options[option])};
           auto depth = std::count(topic.begin(), topic.end(), '/');
@@ -176,7 +176,7 @@ namespace mtconnect {
 
         uint64_t m_instanceId;
 
-        boost::asio::io_context &m_context;
+        boost::asio::io_context& m_context;
         boost::asio::io_context::strand m_strand;
 
         ConfigOptions m_options;
@@ -192,5 +192,5 @@ namespace mtconnect {
         std::map<std::string, std::shared_ptr<AsyncSample>> m_samplers;
       };
     }  // namespace mqtt_sink
-  }    // namespace sink
+  }  // namespace sink
 }  // namespace mtconnect

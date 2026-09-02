@@ -83,7 +83,7 @@ namespace mtconnect {
         /// @brief constructor for a data item. name is always `DataItem`.
         ///
         /// @note Do not use this method directly. Use the `make()` method.
-        DataItem(const std::string &name, const entity::Properties &props);
+        DataItem(const std::string& name, const entity::Properties& props);
         static entity::FactoryPtr getFactory();
         static entity::FactoryPtr getRoot();
 
@@ -91,8 +91,8 @@ namespace mtconnect {
         /// @param[in] props data item properties
         /// @param[in,out] errors list of errors creating the data item
         /// @return shared pointer to DataItem
-        static std::shared_ptr<DataItem> make(const entity::Properties &props,
-                                              entity::ErrorList &errors)
+        static std::shared_ptr<DataItem> make(const entity::Properties& props,
+                                              entity::ErrorList& errors)
         {
           entity::Properties ps(props);
           auto ptr = getFactory()->create("DataItem", ps, errors);
@@ -106,60 +106,60 @@ namespace mtconnect {
         ///@{
 
         /// @brief get the data item id
-        const auto &getId() const { return m_id; }
+        const auto& getId() const { return m_id; }
         /// @brief get the data item name
-        const auto &getName() const { return m_name; }
+        const auto& getName() const { return m_name; }
         /// @brief get the data item source
-        const auto &getSource() const { return get<entity::EntityPtr>("Source"); }
+        const auto& getSource() const { return get<entity::EntityPtr>("Source"); }
 
         /// @brief get the name or the id of the data item
         /// @return the preferred name
-        const auto &getPreferredName() const { return m_preferredName; }
-        const auto &getMinimumDelta() const { return m_minimumDelta; }
-        const auto &getMinimumPeriod() const { return m_minimumPeriod; }
+        const auto& getPreferredName() const { return m_preferredName; }
+        const auto& getMinimumDelta() const { return m_minimumDelta; }
+        const auto& getMinimumPeriod() const { return m_minimumPeriod; }
         /// @brief get a key related to the data item for creating observations
         /// @return a key
-        const auto &getKey() const { return m_key; }
+        const auto& getKey() const { return m_key; }
         /// @brief Return the type property
         /// @return the type property
-        const auto &getType() { return get<std::string>("type"); }
+        const auto& getType() { return get<std::string>("type"); }
         /// @brief Return the sub-type property
         /// @return The sub-type
-        const auto &getSubType() { return get<std::string>("subType"); }
+        const auto& getSubType() { return get<std::string>("subType"); }
 
         /// @brief get the pascalized name for the data item when represented as a observation
         /// @return observation name
-        const auto &getObservationName() const { return m_observationName; }
+        const auto& getObservationName() const { return m_observationName; }
         /// @brief get the properties to build an observation
         /// @return observation properties
-        const auto &getObservationProperties() const { return m_observatonProperties; }
+        const auto& getObservationProperties() const { return m_observatonProperties; }
 
         /// @brief get the topic with the path
         /// @return data item topic
-        const auto &getTopic() const { return m_topic; }
+        const auto& getTopic() const { return m_topic; }
         /// @brief get the topic name leaf node for this data item
         /// @return the topic name
-        const auto &getTopicName() const { return m_topicName; }
+        const auto& getTopicName() const { return m_topicName; }
 
         /// @brief get the initial value if one is set
         /// @return optional initial value
-        const auto &getInitialValue() const { return m_initialValue; }
+        const auto& getInitialValue() const { return m_initialValue; }
 
         Category getCategory() const { return m_category; }
         Representation getRepresentation() const { return m_representation; }
         SpecialClass getSpecialClass() const { return m_specialClass; }
 
-        const auto &getConstantValue() const { return m_constantValue; }
+        const auto& getConstantValue() const { return m_constantValue; }
         ///@}
 
         /// @brief make this data item a constant
         /// @param[in] value constant value
-        void setConstantValue(const std::string &value);
+        void setConstantValue(const std::string& value);
 
         /// @name boolean methods to interigate the data item
         ///@{
 
-        bool hasName(const std::string &name) const;
+        bool hasName(const std::string& name) const;
         bool isSample() const { return m_category == SAMPLE; }
         bool isEvent() const { return m_category == EVENT; }
         bool isCondition() const { return m_category == CONDITION; }
@@ -188,8 +188,8 @@ namespace mtconnect {
         void makeTopic();
 
         // Value converter
-        const auto &getConverter() const { return m_converter; }
-        void setConverter(const UnitConversion &conv)
+        const auto& getConverter() const { return m_converter; }
+        void setConverter(const UnitConversion& conv)
         {
           m_converter = std::make_unique<UnitConversion>(conv);
         }
@@ -214,23 +214,23 @@ namespace mtconnect {
 
         /// @brief get the preferred name
         /// @return the preferred name
-        const std::string &getSourceOrName() const { return m_preferredName; }
+        const std::string& getSourceOrName() const { return m_preferredName; }
 
         /// @brief get the source
         /// @return source if available
-        const std::optional<std::string> &getDataSource() const { return m_dataSource; }
+        const std::optional<std::string>& getDataSource() const { return m_dataSource; }
         /// @brief set the data source
         /// @param[in] source the source
-        void setDataSource(const std::string &source) { m_dataSource = source; }
+        void setDataSource(const std::string& source) { m_dataSource = source; }
         /// @brief set the topic for the data item
         /// @param[in] topic the topic
-        void setTopic(const std::string &topic) { m_topic = topic; }
+        void setTopic(const std::string& topic) { m_topic = topic; }
 
-        bool operator<(const DataItem &another) const;
-        bool operator==(const DataItem &another) const { return m_id == another.m_id; }
+        bool operator<(const DataItem& another) const;
+        bool operator==(const DataItem& another) const { return m_id == another.m_id; }
 
         /// @brief Return the category as a char *
-        const char *getCategoryText() const { return m_categoryText; }
+        const char* getCategoryText() const { return m_categoryText; }
 
         /// @brief create unique ids recursively
         ///
@@ -241,8 +241,8 @@ namespace mtconnect {
         /// @param[in] sha the root sha1
         /// @returns optional string value of the new id
         std::optional<std::string> createUniqueId(
-            std::unordered_map<std::string, std::string> &idMap,
-            const boost::uuids::detail::sha1 &sha1) override
+            std::unordered_map<std::string, std::string>& idMap,
+            const boost::uuids::detail::sha1& sha1) override
         {
           m_originalId.emplace(m_id);
           auto pref = m_id == m_preferredName;
@@ -255,7 +255,7 @@ namespace mtconnect {
 
         /// @brief Get a reference to the optional original id
         /// @returns optional original id
-        const auto &getOriginalId() const { return m_originalId; }
+        const auto& getOriginalId() const { return m_originalId; }
 
         /// @brief Update all id references associated with this data item
         ///
@@ -271,7 +271,7 @@ namespace mtconnect {
         }
 
       protected:
-        double simpleFactor(const std::string &units);
+        double simpleFactor(const std::string& units);
         std::map<std::string, std::string> buildAttributes() const;
 
         friend struct device_model::UpdateDataItemId;
@@ -295,7 +295,7 @@ namespace mtconnect {
 
         // Category of data item
         Category m_category;
-        const char *m_categoryText;
+        const char* m_categoryText;
 
         // Type for observation
         entity::QName m_observationName;
@@ -322,7 +322,7 @@ namespace mtconnect {
 
       using DataItemPtr = std::shared_ptr<DataItem>;
     }  // namespace data_item
-  }    // namespace device_model
+  }  // namespace device_model
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
   using WeakDataItemPtr = std::weak_ptr<device_model::data_item::DataItem>;
 

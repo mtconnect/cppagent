@@ -31,7 +31,7 @@ namespace mtconnect::source::adapter {
     /// @param name adapter name
     /// @param io boost asio io context
     /// @param options adapter options
-    Adapter(const std::string &name, boost::asio::io_context &io, const ConfigOptions &options)
+    Adapter(const std::string& name, boost::asio::io_context& io, const ConfigOptions& options)
       : Source(name, io), m_options(options)
     {}
     virtual ~Adapter() {}
@@ -41,20 +41,20 @@ namespace mtconnect::source::adapter {
 
     /// @brief Get the host name
     /// @return the host
-    virtual const std::string &getHost() const = 0;
+    virtual const std::string& getHost() const = 0;
     /// @brief Get the adapter's identity
     /// @return the identity
-    const std::string &getIdentity() const override { return m_identity; }
+    const std::string& getIdentity() const override { return m_identity; }
     /// @brief Get the port
     /// @return the port
     virtual unsigned int getPort() const = 0;
     /// @brief Get the configuration options
     /// @return configuration options
-    virtual const ConfigOptions &getOptions() const { return m_options; }
+    virtual const ConfigOptions& getOptions() const { return m_options; }
 
     /// @brief set the adapter handler
     /// @param h the handler (takes ownership)
-    void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
+    void setHandler(std::unique_ptr<Handler>& h) { m_handler = std::move(h); }
     ///@}
 
   protected:

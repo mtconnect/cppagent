@@ -37,9 +37,9 @@ namespace mtconnect::pipeline {
     /// @param contract contract to use
     /// @param dataItem the data item to post the metrics
     /// @param count a shared count
-    ComputeMetrics(boost::asio::io_context::strand &st, PipelineContract *contract,
-                   const std::optional<std::string> &dataItem,
-                   std::shared_ptr<std::atomic_size_t> &count)
+    ComputeMetrics(boost::asio::io_context::strand& st, PipelineContract* contract,
+                   const std::optional<std::string>& dataItem,
+                   std::shared_ptr<std::atomic_size_t>& count)
       : m_count(count),
         m_contract(contract),
         m_dataItem(dataItem),
@@ -64,11 +64,11 @@ namespace mtconnect::pipeline {
     void start();
 
     std::shared_ptr<std::atomic_size_t> m_count;
-    PipelineContract *m_contract {nullptr};
+    PipelineContract* m_contract {nullptr};
     std::optional<std::string> m_dataItem;
     std::chrono::time_point<std::chrono::steady_clock> m_lastTime;
 
-    boost::asio::io_context::strand &m_strand;
+    boost::asio::io_context::strand& m_strand;
     boost::asio::steady_timer m_timer;
     bool m_first {true};
     bool m_stopped {false};
@@ -84,8 +84,8 @@ namespace mtconnect::pipeline {
     /// @param name the name of the transform from the subclass
     /// @param context the pipeline context
     /// @param metricsDataItem the data item used for an observation when the metrics are updated
-    MeteredTransform(const std::string &name, PipelineContextPtr context,
-                     const std::optional<std::string> &metricsDataItem = std::nullopt)
+    MeteredTransform(const std::string& name, PipelineContextPtr context,
+                     const std::optional<std::string>& metricsDataItem = std::nullopt)
       : Transform(name),
         m_contract(context->m_contract.get()),
         m_count(std::make_shared<std::atomic_size_t>(0)),
@@ -109,7 +109,7 @@ namespace mtconnect::pipeline {
 
     /// @brief start the metrics
     /// @param st the context to post observations
-    void start(boost::asio::io_context::strand &st) override
+    void start(boost::asio::io_context::strand& st) override
     {
       if (m_dataItem)
       {
@@ -122,7 +122,7 @@ namespace mtconnect::pipeline {
   protected:
     friend struct ComputeMetrics;
 
-    PipelineContract *m_contract;
+    PipelineContract* m_contract;
     std::shared_ptr<std::atomic_size_t> m_count;
     std::shared_ptr<ComputeMetrics> m_metrics;
     std::optional<std::string> m_dataItem;
@@ -134,12 +134,12 @@ namespace mtconnect::pipeline {
   public:
     using Deliver = std::function<void(observation::ObservationPtr)>;
     DeliverObservation(PipelineContextPtr context,
-                       const std::optional<std::string> &metricDataItem = std::nullopt)
+                       const std::optional<std::string>& metricDataItem = std::nullopt)
       : MeteredTransform("DeliverObservation", context, metricDataItem)
     {
       m_guard = TypeGuard<observation::Observation>(RUN);
     }
-    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
+    entity::EntityPtr operator()(entity::EntityPtr&& entity) override;
   };
 
   /// @brief A transform to deliver and meter asset delivery
@@ -148,12 +148,12 @@ namespace mtconnect::pipeline {
   public:
     using Deliver = std::function<void(asset::AssetPtr)>;
     DeliverAsset(PipelineContextPtr context,
-                 const std::optional<std::string> &metricsDataItem = std::nullopt)
+                 const std::optional<std::string>& metricsDataItem = std::nullopt)
       : MeteredTransform("DeliverAsset", context, metricsDataItem)
     {
       m_guard = TypeGuard<asset::Asset>(RUN);
     }
-    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
+    entity::EntityPtr operator()(entity::EntityPtr&& entity) override;
   };
 
   /// @brief A transform to deliver a device
@@ -166,10 +166,10 @@ namespace mtconnect::pipeline {
     {
       m_guard = EntityNameGuard("Devices", RUN);
     }
-    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
+    entity::EntityPtr operator()(entity::EntityPtr&& entity) override;
 
   protected:
-    PipelineContract *m_contract;
+    PipelineContract* m_contract;
   };
 
   /// @brief A transform to deliver a device
@@ -182,10 +182,10 @@ namespace mtconnect::pipeline {
     {
       m_guard = TypeGuard<device_model::Device>(RUN);
     }
-    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
+    entity::EntityPtr operator()(entity::EntityPtr&& entity) override;
 
   protected:
-    PipelineContract *m_contract;
+    PipelineContract* m_contract;
   };
 
   /// @brief deliver the connection status of an adapter
@@ -193,7 +193,7 @@ namespace mtconnect::pipeline {
   {
   public:
     using Deliver = std::function<void(entity::EntityPtr)>;
-    DeliverConnectionStatus(PipelineContextPtr context, const StringList &devices,
+    DeliverConnectionStatus(PipelineContextPtr context, const StringList& devices,
                             bool autoAvailable)
       : Transform("DeliverConnectionStatus"),
         m_contract(context->m_contract.get()),
@@ -202,10 +202,10 @@ namespace mtconnect::pipeline {
     {
       m_guard = EntityNameGuard("ConnectionStatus", RUN);
     }
-    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
+    entity::EntityPtr operator()(entity::EntityPtr&& entity) override;
 
   protected:
-    PipelineContract *m_contract;
+    PipelineContract* m_contract;
     std::list<std::string> m_devices;
     bool m_autoAvailable;
   };
@@ -220,10 +220,10 @@ namespace mtconnect::pipeline {
     {
       m_guard = EntityNameGuard("AssetCommand", RUN);
     }
-    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
+    entity::EntityPtr operator()(entity::EntityPtr&& entity) override;
 
   protected:
-    PipelineContract *m_contract;
+    PipelineContract* m_contract;
   };
 
   /// @brief Deliver an adapter command
@@ -231,15 +231,15 @@ namespace mtconnect::pipeline {
   {
   public:
     using Deliver = std::function<void(entity::EntityPtr)>;
-    DeliverCommand(PipelineContextPtr context, const std::optional<std::string> &device)
+    DeliverCommand(PipelineContextPtr context, const std::optional<std::string>& device)
       : Transform("DeliverCommand"), m_contract(context->m_contract.get()), m_defaultDevice(device)
     {
       m_guard = EntityNameGuard("Command", RUN);
     }
-    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
+    entity::EntityPtr operator()(entity::EntityPtr&& entity) override;
 
   protected:
-    PipelineContract *m_contract;
+    PipelineContract* m_contract;
     std::optional<std::string> m_defaultDevice;
   };
 }  // namespace mtconnect::pipeline

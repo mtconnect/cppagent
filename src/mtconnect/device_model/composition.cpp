@@ -41,7 +41,7 @@ namespace mtconnect {
                 Requirement("type", true),
                 Requirement("Description", ValueType::ENTITY, Description::getFactory(), false),
                 Requirement("Configuration", ValueType::ENTITY, config, false)},
-            [](const std::string &name, Properties &props) -> EntityPtr {
+            [](const std::string& name, Properties& props) -> EntityPtr {
               auto ptr = make_shared<Composition>(name, props);
               return dynamic_pointer_cast<Entity>(ptr);
             });

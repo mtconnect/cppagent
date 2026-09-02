@@ -38,20 +38,20 @@ namespace mtconnect::printer {
   public:
     /// @brief Create a helper using a writer
     /// @param[in] writer a reference to the writer
-    JsonHelper(T &writer) : m_writer(writer) {}
+    JsonHelper(T& writer) : m_writer(writer) {}
 
     /// @name Key methods
     /// @{
 
     /// @brief Wrapper around the rapidjson Key writer methods
     /// @param[in] s string for the key
-    void Key(const char *s) { m_writer.Key(s); }
+    void Key(const char* s) { m_writer.Key(s); }
     /// @brief Wrapper around the rapidjson Key writer methods
     /// @param[in] s string for the key
-    void Key(const std::string &s) { m_writer.Key(s.data(), rapidjson::SizeType(s.size())); }
+    void Key(const std::string& s) { m_writer.Key(s.data(), rapidjson::SizeType(s.size())); }
     /// @brief Wrapper around the rapidjson Key writer methods
     /// @param[in] s string for the key
-    void Key(const std::string_view &s) { m_writer.Key(s.data(), rapidjson::SizeType(s.size())); }
+    void Key(const std::string_view& s) { m_writer.Key(s.data(), rapidjson::SizeType(s.size())); }
     /// @}
 
     /// @name Object methods
@@ -107,16 +107,16 @@ namespace mtconnect::printer {
     void Add(uint64_t i) { m_writer.Uint64(i); }
     /// @brief Add a string
     /// @param[in] s a null terminated string
-    void Add(const char *s) { m_writer.String(s); }
+    void Add(const char* s) { m_writer.String(s); }
     /// @brief Add a string view
     /// @param[in] s a string
-    void Add(const std::string_view &s)
+    void Add(const std::string_view& s)
     {
       m_writer.String(s.data(), rapidjson::SizeType(s.size()));
     }
     /// @brief Add a string
     /// @param[in] s a string
-    void Add(const std::string &s) { m_writer.String(s.data(), rapidjson::SizeType(s.size())); }
+    void Add(const std::string& s) { m_writer.String(s.data(), rapidjson::SizeType(s.size())); }
     /// @}
 
     /// @brief Add pairs of values
@@ -133,7 +133,7 @@ namespace mtconnect::printer {
     /// @tparam T2 Value type
     /// @tparam R parameter pack for the rest of the values
     template <typename T1, typename T2, typename... R>
-    void AddPairs(const T1 &key, const T2 &value, R... rest)
+    void AddPairs(const T1& key, const T2& value, R... rest)
     {
       Key(key);
       Add(value);
@@ -153,7 +153,7 @@ namespace mtconnect::printer {
     /// @tparam T1 Key type
     /// @tparam T2 Value type
     template <typename T1, typename T2>
-    void AddPairs(const T1 &v1, const T2 &v2)
+    void AddPairs(const T1& v1, const T2& v2)
     {
       Key(v1);
       Add(v2);
@@ -161,7 +161,7 @@ namespace mtconnect::printer {
 
   protected:
     /// @brief The rapidjson writer
-    T &m_writer;
+    T& m_writer;
   };
 
   /// @brief Provides rapidjson automatic StartObject and EndObject when the object goes out of
@@ -177,7 +177,7 @@ namespace mtconnect::printer {
     /// @brief Start an object as part of another objecy where this object is the value of `key`
     /// @param[in] writer the rapidjson writer
     /// @param[in] key the parent objects key
-    AutoJsonObject(T &writer, const char *key) : base(writer)
+    AutoJsonObject(T& writer, const char* key) : base(writer)
     {
       base::Key(key);
       base::StartObject();
@@ -186,7 +186,7 @@ namespace mtconnect::printer {
     /// @brief Create a object, but only start it if `start` is true
     /// @param[in] writer the rapidjson writer
     /// @param[in] start flag to start the array
-    AutoJsonObject(T &writer, bool start = true) : base(writer)
+    AutoJsonObject(T& writer, bool start = true) : base(writer)
     {
       if (start)
         base::StartObject();
@@ -197,7 +197,7 @@ namespace mtconnect::printer {
     /// @brief Start an object as part of another objecy where this object is the value of `key`
     /// @param[in] writer the rapidjson writer
     /// @param[in] key the parent objects key
-    AutoJsonObject(T &writer, const std::string_view key) : base(writer)
+    AutoJsonObject(T& writer, const std::string_view key) : base(writer)
     {
       base::Key(key.data());
       base::StartObject();
@@ -217,13 +217,13 @@ namespace mtconnect::printer {
 
     /// @brief Check if the key has changed
     /// @param[in] key key to check
-    bool check(const std::string_view &key) { return m_key != key; }
+    bool check(const std::string_view& key) { return m_key != key; }
 
     /// @brief Check if the key has changed and end an open object and start a new one
     /// @param[in] key key to check
     /// @param[in] addKey if `true`, add an object as the value of the parent object using key as
     /// the key
-    bool reset(const std::string_view &key, bool addKey = true)
+    bool reset(const std::string_view& key, bool addKey = true)
     {
       if (m_key != key)
       {
@@ -276,7 +276,7 @@ namespace mtconnect::printer {
     /// @brief Create a array, but only start it if `start` is true
     /// @param[in] writer the rapidjson writer
     /// @param[in] start flag to start the array
-    AutoJsonArray(T &writer, bool start = true) : base(writer)
+    AutoJsonArray(T& writer, bool start = true) : base(writer)
     {
       if (start)
         base::StartArray();
@@ -287,7 +287,7 @@ namespace mtconnect::printer {
     /// @brief Start an array as part of another objecy where this object is the value of `key`
     /// @param[in] writer the rapidjson writer
     /// @param[in] key the parent objects key
-    AutoJsonArray(T &writer, const char *key) : base(writer)
+    AutoJsonArray(T& writer, const char* key) : base(writer)
     {
       base::Key(key);
       base::StartArray();
@@ -296,7 +296,7 @@ namespace mtconnect::printer {
     /// @brief Start an array as part of another objecy where this object is the value of `key`
     /// @param[in] writer the rapidjson writer
     /// @param[in] key the parent objects key
-    AutoJsonArray(T &writer, const std::string_view key) : base(writer)
+    AutoJsonArray(T& writer, const std::string_view key) : base(writer)
     {
       base::Key(key.data());
       base::StartArray();
@@ -342,7 +342,7 @@ namespace mtconnect::printer {
   /// @tparam T the type of the output buffer
   /// @tparam T2 the type of the lambda
   template <typename T, typename T2>
-  inline void RenderJson(T &output, bool pretty, T2 &&func)
+  inline void RenderJson(T& output, bool pretty, T2&& func)
   {
     if (pretty)
     {
@@ -390,7 +390,7 @@ namespace mtconnect::printer {
 
     /// @brief Create a stack for a rapidjson writer
     /// @param[in] writer the rapidjson writer
-    JsonStack(W &writer) : base(writer) {}
+    JsonStack(W& writer) : base(writer) {}
 
     /// @brief Add a new object to the stack
     /// @param[in] key optional key for the parent object
@@ -399,7 +399,7 @@ namespace mtconnect::printer {
       if (!key.empty())
         base::Key(key);
 
-      auto &member = m_stack.emplace_back();
+      auto& member = m_stack.emplace_back();
       member.m_object.emplace(base::m_writer);
     }
 
@@ -410,7 +410,7 @@ namespace mtconnect::printer {
       if (!key.empty())
         base::Key(key);
 
-      auto &member = m_stack.emplace_back();
+      auto& member = m_stack.emplace_back();
       member.m_array.emplace(base::m_writer);
     }
 

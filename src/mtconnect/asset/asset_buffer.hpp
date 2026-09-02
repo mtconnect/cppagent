@@ -54,17 +54,17 @@ namespace mtconnect::asset {
     /// @brief Structure to store asset for boost multi index container
     struct AssetNode
     {
-      AssetNode(AssetPtr &asset) : m_asset(asset), m_identity(asset->getAssetId()) {}
+      AssetNode(AssetPtr& asset) : m_asset(asset), m_identity(asset->getAssetId()) {}
       ~AssetNode() = default;
 
       using element_type = AssetPtr;
 
-      const std::string &getAssetId() const { return m_identity; }
-      const std::string &getType() const { return m_asset->getType(); }
-      const std::string &getDeviceUuid() const
+      const std::string& getAssetId() const { return m_identity; }
+      const std::string& getType() const { return m_asset->getType(); }
+      const std::string& getDeviceUuid() const
       {
         static const std::string unknown {"UNKNOWN"};
-        const auto &dev = m_asset->getProperty("deviceUuid");
+        const auto& dev = m_asset->getProperty("deviceUuid");
         if (std::holds_alternative<std::string>(dev))
           return std::get<std::string>(dev);
         else
@@ -72,7 +72,7 @@ namespace mtconnect::asset {
       }
       bool isRemoved() const { return m_asset->isRemoved(); }
 
-      bool operator<(const AssetNode &o) const { return m_identity < o.m_identity; }
+      bool operator<(const AssetNode& o) const { return m_identity < o.m_identity; }
 
       AssetPtr operator*() const { return m_asset; }
 
@@ -144,7 +144,7 @@ namespace mtconnect::asset {
       if (!added.second)
       {
         old = added.first->m_asset;
-        m_index.modify(added.first, [&asset](AssetNode &n) { n.m_asset = asset; });
+        m_index.modify(added.first, [&asset](AssetNode& n) { n.m_asset = asset; });
         m_index.relocate(m_index.begin(), added.first);
         if (asset->isRemoved() && !old->isRemoved())
           adjustCount(asset, 1);
@@ -165,13 +165,13 @@ namespace mtconnect::asset {
       return old;
     }
 
-    AssetPtr removeAsset(const std::string &id,
-                         const std::optional<Timestamp> &time = std::nullopt) override
+    AssetPtr removeAsset(const std::string& id,
+                         const std::optional<Timestamp>& time = std::nullopt) override
     {
       AssetPtr asset {};
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
 
-      auto &idx = m_index.get<ByAssetId>();
+      auto& idx = m_index.get<ByAssetId>();
       auto it = idx.find(id);
       if (it != idx.end())
       {
@@ -188,10 +188,10 @@ namespace mtconnect::asset {
       return asset;
     }
 
-    AssetPtr getAsset(const std::string &id) const override
+    AssetPtr getAsset(const std::string& id) const override
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      const auto &idx = m_index.get<ByAssetId>();
+      const auto& idx = m_index.get<ByAssetId>();
       auto it = idx.find(id);
       if (it != idx.end())
         return it->m_asset;
@@ -199,7 +199,7 @@ namespace mtconnect::asset {
         return nullptr;
     }
 
-    virtual size_t getAssets(AssetList &list, size_t max, const bool active = true,
+    virtual size_t getAssets(AssetList& list, size_t max, const bool active = true,
                              const std::optional<std::string> device = std::nullopt,
                              const std::optional<std::string> type = std::nullopt) const override
     {
@@ -219,11 +219,11 @@ namespace mtconnect::asset {
       }
       else
       {
-        auto &idx = m_index.get<ByFifo>();
+        auto& idx = m_index.get<ByFifo>();
         range = std::make_pair(idx.begin(), idx.end());
       }
 
-      for (auto &a : range)
+      for (auto& a : range)
       {
         if (!active || !a.isRemoved())
           list.push_back(a.m_asset);
@@ -234,7 +234,7 @@ namespace mtconnect::asset {
       return list.size();
     }
 
-    virtual size_t getAssets(AssetList &list, const std::list<std::string> &ids) const override
+    virtual size_t getAssets(AssetList& list, const std::list<std::string>& ids) const override
     {
       for (auto id : ids)
       {
@@ -245,7 +245,7 @@ namespace mtconnect::asset {
       return list.size();
     }
 
-    size_t getCountForDeviceAndType(const std::string &device, const std::string &type,
+    size_t getCountForDeviceAndType(const std::string& device, const std::string& type,
                                     bool active = true) const override
     {
       using namespace boost::adaptors;
@@ -257,7 +257,7 @@ namespace mtconnect::asset {
           activePredicate(active));
     }
 
-    size_t getCountForType(const std::string &type, bool active = true) const override
+    size_t getCountForType(const std::string& type, bool active = true) const override
     {
       using namespace boost::adaptors;
 
@@ -266,7 +266,7 @@ namespace mtconnect::asset {
       return boost::count_if(m_index.get<ByType>().equal_range(type), activePredicate(active));
     }
 
-    size_t getCountForDevice(const std::string &device, bool active = true) const override
+    size_t getCountForDevice(const std::string& device, bool active = true) const override
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
 
@@ -278,12 +278,12 @@ namespace mtconnect::asset {
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
       TypeCount res;
-      auto &idx = m_index.get<ByType>();
+      auto& idx = m_index.get<ByType>();
       auto it = idx.begin();
       while (it != idx.end())
       {
         int delta = 0;
-        auto &type = it->getType();
+        auto& type = it->getType();
         auto rng = idx.equal_range(type);
         if (active)
         {
@@ -299,20 +299,20 @@ namespace mtconnect::asset {
       return res;
     }
 
-    TypeCount getCountsByTypeForDevice(const std::string &device, bool active = true) const override
+    TypeCount getCountsByTypeForDevice(const std::string& device, bool active = true) const override
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
       TypeCount res;
-      auto &idx = m_index.get<ByDeviceAndType>();
+      auto& idx = m_index.get<ByDeviceAndType>();
       auto removes = m_deviceRemoveCount.find(device);
-      const auto *ridx {removes == m_deviceRemoveCount.end() ? nullptr : &removes->second};
+      const auto* ridx {removes == m_deviceRemoveCount.end() ? nullptr : &removes->second};
 
       auto range = idx.equal_range(std::make_tuple(device));
       auto it = range.first;
       while (it != range.second)
       {
         int delta = 0;
-        auto &type = it->getType();
+        auto& type = it->getType();
         auto rng = idx.equal_range(std::make_tuple(device, type));
         if (ridx != nullptr && active)
         {
@@ -328,25 +328,25 @@ namespace mtconnect::asset {
       return res;
     }
 
-    size_t removeAll(AssetList &list, const std::optional<std::string> device = std::nullopt,
+    size_t removeAll(AssetList& list, const std::optional<std::string> device = std::nullopt,
                      const std::optional<std::string> type = std::nullopt,
-                     const std::optional<Timestamp> &time = std::nullopt) override
+                     const std::optional<Timestamp>& time = std::nullopt) override
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
       getAssets(list, std::numeric_limits<size_t>().max(), false, device, type);
-      for (auto &a : list)
+      for (auto& a : list)
         removeAsset(a->getAssetId(), time);
 
       return list.size();
     }
 
-    int32_t getIndex(const std::string &id) const
+    int32_t getIndex(const std::string& id) const
     {
-      auto &idx = m_index.get<ByAssetId>();
+      auto& idx = m_index.get<ByAssetId>();
       auto it = idx.find(id);
       if (it != idx.end())
       {
-        auto &fifo = m_index.get<ByFifo>();
+        auto& fifo = m_index.get<ByFifo>();
         auto pos = mic::project<ByFifo>(m_index, it);
         return int32_t(std::distance(fifo.begin(), pos));
       }
@@ -357,8 +357,8 @@ namespace mtconnect::asset {
   protected:
     void adjustCount(AssetPtr asset, int delta)
     {
-      const auto &type = asset->getType();
-      const auto &dev = asset->getDeviceUuid();
+      const auto& type = asset->getType();
+      const auto& dev = asset->getDeviceUuid();
       bool found = false;
 
       if (dev)
@@ -392,12 +392,12 @@ namespace mtconnect::asset {
       }
     }
 
-    std::function<bool(const AssetNode &)> activePredicate(bool active) const
+    std::function<bool(const AssetNode&)> activePredicate(bool active) const
     {
       if (active)
-        return [](const AssetNode &a) -> bool { return !a.isRemoved(); };
+        return [](const AssetNode& a) -> bool { return !a.isRemoved(); };
       else
-        return [](const AssetNode &a) -> bool { return true; };
+        return [](const AssetNode& a) -> bool { return true; };
     }
 
   protected:

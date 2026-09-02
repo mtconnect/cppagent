@@ -27,21 +27,21 @@
 // #define BOOST_SPIRIT_DEBUG 1
 #ifdef BOOST_SPIRIT_DEBUG
 namespace std {
-  static ostream &operator<<(ostream &s, const boost::property_tree::ptree &t);
-  static inline ostream &operator<<(ostream &s,
-                                    const pair<std::string, boost::property_tree::ptree> &t)
+  static ostream& operator<<(ostream& s, const boost::property_tree::ptree& t);
+  static inline ostream& operator<<(ostream& s,
+                                    const pair<std::string, boost::property_tree::ptree>& t)
   {
     s << "'" << t.first << "'" << t.second;
     return s;
   }
 
-  static inline ostream &operator<<(ostream &s, const pair<std::string, std::string> &t)
+  static inline ostream& operator<<(ostream& s, const pair<std::string, std::string>& t)
   {
     s << "Pair: '" << t.first << "', '" << t.second << "'";
     return s;
   }
 
-  static ostream &operator<<(ostream &s, const boost::property_tree::ptree &t)
+  static ostream& operator<<(ostream& s, const boost::property_tree::ptree& t)
   {
     if (!t.data().empty())
     {
@@ -50,7 +50,7 @@ namespace std {
     if (!t.empty())
     {
       s << " [Tree: ";
-      for (const auto &c : t)
+      for (const auto& c : t)
         s << c << ", ";
       s << "]";
     }
@@ -79,26 +79,26 @@ namespace mtconnect {
   namespace configuration {
     /// @brief Actions for the configuration parser in reductions
     namespace ConfigurationParserActions {
-      inline static void property(pair<std::string, std::string> &t, const std::string &f,
-                                  const std::string &s)
+      inline static void property(pair<std::string, std::string>& t, const std::string& f,
+                                  const std::string& s)
       {
         t = make_pair(f, trim(s));
       }
 
-      inline static void tree(pair<std::string, pt::ptree> &t, const std::string &f,
-                              const vector<pair<std::string, pt::ptree>> &s)
+      inline static void tree(pair<std::string, pt::ptree>& t, const std::string& f,
+                              const vector<pair<std::string, pt::ptree>>& s)
       {
         t.first = f;
-        for (const auto &a : s)
+        for (const auto& a : s)
         {
           if (!a.first.empty())
             t.second.push_back(a);
         }
       }
 
-      inline static void start(pt::ptree &t, const vector<pair<std::string, pt::ptree>> &s)
+      inline static void start(pt::ptree& t, const vector<pair<std::string, pt::ptree>>& s)
       {
-        for (const auto &a : s)
+        for (const auto& a : s)
         {
           if (!a.first.empty())
             t.push_back(a);
@@ -173,8 +173,8 @@ namespace mtconnect {
       qi::rule<It, pt::ptree(), Skipper> m_start;
     };
 
-    static std::string ExpandValue(const std::map<std::string, std::string> &values,
-                                   const std::string &s)
+    static std::string ExpandValue(const std::map<std::string, std::string>& values,
+                                   const std::string& s)
     {
       static std::regex pat("\\$(([A-Za-z0-9_]+)|\\{([^}]+)\\})");
       stringstream out;
@@ -221,7 +221,7 @@ namespace mtconnect {
     }
 
     static void ExpandValues(std::map<std::string, std::string> values,
-                             boost::property_tree::ptree &node)
+                             boost::property_tree::ptree& node)
     {
       if (auto value = node.get_value_optional<std::string>();
           value->find('$') != std::string::npos)
@@ -230,22 +230,22 @@ namespace mtconnect {
         node.put_value(expanded);
       }
 
-      for (auto &block : node)
+      for (auto& block : node)
       {
         ExpandValues(values, block.second);
-        const auto &value = block.second.get_value_optional<std::string>();
+        const auto& value = block.second.get_value_optional<std::string>();
         if (value && !value->empty())
           values[block.first] = *value;
       }
     }
 
-    static void ExpandVariables(boost::property_tree::ptree &config)
+    static void ExpandVariables(boost::property_tree::ptree& config)
     {
       std::map<std::string, std::string> values;
       ExpandValues(values, config);
     }
 
-    pt::ptree Parser::parse(const std::string &text)
+    pt::ptree Parser::parse(const std::string& text)
     {
       pt::ptree tree;
       using boost::spirit::ascii::space;
@@ -282,7 +282,7 @@ namespace mtconnect {
       return tree;
     }
 
-    pt::ptree Parser::parse(const std::filesystem::path &path)
+    pt::ptree Parser::parse(const std::filesystem::path& path)
     {
       std::ifstream t(path);
       std::stringstream buffer;

@@ -44,8 +44,8 @@ namespace mtconnect {
       // create a json printer
       // call print
 
-      MqttService::MqttService(boost::asio::io_context &context, sink::SinkContractPtr &&contract,
-                               const ConfigOptions &options, const ptree &config)
+      MqttService::MqttService(boost::asio::io_context& context, sink::SinkContractPtr&& contract,
+                               const ConfigOptions& options, const ptree& config)
         : Sink("MqttService", std::move(contract)),
           m_context(context),
           m_strand(context),
@@ -55,7 +55,7 @@ namespace mtconnect {
         // Unique id number for agent instance
         m_instanceId = getCurrentTimeInSec();
 
-        auto jsonPrinter = dynamic_cast<printer::JsonPrinter *>(m_sinkContract->getPrinter("json"));
+        auto jsonPrinter = dynamic_cast<printer::JsonPrinter*>(m_sinkContract->getPrinter("json"));
 
         m_jsonPrinter = make_unique<entity::JsonEntityPrinter>(jsonPrinter->getJsonVersion());
 
@@ -105,7 +105,7 @@ namespace mtconnect {
           auto clientHandler = make_unique<ClientHandler>();
           clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
             // Publish latest devices, assets, and observations
-            auto &circ = m_sinkContract->getCircularBuffer();
+            auto& circ = m_sinkContract->getCircularBuffer();
             std::lock_guard<buffer::CircularBuffer> lock(circ);
             client->connectComplete();
 
@@ -142,8 +142,8 @@ namespace mtconnect {
 
       struct AsyncSample : public observation::AsyncObserver
       {
-        AsyncSample(boost::asio::io_context::strand &strand,
-                    mtconnect::buffer::CircularBuffer &buffer, FilterSet &&filter,
+        AsyncSample(boost::asio::io_context::strand& strand,
+                    mtconnect::buffer::CircularBuffer& buffer, FilterSet&& filter,
                     std::chrono::milliseconds interval, std::chrono::milliseconds heartbeat,
                     std::shared_ptr<MqttClient> client, DevicePtr device)
           : observation::AsyncObserver(strand, buffer, std::move(filter), interval, heartbeat),
@@ -151,7 +151,7 @@ namespace mtconnect {
             m_client(client)
         {}
 
-        void fail(boost::beast::http::status status, const std::string &message) override
+        void fail(boost::beast::http::status status, const std::string& message) override
         {
           LOG(error) << "MQTT Sample Failed: " << message;
         }
@@ -176,20 +176,20 @@ namespace mtconnect {
       void MqttService::pubishInitialContent()
       {
         using std::placeholders::_1;
-        for (auto &dev : m_sinkContract->getDevices())
+        for (auto& dev : m_sinkContract->getDevices())
         {
           publish(dev);
 
           AssetList list;
           m_sinkContract->getAssetStorage()->getAssets(list, 100000, true, *(dev->getUuid()));
-          for (auto &asset : list)
+          for (auto& asset : list)
           {
             publish(asset);
           }
         }
 
         auto seq = publishCurrent(boost::system::error_code {});
-        for (auto &dev : m_sinkContract->getDevices())
+        for (auto& dev : m_sinkContract->getDevices())
         {
           FilterSet filterSet = filterForDevice(dev);
           auto sampler =
@@ -197,7 +197,7 @@ namespace mtconnect {
                                        std::move(filterSet), m_sampleInterval, 600s, m_client, dev);
           sampler->m_sink = getptr();
           sampler->m_handler = boost::bind(&MqttService::publishSample, this, _1);
-          sampler->observe(seq, [this](const std::string &id) {
+          sampler->observe(seq, [this](const std::string& id) {
             return m_sinkContract->getDataItemById(id).get();
           });
           publishSample(sampler);
@@ -218,7 +218,7 @@ namespace mtconnect {
         SequenceNumber_t firstSeq, lastSeq;
 
         {
-          auto &buffer = m_sinkContract->getCircularBuffer();
+          auto& buffer = m_sinkContract->getCircularBuffer();
           std::lock_guard<buffer::CircularBuffer> lock(buffer);
 
           lastSeq = buffer.getSequence() - 1;
@@ -261,7 +261,7 @@ namespace mtconnect {
           return 0;
         }
 
-        for (auto &device : m_sinkContract->getDevices())
+        for (auto& device : m_sinkContract->getDevices())
         {
           auto topic = formatTopic(m_currentTopic, device);
           LOG(debug) << "Publishing current for: " << topic;
@@ -270,7 +270,7 @@ namespace mtconnect {
           auto filterSet = filterForDevice(device);
 
           {
-            auto &buffer = m_sinkContract->getCircularBuffer();
+            auto& buffer = m_sinkContract->getCircularBuffer();
             std::lock_guard<buffer::CircularBuffer> lock(buffer);
 
             firstSeq = buffer.getFirstSequence();
@@ -294,7 +294,7 @@ namespace mtconnect {
         return seq;
       }
 
-      bool MqttService::publish(observation::ObservationPtr &observation)
+      bool MqttService::publish(observation::ObservationPtr& observation)
       {
         // Since we are doing periodic publishing, there is nothing to do here.
         return true;
@@ -342,16 +342,16 @@ namespace mtconnect {
       }
 
       // Register the service with the sink factory
-      void MqttService::registerFactory(SinkFactory &factory)
+      void MqttService::registerFactory(SinkFactory& factory)
       {
         factory.registerFactory(
             "MqttService",
-            [](const std::string &name, boost::asio::io_context &io, SinkContractPtr &&contract,
-               const ConfigOptions &options, const boost::property_tree::ptree &block) -> SinkPtr {
+            [](const std::string& name, boost::asio::io_context& io, SinkContractPtr&& contract,
+               const ConfigOptions& options, const boost::property_tree::ptree& block) -> SinkPtr {
               auto sink = std::make_shared<MqttService>(io, std::move(contract), options, block);
               return sink;
             });
       }
     }  // namespace mqtt_sink
-  }    // namespace sink
+  }  // namespace sink
 }  // namespace mtconnect

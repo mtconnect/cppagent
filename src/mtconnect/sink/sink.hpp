@@ -70,19 +70,19 @@ namespace mtconnect {
       /// @brief get the printer for a mime type. Current options: `xml` or `json`.
       /// @param[in] aType a string for the type
       /// @return A pointer to a printer for that type. `nullptr` if not found
-      virtual printer::Printer *getPrinter(const std::string &aType) const = 0;
+      virtual printer::Printer* getPrinter(const std::string& aType) const = 0;
       /// @brief get the map of type/printer pairs
       /// @return a reference to the map (ownership is not transferred).
-      virtual const PrinterMap &getPrinters() const = 0;
+      virtual const PrinterMap& getPrinters() const = 0;
 
       /// @brief find a device by name
       /// @param[in] name the name of the device
       /// @return shared pointer to the device if found
-      virtual DevicePtr getDeviceByName(const std::string &name) const = 0;
+      virtual DevicePtr getDeviceByName(const std::string& name) const = 0;
       /// @brief find a device by its uuid or name
       /// @param idOrName the uuid or name
       /// @return shared pointer to the device if found
-      virtual DevicePtr findDeviceByUUIDorName(const std::string &idOrName) const = 0;
+      virtual DevicePtr findDeviceByUUIDorName(const std::string& idOrName) const = 0;
       /// @brief get a list of all the devices
       /// @return a list of shared device pointers
       virtual const std::list<DevicePtr> getDevices() const = 0;
@@ -94,14 +94,14 @@ namespace mtconnect {
       /// @brief get a data item by its unique id
       /// @param[in] id a unique id
       /// @return shared pointer to the data item if found
-      virtual DataItemPtr getDataItemById(const std::string &id) const = 0;
+      virtual DataItemPtr getDataItemById(const std::string& id) const = 0;
       /// @brief find all the data items for a given XPath
       /// @param[in] device optional device to search
       /// @param[in] path the xpath to search
       /// @param[out] filter the set of all data items matching path to use for filtering
       virtual void getDataItemsForPath(
-          const DevicePtr device, const std::optional<std::string> &path, FilterSet &filter,
-          const std::optional<std::string> &deviceType = std::nullopt) const = 0;
+          const DevicePtr device, const std::optional<std::string>& path, FilterSet& filter,
+          const std::optional<std::string>& deviceType = std::nullopt) const = 0;
       /// @brief Add a source for this sink.
       ///
       /// This is used to create loopback sources for a sink
@@ -110,21 +110,21 @@ namespace mtconnect {
       virtual void addSource(std::shared_ptr<source::Source> source) = 0;
       /// @brief Get the common circular buffer
       /// @return a reference to the circular buffer
-      virtual buffer::CircularBuffer &getCircularBuffer() = 0;
+      virtual buffer::CircularBuffer& getCircularBuffer() = 0;
 
       /// @brief Get a pointer to the asset storage
       /// @return a pointer to the asset storage.
-      virtual const asset::AssetStorage *getAssetStorage() = 0;
+      virtual const asset::AssetStorage* getAssetStorage() = 0;
 
       /// @brief Get a reference to the hook manager for the agent.
       /// @param[in] type the type manager to retrieve
       /// @return a reference to the hook manager
-      virtual configuration::HookManager<Agent> &getHooks(HookType type) = 0;
+      virtual configuration::HookManager<Agent>& getHooks(HookType type) = 0;
 
       /// @brief Shared pointer to the pipeline context
       std::shared_ptr<pipeline::PipelineContext> m_pipelineContext;
 
-      using FindFile = std::function<std::optional<std::filesystem::path>(const std::string &)>;
+      using FindFile = std::function<std::optional<std::filesystem::path>(const std::string&)>;
       /// @brief function to find a configuration file
       FindFile m_findConfigFile;
 
@@ -138,21 +138,21 @@ namespace mtconnect {
 
     /// @brief The factory callback or lambda to create this sink. Used for plugins.
     using SinkFactoryFn = boost::function<SinkPtr(
-        const std::string &name, boost::asio::io_context &io, SinkContractPtr &&contract,
-        const ConfigOptions &options, const boost::property_tree::ptree &block)>;
+        const std::string& name, boost::asio::io_context& io, SinkContractPtr&& contract,
+        const ConfigOptions& options, const boost::property_tree::ptree& block)>;
 
     /// @brief Abstract Sink
     class AGENT_LIB_API Sink : public std::enable_shared_from_this<Sink>
     {
     public:
-      Sink(const std::string &name, SinkContractPtr &&contract)
+      Sink(const std::string& name, SinkContractPtr&& contract)
         : m_sinkContract(std::move(contract)), m_name(name)
       {}
       virtual ~Sink() = default;
 
       /// @brief The shared_from_this pointer for this object
       /// @return shared pointer
-      SinkPtr getptr() const { return const_cast<Sink *>(this)->shared_from_this(); }
+      SinkPtr getptr() const { return const_cast<Sink*>(this)->shared_from_this(); }
 
       /// @brief Start the sink
       virtual void start() = 0;
@@ -162,7 +162,7 @@ namespace mtconnect {
       /// @brief Receive an observation
       /// @param observation shared pointer to the observation
       /// @return `true` if the publishing was successful
-      virtual bool publish(observation::ObservationPtr &observation) = 0;
+      virtual bool publish(observation::ObservationPtr& observation) = 0;
       /// @brief Receive an asset
       /// @param asset shared point to the asset
       /// @return `true` if successful
@@ -174,7 +174,7 @@ namespace mtconnect {
 
       /// @brief Get the name of the Sink. Sinks should have unique names.
       /// @return the name
-      const auto &getName() const { return m_name; }
+      const auto& getName() const { return m_name; }
 
     protected:
       std::unique_ptr<SinkContract> m_sinkContract;
@@ -188,7 +188,7 @@ namespace mtconnect {
       /// @brief Register and associate the name with the Sink factory functon
       /// @param name the name
       /// @param function the factory
-      void registerFactory(const std::string &name, SinkFactoryFn function)
+      void registerFactory(const std::string& name, SinkFactoryFn function)
       {
         m_factories.insert_or_assign(name, function);
       }
@@ -199,7 +199,7 @@ namespace mtconnect {
       /// @brief Check if a sink factory exists
       /// @param name the name of the factory
       /// @return `true` if the factory exits.
-      bool hasFactory(const std::string &name) { return m_factories.count(name) > 0; }
+      bool hasFactory(const std::string& name) { return m_factories.count(name) > 0; }
 
       /// @brief Create a sink for a given name
       /// @param factoryName The name of the factory
@@ -210,9 +210,9 @@ namespace mtconnect {
       /// @param block Additional configuration options for the Sink as a boost property tree.
       ///        These options need to be interpreted by the sink
       /// @return A shared pointer to the sink.
-      SinkPtr make(const std::string &factoryName, const std::string &sinkName,
-                   boost::asio::io_context &io, SinkContractPtr &&contract,
-                   const ConfigOptions &options, const boost::property_tree::ptree &block);
+      SinkPtr make(const std::string& factoryName, const std::string& sinkName,
+                   boost::asio::io_context& io, SinkContractPtr&& contract,
+                   const ConfigOptions& options, const boost::property_tree::ptree& block);
 
     protected:
       std::map<std::string, SinkFactoryFn> m_factories;

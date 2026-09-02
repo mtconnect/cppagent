@@ -38,7 +38,7 @@ namespace mtconnect {
         factory->getRequirement("uuid")->setMultiplicity(1, 1);
         factory->addRequirements(
             {{"iso841Class", false}, {"mtconnectVersion", false}, {"hash", false}});
-        factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& ps) -> EntityPtr {
           auto device = make_shared<Device>("Device"s, ps);
           device->initialize();
           return device;
@@ -103,13 +103,13 @@ namespace mtconnect {
       }
     }
 
-    Device::Device(const std::string &name, entity::Properties &props) : Component(name, props)
+    Device::Device(const std::string& name, entity::Properties& props) : Component(name, props)
     {
       NAMED_SCOPE("device");
       auto items = getList("DataItems");
       if (items)
       {
-        for (auto &item : *items)
+        for (auto& item : *items)
         {
           auto di = dynamic_pointer_cast<data_item::DataItem>(item);
           cachePointers(di);
@@ -117,7 +117,7 @@ namespace mtconnect {
       }
     }
 
-    void Device::setOptions(const ConfigOptions &options)
+    void Device::setOptions(const ConfigOptions& options)
     {
       if (auto opt = GetOption<bool>(options, PreserveUUID))
         m_preserveUuid = *opt;
@@ -134,7 +134,7 @@ namespace mtconnect {
       }
     }
 
-    void Device::addDataItem(DataItemPtr dataItem, entity::ErrorList &errors)
+    void Device::addDataItem(DataItemPtr dataItem, entity::ErrorList& errors)
     {
       Component::addDataItem(dataItem, errors);
       cachePointers(dataItem);
@@ -154,7 +154,7 @@ namespace mtconnect {
         m_assetCount = dataItem;
     }
 
-    DataItemPtr Device::getDeviceDataItem(const std::string &name) const
+    DataItemPtr Device::getDeviceDataItem(const std::string& name) const
     {
       if (auto it = m_dataItems.get<ById>().find(name); it != m_dataItems.get<ById>().end())
         return it->lock();
@@ -172,7 +172,7 @@ namespace mtconnect {
       return nullptr;
     }
 
-    void Device::createUniqueIds(std::unordered_map<std::string, std::string> &idMap)
+    void Device::createUniqueIds(std::unordered_map<std::string, std::string>& idMap)
     {
       boost::uuids::detail::sha1 sha;
       sha.process_bytes(m_uuid->data(), m_uuid->size());

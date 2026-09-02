@@ -45,7 +45,7 @@ namespace mtconnect {
       /// @brief Abstract Asset constructor
       /// @param name asset name, sometimes referred to as the asset type
       /// @param props asset properties
-      Asset(const std::string &name, const entity::Properties &props)
+      Asset(const std::string& name, const entity::Properties& props)
         : entity::Entity(name, props), m_removed(false)
       {
         auto removed = maybeGet<bool>("removed");
@@ -55,7 +55,7 @@ namespace mtconnect {
 
       /// @brief an assets identity is its `assetId` property
       /// @return the `assetId`
-      const entity::Value &getIdentity() const override { return getProperty("assetId"); }
+      const entity::Value& getIdentity() const override { return getProperty("assetId"); }
 
       /// @brief get the static asset factory
       /// @return shared pointer to the factory
@@ -69,7 +69,7 @@ namespace mtconnect {
       /// Special handling of `removed`. If `true` sets the asset state to removed.
       /// @param key property `key`
       /// @param v property value
-      void setProperty(const std::string &key, const entity::Value &v) override
+      void setProperty(const std::string& key, const entity::Value& v) override
       {
         entity::Value r = v;
         if (key == "removed")
@@ -84,23 +84,23 @@ namespace mtconnect {
       }
       /// @brief Set a property
       /// @param property the property
-      void setProperty(const entity::Property &property) { Entity::setProperty(property); }
+      void setProperty(const entity::Property& property) { Entity::setProperty(property); }
 
       /// @brief Cover method for `getName()`
-      const auto &getType() const { return getName(); }
+      const auto& getType() const { return getName(); }
 
       /// @brief gets the asset id
       ///
       /// Every asset must have an asset id.
       /// @return the assets identity
       /// @throws PropertyError if there is no assetId
-      const std::string &getAssetId() const
+      const std::string& getAssetId() const
       {
         if (m_assetId.empty())
         {
-          const auto &v = getProperty("assetId");
+          const auto& v = getProperty("assetId");
           if (std::holds_alternative<std::string>(v))
-            *const_cast<std::string *>(&m_assetId) = std::get<std::string>(v);
+            *const_cast<std::string*>(&m_assetId) = std::get<std::string>(v);
           else
             throw entity::PropertyError("Asset has no assetId");
         }
@@ -108,7 +108,7 @@ namespace mtconnect {
       }
       /// @brief Set the asset id
       /// @param id the id
-      void setAssetId(const std::string &id)
+      void setAssetId(const std::string& id)
       {
         m_assetId = id;
         setProperty("assetId", id);
@@ -120,7 +120,7 @@ namespace mtconnect {
       /// @return optional device uuid
       const std::optional<std::string> getDeviceUuid() const
       {
-        const auto &v = getProperty("deviceUuid");
+        const auto& v = getProperty("deviceUuid");
         if (std::holds_alternative<std::string>(v))
           return std::get<std::string>(v);
         else
@@ -130,7 +130,7 @@ namespace mtconnect {
       /// @return optional timestamp if available
       const std::optional<Timestamp> getTimestamp() const
       {
-        const auto &v = getProperty("timestamp");
+        const auto& v = getProperty("timestamp");
         if (std::holds_alternative<Timestamp>(v))
           return std::get<Timestamp>(v);
         else
@@ -146,12 +146,12 @@ namespace mtconnect {
       /// @brief register the factory for an asset type
       /// @param t the type or name of the asset
       /// @param factory the factory to create assets
-      static void registerAssetType(const std::string &t, entity::FactoryPtr factory);
+      static void registerAssetType(const std::string& t, entity::FactoryPtr factory);
 
       /// @brief compares two asset ids
       /// @param another other asset
       /// @return `true` if they have the same asset id
-      bool operator==(const Asset &another) const { return getAssetId() == another.getAssetId(); }
+      bool operator==(const Asset& another) const { return getAssetId() == another.getAssetId(); }
 
     protected:
       /// @brief The virtual method that covers `hash(boost::uuids::detail::sha1&,
@@ -160,7 +160,7 @@ namespace mtconnect {
       /// Override to skip the `hash`, `timestamp`, and `removed` properties.
       ///
       /// @param[in,out] sha1 The boost sha1 accumulator
-      void hash(::boost::uuids::detail::sha1 &sha1) const override
+      void hash(::boost::uuids::detail::sha1& sha1) const override
       {
         static const ::boost::unordered_set<std::string> skip {"hash", "timestamp", "removed"};
         entity::Entity::hash(sha1, skip);

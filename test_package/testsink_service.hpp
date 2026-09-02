@@ -27,8 +27,8 @@ namespace mtconnect {
   class sink_plugin_test : public sink::Sink
   {
   public:
-    sink_plugin_test(const string &name, boost::asio::io_context &context,
-                     sink::SinkContractPtr &&contract, const ConfigOptions &config)
+    sink_plugin_test(const string& name, boost::asio::io_context& context,
+                     sink::SinkContractPtr&& contract, const ConfigOptions& config)
       : sink::Sink(name, std::move(contract))
     {}
 
@@ -38,18 +38,18 @@ namespace mtconnect {
     void start() override {}
     void stop() override {}
 
-    bool publish(observation::ObservationPtr &observation) override { return false; }
+    bool publish(observation::ObservationPtr& observation) override { return false; }
     bool publish(asset::AssetPtr asset) override { return false; }
 
-    static sink::SinkPtr create(const std::string &name, boost::asio::io_context &io,
-                                sink::SinkContractPtr &&contract, const ConfigOptions &options,
-                                const boost::property_tree::ptree &block)
+    static sink::SinkPtr create(const std::string& name, boost::asio::io_context& io,
+                                sink::SinkContractPtr&& contract, const ConfigOptions& options,
+                                const boost::property_tree::ptree& block)
     {
       return std::make_shared<sink_plugin_test>(name, io, std::move(contract), options);
     }
 
-    static void register_factory(const boost::property_tree::ptree &block,
-                                 configuration::AgentConfiguration &config)
+    static void register_factory(const boost::property_tree::ptree& block,
+                                 configuration::AgentConfiguration& config)
     {
       config.getSinkFactory().registerFactory("sink_plugin_test", &sink_plugin_test::create);
     }

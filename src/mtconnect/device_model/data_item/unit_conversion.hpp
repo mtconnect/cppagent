@@ -34,7 +34,7 @@ namespace mtconnect::device_model::data_item {
     /// @param[in] factor
     /// @param[in] offset
     UnitConversion(double factor = 1.0, double offset = 0.0) : m_factor(factor), m_offset(offset) {}
-    UnitConversion(const UnitConversion &) = default;
+    UnitConversion(const UnitConversion&) = default;
     ~UnitConversion() = default;
 
     /// @brief convert a value
@@ -45,7 +45,7 @@ namespace mtconnect::device_model::data_item {
     /// @brief convert a vector of values
     /// @param[in] value the vector of double
     /// @return converted vector of doubles
-    entity::Vector convert(const entity::Vector &value) const
+    entity::Vector convert(const entity::Vector& value) const
     {
       entity::Vector res(value.size());
       for (size_t i = 0; i < value.size(); i++)
@@ -56,7 +56,7 @@ namespace mtconnect::device_model::data_item {
 
     /// @brief convert a vector of values in place
     /// @param[in,out] value the vector of double
-    void convert(entity::Vector &value) const
+    void convert(entity::Vector& value) const
     {
       for (size_t i = 0; i < value.size(); i++)
         value[i] = convert(value[i]);
@@ -64,11 +64,11 @@ namespace mtconnect::device_model::data_item {
     /// @brief Convert a entity variant Value if it holds a double or a vector of doubles
     /// @param[in] value a Value variant
     /// @return the converted value
-    entity::Value convertValue(const entity::Value &value)
+    entity::Value convertValue(const entity::Value& value)
     {
-      if (const auto &v = std::get_if<double>(&value))
+      if (const auto& v = std::get_if<double>(&value))
         return {convert(*v)};
-      else if (const auto &a = std::get_if<entity::Vector>(&value))
+      else if (const auto& a = std::get_if<entity::Vector>(&value))
         return {convert(*a)};
       else
         return nullptr;
@@ -76,11 +76,11 @@ namespace mtconnect::device_model::data_item {
 
     /// @brief Convert a entity variant Value if it holds a double or a vector of doubles in place
     /// @param[in,out] value a Value variant
-    void convertValue(entity::Value &value)
+    void convertValue(entity::Value& value)
     {
-      if (const auto &v = std::get_if<double>(&value))
+      if (const auto& v = std::get_if<double>(&value))
         value = convert(*v);
-      else if (const auto &a = std::get_if<entity::Vector>(&value))
+      else if (const auto& a = std::get_if<entity::Vector>(&value))
         convert(*a);
     }
     /// @brief add a scaling factor to the conversion
@@ -90,7 +90,7 @@ namespace mtconnect::device_model::data_item {
     /// @param[in] from units from
     /// @param[in] to units to
     /// @return A units conversion object
-    static std::unique_ptr<UnitConversion> make(const std::string &from, const std::string &to);
+    static std::unique_ptr<UnitConversion> make(const std::string& from, const std::string& to);
 
     /// @brief get the factor
     /// @return the scaling factor

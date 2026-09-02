@@ -35,7 +35,7 @@ using namespace data_item;
 using namespace std;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -44,11 +44,11 @@ int main(int argc, char *argv[])
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(std::map<string, DataItemPtr> &items, int32_t schemaVersion)
+  MockPipelineContract(std::map<string, DataItemPtr>& items, int32_t schemaVersion)
     : m_dataItems(items), m_schemaVersion(schemaVersion)
   {}
-  DevicePtr findDevice(const std::string &) override { return nullptr; }
-  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+  DevicePtr findDevice(const std::string&) override { return nullptr; }
+  DataItemPtr findDataItem(const std::string& device, const std::string& name) override
   {
     return m_dataItems[name];
   }
@@ -61,11 +61,11 @@ public:
   bool isValidating() const override { return false; }
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
-  void sourceFailed(const std::string &id) override {}
-  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
+  void deliverConnectStatus(entity::EntityPtr, const StringList&, bool) override {}
+  void sourceFailed(const std::string& id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr& obs) const override { return obs; }
 
-  std::map<string, DataItemPtr> &m_dataItems;
+  std::map<string, DataItemPtr>& m_dataItems;
   int32_t m_schemaVersion;
 };
 
@@ -82,7 +82,7 @@ protected:
 
   void TearDown() override { m_dataItems.clear(); }
 
-  DataItemPtr makeDataItem(const Properties &props)
+  DataItemPtr makeDataItem(const Properties& props)
   {
     Properties ps(props);
     ErrorList errors;
@@ -106,8 +106,8 @@ protected:
   std::map<string, DataItemPtr> m_dataItems;
 };
 
-inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
-inline TableCell operator""_C(const char *c, std::size_t) { return TableCell(c); }
+inline DataSetEntry operator""_E(const char* c, std::size_t) { return DataSetEntry(c); }
+inline TableCell operator""_C(const char* c, std::size_t) { return TableCell(c); }
 
 TEST_F(DataItemMappingTest, should_map_simple_sample)
 {
@@ -116,7 +116,7 @@ TEST_F(DataItemMappingTest, should_map_simple_sample)
   auto ts = makeTimestamped({"a", "READY"});
 
   auto observations = (*m_mapper)(ts);
-  auto &r = *observations;
+  auto& r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
 
   auto oblist = observations->getValue<EntityList>();
@@ -137,7 +137,7 @@ TEST_F(DataItemMappingTest, should_map_simple_unavailable_event)
   auto ts = makeTimestamped({"a", "unavailable"s});
 
   auto observations = (*m_mapper)(ts);
-  auto &r = *observations;
+  auto& r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
 
   auto oblist = observations->getValue<EntityList>();
@@ -157,7 +157,7 @@ TEST_F(DataItemMappingTest, should_map_two_simple_events)
   auto ts = makeTimestamped({"a", "READY", "a", "ACTIVE"});
 
   auto observations = (*m_mapper)(ts);
-  auto &r = *observations;
+  auto& r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
 
   auto oblist = observations->getValue<EntityList>();
@@ -187,7 +187,7 @@ TEST_F(DataItemMappingTest, should_map_a_message)
   auto ts = makeTimestamped({"a", "A123", "some text"});
 
   auto observations = (*m_mapper)(ts);
-  auto &r = *observations;
+  auto& r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
 
   auto oblist = observations->getValue<EntityList>();
@@ -209,7 +209,7 @@ TEST_F(DataItemMappingTest, should_map_a_sample_and_validate_type)
       {{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}, {"units", "MILLIMETER"}});
   auto ts = makeTimestamped({"a", "1.23456"});
   auto observations = (*m_mapper)(ts);
-  auto &r = *observations;
+  auto& r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
 
   auto oblist = observations->getValue<EntityList>();
@@ -228,7 +228,7 @@ TEST_F(DataItemMappingTest, should_map_a_sample_with_invalid_data_to_unavailable
       {{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}, {"units", "MILLIMETER"s}});
   auto ts = makeTimestamped({"a", "ABC"});
   auto observations = (*m_mapper)(ts);
-  auto &r = *observations;
+  auto& r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
   auto oblist = observations->getValue<EntityList>();
   ASSERT_EQ(1, oblist.size());
@@ -360,7 +360,7 @@ TEST_F(DataItemMappingTest, should_map_an_event_data_set)
 
   ASSERT_EQ(di, set->getDataItem());
 
-  auto &ds = set->getValue<DataSet>();
+  auto& ds = set->getValue<DataSet>();
   ASSERT_EQ(3, ds.size());
   ASSERT_EQ(1, get<int64_t>(ds.find("a"_E)->m_value));
   ASSERT_EQ(2, get<int64_t>(ds.find("b"_E)->m_value));
@@ -385,7 +385,7 @@ TEST_F(DataItemMappingTest, should_map_a_sample_data_set)
 
   ASSERT_EQ(di, set->getDataItem());
 
-  auto &ds = set->getValue<DataSet>();
+  auto& ds = set->getValue<DataSet>();
   ASSERT_EQ(3, ds.size());
   ASSERT_EQ(1, get<int64_t>(ds.find("a"_E)->m_value));
   ASSERT_EQ(2, get<int64_t>(ds.find("b"_E)->m_value));
@@ -408,19 +408,19 @@ TEST_F(DataItemMappingTest, should_map_an_event_table)
   ASSERT_EQ(di, set->getDataItem());
   ASSERT_EQ("SomethingTable", set->getName());
 
-  auto &ds = set->getValue<DataSet>();
+  auto& ds = set->getValue<DataSet>();
   ASSERT_EQ(3, ds.size());
-  const auto &a = get<TableRow>(ds.find("a"_E)->m_value);
+  const auto& a = get<TableRow>(ds.find("a"_E)->m_value);
   ASSERT_EQ(2, a.size());
   ASSERT_EQ(1, get<int64_t>(a.find("c"_C)->m_value));
   ASSERT_EQ(3.0, get<double>(a.find("n"_C)->m_value));
 
-  const auto &b = get<TableRow>(ds.find("b"_E)->m_value);
+  const auto& b = get<TableRow>(ds.find("b"_E)->m_value);
   ASSERT_EQ(2, a.size());
   ASSERT_EQ(2, get<int64_t>(b.find("d"_C)->m_value));
   ASSERT_EQ(3, get<int64_t>(b.find("e"_C)->m_value));
 
-  const auto &c = get<TableRow>(ds.find("c"_E)->m_value);
+  const auto& c = get<TableRow>(ds.find("c"_E)->m_value);
   ASSERT_EQ(2, c.size());
   ASSERT_EQ("abc", get<string>(c.find("x"_C)->m_value));
   ASSERT_EQ("def", get<string>(c.find("y"_C)->m_value));
@@ -444,19 +444,19 @@ TEST_F(DataItemMappingTest, should_map_an_sample_table)
   ASSERT_EQ(di, set->getDataItem());
   ASSERT_EQ("SomethingTable", set->getName());
 
-  auto &ds = set->getValue<DataSet>();
+  auto& ds = set->getValue<DataSet>();
   ASSERT_EQ(3, ds.size());
-  const auto &a = get<TableRow>(ds.find("a"_E)->m_value);
+  const auto& a = get<TableRow>(ds.find("a"_E)->m_value);
   ASSERT_EQ(2, a.size());
   ASSERT_EQ(1, get<int64_t>(a.find("c"_C)->m_value));
   ASSERT_EQ(3.0, get<double>(a.find("n"_C)->m_value));
 
-  const auto &b = get<TableRow>(ds.find("b"_E)->m_value);
+  const auto& b = get<TableRow>(ds.find("b"_E)->m_value);
   ASSERT_EQ(2, a.size());
   ASSERT_EQ(2, get<int64_t>(b.find("d"_C)->m_value));
   ASSERT_EQ(3, get<int64_t>(b.find("e"_C)->m_value));
 
-  const auto &c = get<TableRow>(ds.find("c"_E)->m_value);
+  const auto& c = get<TableRow>(ds.find("c"_E)->m_value);
   ASSERT_EQ(2, c.size());
   ASSERT_EQ("abc", get<string>(c.find("x"_C)->m_value));
   ASSERT_EQ("def", get<string>(c.find("y"_C)->m_value));
@@ -479,7 +479,7 @@ TEST_F(DataItemMappingTest, should_handle_data_set_reset_trigger)
 
   ASSERT_EQ("SomethingDataSet", set->getName());
   ASSERT_EQ("MANUAL", set->get<string>("resetTriggered"));
-  auto &ds = set->getValue<DataSet>();
+  auto& ds = set->getValue<DataSet>();
   ASSERT_EQ(3, ds.size());
 }
 
@@ -497,7 +497,7 @@ TEST_F(DataItemMappingTest, should_handle_table_reset_trigger)
   ASSERT_TRUE(set);
 
   ASSERT_EQ("DAY", set->get<string>("resetTriggered"));
-  auto &ds = set->getValue<DataSet>();
+  auto& ds = set->getValue<DataSet>();
   ASSERT_EQ(3, ds.size());
 }
 
@@ -575,7 +575,7 @@ TEST_F(DataItemMappingTest, continue_after_conversion_error)
 
   auto ts = makeTimestamped({"a", "test"s, "b", "1.23"s, "c", "program"s});
   auto observations = (*m_mapper)(ts);
-  auto &r = *observations;
+  auto& r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
 
   auto oblist = observations->getValue<EntityList>();
@@ -605,7 +605,7 @@ TEST_F(DataItemMappingTest, continue_after_conversion_error)
 TEST_F(DataItemMappingTest, version_23_condition_behavior_with_native_code)
 {
   auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
-  auto *context = dynamic_cast<MockPipelineContract *>(m_context->m_contract.get());
+  auto* context = dynamic_cast<MockPipelineContract*>(m_context->m_contract.get());
   context->m_schemaVersion = SCHEMA_VERSION(2, 3);
   //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 
@@ -629,7 +629,7 @@ TEST_F(DataItemMappingTest, version_23_condition_behavior_with_native_code)
 TEST_F(DataItemMappingTest, version_23_condition_behavior_with_condition_id)
 {
   auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
-  auto *context = dynamic_cast<MockPipelineContract *>(m_context->m_contract.get());
+  auto* context = dynamic_cast<MockPipelineContract*>(m_context->m_contract.get());
   context->m_schemaVersion = SCHEMA_VERSION(2, 3);
   //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 
@@ -653,7 +653,7 @@ TEST_F(DataItemMappingTest, version_23_condition_behavior_with_condition_id)
 TEST_F(DataItemMappingTest, version_23_condition_behavior_with_only_condition_id)
 {
   auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
-  auto *context = dynamic_cast<MockPipelineContract *>(m_context->m_contract.get());
+  auto* context = dynamic_cast<MockPipelineContract*>(m_context->m_contract.get());
   context->m_schemaVersion = SCHEMA_VERSION(2, 3);
   //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 

@@ -25,7 +25,7 @@ namespace mtconnect {
   using namespace observation;
   using namespace entity;
   namespace buffer {
-    Checkpoint::Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet)
+    Checkpoint::Checkpoint(const Checkpoint& checkpoint, const FilterSetOpt& filterSet)
     {
       FilterSetOpt filter;
       if (!filterSet && checkpoint.hasFilter())
@@ -40,10 +40,10 @@ namespace mtconnect {
 
     Checkpoint::~Checkpoint() { clear(); }
 
-    void Checkpoint::addObservation(ConditionPtr event, ObservationPtr &&old)
+    void Checkpoint::addObservation(ConditionPtr event, ObservationPtr&& old)
     {
       bool assign = true;
-      Condition *cond = dynamic_cast<Condition *>(old.get());
+      Condition* cond = dynamic_cast<Condition*>(old.get());
       if (cond->getLevel() != Condition::NORMAL && event->getLevel() != Condition::NORMAL &&
           cond->getLevel() != Condition::UNAVAILABLE && event->getLevel() != Condition::UNAVAILABLE)
       {
@@ -93,7 +93,7 @@ namespace mtconnect {
         old = event;
     }
 
-    void Checkpoint::addObservation(const DataSetEventPtr event, ObservationPtr &&old)
+    void Checkpoint::addObservation(const DataSetEventPtr event, ObservationPtr&& old)
     {
       if (!event->isUnavailable() && !old->isUnavailable() && !event->hasProperty("resetTriggered"))
       {
@@ -101,9 +101,9 @@ namespace mtconnect {
         DataSet set = old->getValue<DataSet>();
 
         // For data sets merge the maps together
-        for (auto &e : event->getValue<DataSet>())
+        for (auto& e : event->getValue<DataSet>())
         {
-          const auto &oe = set.find(e);
+          const auto& oe = set.find(e);
           if (oe != set.end())
             set.erase(oe);
           if (!e.m_removed)
@@ -130,7 +130,7 @@ namespace mtconnect {
       }
 
       auto item = obs->getDataItem();
-      const auto &id = item->getId();
+      const auto& id = item->getId();
       auto old = m_observations.find(id);
 
       if (old != m_observations.end())
@@ -158,7 +158,7 @@ namespace mtconnect {
       }
     }
 
-    void Checkpoint::copy(const Checkpoint &checkpoint, const FilterSetOpt &filterSet)
+    void Checkpoint::copy(const Checkpoint& checkpoint, const FilterSetOpt& filterSet)
     {
       clear();
 
@@ -167,14 +167,14 @@ namespace mtconnect {
         m_filter = filterSet;
       }
 
-      for (const auto &event : checkpoint.m_observations)
+      for (const auto& event : checkpoint.m_observations)
       {
         if (!m_filter || m_filter->count(event.first) > 0)
           m_observations[event.first] = event.second;
       }
     }
 
-    static inline void addToList(ObservationList &list, ObservationPtr obs)
+    static inline void addToList(ObservationList& list, ObservationPtr obs)
     {
       if (obs->getDataItem()->isCondition())
       {
@@ -189,11 +189,11 @@ namespace mtconnect {
       }
     }
 
-    void Checkpoint::getObservations(ObservationList &list, const FilterSetOpt &filterSet) const
+    void Checkpoint::getObservations(ObservationList& list, const FilterSetOpt& filterSet) const
     {
       if (filterSet)
       {
-        for (const auto &id : *filterSet)
+        for (const auto& id : *filterSet)
         {
           auto obs = m_observations.find(id);
           if (obs != m_observations.end() && !obs->second->isOrphan())
@@ -204,7 +204,7 @@ namespace mtconnect {
       }
       else
       {
-        for (const auto &obs : m_observations)
+        for (const auto& obs : m_observations)
         {
           if (!obs.second->isOrphan())
           {
@@ -214,7 +214,7 @@ namespace mtconnect {
       }
     }
 
-    void Checkpoint::filter(const FilterSet &filterSet)
+    void Checkpoint::filter(const FilterSet& filterSet)
     {
       m_filter = filterSet;
 
@@ -240,8 +240,8 @@ namespace mtconnect {
       }
     }
 
-    ObservationPtr Checkpoint::dataSetDifference(const ObservationPtr &obs,
-                                                 const ConstObservationPtr &old) const
+    ObservationPtr Checkpoint::dataSetDifference(const ObservationPtr& obs,
+                                                 const ConstObservationPtr& old) const
     {
       if (obs->isOrphan())
         return nullptr;
@@ -251,7 +251,7 @@ namespace mtconnect {
       if (!setEvent->getDataSet().empty() && !obs->hasProperty("resetTriggered"))
       {
         auto oldEvent = dynamic_pointer_cast<const DataSetEvent>(old);
-        auto &oldSet = oldEvent->getDataSet();
+        auto& oldSet = oldEvent->getDataSet();
         DataSet eventSet = setEvent->getDataSet();
         bool changed = false;
 

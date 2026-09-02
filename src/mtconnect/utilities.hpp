@@ -30,9 +30,12 @@
 #include <boost/uuid/detail/sha1.hpp>
 
 #include <chrono>
+#include <cstddef>
 #include <date/date.h>
+#include <deque>
 #include <filesystem>
 #include <format>
+#include <functional>
 #include <map>
 #include <mtconnect/version.h>
 #include <optional>
@@ -75,27 +78,27 @@ namespace mtconnect {
   public:
     /// @brief Create a fatal exception with a message
     /// @param str The message
-    FatalException(const std::string &str) : m_what(str) {}
+    FatalException(const std::string& str) : m_what(str) {}
     /// @brief Create a fatal exception with a message
     /// @param str The message
-    FatalException(const std::string_view &str) : m_what(str) {}
+    FatalException(const std::string_view& str) : m_what(str) {}
     /// @brief Create a fatal exception with a message
     /// @param str The message
-    FatalException(const char *str) : m_what(str) {}
+    FatalException(const char* str) : m_what(str) {}
     /// @brief Create a default fatal exception
     /// Has the message `Fatal Exception Occurred`
     FatalException() : m_what("Fatal Exception Occurred") {}
     /// @brief Copy construction from an exception
     /// @param ex the exception
-    FatalException(const std::exception &ex) : m_what(ex.what()) {}
+    FatalException(const std::exception& ex) : m_what(ex.what()) {}
     /// @brief Defaut construction
-    FatalException(const FatalException &) = default;
+    FatalException(const FatalException&) = default;
     /// @brief Default destructor
     ~FatalException() = default;
 
     /// @brief gets the message
     /// @returns the message as a string
-    const char *what() const noexcept override { return m_what.c_str(); }
+    const char* what() const noexcept override { return m_what.c_str(); }
 
   protected:
     std::string m_what;
@@ -113,18 +116,18 @@ namespace mtconnect {
   /// @brief Converts string to floating point numberss
   /// @param[in] text the number
   /// @return the converted value or 0.0 if incorrect.
-  inline double stringToFloat(const std::string &text)
+  inline double stringToFloat(const std::string& text)
   {
     double value = 0.0;
     try
     {
       value = stof(text);
     }
-    catch (const std::out_of_range &)
+    catch (const std::out_of_range&)
     {
       value = 0.0;
     }
-    catch (const std::invalid_argument &)
+    catch (const std::invalid_argument&)
     {
       value = 0.0;
     }
@@ -134,18 +137,18 @@ namespace mtconnect {
   /// @brief Converts string to integer
   /// @param[in] text the number
   /// @return the converted value or 0 if incorrect.
-  inline int stringToInt(const std::string &text, int outOfRangeDefault)
+  inline int stringToInt(const std::string& text, int outOfRangeDefault)
   {
     int value = 0;
     try
     {
       value = stoi(text);
     }
-    catch (const std::out_of_range &)
+    catch (const std::out_of_range&)
     {
       value = outOfRangeDefault;
     }
-    catch (const std::invalid_argument &)
+    catch (const std::invalid_argument&)
     {
       value = 0;
     }
@@ -181,8 +184,8 @@ namespace mtconnect {
     /// @param[in] fmter reference to this formatter
     /// @return reference to the output stream
     template <class _CharT, class _Traits>
-    inline friend std::basic_ostream<_CharT, _Traits> &operator<<(
-        std::basic_ostream<_CharT, _Traits> &os, const format_double_stream &fmter)
+    inline friend std::basic_ostream<_CharT, _Traits>& operator<<(
+        std::basic_ostream<_CharT, _Traits>& os, const format_double_stream& fmter)
     {
       constexpr int precision = std::numeric_limits<double>::digits10;
       os << std::setprecision(precision) << fmter.val;
@@ -198,7 +201,7 @@ namespace mtconnect {
   /// @brief Convert text to upper case
   /// @param[in,out] text text
   /// @return upper-case of text as string
-  inline std::string &toUpperCase(std::string &text)
+  inline std::string& toUpperCase(std::string& text)
   {
     std::transform(text.begin(), text.end(), text.begin(),
                    [](unsigned char c) { return std::toupper(c); });
@@ -209,7 +212,7 @@ namespace mtconnect {
   /// @brief Simple check if a number as a string is negative
   /// @param s the numbeer
   /// @return `true` if positive
-  inline bool isNonNegativeInteger(const std::string &s)
+  inline bool isNonNegativeInteger(const std::string& s)
   {
     for (const char c : s)
     {
@@ -223,7 +226,7 @@ namespace mtconnect {
   /// @brief Checks if a string is a valid integer
   /// @param s the string
   /// @return `true` if is `[+-]\d+`
-  inline bool isInteger(const std::string &s)
+  inline bool isInteger(const std::string& s)
   {
     auto iter = s.cbegin();
     if (*iter == '-' || *iter == '+')
@@ -241,7 +244,7 @@ namespace mtconnect {
   /// @brief Thread safe localtime function that uses localtime_s or localtime_r based on platform
   /// @param[in] timer pointer to time_t
   /// @param[out] buf pointer to tm struct to fill
-  inline void safe_localtime(const std::time_t *timer, std::tm *buf)
+  inline void safe_localtime(const std::time_t* timer, std::tm* buf)
   {
 #ifdef _WINDOWS
     localtime_s(buf, timer);
@@ -316,7 +319,7 @@ namespace mtconnect {
   /// @brief Parse the given time
   /// @param aTime the time in text
   /// @return uns64 in microseconds since epoch
-  inline uint64_t parseTimeMicro(const std::string &aTime)
+  inline uint64_t parseTimeMicro(const std::string& aTime)
   {
     std::stringstream str(aTime);
     if (isdigit(aTime.back()))
@@ -340,7 +343,7 @@ namespace mtconnect {
 
   /// @brief escaped reserved XML characters from text
   /// @param data text with reserved characters escaped
-  inline void replaceIllegalCharacters(std::string &data)
+  inline void replaceIllegalCharacters(std::string& data)
   {
     for (auto i = 0u; i < data.length(); i++)
     {
@@ -399,7 +402,7 @@ namespace mtconnect {
   /// @brief split a string into two parts using a ':' separator
   /// @param key the key to split
   /// @return a pair of the key and an optional prefix.
-  static inline std::pair<std::string, std::optional<std::string>> splitKey(const std::string &key)
+  static inline std::pair<std::string, std::optional<std::string>> splitKey(const std::string& key)
   {
     auto c = key.find(':');
     if (c != std::string::npos)
@@ -412,7 +415,7 @@ namespace mtconnect {
   /// @param a first string
   /// @param b second string
   /// @return `true` if equal
-  inline bool iequals(const std::string &a, const std::string_view &b)
+  inline bool iequals(const std::string& a, const std::string_view& b)
   {
     if (a.size() != b.size())
       return false;
@@ -440,10 +443,10 @@ namespace mtconnect {
   class reverse
   {
   private:
-    T &m_iterable;
+    T& m_iterable;
 
   public:
-    explicit reverse(T &iterable) : m_iterable(iterable) {}
+    explicit reverse(T& iterable) : m_iterable(iterable) {}
     auto begin() const { return std::rbegin(m_iterable); }
     auto end() const { return std::rend(m_iterable); }
   };
@@ -475,7 +478,7 @@ namespace mtconnect {
   /// @param name the name to get
   /// @return the value of the option otherwise std::nullopt
   template <typename T>
-  inline const std::optional<T> GetOption(const ConfigOptions &options, const std::string &name)
+  inline const std::optional<T> GetOption(const ConfigOptions& options, const std::string& name)
   {
     auto v = options.find(name);
     if (v != options.end())
@@ -488,7 +491,7 @@ namespace mtconnect {
   /// @param options the set of options
   /// @param name the name of the option
   /// @return `true` if the option exists and has a bool type
-  inline bool IsOptionSet(const ConfigOptions &options, const std::string &name)
+  inline bool IsOptionSet(const ConfigOptions& options, const std::string& name)
   {
     auto v = options.find(name);
     if (v != options.end())
@@ -501,7 +504,7 @@ namespace mtconnect {
   /// @param[in] options the set of options
   /// @param[in] name the name of the option
   /// @return `true` if the option exists
-  inline bool HasOption(const ConfigOptions &options, const std::string &name)
+  inline bool HasOption(const ConfigOptions& options, const std::string& name)
   {
     auto v = options.find(name);
     return v != options.end();
@@ -511,32 +514,32 @@ namespace mtconnect {
   /// @param[in] s the
   /// @param[in] def template for the option
   /// @return a typed option matching `def`
-  inline auto ConvertOption(const std::string &s, const ConfigOption &def,
-                            const ConfigOptions &options)
+  inline auto ConvertOption(const std::string& s, const ConfigOption& def,
+                            const ConfigOptions& options)
   {
     ConfigOption option {s};
     if (std::holds_alternative<std::string>(option))
     {
       std::string sv = std::get<std::string>(option);
-      visit(overloaded {[&option, &sv](const std::string &) {
+      visit(overloaded {[&option, &sv](const std::string&) {
                           if (sv.empty())
                             option = std::monostate();
                           else
                             option = sv;
                         },
-                        [&option, &sv](const int &) { option = stoi(sv); },
-                        [&option, &sv](const Milliseconds &) { option = Milliseconds {stoi(sv)}; },
-                        [&option, &sv](const Seconds &) { option = Seconds {stoi(sv)}; },
-                        [&option, &sv](const double &) { option = stod(sv); },
-                        [&option, &sv](const bool &) { option = sv == "yes" || sv == "true"; },
-                        [&option, &sv](const StringList &) {
+                        [&option, &sv](const int&) { option = stoi(sv); },
+                        [&option, &sv](const Milliseconds&) { option = Milliseconds {stoi(sv)}; },
+                        [&option, &sv](const Seconds&) { option = Seconds {stoi(sv)}; },
+                        [&option, &sv](const double&) { option = stod(sv); },
+                        [&option, &sv](const bool&) { option = sv == "yes" || sv == "true"; },
+                        [&option, &sv](const StringList&) {
                           StringList list;
                           boost::split(list, sv, boost::is_any_of(","));
-                          for (auto &s : list)
+                          for (auto& s : list)
                             boost::trim(s);
                           option = list;
                         },
-                        [](const auto &) {}},
+                        [](const auto&) {}},
             def);
     }
     return option;
@@ -553,7 +556,7 @@ namespace mtconnect {
   /// @param[in] name the name of the options
   /// @param[in] size the default size (0)
   /// @return the size honoring suffixes
-  inline int64_t ConvertFileSize(const ConfigOptions &options, const std::string &name,
+  inline int64_t ConvertFileSize(const ConfigOptions& options, const std::string& name,
                                  int64_t size = 0)
   {
     using namespace std;
@@ -602,10 +605,10 @@ namespace mtconnect {
   /// @param[in] tree the property tree coming from configuration parser
   /// @param[in,out] options the options set
   /// @param[in] entries a set of typed options to check
-  inline void AddOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
-                         const ConfigOptions &entries)
+  inline void AddOptions(const boost::property_tree::ptree& tree, ConfigOptions& options,
+                         const ConfigOptions& entries)
   {
-    for (auto &e : entries)
+    for (auto& e : entries)
     {
       auto val = tree.get_optional<std::string>(e.first);
       if (val)
@@ -628,10 +631,10 @@ namespace mtconnect {
   /// @param[in] tree the property tree coming from configuration parser
   /// @param[in,out] options the option set
   /// @param[in] entries the options with default values
-  inline void AddDefaultedOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
-                                  const ConfigOptions &entries)
+  inline void AddDefaultedOptions(const boost::property_tree::ptree& tree, ConfigOptions& options,
+                                  const ConfigOptions& entries)
   {
-    for (auto &e : entries)
+    for (auto& e : entries)
     {
       auto val = tree.get_optional<std::string>(e.first);
       if (val)
@@ -655,9 +658,9 @@ namespace mtconnect {
   /// @brief combine two option sets
   /// @param[in,out] options existing set of options
   /// @param[in] entries options to add or update
-  inline void MergeOptions(ConfigOptions &options, const ConfigOptions &entries)
+  inline void MergeOptions(ConfigOptions& options, const ConfigOptions& entries)
   {
-    for (auto &e : entries)
+    for (auto& e : entries)
     {
       options.insert_or_assign(e.first, e.second);
     }
@@ -667,10 +670,10 @@ namespace mtconnect {
   /// @param[in] tree the property tree coming from configuration parser
   /// @param[in,out] options option set to modify
   /// @param[in] entries a set of typed options to check
-  inline void GetOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
-                         const ConfigOptions &entries)
+  inline void GetOptions(const boost::property_tree::ptree& tree, ConfigOptions& options,
+                         const ConfigOptions& entries)
   {
-    for (auto &e : entries)
+    for (auto& e : entries)
     {
       if (!std::holds_alternative<std::string>(e.second) ||
           !std::get<std::string>(e.second).empty())
@@ -686,7 +689,7 @@ namespace mtconnect {
   /// @brief Format a timestamp as a string in microseconds
   /// @param[in] ts the timestamp
   /// @return the time with microsecond resolution
-  inline std::string format(const Timestamp &ts)
+  inline std::string format(const Timestamp& ts)
   {
     using namespace std;
     string time = date::format("%FT%T", date::floor<Microseconds>(ts));
@@ -707,7 +710,7 @@ namespace mtconnect {
   ///
   /// @param[in,out] start starting iterator
   /// @param[in,out] end ending iterator
-  inline void capitalize(std::ostringstream &camel, std::string::const_iterator start,
+  inline void capitalize(std::ostringstream& camel, std::string::const_iterator start,
                          std::string::const_iterator end)
   {
     using namespace std;
@@ -718,7 +721,7 @@ namespace mtconnect {
         {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
 
     std::string_view s(&*start, distance(start, end));
-    const auto &w = exceptions.find(s);
+    const auto& w = exceptions.find(s);
     ostream_iterator<char> out(camel);
     if (w != exceptions.end())
     {
@@ -739,7 +742,7 @@ namespace mtconnect {
   /// @param[in] type the words to capitalize
   /// @param[out] prefix the prefix of the string
   /// @return a pascalized upper-camel-case string
-  inline std::string pascalize(const std::string &type, std::optional<std::string> &prefix)
+  inline std::string pascalize(const std::string& type, std::optional<std::string>& prefix)
   {
     using namespace std;
     if (type.empty())
@@ -777,7 +780,7 @@ namespace mtconnect {
   /// @brief parse a string timestamp to a `Timestamp`
   /// @param timestamp[in] the timestamp as a string
   /// @return converted `Timestamp`
-  inline Timestamp parseTimestamp(const std::string &timestamp)
+  inline Timestamp parseTimestamp(const std::string& timestamp)
   {
     Timestamp ts;
     std::istringstream in(timestamp);
@@ -807,7 +810,7 @@ namespace mtconnect {
 
   /// @brief convert a string version to a major and minor as two integers separated by a char.
   /// @param s the version
-  inline int32_t IntSchemaVersion(const std::string &s)
+  inline int32_t IntSchemaVersion(const std::string& s)
   {
     int major {0}, minor {0};
     char c;
@@ -826,7 +829,7 @@ namespace mtconnect {
   /// @brief Retrieve the best Host IP address from the network interfaces.
   /// @param[in] context the boost asio io_context for resolving the address
   /// @param[in] onlyV4 only consider IPV4 addresses if `true`
-  std::string GetBestHostAddress(boost::asio::io_context &context, bool onlyV4 = false);
+  std::string GetBestHostAddress(boost::asio::io_context& context, bool onlyV4 = false);
 
   /// @brief Function to create a unique id given a sha1 namespace and an id.
   ///
@@ -837,8 +840,8 @@ namespace mtconnect {
   /// @param[in] sha the sha1 namespace to use as context
   /// @param[in] id the id to use transform
   /// @returns Returns the first 16 characters of the  base 64 encoded sha1
-  inline std::string makeUniqueId(const ::boost::uuids::detail::sha1 &contextSha,
-                                  const std::string &id)
+  inline std::string makeUniqueId(const ::boost::uuids::detail::sha1& contextSha,
+                                  const std::string& id)
   {
     using namespace std;
     using namespace boost::uuids::detail;
@@ -855,7 +858,7 @@ namespace mtconnect {
     sha1::digest_type digest;
     sha.get_digest(digest);
 
-    auto data = (unsigned int *)digest;
+    auto data = (unsigned int*)digest;
 
     string s(32, ' ');
     auto len = boost::beast::detail::base64::encode(s.data(), data, sizeof(digest));
@@ -892,7 +895,7 @@ namespace mtconnect {
         std::stringstream ss;
         bool has_pre = false;
 
-        for (const auto &kv : *this)
+        for (const auto& kv : *this)
         {
           if (has_pre)
             ss << '&';
@@ -908,7 +911,7 @@ namespace mtconnect {
       /// @param query query to merge
       void merge(UrlQuery query)
       {
-        for (const auto &kv : query)
+        for (const auto& kv : query)
         {
           insert_or_assign(kv.first, kv.second);
         }
@@ -961,8 +964,8 @@ namespace mtconnect {
       /// @param operation the operation (probe,sample,current, or asset)
       /// @param query query parameters
       /// @return A string with the target for a GET reuest
-      std::string getTarget(const std::optional<std::string> &device, const std::string &operation,
-                            const UrlQuery &query) const
+      std::string getTarget(const std::optional<std::string>& device, const std::string& operation,
+                            const UrlQuery& query) const
       {
         UrlQuery uq {m_query};
         if (!query.empty())
@@ -997,7 +1000,7 @@ namespace mtconnect {
       /// @brief Format the URL as text
       /// @param device optional device to add to the URL
       /// @return formatted URL
-      std::string getUrlText(const std::optional<std::string> &device) const
+      std::string getUrlText(const std::optional<std::string>& device) const
       {
         std::stringstream url;
         url << m_protocol << "://" << getHost() << ':' << getPort() << getTarget();
@@ -1008,17 +1011,121 @@ namespace mtconnect {
 
       /// @brief parse a string to a Url
       /// @return parsed URL
-      static Url parse(const std::string_view &url);
+      static Url parse(const std::string_view& url);
     };
 
     /// @brief output operator for URL
     /// @param os the output stream
     /// @param url the URL to output
-    inline std::ostream &operator<<(std::ostream &os, const Url &url)
+    inline std::ostream& operator<<(std::ostream& os, const Url& url)
     {
       os << url.getUrlText(std::nullopt);
       return os;
     }
 
   }  // namespace url
+
+  /// @brief Current number of open file descriptors (handles on Windows) for this process
+  std::size_t openFdCount();
+
+  /// @brief Current resident set size (physical memory) of this process in bytes
+  std::size_t residentBytes();
+
+  /// @brief Tracks a resource metric over a sliding window and flags suspected leaks.
+  ///
+  /// Samples a caller-supplied metric (e.g. open fds or resident memory) on a timer,
+  /// keeps a high-water mark, and computes a least-squares slope over the window. The
+  /// metric is flagged `suspect` when it has risen steadily across a full window and is
+  /// currently at a new high. The growth threshold combines an absolute floor with a
+  /// fraction of the window mean so the same class works for small counts (fds) and
+  /// large magnitudes (bytes).
+  class TrendMonitor
+  {
+  public:
+    /// @brief a source that returns the current value of the metric
+    using Sampler = std::function<std::size_t()>;
+
+    /// @param sampler returns the current value of the metric
+    /// @param window number of samples to retain
+    /// @param absThreshold minimum slope (units/sample) to consider growth
+    /// @param relThreshold minimum slope as a fraction of the window mean to consider growth
+    explicit TrendMonitor(Sampler sampler, std::size_t window = 30, double absThreshold = 0.0,
+                          double relThreshold = 0.0)
+      : m_sampler(std::move(sampler)),
+        m_window(window),
+        m_absThreshold(absThreshold),
+        m_relThreshold(relThreshold)
+    {}
+
+    // call on a timer (e.g. every 10–30s)
+    struct Report
+    {
+      std::size_t m_current, m_highWater;
+      double m_slope;
+      bool m_suspect;
+    };
+
+    Report sample()
+    {
+      std::size_t n = m_sampler();
+      m_highWater = std::max(m_highWater, n);
+
+      m_samples.push_back(n);
+      if (m_samples.size() > m_window)
+        m_samples.pop_front();
+
+      double s = slope();
+      // suspect if steadily rising AND at a new high across the whole window
+      double threshold = std::max(m_absThreshold, m_relThreshold * mean());
+      bool suspect =
+          m_samples.size() == m_window && s > threshold && m_samples.back() == m_highWater;
+      return {n, m_highWater, s, suspect};
+    }
+
+  private:
+    double mean() const
+    {
+      if (m_samples.empty())
+        return 0.0;
+      double sum = 0.0;
+      for (auto v : m_samples)
+        sum += double(v);
+      return sum / double(m_samples.size());
+    }
+
+    double slope() const
+    {  // least-squares over the window
+      std::size_t m = m_samples.size();
+      if (m < 2)
+        return 0.0;
+      double sx = 0, sy = 0, sxy = 0, sxx = 0;
+      for (std::size_t i = 0; i < m; ++i)
+      {
+        double x = double(i), y = double(m_samples[i]);
+        sx += x;
+        sy += y;
+        sxy += x * y;
+        sxx += x * x;
+      }
+      double d = m * sxx - sx * sx;
+      return d == 0.0 ? 0.0 : (m * sxy - sx * sy) / d;
+    }
+
+    Sampler m_sampler;
+    std::size_t m_window, m_highWater = 0;
+    double m_absThreshold, m_relThreshold;
+    std::deque<std::size_t> m_samples;
+  };
+
+  /// @brief Monitor for open file descriptors. Growth of >0.5 fds/sample is suspect.
+  inline TrendMonitor makeFdMonitor(std::size_t window = 30)
+  {
+    return TrendMonitor(&openFdCount, window, 0.5, 0.0);
+  }
+
+  /// @brief Monitor for resident memory. Growth of >1% of the window mean per sample is suspect.
+  inline TrendMonitor makeMemoryMonitor(std::size_t window = 30)
+  {
+    return TrendMonitor(&residentBytes, window, 0.0, 0.01);
+  }
 }  // namespace mtconnect

@@ -35,7 +35,7 @@ using namespace mtconnect;
 using namespace mtconnect::entity;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -863,21 +863,21 @@ TEST_F(EntityTest, entities_should_merge_entity_list_with_new_item)
   auto v1 = createEnt("woof"s, 0_i64);
   ASSERT_TRUE(v1);
 
-  auto const &list1 = v1->getList("seconds");
+  auto const& list1 = v1->getList("seconds");
   ASSERT_TRUE(list1);
   EXPECT_EQ(1, list1->size());
 
   auto v2 = createEnt("meow"s, 1_i64);
   ASSERT_TRUE(v2);
 
-  auto const &list2 = v2->getList("seconds");
+  auto const& list2 = v2->getList("seconds");
   ASSERT_TRUE(list2);
   EXPECT_EQ(2, list2->size());
 
   ASSERT_TRUE(v1->reviseTo(v2));
   // EXPECT_EQ(2, list1->size());
 
-  auto const &list3 = v1->getList("seconds");
+  auto const& list3 = v1->getList("seconds");
   EXPECT_EQ(2, list3->size());
 
   auto it = list3->begin();

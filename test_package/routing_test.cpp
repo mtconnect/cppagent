@@ -36,7 +36,7 @@ using namespace mtconnect::sink::rest_sink;
 using verb = boost::beast::http::verb;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -108,7 +108,7 @@ TEST_F(RoutingTest, parses_current_at_query_parameter)
   EXPECT_EQ("device", pp.m_name);
   EXPECT_EQ(PATH, pp.m_part);
 
-  auto &qp = *r.getQueryParameters().begin();
+  auto& qp = *r.getQueryParameters().begin();
   EXPECT_EQ("at", qp.m_name);
   EXPECT_EQ(UNSIGNED_INTEGER, qp.m_type);
   EXPECT_EQ(QUERY, qp.m_part);
@@ -221,7 +221,7 @@ TEST_F(RoutingTest, should_throw_a_rest_error_with_an_invalid_parameter)
   {
     r.matches(0, request);
   }
-  catch (RestError &e)
+  catch (RestError& e)
   {
     auto errors = e.getErrors();
     ASSERT_EQ(1, errors.size());
@@ -252,7 +252,7 @@ TEST_F(RoutingTest, should_throw_a_rest_error_with_multiple_invalid_parameters)
   {
     r.matches(0, request);
   }
-  catch (RestError &e)
+  catch (RestError& e)
   {
     auto errors = e.getErrors();
     ASSERT_EQ(2, errors.size());

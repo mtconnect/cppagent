@@ -34,12 +34,12 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     /// new Mqtt session with the upstream agent
     /// @param context the pipeline context
     /// @param st strand to run in
-    MqttPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &strand)
+    MqttPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand& strand)
       : AdapterPipeline(context, strand)
     {}
 
-    void build(const ConfigOptions &options) override;
-    Handler *m_handler {nullptr};
+    void build(const ConfigOptions& options) override;
+    Handler* m_handler {nullptr};
   };
 
   /// @brief An Mqtt adapter to connnect to another Agent and replicate data
@@ -52,18 +52,18 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     /// @param context pipeline context
     /// @param options configation options
     /// @param block additional configuration options
-    MqttAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext,
-                const ConfigOptions &options, const boost::property_tree::ptree &block);
+    MqttAdapter(boost::asio::io_context& io, pipeline::PipelineContextPtr pipelineContext,
+                const ConfigOptions& options, const boost::property_tree::ptree& block);
 
     ~MqttAdapter() override {}
 
     /// @brief Register the Mqtt adapter with the factory
     /// @param factory source factory
-    static void registerFactory(SourceFactory &factory);
+    static void registerFactory(SourceFactory& factory);
 
     /// @name Agent Device methods
     ///@{
-    const std::string &getHost() const override;
+    const std::string& getHost() const override;
 
     unsigned int getPort() const override;
     ///@}
@@ -74,7 +74,7 @@ namespace mtconnect::source::adapter::mqtt_adapter {
 
     void stop() override;
 
-    pipeline::Pipeline *getPipeline() override;
+    pipeline::Pipeline* getPipeline() override;
     ///@}
 
     /// @brief subcribe to topics
@@ -84,10 +84,10 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     /// @brief load all topics
     /// @param ptree the property tree coming from configuration parser
     /// @param options configation options
-    void loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options);
+    void loadTopics(const boost::property_tree::ptree& tree, ConfigOptions& options);
 
   protected:
-    boost::asio::io_context &m_ioContext;
+    boost::asio::io_context& m_ioContext;
 
     boost::asio::io_context::strand m_strand;
     // If the connector has been running

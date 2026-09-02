@@ -40,7 +40,7 @@ using namespace entity;
 using namespace device_model;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -61,7 +61,7 @@ protected:
 
   void TearDown() override { m_agentTestHelper.reset(); }
 
-  source::adapter::Adapter *m_adapter {nullptr};
+  source::adapter::Adapter* m_adapter {nullptr};
   std::string m_agentId;
   ComponentPtr m_component {nullptr};
 
@@ -72,7 +72,7 @@ TEST_F(RelationshipTest, component_device_and_asset_relationships_are_parsed_wit
 {
   ASSERT_NE(nullptr, m_component);
 
-  const auto &clc = m_component->get<EntityPtr>("Configuration");
+  const auto& clc = m_component->get<EntityPtr>("Configuration");
   ASSERT_TRUE(clc);
 
   auto rels = clc->getList("Relationships");

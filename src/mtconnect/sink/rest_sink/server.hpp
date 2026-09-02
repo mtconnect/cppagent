@@ -54,7 +54,7 @@ namespace mtconnect::sink::rest_sink {
     /// - AllowPut, defaults to false
     /// - ServerIp, defaults to ::
     /// - HttpHeaders
-    Server(boost::asio::io_context &context, const ConfigOptions &options = {})
+    Server(boost::asio::io_context& context, const ConfigOptions& options = {})
       : m_context(context),
         m_port(GetOption<int>(options, configuration::Port).value_or(5000)),
         m_options(options),
@@ -75,7 +75,7 @@ namespace mtconnect::sink::rest_sink {
       if (fields)
         setHttpHeaders(*fields);
 
-      m_errorFunction = [](SessionPtr session, const RestError &error) {
+      m_errorFunction = [](SessionPtr session, const RestError& error) {
         ResponsePtr response =
             std::make_unique<Response>(error.getStatus(), error.what(), "text/plain");
         session->writeFailureResponse(std::move(response));
@@ -105,9 +105,9 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief Add additional HTTP headers
     /// @param[in] fields the header fields as `<field>: <value>`
-    void setHttpHeaders(const StringList &fields)
+    void setHttpHeaders(const StringList& fields)
     {
-      for (auto &f : fields)
+      for (auto& f : fields)
       {
         auto i = f.find(':');
         if (i != std::string::npos)
@@ -119,7 +119,7 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief Get the list of header fields
     /// @return header fields
-    const auto &getHttpHeaders() const { return m_fields; }
+    const auto& getHttpHeaders() const { return m_fields; }
     /// @brief get the bind port
     /// @return the port being bound
     auto getPort() const { return m_port; }
@@ -130,7 +130,7 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief Set the external base URL
     /// @param[in] url the base URL to set
-    void setBaseUrl(const std::string &url) { m_baseUrl = url; }
+    void setBaseUrl(const std::string& url) { m_baseUrl = url; }
 
     /// @name PUT and POST handling
     ///@{
@@ -147,14 +147,14 @@ namespace mtconnect::sink::rest_sink {
     /// @brief can one put from a particular IP address or host
     /// @param[in] host the host
     /// @return `true` if puts are allowed
-    bool allowPutFrom(const std::string &host);
+    bool allowPutFrom(const std::string& host);
     /// @brief sets the allow puts flag
     /// @param[in] allow
     void allowPuts(bool allow = true) { m_allowPuts = allow; }
     /// @brief can one put from an ip address
     /// @param[in] addr the ip address
     /// @return `true` if puts are accepted from that address
-    bool isPutAllowedFrom(boost::asio::ip::address &addr) const
+    bool isPutAllowedFrom(boost::asio::ip::address& addr) const
     {
       return m_allowPutsFrom.find(addr) != m_allowPutsFrom.end();
     }
@@ -187,7 +187,7 @@ namespace mtconnect::sink::rest_sink {
         }
         else
         {
-          for (auto &r : m_routings)
+          for (auto& r : m_routings)
           {
             success = r.matches(session, request) && r.run(session, request);
             if (success)
@@ -213,7 +213,7 @@ namespace mtconnect::sink::rest_sink {
           m_errorFunction(session, re);
         }
       }
-      catch (RestError &re)
+      catch (RestError& re)
       {
         auto uri = request->getUri();
         re.setUri(uri);
@@ -225,7 +225,7 @@ namespace mtconnect::sink::rest_sink {
           re.setRequestId(*request->m_requestId);
         m_errorFunction(session, re);
       }
-      catch (std::logic_error &le)
+      catch (std::logic_error& le)
       {
         std::stringstream txt;
         txt << session->getRemote().address() << ": Logic Error: " << le.what();
@@ -250,13 +250,13 @@ namespace mtconnect::sink::rest_sink {
     /// @brief Method that generates an MTConnect Error document
     /// @param[in] ec an error code
     /// @param[in] what the description why the request failed
-    void fail(boost::system::error_code ec, char const *what);
+    void fail(boost::system::error_code ec, char const* what);
 
     /// @brief Add a routing to the server
     /// @param[in] routing the routing
-    Routing &addRouting(const Routing &routing)
+    Routing& addRouting(const Routing& routing)
     {
-      auto &route = m_routings.emplace_back(routing);
+      auto& route = m_routings.emplace_back(routing);
       if (m_parameterDocumentation)
         route.documentParameters(*m_parameterDocumentation);
       if (route.getCommand())
@@ -267,7 +267,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief Setup commands from routings
     void addCommands()
     {
-      for (auto &route : m_routings)
+      for (auto& route : m_routings)
       {
         if (route.getCommand())
           m_commands.emplace(*route.getCommand(), &route);
@@ -276,14 +276,14 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief Add common set of documentation for all rest routings
     /// @param[in] docs Parameter documentation
-    void addParameterDocumentation(const ParameterDocList &docs)
+    void addParameterDocumentation(const ParameterDocList& docs)
     {
       m_parameterDocumentation.emplace(docs);
     }
 
     /// @brief Set the error function to format the error during failure
     /// @param func the error function
-    void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
+    void setErrorFunction(const ErrorFunction& func) { m_errorFunction = func; }
     /// @brief get the error funciton
     /// @return the error function
     ErrorFunction getErrorFunction() const { return m_errorFunction; }
@@ -308,7 +308,7 @@ namespace mtconnect::sink::rest_sink {
     /// Caches the API document based on the response type requested. Cache cleared whenever a new
     /// routing is added.
     template <typename T>
-    const void renderSwaggerResponse(T &format);
+    const void renderSwaggerResponse(T& format);
     /// @}
 
     /// @name CORS Support
@@ -322,7 +322,7 @@ namespace mtconnect::sink::rest_sink {
     /// @}
 
   protected:
-    boost::asio::io_context &m_context;
+    boost::asio::io_context& m_context;
 
     boost::asio::ip::address m_address;
     unsigned short m_port {5000};
@@ -337,7 +337,7 @@ namespace mtconnect::sink::rest_sink {
     std::set<boost::asio::ip::address> m_allowPutsFrom;
 
     std::list<Routing> m_routings;
-    std::map<std::string, Routing *> m_commands;
+    std::map<std::string, Routing*> m_commands;
     std::unique_ptr<FileCache> m_fileCache;
     ErrorFunction m_errorFunction;
     FieldList m_fields;

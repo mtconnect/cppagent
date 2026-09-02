@@ -51,7 +51,7 @@ using namespace std::chrono_literals;
 using namespace boost::algorithm;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -77,7 +77,7 @@ namespace {
       chdir(m_cwd.string().c_str());
     }
 
-    fs::path createTempDirectory(const string &ext)
+    fs::path createTempDirectory(const string& ext)
     {
       fs::path root {fs::path(TEST_BIN_ROOT_DIR) / ("config_test_" + ext)};
       if (fs::exists(root))
@@ -93,7 +93,7 @@ namespace {
       return root;
     }
 
-    fs::path copySampleFile(const std::string &src, fs::path target, chrono::seconds delta)
+    fs::path copySampleFile(const std::string& src, fs::path target, chrono::seconds delta)
     {
       fs::path file {fs::path("samples") / src};
       return copyFile(file, target, delta);
@@ -111,7 +111,7 @@ namespace {
       return target;
     }
 
-    void replaceTextInFile(fs::path file, const std::string &from, const std::string &to)
+    void replaceTextInFile(fs::path file, const std::string& from, const std::string& to)
     {
       ifstream is {file.string(), ios::binary | ios::ate};
       auto size = is.tellg();
@@ -146,7 +146,7 @@ namespace {
     m_config->loadConfig("BufferSize = 4\n");
 
     auto agent = m_config->getAgent();
-    auto &circ = agent->getCircularBuffer();
+    auto& circ = agent->getCircularBuffer();
 
     ASSERT_TRUE(agent);
     ASSERT_EQ(16U, circ.getBufferSize());
@@ -223,7 +223,7 @@ namespace {
     ASSERT_TRUE(source);
     const auto adapter = dynamic_pointer_cast<source::adapter::Adapter>(source);
     ASSERT_TRUE(adapter);
-    const auto &opts = adapter->getOptions();
+    const auto& opts = adapter->getOptions();
 
     EXPECT_EQ("http", *GetOption<string>(opts, configuration::Protocol));
     EXPECT_EQ("192.168.1.50", *GetOption<string>(opts, configuration::Host));
@@ -342,9 +342,9 @@ namespace {
         "}\n");
 
     m_config->loadConfig(streams);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter*>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto path = printer->getStreamsUrn("x");
@@ -360,9 +360,9 @@ namespace {
         "}\n");
 
     m_config->loadConfig(devices);
-    agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
+    printer = dynamic_cast<printer::XmlPrinter*>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
     path = printer->getDevicesUrn("y");
     ASSERT_EQ(std::string("urn:example.com:ExampleDevices:1.2"), path);
@@ -377,9 +377,9 @@ namespace {
         "}\n");
 
     m_config->loadConfig(asset);
-    agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
+    printer = dynamic_cast<printer::XmlPrinter*>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
     path = printer->getAssetsUrn("z");
     ASSERT_EQ(std::string("urn:example.com:ExampleAssets:1.2"), path);
@@ -394,9 +394,9 @@ namespace {
         "}\n");
 
     m_config->loadConfig(errors);
-    agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
+    printer = dynamic_cast<printer::XmlPrinter*>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
     path = printer->getErrorUrn("a");
     ASSERT_EQ(std::string("urn:example.com:ExampleErrors:1.2"), path);
@@ -461,9 +461,9 @@ namespace {
         "}\n");
 
     m_config->loadConfig(streams);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter*>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto path = printer->getStreamsUrn("m");
@@ -479,9 +479,9 @@ namespace {
     string streams("SchemaVersion = 1.4\n");
 
     m_config->loadConfig(streams);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter*>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto version = printer->getSchemaVersion();
@@ -507,9 +507,9 @@ namespace {
 
     m_config->setDebug(true);
     m_config->loadConfig(schemas);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter*>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto path = printer->getStreamsUrn("m");
@@ -541,7 +541,7 @@ namespace {
         "\n"
         "}\n");
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
     ASSERT_TRUE(agent);
 
     ASSERT_TRUE(agent);
@@ -551,10 +551,10 @@ namespace {
     ASSERT_TRUE(rest);
     const auto server = rest->getServer();
 
-    const auto &headers = server->getHttpHeaders();
+    const auto& headers = server->getHttpHeaders();
 
     ASSERT_EQ(1, headers.size());
-    const auto &first = headers.front();
+    const auto& first = headers.front();
     ASSERT_EQ("Access-Control-Allow-Origin", first.first);
     ASSERT_EQ(" *", first.second);
   }
@@ -573,7 +573,7 @@ Sinks {
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
     const auto sink = agent->findSink("TestBADService");
@@ -590,7 +590,7 @@ Sinks {
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
 
@@ -612,7 +612,7 @@ Sinks {
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
 
@@ -630,7 +630,7 @@ Sinks {
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
     const auto sink1 = agent->findSink("sink_plugin_test");
@@ -651,7 +651,7 @@ Sinks {
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
     const auto sink1 = agent->findSink("sink_plugin_test");
@@ -674,7 +674,7 @@ Adapters {
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
     const auto adapter = agent->findSource("_Host1_7878");
@@ -693,7 +693,7 @@ Adapters {
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
     const auto adapter = agent->findSource("Test");
@@ -717,7 +717,7 @@ Adapters {
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
     const auto adapter = agent->findSource("Test");
@@ -731,7 +731,7 @@ MaxCachedFileSize = 2000
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
     const auto rest =
@@ -749,7 +749,7 @@ MaxCachedFileSize = 2k
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
     const auto rest =
@@ -767,7 +767,7 @@ MaxCachedFileSize = 2K
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
     const auto rest =
@@ -785,7 +785,7 @@ MaxCachedFileSize = 2m
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
     const auto rest =
@@ -803,7 +803,7 @@ MaxCachedFileSize = 2g
 )");
 
     m_config->loadConfig(str);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
     const auto rest =
@@ -1108,10 +1108,10 @@ Port = 0
     options.insert(make_pair("config-file"s, value));
 
     m_config->initialize(options);
-    auto &context = m_config->getAsyncContext();
+    auto& context = m_config->getAsyncContext();
 
     auto agent = m_config->getAgent();
-    const auto &printer = agent->getPrinter("xml");
+    const auto& printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
 
     auto chg = printer->getModelChangeTime();
@@ -1153,7 +1153,7 @@ Port = 0
         EXPECT_FALSE(dataItem->isOrphan());
 
         auto agent = m_config->getAgent();
-        const auto &printer = agent->getPrinter("xml");
+        const auto& printer = agent->getPrinter("xml");
         EXPECT_NE(nullptr, printer);
         EXPECT_NE(chg, printer->getModelChangeTime());
       }
@@ -1187,10 +1187,10 @@ Port = 0
     options.insert(make_pair("config-file"s, value));
 
     m_config->initialize(options);
-    auto &context = m_config->getAsyncContext();
+    auto& context = m_config->getAsyncContext();
 
     auto agent = m_config->getAgent();
-    const auto &printer = agent->getPrinter("xml");
+    const auto& printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
 
     auto chg = printer->getModelChangeTime();
@@ -1219,7 +1219,7 @@ Port = 0
       if (!ec)
       {
         auto agent = m_config->getAgent();
-        const auto &printer = agent->getPrinter("xml");
+        const auto& printer = agent->getPrinter("xml");
         EXPECT_NE(nullptr, printer);
         EXPECT_EQ(chg, printer->getModelChangeTime());
       }
@@ -1232,7 +1232,7 @@ Port = 0
   TEST_F(ConfigTest, should_restart_agent_when_config_file_changes)
   {
     fs::path root {createTempDirectory("3")};
-    auto &context = m_config->getAsyncContext();
+    auto& context = m_config->getAsyncContext();
 
     fs::path devices(root / "Devices.xml");
     fs::path config {root / "agent.cfg"};
@@ -1328,10 +1328,10 @@ Port = 0
     options.insert(make_pair("config-file"s, value));
 
     m_config->initialize(options);
-    auto &context = m_config->getAsyncContext();
+    auto& context = m_config->getAsyncContext();
 
     auto agent = m_config->getAgent();
-    const auto &printer = agent->getPrinter("xml");
+    const auto& printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
 
     auto chg = printer->getModelChangeTime();
@@ -1370,7 +1370,7 @@ Port = 0
         EXPECT_TRUE(last);
         EXPECT_EQ("001", last->getUuid());
 
-        const auto &dis = last->getDeviceDataItems();
+        const auto& dis = last->getDeviceDataItems();
         EXPECT_EQ(5, dis.size());
 
         EXPECT_TRUE(last->getDeviceDataItem("xd1"));
@@ -1396,7 +1396,7 @@ Port = 0
     string streams("SchemaVersion = 2.0\nDisableAgentDevice = true\n");
 
     m_config->loadConfig(streams);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
     ASSERT_TRUE(agent);
 
     auto devices = agent->getDevices();
@@ -1411,7 +1411,7 @@ Port = 0
     string streams("SchemaVersion = 2.0\n");
 
     m_config->loadConfig(streams);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
     ASSERT_TRUE(agent);
 
     auto devices = agent->getDevices();
@@ -1447,7 +1447,7 @@ Port = 0
 
     m_config->initialize(options);
     auto agent = m_config->getAgent();
-    auto &context = m_config->getAsyncContext();
+    auto& context = m_config->getAsyncContext();
     auto sink = agent->findSink("RestService");
     auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
     ASSERT_TRUE(rest);
@@ -1456,7 +1456,7 @@ Port = 0
     sink.reset();
     rest.reset();
 
-    const auto &printer = agent->getPrinter("xml");
+    const auto& printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
     ASSERT_EQ("1.2", *printer->getSchemaVersion());
 
@@ -1501,7 +1501,7 @@ Port = 0
           EXPECT_TRUE(dataItem);
           EXPECT_EQ("ROTARY_VELOCITY", dataItem->getType());
 
-          const auto &printer = agent2->getPrinter("xml");
+          const auto& printer = agent2->getPrinter("xml");
           EXPECT_NE(nullptr, printer);
           ASSERT_EQ("1.3", *printer->getSchemaVersion());
         }
@@ -1544,10 +1544,10 @@ Adapters {
     options.insert(make_pair("config-file"s, value));
 
     m_config->initialize(options);
-    auto &asyncContext = m_config->getAsyncContext();
+    auto& asyncContext = m_config->getAsyncContext();
 
     auto agent = m_config->getAgent();
-    const auto &printer = agent->getPrinter("xml");
+    const auto& printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
 
     auto sp = agent->findSource("_localhost_7878");
@@ -1568,13 +1568,13 @@ Adapters {
         auto dit = directory_iterator(".");
         std::list<directory_entry> entries;
         copy_if(dit, end(dit), back_inserter(entries),
-                [&ext](const auto &de) { return contains(de.path().string(), ext); });
+                [&ext](const auto& de) { return contains(de.path().string(), ext); });
         ASSERT_EQ(1, entries.size());
 
         auto device = agent->getDeviceByName("LinuxCNC");
         ASSERT_TRUE(device) << "Cannot find LinuxCNC device";
 
-        const auto &components = device->getChildren();
+        const auto& components = device->getChildren();
         ASSERT_EQ(1, components->size());
 
         auto cont = device->getComponentById("cont");
@@ -1583,7 +1583,7 @@ Adapters {
         auto exec = device->getDeviceDataItem("exec");
         ASSERT_TRUE(exec) << "Cannot find DataItem with id exec";
 
-        auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
+        auto pipeline = dynamic_cast<AdapterPipeline*>(adapter->getPipeline());
         ASSERT_EQ("000", pipeline->getDevice());
       }
       m_config->stop();
@@ -1656,13 +1656,13 @@ Port = 0
     options.insert(make_pair("config-file"s, value));
 
     m_config->initialize(options);
-    auto &asyncContext = m_config->getAsyncContext();
+    auto& asyncContext = m_config->getAsyncContext();
 
     auto agent = m_config->getAgent();
     auto device = agent->getDeviceByName("LinuxCNC");
     ASSERT_TRUE(device);
 
-    const auto &printer = agent->getPrinter("xml");
+    const auto& printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
 
     auto sp = agent->findSource("_localhost_7878");
@@ -1683,13 +1683,13 @@ Port = 0
         auto dit = directory_iterator(".");
         std::list<directory_entry> entries;
         copy_if(dit, end(dit), back_inserter(entries),
-                [&ext](const auto &de) { return contains(de.path().string(), ext); });
+                [&ext](const auto& de) { return contains(de.path().string(), ext); });
         ASSERT_EQ(2, entries.size());
 
         auto device = agent->getDeviceByName("LinuxCNC");
         ASSERT_TRUE(device) << "Cannot find LinuxCNC device";
 
-        const auto &components = device->getChildren();
+        const auto& components = device->getChildren();
         ASSERT_EQ(1, components->size());
 
         auto conts = device->getComponentByType("Controller");
@@ -1715,7 +1715,7 @@ Port = 0
         auto exec = device->getDeviceDataItem("exc");
         ASSERT_TRUE(exec) << "Cannot find DataItem with id exc";
 
-        auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
+        auto pipeline = dynamic_cast<AdapterPipeline*>(adapter->getPipeline());
         ASSERT_EQ("000", pipeline->getDevice());
       }
       m_config->stop();
@@ -1847,13 +1847,13 @@ Port = 0
     options.insert(make_pair("config-file"s, value));
 
     m_config->initialize(options);
-    auto &asyncContext = m_config->getAsyncContext();
+    auto& asyncContext = m_config->getAsyncContext();
 
     auto agent = m_config->getAgent();
     auto device = agent->getDeviceByName("LinuxCNC");
     ASSERT_TRUE(device);
 
-    const auto &printer = agent->getPrinter("xml");
+    const auto& printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
 
     auto sp = agent->findSource("_localhost_7878");
@@ -1874,7 +1874,7 @@ Port = 0
         auto dit = directory_iterator(".");
         std::list<directory_entry> entries;
         copy_if(dit, end(dit), back_inserter(entries),
-                [&ext](const auto &de) { return contains(de.path().string(), ext); });
+                [&ext](const auto& de) { return contains(de.path().string(), ext); });
         ASSERT_EQ(2, entries.size());
 
         ASSERT_EQ(3, agent->getDevices().size());
@@ -1885,7 +1885,7 @@ Port = 0
         auto device2 = agent->getDeviceByName("AnotherCNC");
         ASSERT_TRUE(device2) << "Cannot find LinuxCNC device";
 
-        auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
+        auto pipeline = dynamic_cast<AdapterPipeline*>(adapter->getPipeline());
         ASSERT_EQ("001", pipeline->getDevice());
       }
       m_config->stop();
@@ -1900,7 +1900,7 @@ Port = 0
       }
       else
       {
-        auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
+        auto pipeline = dynamic_cast<AdapterPipeline*>(adapter->getPipeline());
         ASSERT_EQ("LinuxCNC", pipeline->getDevice());
 
         adapter->processData("* deviceModel: --multiline--AAAAA");
@@ -1965,10 +1965,10 @@ Adapters {
     options.insert(make_pair("config-file"s, value));
 
     m_config->initialize(options);
-    auto &asyncContext = m_config->getAsyncContext();
+    auto& asyncContext = m_config->getAsyncContext();
 
     auto agent = m_config->getAgent();
-    const auto &printer = agent->getPrinter("xml");
+    const auto& printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
 
     auto sp = agent->findSource("_localhost_7878");
@@ -1989,7 +1989,7 @@ Adapters {
         auto dit = directory_iterator(".");
         std::list<directory_entry> entries;
         copy_if(dit, end(dit), back_inserter(entries),
-                [&ext](const auto &de) { return contains(de.path().string(), ext); });
+                [&ext](const auto& de) { return contains(de.path().string(), ext); });
         ASSERT_EQ(1, entries.size());
 
         auto device = agent->getDeviceByName("LinuxCNC");
@@ -2070,13 +2070,13 @@ Port = 0
     options.insert(make_pair("config-file"s, value));
 
     m_config->initialize(options);
-    auto &asyncContext = m_config->getAsyncContext();
+    auto& asyncContext = m_config->getAsyncContext();
 
     auto agent = m_config->getAgent();
     auto device = agent->getDeviceByName("LinuxCNC");
     ASSERT_TRUE(device);
 
-    const auto &printer = agent->getPrinter("xml");
+    const auto& printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
 
     auto sp = agent->findSource("_localhost_7878");
@@ -2104,7 +2104,7 @@ Port = 0
         auto dit = directory_iterator(".");
         std::list<directory_entry> entries;
         copy_if(dit, end(dit), back_inserter(entries),
-                [&ext](const auto &de) { return contains(de.path().string(), ext); });
+                [&ext](const auto& de) { return contains(de.path().string(), ext); });
         ASSERT_EQ(2, entries.size());
 
         ASSERT_EQ(3, agent->getDevices().size());
@@ -2115,7 +2115,7 @@ Port = 0
         auto device2 = agent->getDeviceByName("AnotherCNC");
         ASSERT_TRUE(device2) << "Cannot find LinuxCNC device";
 
-        auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
+        auto pipeline = dynamic_cast<AdapterPipeline*>(adapter->getPipeline());
         ASSERT_EQ("001", pipeline->getDevice());
       }
 
@@ -2132,7 +2132,7 @@ Port = 0
       }
       else
       {
-        auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
+        auto pipeline = dynamic_cast<AdapterPipeline*>(adapter->getPipeline());
         ASSERT_EQ("LinuxCNC", pipeline->getDevice());
 
         adapter->processData("* deviceModel: --multiline--AAAAA");
@@ -2197,10 +2197,10 @@ Adapters {
     options.insert(make_pair("config-file"s, value));
 
     m_config->initialize(options);
-    auto &asyncContext = m_config->getAsyncContext();
+    auto& asyncContext = m_config->getAsyncContext();
 
     auto agent = m_config->getAgent();
-    const auto &printer = agent->getPrinter("xml");
+    const auto& printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
 
     auto sp = agent->findSource("_localhost_7878");
@@ -2256,7 +2256,7 @@ ServiceName=$CONFIG_TEST
     m_config->setDebug(true);
     m_config->loadConfig(config);
 
-    const auto &options = m_config->getAgent()->getOptions();
+    const auto& options = m_config->getAgent()->getOptions();
     ASSERT_EQ("TestValue", *GetOption<string>(options, configuration::ServiceName));
   }
 
@@ -2272,7 +2272,7 @@ ServiceName=$TestVariable
     m_config->setDebug(true);
     m_config->loadConfig(config);
 
-    const auto &options = m_config->getAgent()->getOptions();
+    const auto& options = m_config->getAgent()->getOptions();
     ASSERT_EQ("TestValue", *GetOption<string>(options, configuration::ServiceName));
   }
 
@@ -2288,7 +2288,7 @@ ServiceName=/some/prefix/$CONFIG_TEST:suffix
     m_config->setDebug(true);
     m_config->loadConfig(config);
 
-    const auto &options = m_config->getAgent()->getOptions();
+    const auto& options = m_config->getAgent()->getOptions();
     ASSERT_EQ("/some/prefix/TestValue:suffix",
               *GetOption<string>(options, configuration::ServiceName));
   }
@@ -2304,7 +2304,7 @@ ServiceName="some_prefix_${CONFIG_TEST}_suffix"
     m_config->setDebug(true);
     m_config->loadConfig(config);
 
-    const auto &options = m_config->getAgent()->getOptions();
+    const auto& options = m_config->getAgent()->getOptions();
     ASSERT_EQ("some_prefix_TestValue_suffix",
               *GetOption<string>(options, configuration::ServiceName));
   }
@@ -2376,7 +2376,7 @@ AgentDeviceUUID = SOME_UUID
     m_config->setDebug(true);
     m_config->loadConfig(config);
 
-    const auto &ad = m_config->getAgent()->getAgentDevice();
+    const auto& ad = m_config->getAgent()->getAgentDevice();
     ASSERT_EQ("SOME_UUID", *(ad->getUuid()));
   }
 
@@ -2557,9 +2557,9 @@ DevicesStyle {
     string streams("Sender = MachineXXX\n");
 
     m_config->loadConfig(streams);
-    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter*>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto sender = printer->getSenderName();
@@ -2577,11 +2577,11 @@ DevicesJsonSchema {{
                              PROJECT_ROOT_DIR)};
 
   m_config->loadConfig(config);
-  auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+  auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
   ASSERT_TRUE(agent);
-  auto printer = dynamic_cast<printer::JsonPrinter *>(agent->getPrinter("json"));
+  auto printer = dynamic_cast<printer::JsonPrinter*>(agent->getPrinter("json"));
   ASSERT_TRUE(printer);
-  const auto &schema = printer->getDevicesSchema();
+  const auto& schema = printer->getDevicesSchema();
   ASSERT_TRUE(schema);
   ASSERT_EQ("http://localhost:5000/myschemas/MTConnectDevices_2.7_draft-04.schema.json", *schema);
 }
@@ -2596,11 +2596,11 @@ StreamsJsonSchema {{
                              PROJECT_ROOT_DIR)};
 
   m_config->loadConfig(config);
-  auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+  auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
   ASSERT_TRUE(agent);
-  auto printer = dynamic_cast<printer::JsonPrinter *>(agent->getPrinter("json"));
+  auto printer = dynamic_cast<printer::JsonPrinter*>(agent->getPrinter("json"));
   ASSERT_TRUE(printer);
-  const auto &schema = printer->getStreamsSchema();
+  const auto& schema = printer->getStreamsSchema();
   ASSERT_TRUE(schema);
   ASSERT_EQ("http://localhost:5000/myschemas/MTConnectStreams_2.7_draft-04.schema.json", *schema);
 }
@@ -2615,11 +2615,11 @@ AssetsJsonSchema {{
                              PROJECT_ROOT_DIR)};
 
   m_config->loadConfig(config);
-  auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+  auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
   ASSERT_TRUE(agent);
-  auto printer = dynamic_cast<printer::JsonPrinter *>(agent->getPrinter("json"));
+  auto printer = dynamic_cast<printer::JsonPrinter*>(agent->getPrinter("json"));
   ASSERT_TRUE(printer);
-  const auto &schema = printer->getAssetsSchema();
+  const auto& schema = printer->getAssetsSchema();
   ASSERT_TRUE(schema);
   ASSERT_EQ("http://localhost:5000/myschemas/MTConnectAssets_2.7_draft-04.schema.json", *schema);
 }
@@ -2634,11 +2634,11 @@ ErrorJsonSchema {{
                              PROJECT_ROOT_DIR)};
 
   m_config->loadConfig(config);
-  auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+  auto agent = const_cast<mtconnect::Agent*>(m_config->getAgent());
   ASSERT_TRUE(agent);
-  auto printer = dynamic_cast<printer::JsonPrinter *>(agent->getPrinter("json"));
+  auto printer = dynamic_cast<printer::JsonPrinter*>(agent->getPrinter("json"));
   ASSERT_TRUE(printer);
-  const auto &schema = printer->getErrorSchema();
+  const auto& schema = printer->getErrorSchema();
   ASSERT_TRUE(schema);
   ASSERT_EQ("http://localhost:5000/myschemas/MTConnectError_2.7_draft-04.schema.json", *schema);
 }

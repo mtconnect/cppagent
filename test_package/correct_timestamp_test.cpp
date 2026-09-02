@@ -42,7 +42,7 @@ using namespace std::literals;
 using namespace std::chrono_literals;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -51,9 +51,9 @@ int main(int argc, char *argv[])
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(std::map<string, DataItemPtr> &items) : m_dataItems(items) {}
-  DevicePtr findDevice(const std::string &device) override { return nullptr; }
-  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+  MockPipelineContract(std::map<string, DataItemPtr>& items) : m_dataItems(items) {}
+  DevicePtr findDevice(const std::string& device) override { return nullptr; }
+  DataItemPtr findDataItem(const std::string& device, const std::string& name) override
   {
     return m_dataItems[name];
   }
@@ -66,11 +66,11 @@ public:
   int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
   bool isValidating() const override { return false; }
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
-  void sourceFailed(const std::string &id) override {}
-  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return nullptr; }
+  void deliverConnectStatus(entity::EntityPtr, const StringList&, bool) override {}
+  void sourceFailed(const std::string& id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr& obs) const override { return nullptr; }
 
-  std::map<string, DataItemPtr> &m_dataItems;
+  std::map<string, DataItemPtr>& m_dataItems;
 };
 
 class CorrectTimestampTest : public testing::Test

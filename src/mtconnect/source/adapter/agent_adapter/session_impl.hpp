@@ -49,14 +49,14 @@ namespace mtconnect::source::adapter::agent_adapter {
   public:
     /// @brief Cast this class as the derived class
     /// @return reference to the derived class
-    Derived &derived() { return static_cast<Derived &>(*this); }
+    Derived& derived() { return static_cast<Derived&>(*this); }
     /// @brief Immutably cast this class as its derived subclass
     /// @return const reference to the derived class
-    const Derived &derived() const { return static_cast<const Derived &>(*this); }
+    const Derived& derived() const { return static_cast<const Derived&>(*this); }
 
     // Objects are constructed with a strand to
     // ensure that handlers do not execute concurrently.
-    SessionImpl(boost::asio::io_context::strand &strand, const url::Url &url)
+    SessionImpl(boost::asio::io_context::strand& strand, const url::Url& url)
       : m_resolver(strand.context()), m_strand(strand), m_url(url), m_chunk(1 * 1024 * 1024)
     {}
 
@@ -74,7 +74,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     /// Closes the socket and resets the request
     /// @param ec error code to report
     /// @param what the reason why the failure occurred
-    void failed(std::error_code ec, const char *what) override
+    void failed(std::error_code ec, const char* what) override
     {
       derived().lowestLayer().socket().close();
 
@@ -94,7 +94,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     void stop() override { m_request.reset(); }
 
-    bool makeRequest(const Request &req) override
+    bool makeRequest(const Request& req) override
     {
       if (!m_request)
       {
@@ -134,18 +134,18 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     /// @brief Process data from the remote agent
     /// @param data the payload from the agent
-    void processData(const std::string &data)
+    void processData(const std::string& data)
     {
       try
       {
         if (m_handler && m_handler->m_processData)
           m_handler->m_processData(data, m_identity);
       }
-      catch (FatalException &e)
+      catch (FatalException& e)
       {
         throw e;
       }
-      catch (std::system_error &e)
+      catch (std::system_error& e)
       {
         LOG(warning) << "AgentAdapter - Error occurred processing data: " << e.what();
         if (e.code().category() == TheErrorCategory())
@@ -154,7 +154,7 @@ namespace mtconnect::source::adapter::agent_adapter {
           failed(source::make_error_code(ErrorCode::RETRY_REQUEST),
                  "Exception occurred in AgentAdapter::processData");
       }
-      catch (std::exception &e)
+      catch (std::exception& e)
       {
         LOG(error) << "AgentAdapter - Error occurred processing data: " << e.what();
         failed(source::make_error_code(ErrorCode::RETRY_REQUEST),
@@ -318,7 +318,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "header");
       }
 
-      auto &msg = m_headerParser->get();
+      auto& msg = m_headerParser->get();
       if (msg.version() < 11)
       {
         LOG(trace) << "Agent adapter: HTTP 10 requires close on read";
@@ -432,7 +432,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     void createChunkHeaderHandler()
     {
       m_chunkHeaderHandler = [this](std::uint64_t size, boost::string_view extensions,
-                                    boost::system::error_code &ec) {
+                                    boost::system::error_code& ec) {
         derived().lowestLayer().expires_after(m_timeout);
 
         if (ec)
@@ -457,7 +457,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         return false;
       }
 
-      auto start = static_cast<const char *>(m_chunk.data().data());
+      auto start = static_cast<const char*>(m_chunk.data().data());
       boost::string_view view(start, m_chunk.data().size());
 
       auto bp = view.find(m_boundary.c_str());
@@ -520,7 +520,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     void createChunkBodyHandler()
     {
       m_chunkHandler = [this](std::uint64_t remain, boost::string_view body,
-                              boost::system::error_code &ev) -> std::size_t {
+                              boost::system::error_code& ev) -> std::size_t {
         if (!m_request)
         {
           derived().lowestLayer().close();
@@ -549,7 +549,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         auto len = m_chunk.size();
         if (len >= m_chunkLength)
         {
-          auto start = static_cast<const char *>(m_chunk.data().data());
+          auto start = static_cast<const char*>(m_chunk.data().data());
           boost::string_view sbuf(start, m_chunkLength);
 
           LOG(trace) << "Received Chunk: --------\n" << sbuf << "\n-------------";
@@ -603,9 +603,9 @@ namespace mtconnect::source::adapter::agent_adapter {
     asio::io_context::strand m_strand;
     url::Url m_url;
 
-    std::function<std::size_t(std::uint64_t, boost::string_view, boost::system::error_code &)>
+    std::function<std::size_t(std::uint64_t, boost::string_view, boost::system::error_code&)>
         m_chunkHandler;
-    std::function<void(std::uint64_t, boost::string_view, boost::system::error_code &)>
+    std::function<void(std::uint64_t, boost::string_view, boost::system::error_code&)>
         m_chunkHeaderHandler;
 
     std::string m_boundary;

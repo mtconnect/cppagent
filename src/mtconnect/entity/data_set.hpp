@@ -44,7 +44,7 @@ namespace mtconnect::entity {
     /// do not have a simple `==` method. The method first makes sure the types are the same and
     /// then compares using `==`.
     template <typename T1, typename T2>
-    inline bool SameValue(const T1 &v1, const T2 &v2)
+    inline bool SameValue(const T1& v1, const T2& v2)
     {
       return std::holds_alternative<T2>(v1) && std::get<T2>(v1) == v2;
     }
@@ -58,7 +58,7 @@ namespace mtconnect::entity {
       /// @param key the key
       /// @param value the value as a string
       /// @param removed `true` if the key has been removed
-      Entry(const std::string &key, std::string &value, bool removed = false)
+      Entry(const std::string& key, std::string& value, bool removed = false)
         : m_key(key), m_value(std::move(value)), m_removed(removed)
       {}
 
@@ -66,7 +66,7 @@ namespace mtconnect::entity {
       /// @param key the key
       /// @param value the value as a string
       /// @param removed `true` if the key has been removed
-      Entry(std::string &&key, std::string &value, bool removed = false)
+      Entry(std::string&& key, std::string& value, bool removed = false)
         : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
       {}
 
@@ -74,7 +74,7 @@ namespace mtconnect::entity {
       /// @param key the key
       /// @param value the value as a DataSet
       /// @param removed `true` if the key has been removed
-      Entry(const std::string &key, Entry &value, bool removed = false)
+      Entry(const std::string& key, Entry& value, bool removed = false)
         : m_key(key), m_value(std::move(value)), m_removed(removed)
       {}
 
@@ -82,17 +82,17 @@ namespace mtconnect::entity {
       /// @param key the key
       /// @param value the a data set variant
       /// @param removed `true` if the key has been removed
-      Entry(const std::string &key, T value, bool removed = false)
+      Entry(const std::string& key, T value, bool removed = false)
         : m_key(key), m_value(std::forward<T>(value)), m_removed(removed)
       {}
       /// @brief Create a data set entry with just a key (used for search)
       /// @param key
-      Entry(const std::string &key) : m_key(key), m_removed(false) {}
-      Entry(const Entry &other) = default;
+      Entry(const std::string& key) : m_key(key), m_removed(false) {}
+      Entry(const Entry& other) = default;
       Entry() : m_removed(false) {}
 
       /// @brief copy a data set entry from another
-      Entry &operator=(const Entry &other)
+      Entry& operator=(const Entry& other)
       {
         m_key = other.m_key;
         m_value = other.m_value;
@@ -101,9 +101,9 @@ namespace mtconnect::entity {
       }
 
       /// @brief only compares keys for equality
-      bool operator==(const Entry &other) const { return m_key == other.m_key; }
+      bool operator==(const Entry& other) const { return m_key == other.m_key; }
       /// @brief only compares keys for less than
-      bool operator<(const Entry &other) const { return m_key < other.m_key; }
+      bool operator<(const Entry& other) const { return m_key < other.m_key; }
 
       /// @brief Compares the values of the entiry
       /// @param other the other value to compare against `m_value`
@@ -111,15 +111,15 @@ namespace mtconnect::entity {
       ///
       /// Compares using the `SameValue` free function in the `data_set` namespace. It must be
       /// overloaded for any special types required by the variant type T.
-      bool sameValue(const Entry &other) const
+      bool sameValue(const Entry& other) const
       {
-        const auto &ov = other.m_value;
-        return std::visit([&ov](const auto &v) { return SameValue(ov, v); }, m_value);
+        const auto& ov = other.m_value;
+        return std::visit([&ov](const auto& v) { return SameValue(ov, v); }, m_value);
       }
 
       /// @brief compare a data entry ewith another
       /// @param other the other entry  to compare
-      bool same(const Entry &other) const
+      bool same(const Entry& other) const
       {
         return m_key == other.m_key && m_removed == other.m_removed && sameValue(other);
       }
@@ -143,7 +143,7 @@ namespace mtconnect::entity {
       /// @param key the key
       /// @return the typed value of the entry
       template <typename T>
-      const T &get(const std::string &key) const
+      const T& get(const std::string& key) const
       {
         auto v = base::find(ET(key));
         if (v == this->end())
@@ -157,7 +157,7 @@ namespace mtconnect::entity {
       /// @param key the key
       /// @return optional typed value of the entry
       template <typename T>
-      const std::optional<T> maybeGet(const std::string &key) const
+      const std::optional<T> maybeGet(const std::string& key) const
       {
         auto v = base::find(ET(key));
         if (v == this->end())
@@ -192,19 +192,19 @@ namespace mtconnect::entity {
     /// @param v1 The value of the other variant
     /// @param row The row we're comparing
     template <typename T1>
-    inline bool SameValue(const T1 &v1, const TableRow &row)
+    inline bool SameValue(const T1& v1, const TableRow& row)
     {
       if (!std::holds_alternative<TableRow>(v1))
         return false;
 
-      const auto &orow = std::get<TableRow>(v1);
+      const auto& orow = std::get<TableRow>(v1);
 
       if (row.size() != orow.size())
         return false;
 
-      for (const auto &c1 : row)
+      for (const auto& c1 : row)
       {
-        const auto &c2 = orow.find(c1);
+        const auto& c2 = orow.find(c1);
         if (c2 == orow.end() || !c2->sameValue(c1))
           return false;
       }
@@ -238,6 +238,6 @@ namespace mtconnect::entity {
 
     /// @brief Split the data set entries by space delimiters and account for the
     /// use of single and double quotes as well as curly braces
-    bool parse(const std::string &s, bool table);
+    bool parse(const std::string& s, bool table);
   };
 }  // namespace mtconnect::entity

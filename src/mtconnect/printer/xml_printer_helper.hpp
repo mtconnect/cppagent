@@ -74,7 +74,7 @@ namespace mtconnect::printer {
         xmlFreeTextWriter(m_writer);
         m_writer = nullptr;
       }
-      return std::string((char *)xmlBufferContent(m_buf), xmlBufferLength(m_buf));
+      return std::string((char*)xmlBufferContent(m_buf), xmlBufferLength(m_buf));
     }
 
   protected:
@@ -85,7 +85,7 @@ namespace mtconnect::printer {
   /// @brief Wrapper to create an XML open element
   /// @param writer the writer
   /// @param name the name of the element
-  static inline void openElement(xmlTextWriterPtr writer, const char *name)
+  static inline void openElement(xmlTextWriterPtr writer, const char* name)
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST name));
   }
@@ -108,7 +108,7 @@ namespace mtconnect::printer {
     /// @param writer the writer
     /// @param name name of the element
     /// @param key optional key if the for closing an element and reopening another element
-    AutoElement(xmlTextWriterPtr writer, const char *name, std::string key = "")
+    AutoElement(xmlTextWriterPtr writer, const char* name, std::string key = "")
       : m_writer(writer), m_name(name), m_key(std::move(key))
     {
       openElement(writer, name);
@@ -117,7 +117,7 @@ namespace mtconnect::printer {
     /// @param writer the writer
     /// @param name name of the element
     /// @param key optional key if the for closing an element and reopening another element
-    AutoElement(xmlTextWriterPtr writer, const std::string &name, std::string key = "")
+    AutoElement(xmlTextWriterPtr writer, const std::string& name, std::string key = "")
       : m_writer(writer), m_name(name), m_key(std::move(key))
     {
       openElement(writer, name.c_str());
@@ -126,7 +126,7 @@ namespace mtconnect::printer {
     /// @param name of the element
     /// @param key optional key if the for closing an element and reopening another element
     /// @return `true` if the element was closed and reopened
-    bool reset(const std::string &name, const std::string &key = "")
+    bool reset(const std::string& name, const std::string& key = "")
     {
       if (name != m_name || m_key != key)
       {
@@ -152,10 +152,10 @@ namespace mtconnect::printer {
 
     /// @brief get the key
     /// @return the key
-    const std::string &key() const { return m_key; }
+    const std::string& key() const { return m_key; }
     /// @brief return the name
     /// @return the name
-    const std::string &name() const { return m_name; }
+    const std::string& name() const { return m_name; }
 
   protected:
     xmlTextWriterPtr m_writer;
@@ -166,8 +166,8 @@ namespace mtconnect::printer {
   /// @param writer the writer
   /// @param key the attribute name
   /// @param value the attribute value (empty strings are skipped)
-  static inline void addAttribute(xmlTextWriterPtr writer, const char *key,
-                                  const std::string &value)
+  static inline void addAttribute(xmlTextWriterPtr writer, const char* key,
+                                  const std::string& value)
   {
     if (!value.empty())
       THROW_IF_XML2_ERROR(
@@ -180,7 +180,7 @@ namespace mtconnect::printer {
   /// @param value the integral value
   template <typename T>
   requires std::integral<T> static inline void addAttribute(xmlTextWriterPtr writer,
-                                                            const char *key, T value)
+                                                            const char* key, T value)
   {
     auto str = std::format("{}", value);
     THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST key, BAD_CAST str.c_str()));
@@ -190,9 +190,9 @@ namespace mtconnect::printer {
   /// @param writer the writer
   /// @param attributes map of key-value attribute pairs
   static inline void addAttributes(xmlTextWriterPtr writer,
-                                   const std::map<std::string, std::string> &attributes)
+                                   const std::map<std::string, std::string>& attributes)
   {
-    for (const auto &attr : attributes)
+    for (const auto& attr : attributes)
     {
       if (!attr.second.empty())
       {
@@ -208,9 +208,9 @@ namespace mtconnect::printer {
   /// @param body text content of the element
   /// @param attributes optional map of attributes
   /// @param raw if true, body is written without XML encoding
-  static inline void addSimpleElement(xmlTextWriterPtr writer, const std::string &element,
-                                      const std::string &body,
-                                      const std::map<std::string, std::string> &attributes = {},
+  static inline void addSimpleElement(xmlTextWriterPtr writer, const std::string& element,
+                                      const std::string& body,
+                                      const std::map<std::string, std::string>& attributes = {},
                                       bool raw = false)
   {
     AutoElement ele(writer, element);
@@ -220,7 +220,7 @@ namespace mtconnect::printer {
 
     if (!body.empty())
     {
-      xmlChar *text = nullptr;
+      xmlChar* text = nullptr;
       if (!raw)
         text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST body.c_str());
       else

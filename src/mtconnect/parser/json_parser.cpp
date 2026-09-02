@@ -34,7 +34,7 @@ namespace rj = ::rapidjson;
 namespace mtconnect::parser {
   using namespace device_model;
 
-  list<DevicePtr> JsonParser::parseFile(const string &filePath)
+  list<DevicePtr> JsonParser::parseFile(const string& filePath)
   {
     NAMED_SCOPE("json.parser");
 
@@ -50,7 +50,7 @@ namespace mtconnect::parser {
     return parseDocument(buffer.str());
   }
 
-  list<DevicePtr> JsonParser::parseDocument(const string &jsonDoc)
+  list<DevicePtr> JsonParser::parseDocument(const string& jsonDoc)
   {
     NAMED_SCOPE("json.parser");
 
@@ -80,7 +80,7 @@ namespace mtconnect::parser {
       throw FatalException("JSON document does not contain MTConnectDevices");
     }
 
-    const auto &mtcDevices = mtcIt->value;
+    const auto& mtcDevices = mtcIt->value;
 
     // Use document jsonVersion if present, otherwise fall back to the default
     uint32_t version = m_version;
@@ -105,7 +105,7 @@ namespace mtconnect::parser {
       return deviceList;
     }
 
-    const auto &devices = devicesIt->value;
+    const auto& devices = devicesIt->value;
 
     if (version == 1)
     {
@@ -118,7 +118,7 @@ namespace mtconnect::parser {
 
       for (rj::SizeType i = 0; i < devices.Size(); ++i)
       {
-        const auto &item = devices[i];
+        const auto& item = devices[i];
         if (item.IsObject() && item.MemberCount() > 0)
         {
           // Re-serialize the single device wrapper object for the entity parser
@@ -148,7 +148,7 @@ namespace mtconnect::parser {
       {
         for (rj::SizeType i = 0; i < deviceArrayIt->value.Size(); ++i)
         {
-          const auto &deviceObj = deviceArrayIt->value[i];
+          const auto& deviceObj = deviceArrayIt->value[i];
           // Wrap as {"Device": {...}} for the entity parser
           rj::StringBuffer sb;
           rj::Writer<rj::StringBuffer> writer(sb);
@@ -169,7 +169,7 @@ namespace mtconnect::parser {
     return deviceList;
   }
 
-  DevicePtr JsonParser::parseDevice(const std::string &jsonDoc, uint32_t version)
+  DevicePtr JsonParser::parseDevice(const std::string& jsonDoc, uint32_t version)
   {
     NAMED_SCOPE("json.parser");
 
@@ -183,7 +183,7 @@ namespace mtconnect::parser {
 
       if (!errors.empty())
       {
-        for (auto &e : errors)
+        for (auto& e : errors)
         {
           LOG(warning) << "Error parsing JSON Device: " << e->what();
         }
@@ -198,7 +198,7 @@ namespace mtconnect::parser {
         LOG(error) << "Failed to parse JSON device document";
       }
     }
-    catch (const exception &e)
+    catch (const exception& e)
     {
       LOG(fatal) << "Cannot parse JSON document: " << e.what();
       throw FatalException(e.what());

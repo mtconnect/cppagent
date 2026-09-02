@@ -56,5 +56,5 @@ namespace mtconnect {
         return coordinateSystems;
       }
     }  // namespace configuration
-  }    // namespace device_model
+  }  // namespace device_model
 }  // namespace mtconnect

@@ -33,7 +33,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     /// @brief Create a session to connect to the remote agent
     /// @param ioc the asio strand to run in
     /// @param url URL to connect to
-    HttpSession(boost::asio::io_context::strand &ioc, const url::Url &url)
+    HttpSession(boost::asio::io_context::strand& ioc, const url::Url& url)
       : super(ioc, url), m_stream(ioc.context())
     {}
 
@@ -52,13 +52,13 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     /// @brief Get the boost asio tcp stream
     /// @return reference to the stream
-    auto &stream() { return m_stream; }
+    auto& stream() { return m_stream; }
     /// @brief Get the lowest protocol layer to the tcp stream
     /// @return lowest protocol layer
-    auto &lowestLayer() { return beast::get_lowest_layer(m_stream); }
+    auto& lowestLayer() { return beast::get_lowest_layer(m_stream); }
     /// @brief Get an immutable lowest protocol layer to the tcp stream
     /// @return const lowest protocol layer
-    const auto &lowestLayer() const { return beast::get_lowest_layer(m_stream); }
+    const auto& lowestLayer() const { return beast::get_lowest_layer(m_stream); }
 
     /// @brief method called asynchonously when the source connects to the agent
     /// @param ec an error code

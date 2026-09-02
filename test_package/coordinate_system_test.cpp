@@ -38,7 +38,7 @@ using namespace mtconnect::source::adapter;
 using namespace entity;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -57,7 +57,7 @@ protected:
 
   void TearDown() override { m_agentTestHelper.reset(); }
 
-  Adapter *m_adapter {nullptr};
+  Adapter* m_adapter {nullptr};
   std::string m_agentId;
   DevicePtr m_device {nullptr};
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
@@ -67,10 +67,10 @@ TEST_F(CoordinateSystemTest, coordinate_systems_with_origin_and_transformation_a
 {
   ASSERT_NE(nullptr, m_device);
 
-  auto &clc = m_device->get<EntityPtr>("Configuration");
+  auto& clc = m_device->get<EntityPtr>("Configuration");
   ASSERT_TRUE(clc);
 
-  const auto &cds = clc->getList("CoordinateSystems");
+  const auto& cds = clc->getList("CoordinateSystems");
   ASSERT_TRUE(cds);
   ASSERT_EQ(2, cds->size());
 

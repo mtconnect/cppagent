@@ -32,7 +32,7 @@ namespace mtconnect::pipeline {
   class AGENT_LIB_API JsonMapper : public Transform
   {
   public:
-    JsonMapper(const JsonMapper &) = default;
+    JsonMapper(const JsonMapper&) = default;
     JsonMapper(PipelineContextPtr context) : Transform("JsonMapper"), m_context(context)
     {
       m_guard = TypeGuard<JsonMessage>(RUN);
@@ -40,7 +40,7 @@ namespace mtconnect::pipeline {
 
     /// @brief Use rapidjson to parse the json content. If there is an error, output the text and
     /// log the error.
-    EntityPtr operator()(entity::EntityPtr &&entity) override;
+    EntityPtr operator()(entity::EntityPtr&& entity) override;
 
   protected:
     PipelineContextPtr m_context;

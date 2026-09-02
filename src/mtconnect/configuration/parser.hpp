@@ -39,10 +39,10 @@ namespace mtconnect {
     {
       /// @brief Parse text string to a property tree (testing)
       /// @param[in] text text to be parsed
-      static boost::property_tree::ptree parse(const std::string &text);
+      static boost::property_tree::ptree parse(const std::string& text);
       /// @brief Parse file to a property tree
       /// @param[in] path file to be parsed
-      static boost::property_tree::ptree parse(const std::filesystem::path &path);
+      static boost::property_tree::ptree parse(const std::filesystem::path& path);
     };
   }  // namespace configuration
 }  // namespace mtconnect

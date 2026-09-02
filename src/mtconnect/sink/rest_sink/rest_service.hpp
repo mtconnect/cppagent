@@ -43,15 +43,14 @@ namespace mtconnect {
     struct AsyncCurrentResponse;
 
     /// @brief Callback fundtion for setting namespaces
-    using NamespaceFunction = void (printer::XmlPrinter::*)(const std::string &,
-                                                            const std::string &,
-                                                            const std::string &);
+    using NamespaceFunction = void (printer::XmlPrinter::*)(const std::string&, const std::string&,
+                                                            const std::string&);
 
     /// @brief Callback fundtion for setting json schema
-    using SchemaFunction = void (printer::JsonPrinter::*)(const std::string &);
+    using SchemaFunction = void (printer::JsonPrinter::*)(const std::string&);
 
     /// @brief Callback fundtion for setting stylesheet
-    using StyleFunction = void (printer::XmlPrinter::*)(const std::string &);
+    using StyleFunction = void (printer::XmlPrinter::*)(const std::string&);
 
     /// @brief The Sink for the MTConnect normative REST Service
     class AGENT_LIB_API RestService : public Sink
@@ -62,14 +61,14 @@ namespace mtconnect {
       /// @param contract the Sink Contract from the agent
       /// @param options configuration options
       /// @param config additional configuration options if specified directly as a sink
-      RestService(boost::asio::io_context &context, SinkContractPtr &&contract,
-                  const ConfigOptions &options, const boost::property_tree::ptree &config);
+      RestService(boost::asio::io_context& context, SinkContractPtr&& contract,
+                  const ConfigOptions& options, const boost::property_tree::ptree& config);
 
       ~RestService() = default;
 
       /// @brief Register the Sink factory to create this sink
       /// @param factory
-      static void registerFactory(SinkFactory &factory);
+      static void registerFactory(SinkFactory& factory);
 
       /// @brief Make a loopback source to handle PUT, POST, and DELETE
       /// @param context the pipeline context
@@ -83,7 +82,7 @@ namespace mtconnect {
 
       void stop() override;
 
-      bool publish(observation::ObservationPtr &observation) override;
+      bool publish(observation::ObservationPtr& observation) override;
 
       bool publish(asset::AssetPtr asset) override { return false; }
       ///@}
@@ -103,11 +102,11 @@ namespace mtconnect {
       /// @param[in] device optional device name or uuid
       /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Devices response
-      ResponsePtr probeRequest(const printer::Printer *p,
-                               const std::optional<std::string> &device = std::nullopt,
+      ResponsePtr probeRequest(const printer::Printer* p,
+                               const std::optional<std::string>& device = std::nullopt,
                                bool pretty = false,
-                               const std::optional<std::string> &deviceType = std::nullopt,
-                               const std::optional<std::string> &requestId = std::nullopt);
+                               const std::optional<std::string>& deviceType = std::nullopt,
+                               const std::optional<std::string>& requestId = std::nullopt);
 
       /// @brief Handler for a current request
       /// @param[in] p printer for doc generation
@@ -116,13 +115,13 @@ namespace mtconnect {
       /// @param[in] path an xpath to filter
       /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Streams response
-      ResponsePtr currentRequest(const printer::Printer *p,
-                                 const std::optional<std::string> &device = std::nullopt,
-                                 const std::optional<SequenceNumber_t> &at = std::nullopt,
-                                 const std::optional<std::string> &path = std::nullopt,
+      ResponsePtr currentRequest(const printer::Printer* p,
+                                 const std::optional<std::string>& device = std::nullopt,
+                                 const std::optional<SequenceNumber_t>& at = std::nullopt,
+                                 const std::optional<std::string>& path = std::nullopt,
                                  bool pretty = false,
-                                 const std::optional<std::string> &deviceType = std::nullopt,
-                                 const std::optional<std::string> &requestId = std::nullopt);
+                                 const std::optional<std::string>& deviceType = std::nullopt,
+                                 const std::optional<std::string>& requestId = std::nullopt);
 
       /// @brief Handler for a sample request
       /// @param[in] p printer for doc generation
@@ -133,14 +132,14 @@ namespace mtconnect {
       /// @param[in] path an xpath for filtering
       /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Streams response
-      ResponsePtr sampleRequest(const printer::Printer *p, const int count = 100,
-                                const std::optional<std::string> &device = std::nullopt,
-                                const std::optional<SequenceNumber_t> &from = std::nullopt,
-                                const std::optional<SequenceNumber_t> &to = std::nullopt,
-                                const std::optional<std::string> &path = std::nullopt,
+      ResponsePtr sampleRequest(const printer::Printer* p, const int count = 100,
+                                const std::optional<std::string>& device = std::nullopt,
+                                const std::optional<SequenceNumber_t>& from = std::nullopt,
+                                const std::optional<SequenceNumber_t>& to = std::nullopt,
+                                const std::optional<std::string>& path = std::nullopt,
                                 bool pretty = false,
-                                const std::optional<std::string> &deviceType = std::nullopt,
-                                const std::optional<std::string> &requestId = std::nullopt);
+                                const std::optional<std::string>& deviceType = std::nullopt,
+                                const std::optional<std::string>& requestId = std::nullopt);
       /// @brief Handler for a streaming sample
       /// @param[in] session session to stream data to
       /// @param[in] p printer for doc generation
@@ -151,14 +150,14 @@ namespace mtconnect {
       /// @param[in] from optional starting sequence number
       /// @param[in] path optional path for filtering
       /// @param[in] pretty `true` to ensure response is formatted
-      void streamSampleRequest(SessionPtr session, const printer::Printer *p, const int interval,
+      void streamSampleRequest(SessionPtr session, const printer::Printer* p, const int interval,
                                const int heartbeat, const int count = 100,
-                               const std::optional<std::string> &device = std::nullopt,
-                               const std::optional<SequenceNumber_t> &from = std::nullopt,
-                               const std::optional<std::string> &path = std::nullopt,
+                               const std::optional<std::string>& device = std::nullopt,
+                               const std::optional<SequenceNumber_t>& from = std::nullopt,
+                               const std::optional<std::string>& path = std::nullopt,
                                bool pretty = false,
-                               const std::optional<std::string> &deviceType = std::nullopt,
-                               const std::optional<std::string> &requestId = std::nullopt);
+                               const std::optional<std::string>& deviceType = std::nullopt,
+                               const std::optional<std::string>& requestId = std::nullopt);
 
       /// @brief Handler for a streaming current
       /// @param[in] session session to stream data to
@@ -167,21 +166,21 @@ namespace mtconnect {
       /// @param[in] device optional device name or uuid
       /// @param[in] path optional path for filtering
       /// @param[in] pretty `true` to ensure response is formatted
-      void streamCurrentRequest(SessionPtr session, const printer::Printer *p, const int interval,
-                                const std::optional<std::string> &device = std::nullopt,
-                                const std::optional<std::string> &path = std::nullopt,
+      void streamCurrentRequest(SessionPtr session, const printer::Printer* p, const int interval,
+                                const std::optional<std::string>& device = std::nullopt,
+                                const std::optional<std::string>& path = std::nullopt,
                                 bool pretty = false,
-                                const std::optional<std::string> &deviceType = std::nullopt,
-                                const std::optional<std::string> &requestId = std::nullopt);
+                                const std::optional<std::string>& deviceType = std::nullopt,
+                                const std::optional<std::string>& requestId = std::nullopt);
       /// @brief Handler for put/post observation
       /// @param[in] p printer for response generation
       /// @param[in] device device
       /// @param[in] observations key/value pairs for the observations
       /// @param[in] time optional timestamp
       /// @return `<success/>` if succeeds
-      ResponsePtr putObservationRequest(const printer::Printer *p, const std::string &device,
+      ResponsePtr putObservationRequest(const printer::Printer* p, const std::string& device,
                                         const QueryMap observations,
-                                        const std::optional<std::string> &time = std::nullopt);
+                                        const std::optional<std::string>& time = std::nullopt);
 
       ///@}
 
@@ -212,20 +211,20 @@ namespace mtconnect {
       /// @param[in] device optional device name or uuid
       /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Assets response document
-      ResponsePtr assetRequest(const printer::Printer *p, const int32_t count, const bool removed,
-                               const std::optional<std::string> &type = std::nullopt,
-                               const std::optional<std::string> &device = std::nullopt,
+      ResponsePtr assetRequest(const printer::Printer* p, const int32_t count, const bool removed,
+                               const std::optional<std::string>& type = std::nullopt,
+                               const std::optional<std::string>& device = std::nullopt,
                                bool pretty = false,
-                               const std::optional<std::string> &requestId = std::nullopt);
+                               const std::optional<std::string>& requestId = std::nullopt);
 
       /// @brief Asset request handler using a list of asset ids
       /// @param[in] p printer for the response document
       /// @param[in] ids list of asset ids
       /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Assets response document
-      ResponsePtr assetIdsRequest(const printer::Printer *p, const std::list<std::string> &ids,
+      ResponsePtr assetIdsRequest(const printer::Printer* p, const std::list<std::string>& ids,
                                   bool pretty = false,
-                                  const std::optional<std::string> &requestId = std::nullopt);
+                                  const std::optional<std::string>& requestId = std::nullopt);
 
       /// @brief Asset request handler to update an asset
       /// @param p printer for the response document
@@ -234,23 +233,23 @@ namespace mtconnect {
       /// @param device option device, if not given will derive from `asset`
       /// @param uuid optional asset id, if not given will derive from the `asset`
       /// @return MTConnect Assets response document
-      ResponsePtr putAssetRequest(const printer::Printer *p, const std::string &asset,
-                                  const std::optional<std::string> &type,
-                                  const std::optional<std::string> &device = std::nullopt,
-                                  const std::optional<std::string> &uuid = std::nullopt);
+      ResponsePtr putAssetRequest(const printer::Printer* p, const std::string& asset,
+                                  const std::optional<std::string>& type,
+                                  const std::optional<std::string>& device = std::nullopt,
+                                  const std::optional<std::string>& uuid = std::nullopt);
       /// @brief Asset request handler to delete a a list of asset ids
       /// @param p printer for the response document
       /// @param ids the list of ids
       /// @return MTConnect Assets response document
-      ResponsePtr deleteAssetRequest(const printer::Printer *p, const std::list<std::string> &ids);
+      ResponsePtr deleteAssetRequest(const printer::Printer* p, const std::list<std::string>& ids);
       /// @brief Asset request handler to delete all assets by device and/or type
       /// @param p printer for the response document
       /// @param device optional device
       /// @param type optonal type
       /// @return number of assets removed as response
-      ResponsePtr deleteAllAssetsRequest(const printer::Printer *p,
-                                         const std::optional<std::string> &device = std::nullopt,
-                                         const std::optional<std::string> &type = std::nullopt);
+      ResponsePtr deleteAllAssetsRequest(const printer::Printer* p,
+                                         const std::optional<std::string>& device = std::nullopt,
+                                         const std::optional<std::string>& type = std::nullopt);
       ///@}
 
       /// @brief For debugging: turn on stream data logging
@@ -260,11 +259,11 @@ namespace mtconnect {
       /// @brief Check the accepts header for a matching printer key
       /// @param accepts the accepts header
       /// @return printer key or `xml` if one is not found
-      const std::string acceptFormat(const std::string &accepts) const;
+      const std::string acceptFormat(const std::string& accepts) const;
       /// @brief get a printer given a list of formats from the Accepts header
       /// @param accepts the accepts header
       /// @return pointer to a printer
-      const printer::Printer *printerForAccepts(const std::string &accepts) const
+      const printer::Printer* printerForAccepts(const std::string& accepts) const
       {
         return m_sinkContract->getPrinter(acceptFormat(accepts));
       }
@@ -274,10 +273,10 @@ namespace mtconnect {
       /// @param accepts the accept header of the request
       /// @param format optional format query param
       /// @return pointer to a printer
-      const printer::Printer *getPrinter(const std::string &accepts,
+      const printer::Printer* getPrinter(const std::string& accepts,
                                          std::optional<std::string> format) const
       {
-        const printer::Printer *printer = nullptr;
+        const printer::Printer* printer = nullptr;
         if (format)
           printer = m_sinkContract->getPrinter(*format);
         if (printer == nullptr)
@@ -299,13 +298,13 @@ namespace mtconnect {
       /// to use.
       /// @param session the session to write to
       /// @param error the error to write
-      void writeErrorResponse(SessionPtr session, const RestError &error)
+      void writeErrorResponse(SessionPtr session, const RestError& error)
       {
         LOG(debug) << "Returning error: " << error.what();
 
         if (m_sinkContract)
         {
-          const auto *prnt = error.getPrinter();
+          const auto* prnt = error.getPrinter();
           if (!prnt)
           {
             prnt = getPrinter(error.getAccepts(), error.getFormat());
@@ -324,21 +323,21 @@ namespace mtconnect {
       }
 
       // Configuration
-      void loadNamespace(const boost::property_tree::ptree &tree, const char *namespaceType,
-                         printer::XmlPrinter *xmlPrinter, NamespaceFunction callback);
+      void loadNamespace(const boost::property_tree::ptree& tree, const char* namespaceType,
+                         printer::XmlPrinter* xmlPrinter, NamespaceFunction callback);
 
-      void loadJsonSchema(const boost::property_tree::ptree &tree, const char *schemaType,
-                          printer::JsonPrinter *jsonPrinter, SchemaFunction callback);
+      void loadJsonSchema(const boost::property_tree::ptree& tree, const char* schemaType,
+                          printer::JsonPrinter* jsonPrinter, SchemaFunction callback);
 
-      void loadFiles(printer::XmlPrinter *xmlPrinter, printer::JsonPrinter *jsonPrinter,
-                     const boost::property_tree::ptree &tree);
+      void loadFiles(printer::XmlPrinter* xmlPrinter, printer::JsonPrinter* jsonPrinter,
+                     const boost::property_tree::ptree& tree);
 
-      void loadHttpHeaders(const boost::property_tree::ptree &tree);
+      void loadHttpHeaders(const boost::property_tree::ptree& tree);
 
-      void loadStyle(const boost::property_tree::ptree &tree, const char *styleName,
-                     printer::XmlPrinter *xmlPrinter, StyleFunction styleFunction);
+      void loadStyle(const boost::property_tree::ptree& tree, const char* styleName,
+                     printer::XmlPrinter* xmlPrinter, StyleFunction styleFunction);
 
-      void loadTypes(const boost::property_tree::ptree &tree);
+      void loadTypes(const boost::property_tree::ptree& tree);
 
       void loadAllowPut();
 
@@ -356,29 +355,29 @@ namespace mtconnect {
       void createAssetRoutings();
 
       // Current Data Collection
-      std::string fetchCurrentData(const printer::Printer *printer, const FilterSetOpt &filterSet,
-                                   const std::optional<SequenceNumber_t> &at, bool pretty = false,
-                                   const std::optional<std::string> &requestId = std::nullopt);
+      std::string fetchCurrentData(const printer::Printer* printer, const FilterSetOpt& filterSet,
+                                   const std::optional<SequenceNumber_t>& at, bool pretty = false,
+                                   const std::optional<std::string>& requestId = std::nullopt);
 
       // Sample data collection
-      std::string fetchSampleData(const printer::Printer *printer, const FilterSetOpt &filterSet,
-                                  int count, const std::optional<SequenceNumber_t> &from,
-                                  const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
-                                  bool &endOfBuffer, bool pretty = false,
-                                  const std::optional<std::string> &requestId = std::nullopt);
+      std::string fetchSampleData(const printer::Printer* printer, const FilterSetOpt& filterSet,
+                                  int count, const std::optional<SequenceNumber_t>& from,
+                                  const std::optional<SequenceNumber_t>& to, SequenceNumber_t& end,
+                                  bool& endOfBuffer, bool pretty = false,
+                                  const std::optional<std::string>& requestId = std::nullopt);
 
       // Verification methods
       template <typename T>
-      void checkRange(const printer::Printer *printer, const T value, const T min, const T max,
-                      const std::string &param, bool notZero = false) const;
+      void checkRange(const printer::Printer* printer, const T value, const T min, const T max,
+                      const std::string& param, bool notZero = false) const;
 
-      void checkPath(const printer::Printer *printer, const std::optional<std::string> &path,
-                     const DevicePtr device, FilterSet &filter,
-                     const std::optional<std::string> &deviceType = std::nullopt) const;
+      void checkPath(const printer::Printer* printer, const std::optional<std::string>& path,
+                     const DevicePtr device, FilterSet& filter,
+                     const std::optional<std::string>& deviceType = std::nullopt) const;
 
-      DevicePtr checkDevice(const printer::Printer *printer, const std::string &uuid) const;
+      DevicePtr checkDevice(const printer::Printer* printer, const std::string& uuid) const;
 
-      std::string externalUrl(const std::string &url)
+      std::string externalUrl(const std::string& url)
       {
         std::string fullUrl = m_baseUrl;
         if (!fullUrl.empty() && !url.empty())
@@ -398,7 +397,7 @@ namespace mtconnect {
 
     protected:
       // Loopback
-      boost::asio::io_context &m_context;
+      boost::asio::io_context& m_context;
       boost::asio::io_context::strand m_strand;
       std::string m_schemaVersion;
       ConfigOptions m_options;

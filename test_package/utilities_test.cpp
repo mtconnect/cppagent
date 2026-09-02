@@ -28,7 +28,7 @@ using namespace std;
 using namespace mtconnect;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -135,7 +135,7 @@ TEST(UtilitiesTest, get_current_time_returns_parseable_formatted_strings)
   char tzs[32] = {0};
 
   int n = sscanf(human.c_str(), "%3s, %2d %3s %4d %2d:%2d:%2d %5s", wday, &day, mon, &year, &hour,
-                 &min, &sec, (char *)&tzs);
+                 &min, &sec, (char*)&tzs);
 
   ASSERT_EQ(8, n);
 }

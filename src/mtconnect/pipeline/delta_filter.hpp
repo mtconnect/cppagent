@@ -42,7 +42,7 @@ namespace mtconnect {
           m_contract(context->m_contract.get())
       {
         using namespace observation;
-        constexpr static auto lambda = [](const Sample &s) {
+        constexpr static auto lambda = [](const Sample& s) {
           return bool(!s.isOrphan() && s.getDataItem()->getMinimumDelta());
         };
         m_guard = LambdaGuard<Sample, ExactTypeGuard<Sample>>(lambda, RUN) ||
@@ -51,7 +51,7 @@ namespace mtconnect {
 
       ~DeltaFilter() override = default;
 
-      entity::EntityPtr operator()(entity::EntityPtr &&entity) override
+      entity::EntityPtr operator()(entity::EntityPtr&& entity) override
       {
         using namespace std;
         using namespace observation;
@@ -63,7 +63,7 @@ namespace mtconnect {
         if (o->isOrphan())
           return EntityPtr();
         auto di = o->getDataItem();
-        auto &id = di->getId();
+        auto& id = di->getId();
 
         if (o->isUnavailable())
         {
@@ -80,7 +80,7 @@ namespace mtconnect {
       }
 
     protected:
-      bool filterMinimumDelta(const std::string &id, const double value, const double fv)
+      bool filterMinimumDelta(const std::string& id, const double value, const double fv)
       {
         auto last = m_state->m_lastSampleValue.find(id);
         if (last != m_state->m_lastSampleValue.end())
@@ -102,7 +102,7 @@ namespace mtconnect {
 
     protected:
       std::shared_ptr<State> m_state;
-      PipelineContract *m_contract;
+      PipelineContract* m_contract;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

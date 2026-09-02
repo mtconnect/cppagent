@@ -37,9 +37,9 @@ using namespace std::literals;
 
 namespace mtconnect::source::adapter::shdr {
   // Adapter public methods
-  ShdrAdapter::ShdrAdapter(boost::asio::io_context &io,
+  ShdrAdapter::ShdrAdapter(boost::asio::io_context& io,
                            pipeline::PipelineContextPtr pipelineContext,
-                           const ConfigOptions &options, const boost::property_tree::ptree &block)
+                           const ConfigOptions& options, const boost::property_tree::ptree& block)
     : Adapter("ShdrAdapter", io, options),
       Connector(Source::m_strand, "", 0, 60s),
       m_pipeline(pipelineContext, Source::m_strand),
@@ -113,7 +113,7 @@ namespace mtconnect::source::adapter::shdr {
     }
   }
 
-  void ShdrAdapter::processData(const string &data)
+  void ShdrAdapter::processData(const string& data)
   {
     NAMED_SCOPE("ShdrAdapter::processData");
 
@@ -143,7 +143,7 @@ namespace mtconnect::source::adapter::shdr {
         forwardData(data);
       }
     }
-    catch (std::exception &e)
+    catch (std::exception& e)
     {
       LOG(error) << "Error in processData: " << e.what();
     }
@@ -165,9 +165,9 @@ namespace mtconnect::source::adapter::shdr {
     LOG(debug) << "Adapter exited: " << m_name;
   }
 
-  inline bool is_true(const std::string &value) { return value == "yes" || value == "true"; }
+  inline bool is_true(const std::string& value) { return value == "yes" || value == "true"; }
 
-  void ShdrAdapter::protocolCommand(const std::string &data)
+  void ShdrAdapter::protocolCommand(const std::string& data)
   {
     NAMED_SCOPE("ShdrAdapter::protocolCommand");
 
@@ -182,7 +182,7 @@ namespace mtconnect::source::adapter::shdr {
     using qi::lit;
 
     string command;
-    auto f = [&command](const auto &s) { command = string(s.begin(), s.end()); };
+    auto f = [&command](const auto& s) { command = string(s.begin(), s.end()); };
 
     auto it = data.begin();
     bool res =

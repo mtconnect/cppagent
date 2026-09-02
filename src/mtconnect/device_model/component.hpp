@@ -52,9 +52,9 @@ namespace mtconnect {
       /// @brief Create a component with a type and properties
       /// @param[in] name the name of the component (o type)
       /// @param[in] props properties of the component
-      Component(const std::string &name, const entity::Properties &props);
-      static ComponentPtr make(const std::string &name, const entity::Properties &props,
-                               entity::ErrorList &errors)
+      Component(const std::string& name, const entity::Properties& props);
+      static ComponentPtr make(const std::string& name, const entity::Properties& props,
+                               entity::ErrorList& errors)
       {
         entity::Properties ps(props);
         auto ptr = getFactory()->make(name, ps, errors);
@@ -78,13 +78,13 @@ namespace mtconnect {
 
       /// @brief get the component id
       /// @return component id
-      const auto &getId() const { return m_id; }
+      const auto& getId() const { return m_id; }
       /// @brief get the name property of the component
       /// @return name if it exists
-      const auto &getComponentName() const { return m_componentName; }
+      const auto& getComponentName() const { return m_componentName; }
       /// @brief get the component uuid
       /// @return uuid if it exists
-      const auto &getUuid() const { return m_uuid; }
+      const auto& getUuid() const { return m_uuid; }
 
       /// @brief Get the topic name for the component
       /// @return topic name
@@ -92,7 +92,7 @@ namespace mtconnect {
       {
         if (!m_topicName)
         {
-          auto *self = const_cast<Component *>(this);
+          auto* self = const_cast<Component*>(this);
           self->m_topicName.emplace(getName());
           if (m_componentName)
           {
@@ -120,7 +120,7 @@ namespace mtconnect {
 
       /// @brief set the manufacturer in the description
       /// @param value the manufacturer
-      void setManufacturer(const std::string &value)
+      void setManufacturer(const std::string& value)
       {
         auto desc = getDescription();
         desc->setProperty("manufacturer", value);
@@ -128,7 +128,7 @@ namespace mtconnect {
 
       /// @brief set the station in the description
       /// @param value the description
-      void setStation(const std::string &value)
+      void setStation(const std::string& value)
       {
         auto desc = getDescription();
         desc->setProperty("station", value);
@@ -136,7 +136,7 @@ namespace mtconnect {
 
       /// @brief set the serial number in the description
       /// @param value the serial number
-      void setSerialNumber(const std::string &value)
+      void setSerialNumber(const std::string& value)
       {
         auto desc = getDescription();
         desc->setProperty("serialNumber", value);
@@ -144,7 +144,7 @@ namespace mtconnect {
 
       /// @brief set the description value in the description
       /// @param value the description value
-      void setDescriptionValue(const std::string &value)
+      void setDescriptionValue(const std::string& value)
       {
         auto desc = getDescription();
         desc->setValue(value);
@@ -152,21 +152,21 @@ namespace mtconnect {
 
       /// @brief set the uuid
       /// @param uuid the uuid
-      void setUuid(const std::string &uuid)
+      void setUuid(const std::string& uuid)
       {
         m_uuid = uuid;
         setProperty("uuid", uuid);
       }
       /// @brief set the compoent name property, not the compoent type
       /// @param name name property
-      void setComponentName(const std::string &name)
+      void setComponentName(const std::string& name)
       {
         m_componentName = name;
         setProperty("name", name);
       }
       /// @brief set the compoent name property, not the compoent type
       /// @param name name property
-      void setComponentName(const std::optional<std::string> &name)
+      void setComponentName(const std::optional<std::string>& name)
       {
         m_componentName = name;
         if (name)
@@ -185,7 +185,7 @@ namespace mtconnect {
           auto parent = m_parent.lock();
           if (parent)
           {
-            const_cast<Component *>(this)->m_device = parent->getDevice();
+            const_cast<Component*>(this)->m_device = parent->getDevice();
             device = m_device.lock();
           }
         }
@@ -202,7 +202,7 @@ namespace mtconnect {
       /// @brief add a child to this component
       /// @param[in] child the child component
       /// @param[in,out] errors errors that occurred when adding the child
-      void addChild(ComponentPtr child, entity::ErrorList &errors)
+      void addChild(ComponentPtr child, entity::ErrorList& errors)
       {
         addToList("Components", Component::getFactory(), child, errors);
         child->setParent(getptr());
@@ -214,7 +214,7 @@ namespace mtconnect {
       /// @brief add a data item to the component
       /// @param[in] dataItem the data item
       /// @param[in,out] errors errors that occurred when adding the data item
-      virtual void addDataItem(DataItemPtr dataItem, entity::ErrorList &errors);
+      virtual void addDataItem(DataItemPtr dataItem, entity::ErrorList& errors);
       /// @brief get the list of data items
       /// @return the data item list
       auto getDataItems() const { return getList("DataItems"); }
@@ -222,12 +222,12 @@ namespace mtconnect {
       /// @brief compares the ids of the component for sorting
       /// @param comp other component to compare against
       /// @return `true` if this id is less than the comp id
-      bool operator<(const Component &comp) const { return m_id < comp.getId(); }
+      bool operator<(const Component& comp) const { return m_id < comp.getId(); }
 
       /// @brief compares the ids for equality
       /// @param comp other component to compare against
       /// @return `true` if this id is equal than the comp id
-      bool operator==(const Component &comp) const { return m_id == comp.getId(); }
+      bool operator==(const Component& comp) const { return m_id == comp.getId(); }
 
       /// @brief connected references by looking them up in the device
       /// @param device the device to use as an index
@@ -247,12 +247,12 @@ namespace mtconnect {
       /// @brief get the composition by its id
       /// @param id the composition id
       /// @return shared pointer to the composition
-      CompositionPtr getComposition(const std::string &id) const
+      CompositionPtr getComposition(const std::string& id) const
       {
         auto comps = getList("Compositions");
         if (comps)
         {
-          for (auto &comp : *comps)
+          for (auto& comp : *comps)
           {
             const auto cid = comp->get<std::string>("id");
             if (cid == id)
@@ -267,7 +267,7 @@ namespace mtconnect {
       ///
       /// Recurses to root and then appends getTopicName
       /// @param[in,out] pth the path list to append to
-      void path(std::list<std::string> &pth)
+      void path(std::list<std::string>& pth)
       {
         auto p = getParent();
         if (p)
@@ -276,8 +276,8 @@ namespace mtconnect {
         pth.push_back(getTopicName());
       }
 
-      std::optional<std::string> createUniqueId(std::unordered_map<std::string, std::string> &idMap,
-                                                const boost::uuids::detail::sha1 &sha1) override
+      std::optional<std::string> createUniqueId(std::unordered_map<std::string, std::string>& idMap,
+                                                const boost::uuids::detail::sha1& sha1) override
       {
         auto newId = Entity::createUniqueId(idMap, sha1);
         m_id = *newId;
@@ -303,7 +303,7 @@ namespace mtconnect {
     /// @brief Comparison lambda to sort components
     struct ComponentComp
     {
-      bool operator()(const Component *lhs, const Component *rhs) const { return *lhs < *rhs; }
+      bool operator()(const Component* lhs, const Component* rhs) const { return *lhs < *rhs; }
     };
   }  // namespace device_model
 }  // namespace mtconnect

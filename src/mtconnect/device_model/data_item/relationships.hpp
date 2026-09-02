@@ -32,7 +32,7 @@ namespace mtconnect::device_model::data_item {
     using entity::Entity::Entity;
     ~Relationship() override = default;
 
-    const entity::Value &getIdentity() const override { return getProperty("idRef"); }
+    const entity::Value& getIdentity() const override { return getProperty("idRef"); }
 
     static entity::FactoryPtr getDataItemFactory()
     {
@@ -47,7 +47,7 @@ namespace mtconnect::device_model::data_item {
              true},
             {"name", false},
             {"idRef", true}});
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           return std::make_shared<Relationship>(name, props);
         });
       }
@@ -64,7 +64,7 @@ namespace mtconnect::device_model::data_item {
       {
         factory = make_shared<Factory>(Requirements {
             {"type", ControlledVocab {"LIMIT"}, true}, {"name", false}, {"idRef", true}});
-        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        factory->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           return std::make_shared<Relationship>(name, props);
         });
       }
@@ -96,7 +96,7 @@ namespace mtconnect::device_model::data_item {
             {"SpecificationRelationship", ValueType::ENTITY, spec, 0, Requirement::Infinite},
             {"DataItemRelationship", ValueType::ENTITY, di, 0, Requirement::Infinite}});
         relationships->setMinListSize(1);
-        relationships->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        relationships->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           return std::make_shared<Relationships>(name, props);
         });
       }

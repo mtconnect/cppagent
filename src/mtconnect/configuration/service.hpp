@@ -38,9 +38,9 @@ namespace mtconnect {
       /// @brief command line parser and entry point for agent
       /// @param[in] argc the count of arguments
       /// @param[in] argv the arguments
-      virtual int main(int argc, char const *argv[]);
+      virtual int main(int argc, char const* argv[]);
       /// @brief initialize the service with the parser command line options
-      virtual void initialize(const boost::program_options::variables_map &options) = 0;
+      virtual void initialize(const boost::program_options::variables_map& options) = 0;
       /// @brief stop the srvice
       virtual void stop() = 0;
       /// @brief start the service
@@ -48,10 +48,10 @@ namespace mtconnect {
 
       /// @brief set the name of the service
       /// @param[in] name name of the service
-      void setName(std::string const &name) { m_name = name; }
+      void setName(std::string const& name) { m_name = name; }
       /// @brief get the name of the service
       /// @return service name
-      std::string const &name() const { return m_name; }
+      std::string const& name() const { return m_name; }
       /// @brief set the debugging state
       /// @param debug `true` if debugging
       void setDebug(bool debug) { m_isDebug = debug; }
@@ -69,9 +69,9 @@ namespace mtconnect {
       /// @param command optonal command for testing
       /// @param config optional configration file for testing
       /// @return boost variable map
-      boost::program_options::variables_map parseOptions(int argc, const char *argv[],
-                                                         boost::optional<std::string> &command,
-                                                         boost::optional<std::string> &config);
+      boost::program_options::variables_map parseOptions(int argc, const char* argv[],
+                                                         boost::optional<std::string>& command,
+                                                         boost::optional<std::string>& config);
 
     protected:
       std::string m_name;

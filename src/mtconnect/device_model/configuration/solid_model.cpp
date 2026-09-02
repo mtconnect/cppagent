@@ -57,5 +57,5 @@ namespace mtconnect {
         return solidModel;
       }
     }  // namespace configuration
-  }    // namespace device_model
+  }  // namespace device_model
 }  // namespace mtconnect

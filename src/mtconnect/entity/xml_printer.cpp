@@ -30,8 +30,8 @@ using namespace std;
 namespace mtconnect {
   using namespace printer;
   namespace entity {
-    inline string stripUndeclaredNamespace(const QName &qname,
-                                           const unordered_set<string> &namespaces)
+    inline string stripUndeclaredNamespace(const QName& qname,
+                                           const unordered_set<string>& namespaces)
     {
       string name;
       if (qname.hasNs() && namespaces.count(string(qname.getNs())) == 0)
@@ -42,7 +42,7 @@ namespace mtconnect {
       return name;
     }
 
-    void printDataSet(xmlTextWriterPtr writer, const std::string &name, const DataSet &set)
+    void printDataSet(xmlTextWriterPtr writer, const std::string& name, const DataSet& set)
     {
       AutoElement ele(writer);
       if (name != "VALUE")
@@ -50,30 +50,30 @@ namespace mtconnect {
         ele.reset(name);
       }
 
-      for (auto &e : set)
+      for (auto& e : set)
       {
         map<string, string> attrs = {{"key", e.m_key}};
         if (e.m_removed)
         {
           attrs["removed"] = "true";
         }
-        visit(overloaded {[&writer, &attrs](const monostate &st) {
+        visit(overloaded {[&writer, &attrs](const monostate& st) {
                             addSimpleElement(writer, "Entry", "", attrs);
                           },
-                          [&writer, &attrs](const string &st) {
+                          [&writer, &attrs](const string& st) {
                             addSimpleElement(writer, "Entry", st, attrs);
                           },
-                          [&writer, &attrs](const int64_t &i) {
+                          [&writer, &attrs](const int64_t& i) {
                             addSimpleElement(writer, "Entry", to_string(i), attrs);
                           },
-                          [&writer, &attrs](const double &d) {
+                          [&writer, &attrs](const double& d) {
                             addSimpleElement(writer, "Entry", format(d), attrs);
                           },
-                          [&writer, &attrs](const TableRow &row) {
+                          [&writer, &attrs](const TableRow& row) {
                             // Table
                             AutoElement ele(writer, "Entry");
                             addAttributes(writer, attrs);
-                            for (auto &c : row)
+                            for (auto& c : row)
                             {
                               map<string, string> attrs = {{"key", c.m_key}};
                               if (c.m_removed)
@@ -81,16 +81,16 @@ namespace mtconnect {
                                 attrs["removed"] = "true";
                               }
                               visit(overloaded {
-                                        [&writer, &attrs](const string &s) {
+                                        [&writer, &attrs](const string& s) {
                                           addSimpleElement(writer, "Cell", s, attrs);
                                         },
-                                        [&writer, &attrs](const int64_t &i) {
+                                        [&writer, &attrs](const int64_t& i) {
                                           addSimpleElement(writer, "Cell", to_string(i), attrs);
                                         },
-                                        [&writer, &attrs](const double &d) {
+                                        [&writer, &attrs](const double& d) {
                                           addSimpleElement(writer, "Cell", format(d), attrs);
                                         },
-                                        [](auto &a) {
+                                        [](auto& a) {
                                           LOG(error) << "Invalid type for DataSetVariant cell";
                                         }},
                                     c.m_value);
@@ -100,9 +100,9 @@ namespace mtconnect {
       }
     }
 
-    const char *toCharPtr(const Value &value, string &temp)
+    const char* toCharPtr(const Value& value, string& temp)
     {
-      const string *s;
+      const string* s;
       if (!holds_alternative<string>(value))
       {
         Value conv = value;
@@ -118,11 +118,11 @@ namespace mtconnect {
       return s->c_str();
     }
 
-    void printProperty(xmlTextWriterPtr writer, const Property &p,
-                       const unordered_set<string> &namespaces)
+    void printProperty(xmlTextWriterPtr writer, const Property& p,
+                       const unordered_set<string>& namespaces)
     {
       string t;
-      const char *s = toCharPtr(p.second, t);
+      const char* s = toCharPtr(p.second, t);
       if (p.first == "VALUE")
       {
         // The value is the content for a simple element
@@ -145,12 +145,12 @@ namespace mtconnect {
     }
 
     void XmlPrinter::print(xmlTextWriterPtr writer, const EntityPtr entity,
-                           const std::unordered_set<std::string> &namespaces)
+                           const std::unordered_set<std::string>& namespaces)
     {
       NAMED_SCOPE("entity.xml_printer");
-      const auto &properties = entity->getProperties();
+      const auto& properties = entity->getProperties();
       const auto order = entity->getOrder();
-      const auto *localNamespaces = &namespaces;
+      const auto* localNamespaces = &namespaces;
 
       // If this element has a namespace and there is a xmlns delcaration, create a new set of
       // namespaces with this one added
@@ -177,10 +177,10 @@ namespace mtconnect {
       list<Property> elements;
 
       // Partition the properties
-      const auto &attrs = entity->getAttributes();
-      for (const auto &prop : properties)
+      const auto& attrs = entity->getAttributes();
+      for (const auto& prop : properties)
       {
-        auto &key = prop.first;
+        auto& key = prop.first;
         if (m_includeHidden || !entity->isHidden(key))
         {
           if (islower(key.getName()[0]) || attrs.count(key) > 0)
@@ -195,7 +195,7 @@ namespace mtconnect {
       {
         // Sort all ordered elements first based on the order in the
         // ordering list
-        elements.sort([&order](auto &e1, auto &e2) -> bool {
+        elements.sort([&order](auto& e1, auto& e2) -> bool {
           auto it1 = order->find(e1.first);
           if (it1 == order->end())
             return false;
@@ -206,7 +206,7 @@ namespace mtconnect {
         });
       }
 
-      for (auto &a : attributes)
+      for (auto& a : attributes)
       {
         string t;
         QName name(a.first);
@@ -218,17 +218,17 @@ namespace mtconnect {
         }
       }
 
-      for (auto &e : elements)
+      for (auto& e : elements)
       {
-        visit(overloaded {[&writer, localNamespaces, this](const EntityPtr &v) {
+        visit(overloaded {[&writer, localNamespaces, this](const EntityPtr& v) {
                             print(writer, v, *localNamespaces);
                           },
-                          [&writer, localNamespaces, this](const EntityList &list) {
-                            for (auto &en : list)
+                          [&writer, localNamespaces, this](const EntityList& list) {
+                            for (auto& en : list)
                               print(writer, en, *localNamespaces);
                           },
-                          [&writer, &e](const DataSet &v) { printDataSet(writer, e.first, v); },
-                          [&writer, &e, localNamespaces](const auto &v) {
+                          [&writer, &e](const DataSet& v) { printDataSet(writer, e.first, v); },
+                          [&writer, &e, localNamespaces](const auto& v) {
                             printProperty(writer, e, *localNamespaces);
                           }},
               e.second);

@@ -30,8 +30,8 @@ namespace mtconnect {
     struct ClientHandler
     {
       using Connect = std::function<void(std::shared_ptr<MqttClient>)>;
-      using Received = std::function<void(std::shared_ptr<MqttClient>, const std::string &topic,
-                                          const std::string &payload)>;
+      using Received = std::function<void(std::shared_ptr<MqttClient>, const std::string& topic,
+                                          const std::string& payload)>;
 
       Connect m_connected;
       Connect m_connecting;
@@ -54,7 +54,7 @@ namespace mtconnect {
       /// @param ClientHandler configuration options
       /// - ConnectInterval, defaults to 5000
 
-      MqttClient(boost::asio::io_context &ioc, std::unique_ptr<ClientHandler> &&handler,
+      MqttClient(boost::asio::io_context& ioc, std::unique_ptr<ClientHandler>&& handler,
                  const std::optional<std::string> willTopic = std::nullopt,
                  const std::optional<std::string> willPayload = std::nullopt)
         : m_ioContext(ioc),
@@ -67,11 +67,11 @@ namespace mtconnect {
 
       /// @brief get the clientId
       /// @return the clientId
-      const auto &getIdentity() const { return m_identity; }
+      const auto& getIdentity() const { return m_identity; }
 
       /// @brief get the Url link mqtt://localhost:1883
       /// @return the Url to access localhost
-      const auto &getUrl() const { return m_url; }
+      const auto& getUrl() const { return m_url; }
 
       /// @brief Start the Mqtt Client
       virtual bool start() = 0;
@@ -82,20 +82,20 @@ namespace mtconnect {
       /// @brief Subscribe Topic to the Mqtt Client
       /// @param topic Subscribing to the topic
       /// @return boolean either topic sucessfully connected and subscribed
-      virtual bool subscribe(const std::string &topic) = 0;
+      virtual bool subscribe(const std::string& topic) = 0;
 
       /// @brief Publish Topic to the Mqtt Client
       /// @param topic Publishing to the topic
       /// @param payload Publishing to the payload
       /// @return boolean either topic sucessfully connected and published
-      virtual bool publish(const std::string &topic, const std::string &payload, bool retain = true,
+      virtual bool publish(const std::string& topic, const std::string& payload, bool retain = true,
                            QOS qos = QOS::at_least_once) = 0;
 
       /// @brief Publish Topic to the Mqtt Client and call the async handler
       /// @param topic Publishing to the topic
       /// @param payload Publishing to the payload
       /// @return boolean either topic sucessfully connected and published
-      virtual bool asyncPublish(const std::string &topic, const std::string &payload,
+      virtual bool asyncPublish(const std::string& topic, const std::string& payload,
                                 std::function<void(std::error_code)> callback, bool retain = true,
                                 QOS qos = QOS::at_least_once) = 0;
 
@@ -111,7 +111,7 @@ namespace mtconnect {
       void connectComplete() { m_connected = true; }
 
     protected:
-      boost::asio::io_context &m_ioContext;
+      boost::asio::io_context& m_ioContext;
       std::string m_url;
       std::string m_identity;
       std::unique_ptr<ClientHandler> m_handler;

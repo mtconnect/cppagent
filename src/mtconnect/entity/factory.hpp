@@ -32,8 +32,8 @@ namespace mtconnect {
     class AGENT_LIB_API Factory : public Matcher, public std::enable_shared_from_this<Factory>
     {
     public:
-      using Function = std::function<EntityPtr(const std::string &name, Properties &)>;
-      using Matcher = std::function<bool(const std::string &)>;
+      using Function = std::function<EntityPtr(const std::string& name, Properties&)>;
+      using Matcher = std::function<bool(const std::string&)>;
       using MatchPair = std::pair<Matcher, FactoryPtr>;
       using StringFactory = std::unordered_map<std::string, FactoryPtr>;
       using MatchFactory = std::list<MatchPair>;
@@ -43,12 +43,12 @@ namespace mtconnect {
       /// @param name name of the entity
       /// @param p properties for the entity
       /// @return shared entity pointer
-      static auto createEntity(const std::string &name, Properties &p)
+      static auto createEntity(const std::string& name, Properties& p)
       {
         return std::make_shared<Entity>(name, p);
       }
 
-      Factory(const Factory &other) = default;
+      Factory(const Factory& other) = default;
       Factory() : m_function(createEntity) {}
       ~Factory() = default;
 
@@ -82,15 +82,15 @@ namespace mtconnect {
       {
         m_order = std::make_shared<OrderMap>();
         int i = 0;
-        for (auto &e : list)
+        for (auto& e : list)
           m_order->emplace(e, i++);
       }
       /// @brief set the order from a order map
       /// @param list the order map
-      void setOrder(OrderMapPtr &list) { m_order = list; }
+      void setOrder(OrderMapPtr& list) { m_order = list; }
       /// @brief get the order list
       /// @return pointer to the order list
-      const OrderMapPtr &getOrder() const { return m_order; }
+      const OrderMapPtr& getOrder() const { return m_order; }
 
       /// @brief set if this is a list factory
       /// @param list `true` if this is a list
@@ -124,16 +124,16 @@ namespace mtconnect {
       /// @brief does this factory have a requirement for the property
       /// @param name the property key
       /// @return `true` if there is a requirement
-      bool isProperty(const std::string &name) const { return m_properties.count(name) > 0; }
+      bool isProperty(const std::string& name) const { return m_properties.count(name) > 0; }
       /// @brief checks if this is a property set
       /// @param name the property key
       /// @return `true` if this is a property with ENTITY or ENTITY_SET with multiplicity more than
       /// 0
-      bool isPropertySet(const std::string &name) const { return m_propertySets.count(name) > 0; }
+      bool isPropertySet(const std::string& name) const { return m_propertySets.count(name) > 0; }
       /// @brief is there a requirement with a simple value
       /// @param name the property key
       /// @return `true` if this is a value propery
-      bool isSimpleProperty(const std::string &name) const
+      bool isSimpleProperty(const std::string& name) const
       {
         return m_simpleProperties.count(name) > 0;
       }
@@ -141,12 +141,12 @@ namespace mtconnect {
       /// @brief is this requirement resolved with a data set
       /// @param name the name of the property
       /// @return `true` if this is a data set
-      bool isDataSet(const std::string &name) const { return m_dataSets.count(name) > 0; }
+      bool isDataSet(const std::string& name) const { return m_dataSets.count(name) > 0; }
 
       /// @brief is this requirement resolved with a table
       /// @param name the name of the property
       /// @return `true` if this is a table
-      bool isTable(const std::string &name) const { return m_tables.count(name) > 0; }
+      bool isTable(const std::string& name) const { return m_tables.count(name) > 0; }
 
       /// @brief is the value of this entity a data set or table
       /// @returns `true` if the value is a data set or table
@@ -159,9 +159,9 @@ namespace mtconnect {
       /// @brief get the requirement pointer for a key
       /// @param name the property key
       /// @return requirement pointer
-      Requirement *getRequirement(const std::string &name)
+      Requirement* getRequirement(const std::string& name)
       {
-        for (auto &r : m_requirements)
+        for (auto& r : m_requirements)
         {
           if (r.getName() == name)
             return &r;
@@ -171,12 +171,12 @@ namespace mtconnect {
 
       /// @brief add requirements to the factory
       /// @param reqs the set of requirements
-      void addRequirements(const Requirements &reqs)
+      void addRequirements(const Requirements& reqs)
       {
-        for (const auto &r : reqs)
+        for (const auto& r : reqs)
         {
           auto old = std::find_if(m_requirements.begin(), m_requirements.end(),
-                                  [&r](Requirement &o) { return r.getName() == o.getName(); });
+                                  [&r](Requirement& o) { return r.getName() == o.getName(); });
           if (old != m_requirements.end())
           {
             *old = r;
@@ -191,12 +191,12 @@ namespace mtconnect {
       /// @brief convert properties to the requirements
       /// @param[in,out] p the properties to convert
       /// @param[in,out] errors errors related to conversions
-      void performConversions(Properties &p, ErrorList &errors) const;
+      void performConversions(Properties& p, ErrorList& errors) const;
       /// @brief check if the properties are sufficient for the factory
       /// @param[in,out] properties the properties for the entity
       /// @param[in,out] errors errors related to verification
       /// @return `true` if the properties are sufficient
-      virtual bool isSufficient(Properties &properties, ErrorList &errors) const;
+      virtual bool isSufficient(Properties& properties, ErrorList& errors) const;
 
       /// @name Entity factory
       ///@{
@@ -206,7 +206,7 @@ namespace mtconnect {
       /// @param[in,out] p properties for the entity
       /// @param[in,out] errors errors when creating the entity
       /// @return shared entity pointer if successful
-      EntityPtr make(const std::string &name, Properties &p, ErrorList &errors) const
+      EntityPtr make(const std::string& name, Properties& p, ErrorList& errors) const
       {
         try
         {
@@ -220,14 +220,14 @@ namespace mtconnect {
           }
         }
 
-        catch (EntityError &e)
+        catch (EntityError& e)
         {
           e.setEntity(name);
           errors.emplace_back(std::make_unique<EntityError>(e));
           LogError("Failed to create " + name + ": " + e.what());
         }
 
-        for (auto &e : errors)
+        for (auto& e : errors)
         {
           if (e->getEntity().empty())
             e->setEntity(name);
@@ -237,7 +237,7 @@ namespace mtconnect {
       }
 
       /// @brief alias for `make()`
-      EntityPtr operator()(const std::string &name, Properties &p, ErrorList &errors) const
+      EntityPtr operator()(const std::string& name, Properties& p, ErrorList& errors) const
       {
         return make(name, p, errors);
       }
@@ -248,7 +248,7 @@ namespace mtconnect {
       /// @param name the name to match against
       /// @param factory the factory to create entities
       /// @return `true` if successful
-      bool registerFactory(const std::string &name, FactoryPtr factory)
+      bool registerFactory(const std::string& name, FactoryPtr factory)
       {
         m_stringFactory.emplace(make_pair(name, factory));
         return true;
@@ -257,9 +257,9 @@ namespace mtconnect {
       /// @param exp expression to match against
       /// @param factory the factory to create entities
       /// @return `true` if successful
-      bool registerFactory(const std::regex &exp, FactoryPtr factory)
+      bool registerFactory(const std::regex& exp, FactoryPtr factory)
       {
-        auto matcher = [exp](const std::string &name) { return std::regex_match(name, exp); };
+        auto matcher = [exp](const std::string& name) { return std::regex_match(name, exp); };
         m_matchFactory.emplace_back(make_pair(matcher, factory));
         return true;
       }
@@ -267,7 +267,7 @@ namespace mtconnect {
       /// @param matcher matcher to use to match
       /// @param factory the factory to create entities
       /// @return `true` if successful
-      bool registerFactory(const Matcher &matcher, FactoryPtr factory)
+      bool registerFactory(const Matcher& matcher, FactoryPtr factory)
       {
         m_matchFactory.emplace_back(make_pair(matcher, factory));
         return true;
@@ -276,14 +276,14 @@ namespace mtconnect {
       /// @brief find a factory for a name
       /// @param name the name to match
       /// @return the factory
-      FactoryPtr factoryFor(const std::string &name) const
+      FactoryPtr factoryFor(const std::string& name) const
       {
         const auto it = m_stringFactory.find(name);
         if (it != m_stringFactory.end())
           return it->second;
         else
         {
-          for (const auto &r : m_matchFactory)
+          for (const auto& r : m_matchFactory)
           {
             if (r.first(name))
               return r.second;
@@ -296,7 +296,7 @@ namespace mtconnect {
       /// @brief check if a factory exists
       /// @param s name to match against
       /// @return `true` if there is a factory
-      bool matches(const std::string &s) const override
+      bool matches(const std::string& s) const override
       {
         auto f = factoryFor(s);
         return (bool)f;
@@ -313,7 +313,7 @@ namespace mtconnect {
       /// @param a list of entities
       /// @param errors errors when creating entity
       /// @return entity if successful
-      EntityPtr create(const std::string &name, EntityList &a, ErrorList &errors)
+      EntityPtr create(const std::string& name, EntityList& a, ErrorList& errors)
       {
         auto factory = factoryFor(name);
         if (factory)
@@ -333,7 +333,7 @@ namespace mtconnect {
       /// @param[in,out] a the properties
       /// @param[in,out] errors errors when creating entity
       /// @return entity if successful
-      EntityPtr create(const std::string &name, Properties &a, ErrorList &errors)
+      EntityPtr create(const std::string& name, Properties& a, ErrorList& errors)
       {
         auto factory = factoryFor(name);
         if (factory)
@@ -350,7 +350,7 @@ namespace mtconnect {
       /// @param[in,out] a the properties as an rvalue
       /// @param[in,out] errors errors when creating entity
       /// @return entity if successful
-      EntityPtr create(const std::string &name, Properties &&a, ErrorList &errors)
+      EntityPtr create(const std::string& name, Properties&& a, ErrorList& errors)
       {
         auto factory = factoryFor(name);
         if (factory)
@@ -366,7 +366,7 @@ namespace mtconnect {
       /// @param name the entity name
       /// @param[in,out] a the properties as an rvalue
       /// @return entity if successful
-      EntityPtr create(const std::string &name, Properties &a)
+      EntityPtr create(const std::string& name, Properties& a)
       {
         ErrorList list;
         return create(name, a, list);
@@ -381,7 +381,7 @@ namespace mtconnect {
         {
           m_requirements.emplace_back("originalId", false);
         }
-        for (auto &r : m_requirements)
+        for (auto& r : m_requirements)
         {
           m_properties.emplace(r.getName());
           auto factory = r.getFactory();
@@ -419,7 +419,7 @@ namespace mtconnect {
       void registerMatchers()
       {
         auto m = getptr();
-        for (auto &r : m_requirements)
+        for (auto& r : m_requirements)
         {
           if (r.getUpperMultiplicity() > 1 && !r.hasMatcher())
           {
@@ -441,9 +441,9 @@ namespace mtconnect {
 
     protected:
       using FactoryMap = std::map<FactoryPtr, FactoryPtr>;
-      static void LogError(const std::string &what);
-      void _deepCopy(FactoryMap &factories);
-      static void _dupFactory(FactoryPtr &factory, FactoryMap &factories);
+      static void LogError(const std::string& what);
+      void _deepCopy(FactoryMap& factories);
+      static void _dupFactory(FactoryPtr& factory, FactoryMap& factories);
 
     protected:
       Requirements m_requirements;

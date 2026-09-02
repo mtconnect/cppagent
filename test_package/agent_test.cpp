@@ -52,7 +52,7 @@ using namespace mtconnect::observation;
 using status = boost::beast::http::status;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -334,7 +334,7 @@ TEST_F(AgentTest, should_handle_current_at)
   addAdapter();
 
   // Get the current position
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   auto seq = circ.getSequence();
   char line[80] = {0};
 
@@ -405,7 +405,7 @@ TEST_F(AgentTest, should_handle_64_bit_current_at)
   char line[80] = {0};
 
   // Initialize the sliding buffer at a very large number.
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
 
   uint64_t start = (((uint64_t)1) << 48) + 1317;
   circ.setSequence(start);
@@ -443,7 +443,7 @@ TEST_F(AgentTest, should_report_out_of_range_for_current_at)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   auto seq = circ.getSequence();
 
   {
@@ -484,7 +484,7 @@ TEST_F(AgentTest, should_report_2_6_out_of_range_for_current_at)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   auto seq = circ.getSequence();
   auto max = seq - 1;
   {
@@ -607,7 +607,7 @@ TEST_F(AgentTest, should_include_composition_ids_in_observations)
 
 TEST_F(AgentTest, should_report_an_error_when_the_count_is_out_of_range)
 {
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   int size = circ.getBufferSize() + 1;
   {
     QueryMap query {{"count", "NON_INTEGER"}};
@@ -667,7 +667,7 @@ TEST_F(AgentTest, should_report_a_2_6_error_when_the_count_is_out_of_range)
   m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.6", 4, false, true,
                                  {{configuration::Validation, false}});
 
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   int size = circ.getBufferSize() + 1;
   {
     QueryMap query {{"count", "NON_INTEGER"}};
@@ -811,7 +811,7 @@ TEST_F(AgentTest, should_get_samples_using_next_sequence)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   auto seq = circ.getSequence();
   {
     query["from"] = to_string(seq);
@@ -824,7 +824,7 @@ TEST_F(AgentTest, should_give_correct_number_of_samples_with_count)
 {
   QueryMap query;
   addAdapter();
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   auto seq = circ.getSequence();
 
   // Get the current position
@@ -871,7 +871,7 @@ TEST_F(AgentTest, should_give_correct_number_of_samples_with_negative_count)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   auto seq = circ.getSequence() - 20;
 
   {
@@ -907,7 +907,7 @@ TEST_F(AgentTest, should_give_correct_number_of_samples_with_to_parameter)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   auto seq = circ.getSequence() - 20;
 
   {
@@ -970,7 +970,7 @@ TEST_F(AgentTest, should_give_empty_stream_with_no_new_samples)
   }
 
   {
-    auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+    auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
     QueryMap query {{"from", to_string(circ.getSequence())}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
@@ -984,7 +984,7 @@ TEST_F(AgentTest, should_not_leak_observations_when_added_to_buffer)
 
   string device("LinuxCNC"), key("badKey"), value("ON");
   SequenceNumber_t seqNum {0};
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   auto event1 = circ.getFromBuffer(seqNum);
   ASSERT_FALSE(event1);
 
@@ -1020,7 +1020,7 @@ TEST_F(AgentTest, should_int_64_sequences_should_not_truncate_at_32_bits)
   addAdapter();
 
   // Set the sequence number near MAX_UINT32
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   circ.setSequence(0xFFFFFFA0);
   SequenceNumber_t seq = circ.getSequence();
   ASSERT_EQ((int64_t)0xFFFFFFA0, seq);
@@ -1294,7 +1294,7 @@ TEST_F(AgentTest, should_support_dynamic_calibration_data)
   ASSERT_TRUE(di);
 
   // TODO: Fix conversions
-  auto &conv1 = di->getConverter();
+  auto& conv1 = di->getConverter();
   ASSERT_TRUE(conv1);
   ASSERT_EQ(0.01, conv1->factor());
   ASSERT_EQ(200.0, conv1->offset());
@@ -1302,7 +1302,7 @@ TEST_F(AgentTest, should_support_dynamic_calibration_data)
   di = agent->getDataItemForDevice("LinuxCNC", "Zact");
   ASSERT_TRUE(di);
 
-  auto &conv2 = di->getConverter();
+  auto& conv2 = di->getConverter();
   ASSERT_TRUE(conv2);
   ASSERT_EQ(0.02, conv2->factor());
   ASSERT_EQ(300.0, conv2->offset());
@@ -1960,7 +1960,7 @@ TEST_F(AgentTest, adapter_should_receive_commands)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "MK-1234");
   }
 
-  auto &options = m_agentTestHelper->m_adapter->getOptions();
+  auto& options = m_agentTestHelper->m_adapter->getOptions();
   ASSERT_EQ("MK-1234", *GetOption<string>(options, configuration::Device));
 }
 
@@ -2102,7 +2102,7 @@ TEST_F(AgentTest, should_handle_uuid_change)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "YYYY");
   }
 
-  auto *pipe = static_cast<shdr::ShdrPipeline *>(m_agentTestHelper->m_adapter->getPipeline());
+  auto* pipe = static_cast<shdr::ShdrPipeline*>(m_agentTestHelper->m_adapter->getPipeline());
 
   ASSERT_EQ("MK-1234", pipe->getDevice());
 
@@ -2230,7 +2230,7 @@ TEST_F(AgentTest, should_stream_data_with_interval)
   addAdapter();
   auto heartbeatFreq {200ms};
   auto rest = m_agentTestHelper->getRestService();
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   rest->start();
 
   // Start a thread...
@@ -2292,7 +2292,7 @@ TEST_F(AgentTest, should_signal_observer_when_observations_arrive)
   auto rest = m_agentTestHelper->getRestService();
   rest->start();
 
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
 
   ///     - Set up streaming every 100ms with a 1000ms heartbeat
   std::map<string, string> query;
@@ -2326,7 +2326,7 @@ TEST_F(AgentTest, should_fail_if_from_is_out_of_range)
   auto rest = m_agentTestHelper->getRestService();
   rest->start();
 
-  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto& circ = m_agentTestHelper->getAgent()->getCircularBuffer();
 
   // Start a thread...
   std::map<string, string> query;
@@ -2418,8 +2418,8 @@ TEST_F(AgentTest, asset_count_data_item_is_added_to_probe_in_schema_2_0)
 TEST_F(AgentTest, pre_start_hook_should_be_called)
 {
   bool called = false;
-  Agent::Hook lambda = [&](Agent &agent) { called = true; };
-  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+  Agent::Hook lambda = [&](Agent& agent) { called = true; };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper& helper) {
     helper.getAgent()->beforeStartHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
@@ -2434,8 +2434,8 @@ TEST_F(AgentTest, pre_start_hook_should_be_called)
 TEST_F(AgentTest, pre_initialize_hooks_should_be_called)
 {
   bool called = false;
-  Agent::Hook lambda = [&](Agent &agent) { called = true; };
-  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+  Agent::Hook lambda = [&](Agent& agent) { called = true; };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper& helper) {
     helper.getAgent()->beforeInitializeHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
@@ -2447,8 +2447,8 @@ TEST_F(AgentTest, pre_initialize_hooks_should_be_called)
 TEST_F(AgentTest, post_initialize_hooks_should_be_called)
 {
   bool called = false;
-  Agent::Hook lambda = [&](Agent &agent) { called = true; };
-  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+  Agent::Hook lambda = [&](Agent& agent) { called = true; };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper& helper) {
     helper.getAgent()->afterInitializeHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
@@ -2460,8 +2460,8 @@ TEST_F(AgentTest, post_initialize_hooks_should_be_called)
 TEST_F(AgentTest, pre_stop_hook_should_be_called)
 {
   static bool called = false;
-  Agent::Hook lambda = [&](Agent &agent) { called = true; };
-  AgentTestHelper::Hook helperHook = [&lambda](AgentTestHelper &helper) {
+  Agent::Hook lambda = [&](Agent& agent) { called = true; };
+  AgentTestHelper::Hook helperHook = [&lambda](AgentTestHelper& helper) {
     helper.getAgent()->beforeStopHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
@@ -2651,7 +2651,7 @@ TEST_F(AgentTest, should_handle_japanese_characters)
     PARSE_JSON_RESPONSE("/current");
     json streams = doc.at("/MTConnectStreams/Streams/DeviceStream/0/ComponentStream"_json_pointer);
     ASSERT_TRUE(streams.is_array());
-    auto controller = std::find_if(streams.begin(), streams.end(), [](const nlohmann::json &comp) {
+    auto controller = std::find_if(streams.begin(), streams.end(), [](const nlohmann::json& comp) {
       return comp.at("/component"_json_pointer).get<string>() == "Controller";
     });
     ASSERT_NE(streams.end(), controller);
@@ -2810,7 +2810,7 @@ TEST_F(AgentTest, should_add_local_locations_when_files_are_given)
 ///       by name, and returns null for an unknown name
 TEST_F(AgentTest, get_device_by_name_const_resolves_default_known_and_unknown)
 {
-  const Agent &agent = *m_agentTestHelper->getAgent();
+  const Agent& agent = *m_agentTestHelper->getAgent();
 
   // Empty name returns the default device
   auto def = agent.getDeviceByName("");

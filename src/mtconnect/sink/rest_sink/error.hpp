@@ -52,12 +52,12 @@ namespace mtconnect::sink::rest_sink {
       INVALID_QUERY_PARAMETER
     };
 
-    Error(const std::string &name, const entity::Properties &props) : entity::Entity(name, props) {}
+    Error(const std::string& name, const entity::Properties& props) : entity::Entity(name, props) {}
     ~Error() override = default;
 
-    void setURI(const std::string &uri) { setProperty("URI", uri); }
-    void setRequest(const std::string &request) { setProperty("Request", request); }
-    void setErrorMessage(const std::string &message) { setProperty("ErrorMessage", message); }
+    void setURI(const std::string& uri) { setProperty("URI", uri); }
+    void setRequest(const std::string& request) { setProperty("Request", request); }
+    void setErrorMessage(const std::string& message) { setProperty("ErrorMessage", message); }
 
     /// @brief get the static error factory
     /// @return shared pointer to the factory
@@ -66,7 +66,7 @@ namespace mtconnect::sink::rest_sink {
       static auto error = std::make_shared<entity::Factory>(
           entity::Requirements {
               {"errorCode", false}, {"URI", false}, {"Request", false}, {"ErrorMessage", false}},
-          [](const std::string &name, entity::Properties &props) -> entity::EntityPtr {
+          [](const std::string& name, entity::Properties& props) -> entity::EntityPtr {
             return std::make_shared<Error>(name, props);
           });
 
@@ -113,8 +113,8 @@ namespace mtconnect::sink::rest_sink {
   class AGENT_LIB_API QueryParameter : public entity::Entity
   {
   public:
-    QueryParameter(const entity::Properties &props) : entity::Entity("QueryParameter", props) {}
-    QueryParameter(const std::string &name, const entity::Properties &props)
+    QueryParameter(const entity::Properties& props) : entity::Entity("QueryParameter", props) {}
+    QueryParameter(const std::string& name, const entity::Properties& props)
       : entity::Entity(name, props)
     {}
 
@@ -129,7 +129,7 @@ namespace mtconnect::sink::rest_sink {
                                 {"Format", false},
                                 {"Minimum", entity::ValueType::INTEGER, false},
                                 {"Maximum", entity::ValueType::INTEGER, false}},
-          [](const std::string &name, entity::Properties &props) -> entity::EntityPtr {
+          [](const std::string& name, entity::Properties& props) -> entity::EntityPtr {
             return std::make_shared<QueryParameter>(name, props);
           });
 
@@ -138,7 +138,7 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief static factory method
     /// @param properties the properties for the QueryParameter
-    static entity::EntityPtr make(const entity::Properties &properties)
+    static entity::EntityPtr make(const entity::Properties& properties)
     {
       return std::make_shared<QueryParameter>(properties);
     }
@@ -149,9 +149,9 @@ namespace mtconnect::sink::rest_sink {
   class AGENT_LIB_API InvalidParameterValue : public Error
   {
   public:
-    InvalidParameterValue(const entity::Properties &props) : Error("InvalidParameterValue", props)
+    InvalidParameterValue(const entity::Properties& props) : Error("InvalidParameterValue", props)
     {}
-    InvalidParameterValue(const std::string &name, const entity::Properties &props)
+    InvalidParameterValue(const std::string& name, const entity::Properties& props)
       : Error(name, props)
     {}
     ~InvalidParameterValue() override = default;
@@ -168,7 +168,7 @@ namespace mtconnect::sink::rest_sink {
             entity::Requirements {{"InvalidParameterValue", entity::ValueType::ENTITY,
                                    QueryParameter::getFactory(), true}});
         factory->setFunction(
-            [](const std::string &name, entity::Properties &props) -> entity::EntityPtr {
+            [](const std::string& name, entity::Properties& props) -> entity::EntityPtr {
               return std::make_shared<InvalidParameterValue>(name, props);
             });
       }
@@ -182,8 +182,8 @@ namespace mtconnect::sink::rest_sink {
     /// @param format the format of the parameter
     /// @param errorMessage optional error message
     /// @param request optional request string
-    static entity::EntityPtr make(const std::string &name, const std::string &value,
-                                  const std::string &type, const std::string &format,
+    static entity::EntityPtr make(const std::string& name, const std::string& value,
+                                  const std::string& type, const std::string& format,
                                   std::optional<std::string> errorMessage = std::nullopt,
                                   std::optional<std::string> request = std::nullopt)
     {
@@ -209,8 +209,8 @@ namespace mtconnect::sink::rest_sink {
   class AGENT_LIB_API OutOfRange : public Error
   {
   public:
-    OutOfRange(const entity::Properties &props) : Error("OutOfRange", props) {}
-    OutOfRange(const std::string &name, const entity::Properties &props) : Error(name, props) {}
+    OutOfRange(const entity::Properties& props) : Error("OutOfRange", props) {}
+    OutOfRange(const std::string& name, const entity::Properties& props) : Error(name, props) {}
     ~OutOfRange() override = default;
 
     /// @brief get the static error factory
@@ -224,7 +224,7 @@ namespace mtconnect::sink::rest_sink {
         factory->addRequirements(entity::Requirements {
             {"QueryParameters", entity::ValueType::ENTITY, QueryParameter::getFactory(), true}});
         factory->setFunction(
-            [](const std::string &name, entity::Properties &props) -> entity::EntityPtr {
+            [](const std::string& name, entity::Properties& props) -> entity::EntityPtr {
               return std::make_shared<OutOfRange>(name, props);
             });
       }
@@ -238,7 +238,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param max the maximum value of the parameter
     /// @param errorMessage optional error message
     /// @param request optional request string
-    static entity::EntityPtr make(const std::string &name, int64_t value, int64_t min, int64_t max,
+    static entity::EntityPtr make(const std::string& name, int64_t value, int64_t min, int64_t max,
                                   std::optional<std::string> errorMessage = std::nullopt,
                                   std::optional<std::string> request = std::nullopt)
     {
@@ -262,8 +262,8 @@ namespace mtconnect::sink::rest_sink {
   class AGENT_LIB_API AssetNotFound : public Error
   {
   public:
-    AssetNotFound(const entity::Properties &props) : Error("AssetNotFound", props) {}
-    AssetNotFound(const std::string &name, const entity::Properties &props) : Error(name, props) {}
+    AssetNotFound(const entity::Properties& props) : Error("AssetNotFound", props) {}
+    AssetNotFound(const std::string& name, const entity::Properties& props) : Error(name, props) {}
     ~AssetNotFound() override = default;
 
     /// @brief get the static error factory
@@ -276,7 +276,7 @@ namespace mtconnect::sink::rest_sink {
         factory = std::make_shared<entity::Factory>(*Error::getFactory());
         factory->addRequirements(entity::Requirements {{"AssetId", true}});
         factory->setFunction(
-            [](const std::string &name, entity::Properties &props) -> entity::EntityPtr {
+            [](const std::string& name, entity::Properties& props) -> entity::EntityPtr {
               return std::make_shared<AssetNotFound>(name, props);
             });
       }
@@ -287,7 +287,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param assetId the asset ID that was not found
     /// @param errorMessage optional error message
     /// @param request optional request string
-    static entity::EntityPtr make(const std::string &assetId,
+    static entity::EntityPtr make(const std::string& assetId,
                                   std::optional<std::string> errorMessage = std::nullopt,
                                   std::optional<std::string> request = std::nullopt)
     {
@@ -328,7 +328,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param accepts the accepted mime types, defaults to application/xml
     /// @param status the HTTP status code, defaults to 400 Bad Request
     /// @param format optional format for the error
-    RestError(entity::EntityList &errors, std::string accepts = "application/xml",
+    RestError(entity::EntityList& errors, std::string accepts = "application/xml",
               status st = status::bad_request, std::optional<std::string> format = std::nullopt,
               std::optional<std::string> requestId = std::nullopt)
       : m_errors(errors), m_accepts(accepts), m_status(st), m_format(format), m_requestId(requestId)
@@ -339,7 +339,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param printer the printer to generate the error document
     /// @param status the HTTP status code, defaults to 400 Bad Request
     /// @param format optional format for the error
-    RestError(entity::EntityPtr error, const printer::Printer *printer = nullptr,
+    RestError(entity::EntityPtr error, const printer::Printer* printer = nullptr,
               status st = status::bad_request, std::optional<std::string> format = std::nullopt,
               std::optional<std::string> requestId = std::nullopt)
       : m_errors({error}),
@@ -355,45 +355,45 @@ namespace mtconnect::sink::rest_sink {
     /// @param printer the printer to generate the error document
     /// @param status the HTTP status code, defaults to 400 Bad Request
     /// @param format optional format for the error
-    RestError(entity::EntityList &errors, const printer::Printer *printer = nullptr,
+    RestError(entity::EntityList& errors, const printer::Printer* printer = nullptr,
               status st = status::bad_request, std::optional<std::string> format = std::nullopt,
               std::optional<std::string> requestId = std::nullopt)
       : m_errors(errors), m_status(st), m_format(format), m_requestId(requestId), m_printer(printer)
     {}
 
     ~RestError() = default;
-    RestError(const RestError &o) = default;
+    RestError(const RestError& o) = default;
 
     /// @brief set the URI for all errors
     /// @param uri the URI
-    void setUri(const std::string &uri)
+    void setUri(const std::string& uri)
     {
-      for (auto &e : m_errors)
+      for (auto& e : m_errors)
         e->setProperty("URI", uri);
     }
 
     /// @brief set the Request ID for the websocket responses
     /// @param requestId the Request ID
-    void setRequestId(const std::string &requestId) { m_requestId = requestId; }
-    const auto &getRequestId() const { return m_requestId; }
+    void setRequestId(const std::string& requestId) { m_requestId = requestId; }
+    const auto& getRequestId() const { return m_requestId; }
 
     /// @brief The response document type for the request (e.g. MTConnectDevices)
     /// @param request the Request
-    void setRequest(const std::string &request)
+    void setRequest(const std::string& request)
     {
-      for (auto &e : m_errors)
+      for (auto& e : m_errors)
         e->setProperty("Request", request);
     }
 
-    const auto &getErrors() const { return m_errors; }
+    const auto& getErrors() const { return m_errors; }
 
     void setStatus(status st) { m_status = st; }
-    const auto &getStatus() const { return m_status; }
+    const auto& getStatus() const { return m_status; }
 
-    void setFormat(const std::string &format) { m_format = format; }
-    const auto &getFormat() const { return m_format; }
+    void setFormat(const std::string& format) { m_format = format; }
+    const auto& getFormat() const { return m_format; }
 
-    const auto &getAccepts() const { return m_accepts; }
+    const auto& getAccepts() const { return m_accepts; }
 
     auto getPrinter() const { return m_printer; }
 
@@ -402,7 +402,7 @@ namespace mtconnect::sink::rest_sink {
     std::string what() const
     {
       std::stringstream ss;
-      for (const auto &e : m_errors)
+      for (const auto& e : m_errors)
       {
         ss << e->getName() << ": ";
         auto message = e->maybeGet<std::string>("ErrorMessage");
@@ -421,7 +421,7 @@ namespace mtconnect::sink::rest_sink {
     status m_status;                            ///< The HTTP status code
     std::optional<std::string> m_format;  ///< The format for the error response overriding accepts
     std::optional<std::string> m_requestId;  ///< The request id for the response
-    const printer::Printer *m_printer {
+    const printer::Printer* m_printer {
         nullptr};  ///< The printer to use for the response. If the printer is not specified it will
                    ///< be inferred from the accepts or format.
   };

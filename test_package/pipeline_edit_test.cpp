@@ -41,27 +41,27 @@ using namespace std::chrono_literals;
 using namespace mtconnect::sink::rest_sink;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
 
-using TransformFun = std::function<EntityPtr(EntityPtr &&entity)>;
+using TransformFun = std::function<EntityPtr(EntityPtr&& entity)>;
 class TestTransform : public Transform
 {
 public:
-  TestTransform(const std::string &name, TransformFun fun, Guard guard)
+  TestTransform(const std::string& name, TransformFun fun, Guard guard)
     : Transform(name), m_function(fun)
   {
     m_guard = guard;
   }
-  TestTransform(const std::string &name, Guard guard) : Transform(name) { m_guard = guard; }
-  TestTransform(const std::string &name) : Transform(name) {}
+  TestTransform(const std::string& name, Guard guard) : Transform(name) { m_guard = guard; }
+  TestTransform(const std::string& name) : Transform(name) {}
 
-  EntityPtr operator()(EntityPtr &&ptr) override { return m_function(std::move(ptr)); }
+  EntityPtr operator()(EntityPtr&& ptr) override { return m_function(std::move(ptr)); }
 
-  void setGuard(Guard &guard) { m_guard = guard; }
+  void setGuard(Guard& guard) { m_guard = guard; }
   TransformFun m_function;
 };
 using TestTransformPtr = shared_ptr<TestTransform>;
@@ -71,7 +71,7 @@ class TestPipeline : public Pipeline
 public:
   using Pipeline::Pipeline;
 
-  void build(const ConfigOptions &options) override {}
+  void build(const ConfigOptions& options) override {}
 
   TransformPtr getStart() { return m_start; }
 };
@@ -85,14 +85,14 @@ protected:
     m_pipeline = make_unique<TestPipeline>(m_context, strand);
 
     TestTransformPtr ta = make_shared<TestTransform>("A"s, EntityNameGuard("X", RUN));
-    ta->m_function = [ta](EntityPtr &&entity) {
+    ta->m_function = [ta](EntityPtr&& entity) {
       EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
       ret->setValue(ret->getValue<string>() + "A"s);
       return ta->next(std::move(ret));
     };
 
     TestTransformPtr tb = make_shared<TestTransform>("B"s, EntityNameGuard("X", RUN));
-    tb->m_function = [tb](EntityPtr &&entity) {
+    tb->m_function = [tb](EntityPtr&& entity) {
       EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
       ret->setValue(ret->getValue<string>() + "B"s);
       return tb->next(std::move(ret));
@@ -132,7 +132,7 @@ TEST_F(PipelineEditTest, run_three_transforms)
 TEST_F(PipelineEditTest, insert_R_before_B)
 {
   TestTransformPtr tr = make_shared<TestTransform>("R"s, EntityNameGuard("X", RUN));
-  tr->m_function = [&tr](EntityPtr &&entity) {
+  tr->m_function = [&tr](EntityPtr&& entity) {
     EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
     ret->setValue(ret->getValue<string>() + "R"s);
     return tr->next(std::move(ret));
@@ -149,7 +149,7 @@ TEST_F(PipelineEditTest, insert_R_before_B)
 TEST_F(PipelineEditTest, insert_R_after_B)
 {
   TestTransformPtr tr = make_shared<TestTransform>("R"s, EntityNameGuard("X", RUN));
-  tr->m_function = [&tr](EntityPtr &&entity) {
+  tr->m_function = [&tr](EntityPtr&& entity) {
     EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
     ret->setValue(ret->getValue<string>() + "R"s);
     return tr->next(std::move(ret));

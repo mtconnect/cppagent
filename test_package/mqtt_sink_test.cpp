@@ -43,7 +43,7 @@ using namespace mtconnect::configuration;
 using namespace mtconnect::mqtt_client;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -101,7 +101,7 @@ protected:
     m_agentTestHelper->getAgent()->start();
   }
 
-  void createServer(const ConfigOptions &options)
+  void createServer(const ConfigOptions& options)
   {
     using namespace mtconnect::configuration;
     ConfigOptions opts(options);
@@ -116,7 +116,7 @@ protected:
   }
 
   template <typename Rep, typename Period>
-  bool waitFor(const chrono::duration<Rep, Period> &time, function<bool()> pred)
+  bool waitFor(const chrono::duration<Rep, Period>& time, function<bool()> pred)
   {
     boost::asio::steady_timer timer(m_agentTestHelper->m_ioContext);
     timer.expires_after(time);
@@ -150,7 +150,7 @@ protected:
     }
   }
 
-  void createClient(const ConfigOptions &options, unique_ptr<ClientHandler> &&handler)
+  void createClient(const ConfigOptions& options, unique_ptr<ClientHandler>&& handler)
   {
     ConfigOptions opts(options);
     MergeOptions(opts, {{MqttHost, "127.0.0.1"s},
@@ -211,7 +211,7 @@ TEST_F(MqttSinkTest, mqtt_sink_publishes_probe_response)
   auto handler = make_unique<ClientHandler>();
   bool gotDevice = false;
   handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient> client,
-                                             const std::string &topic, const std::string &payload) {
+                                             const std::string& topic, const std::string& payload) {
     EXPECT_EQ("MTConnect/Probe/000", topic);
 
     ErrorList list;
@@ -251,7 +251,7 @@ TEST_F(MqttSinkTest, mqtt_sink_publishes_sample_on_data_change)
   bool gotSample = false;
   bool first = true;
   handler->m_receive = [&gotSample, &first](std::shared_ptr<MqttClient> client,
-                                            const std::string &topic, const std::string &payload) {
+                                            const std::string& topic, const std::string& payload) {
     if (first)
     {
       first = false;
@@ -294,8 +294,8 @@ TEST_F(MqttSinkTest, mqtt_sink_publishes_current_on_connection)
 
   auto handler = make_unique<ClientHandler>();
   bool gotCurrent = false;
-  handler->m_receive = [&gotCurrent](std::shared_ptr<MqttClient> client, const std::string &topic,
-                                     const std::string &payload) {
+  handler->m_receive = [&gotCurrent](std::shared_ptr<MqttClient> client, const std::string& topic,
+                                     const std::string& payload) {
     EXPECT_EQ("MTConnect/Current/000", topic);
 
     auto jdoc = json::parse(payload);
@@ -332,7 +332,7 @@ TEST_F(MqttSinkTest, mqtt_sink_publishes_probe_with_uuid_first_in_topic)
   auto handler = make_unique<ClientHandler>();
   bool gotDevice = false;
   handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient> client,
-                                             const std::string &topic, const std::string &payload) {
+                                             const std::string& topic, const std::string& payload) {
     EXPECT_EQ("MTConnect/000/Probe", topic);
 
     ErrorList list;
@@ -371,7 +371,7 @@ TEST_F(MqttSinkTest, mqtt_sink_publishes_probe_without_device_in_topic)
   auto handler = make_unique<ClientHandler>();
   bool gotDevice = false;
   handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient> client,
-                                             const std::string &topic, const std::string &payload) {
+                                             const std::string& topic, const std::string& payload) {
     EXPECT_EQ("MTConnect/Probe/000", topic);
 
     ErrorList list;
@@ -413,8 +413,8 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_agent_device)
   auto handler = make_unique<ClientHandler>();
   bool gotDevice = false;
   handler->m_receive = [&gotDevice, &parser, &agent_topic, &ad](std::shared_ptr<MqttClient> client,
-                                                                const std::string &topic,
-                                                                const std::string &payload) {
+                                                                const std::string& topic,
+                                                                const std::string& payload) {
     EXPECT_EQ(agent_topic, topic);
     gotDevice = true;
   };

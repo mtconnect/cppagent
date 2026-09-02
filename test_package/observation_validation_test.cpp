@@ -43,7 +43,7 @@ using namespace date::literals;
 using namespace std::literals;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -52,11 +52,11 @@ int main(int argc, char *argv[])
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(int32_t schemaVersion, DataItemPtr &dataItem)
+  MockPipelineContract(int32_t schemaVersion, DataItemPtr& dataItem)
     : m_schemaVersion(schemaVersion), m_dataItem(dataItem)
   {}
-  DevicePtr findDevice(const std::string &) override { return m_device; }
-  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+  DevicePtr findDevice(const std::string&) override { return m_device; }
+  DataItemPtr findDataItem(const std::string& device, const std::string& name) override
   {
     return m_dataItem;
   }
@@ -69,12 +69,12 @@ public:
   bool isValidating() const override { return m_validation; }
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
-  void sourceFailed(const std::string &id) override {}
-  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
+  void deliverConnectStatus(entity::EntityPtr, const StringList&, bool) override {}
+  void sourceFailed(const std::string& id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr& obs) const override { return obs; }
 
   int32_t m_schemaVersion;
-  DataItemPtr &m_dataItem;
+  DataItemPtr& m_dataItem;
   DevicePtr m_device;
   bool m_validation {true};
 };
@@ -179,7 +179,7 @@ TEST_F(ObservationValidationTest, should_not_set_deprecated_flag_when_deprecated
   m_dataItem =
       DataItem::make({{"id", "exec"s}, {"category", "EVENT"s}, {"type", "EXECUTION"s}}, errors);
 
-  auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+  auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
   contract->m_schemaVersion = SCHEMA_VERSION(1, 3);
 
   auto event = Observation::make(m_dataItem, {{"VALUE", "PROGRAM_OPTIONAL_STOP"s}}, m_time, errors);
@@ -235,7 +235,7 @@ TEST_F(ObservationValidationTest, should_be_invalid_if_entry_has_not_been_introd
   m_dataItem =
       DataItem::make({{"id", "exec"s}, {"category", "EVENT"s}, {"type", "EXECUTION"s}}, errors);
 
-  auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+  auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
   contract->m_schemaVersion = SCHEMA_VERSION(1, 4);
 
   auto event = Observation::make(m_dataItem, {{"VALUE", "WAIT"s}}, m_time, errors);
@@ -248,7 +248,7 @@ TEST_F(ObservationValidationTest, should_be_invalid_if_entry_has_not_been_introd
 
 TEST_F(ObservationValidationTest, should_validate_invalid_sample_value)
 {
-  auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+  auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
   contract->m_schemaVersion = SCHEMA_VERSION(2, 5);
 
   shared_ptr<ShdrTokenMapper> mapper;
@@ -266,7 +266,7 @@ TEST_F(ObservationValidationTest, should_validate_invalid_sample_value)
   ts->setProperty("timestamp", ts->m_timestamp);
 
   auto observations = (*mapper)(ts);
-  auto &r = *observations;
+  auto& r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
 
   auto oblist = observations->getValue<EntityList>();
@@ -286,7 +286,7 @@ TEST_F(ObservationValidationTest, should_validate_invalid_sample_value)
 
 TEST_F(ObservationValidationTest, should_validate_sample)
 {
-  auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+  auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
   contract->m_schemaVersion = SCHEMA_VERSION(2, 5);
 
   shared_ptr<ShdrTokenMapper> mapper;
@@ -304,7 +304,7 @@ TEST_F(ObservationValidationTest, should_validate_sample)
   ts->setProperty("timestamp", ts->m_timestamp);
 
   auto observations = (*mapper)(ts);
-  auto &r = *observations;
+  auto& r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
 
   auto oblist = observations->getValue<EntityList>();
@@ -338,7 +338,7 @@ TEST_F(ObservationValidationTest, should_validate_sample_with_int64_value)
 
 TEST_F(ObservationValidationTest, should_not_validate_if_validation_is_off)
 {
-  auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+  auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
   contract->m_schemaVersion = SCHEMA_VERSION(2, 5);
   contract->m_validation = false;
 
@@ -357,7 +357,7 @@ TEST_F(ObservationValidationTest, should_not_validate_if_validation_is_off)
   ts->setProperty("timestamp", ts->m_timestamp);
 
   auto observations = (*mapper)(ts);
-  auto &r = *observations;
+  auto& r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
 
   auto oblist = observations->getValue<EntityList>();
@@ -380,7 +380,7 @@ TEST_F(ObservationValidationTest, should_validate_json_data_item_types)
   using namespace mtconnect::device_model;
 
   ErrorList errors;
-  auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+  auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
   contract->m_schemaVersion = SCHEMA_VERSION(2, 5);
   Properties dev {
       {"id", "3"s}, {"name", "DeviceTest2"s}, {"uuid", "UnivUniqId2"s}, {"iso841Class", "6"s}};

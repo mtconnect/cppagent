@@ -24,8 +24,8 @@
 using namespace std;
 
 namespace mtconnect::entity {
-  bool Entity::addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
-                         ErrorList &errors)
+  bool Entity::addToList(const std::string& name, FactoryPtr factory, EntityPtr entity,
+                         ErrorList& errors)
   {
     if (!hasProperty(name))
     {
@@ -38,7 +38,7 @@ namespace mtconnect::entity {
     }
     else
     {
-      auto *entities = std::get_if<EntityPtr>(&getProperty_(name));
+      auto* entities = std::get_if<EntityPtr>(&getProperty_(name));
       if (entities)
       {
         std::get<EntityList>((*entities)->getProperty_("LIST")).emplace_back(entity);
@@ -53,14 +53,14 @@ namespace mtconnect::entity {
     return true;
   }
 
-  bool Entity::removeFromList(const std::string &name, EntityPtr entity)
+  bool Entity::removeFromList(const std::string& name, EntityPtr entity)
   {
-    auto &v = getProperty_(name);
-    auto *p = std::get_if<EntityPtr>(&v);
+    auto& v = getProperty_(name);
+    auto* p = std::get_if<EntityPtr>(&v);
     if (p)
     {
-      auto &lv = (*p)->getProperty_("LIST");
-      auto *l = std::get_if<EntityList>(&lv);
+      auto& lv = (*p)->getProperty_("LIST");
+      auto* l = std::get_if<EntityList>(&lv);
       if (l)
       {
         auto it = std::find(l->begin(), l->end(), entity);
@@ -75,44 +75,44 @@ namespace mtconnect::entity {
     return false;
   }
 
-  inline static void hash(boost::uuids::detail::sha1 &sha1, const DataSet &set);
-  inline static void hash(boost::uuids::detail::sha1 &sha1, const TableRow &set);
+  inline static void hash(boost::uuids::detail::sha1& sha1, const DataSet& set);
+  inline static void hash(boost::uuids::detail::sha1& sha1, const TableRow& set);
 
   template <typename ST>
   struct HashVisitor
   {
-    HashVisitor(boost::uuids::detail::sha1 &sha1) : m_sha1(sha1) {}
+    HashVisitor(boost::uuids::detail::sha1& sha1) : m_sha1(sha1) {}
 
-    void operator()(const EntityPtr &arg) { arg->hash(m_sha1); }
-    void operator()(const EntityList &arg)
+    void operator()(const EntityPtr& arg) { arg->hash(m_sha1); }
+    void operator()(const EntityList& arg)
     {
-      for (const auto &e : arg)
+      for (const auto& e : arg)
         e->hash(m_sha1);
     }
-    void operator()(const std::monostate &arg) { m_sha1.process_bytes("NIL", 4); }
-    void operator()(const Vector &arg)
+    void operator()(const std::monostate& arg) { m_sha1.process_bytes("NIL", 4); }
+    void operator()(const Vector& arg)
     {
-      for (const auto &e : arg)
+      for (const auto& e : arg)
         m_sha1.process_bytes(&e, sizeof(e));
     }
-    void operator()(const std::string &arg) { m_sha1.process_bytes(arg.c_str(), arg.size()); }
+    void operator()(const std::string& arg) { m_sha1.process_bytes(arg.c_str(), arg.size()); }
     void operator()(const double arg) { m_sha1.process_bytes(&arg, sizeof(arg)); }
     void operator()(const int64_t arg) { m_sha1.process_bytes(&arg, sizeof(arg)); }
     void operator()(const bool arg) { m_sha1.process_bytes(&arg, sizeof(arg)); }
-    void operator()(const Timestamp &arg)
+    void operator()(const Timestamp& arg)
     {
       auto c = arg.time_since_epoch().count();
       m_sha1.process_bytes(&c, sizeof(c));
     }
-    void operator()(const ST &arg) { hash(m_sha1, arg); }
-    void operator()(const std::nullptr_t &arg) { m_sha1.process_bytes("NULL", 4); }
+    void operator()(const ST& arg) { hash(m_sha1, arg); }
+    void operator()(const std::nullptr_t& arg) { m_sha1.process_bytes("NULL", 4); }
 
-    boost::uuids::detail::sha1 &m_sha1;
+    boost::uuids::detail::sha1& m_sha1;
   };
 
-  inline static void hash(boost::uuids::detail::sha1 &sha1, const DataSet &set)
+  inline static void hash(boost::uuids::detail::sha1& sha1, const DataSet& set)
   {
-    for (auto &e : set)
+    for (auto& e : set)
     {
       sha1.process_bytes(e.m_key.c_str(), e.m_key.size());
       if (e.m_removed)
@@ -127,9 +127,9 @@ namespace mtconnect::entity {
     }
   }
 
-  inline static void hash(boost::uuids::detail::sha1 &sha1, const TableRow &set)
+  inline static void hash(boost::uuids::detail::sha1& sha1, const TableRow& set)
   {
-    for (auto &e : set)
+    for (auto& e : set)
     {
       sha1.process_bytes(e.m_key.c_str(), e.m_key.size());
       HashVisitor<TableCell> visitor(sha1);
@@ -137,17 +137,17 @@ namespace mtconnect::entity {
     }
   }
 
-  void Entity::hash(boost::uuids::detail::sha1 &sha1,
-                    const boost::unordered_set<string> &skip) const
+  void Entity::hash(boost::uuids::detail::sha1& sha1,
+                    const boost::unordered_set<string>& skip) const
   {
     sha1.process_bytes(m_name.c_str(), m_name.size());
 
-    for (const auto &e : m_properties)
+    for (const auto& e : m_properties)
     {
       // Skip hash
       if (!skip.contains(e.first) && !isHidden(e.first))
       {
-        const auto &value = e.second;
+        const auto& value = e.second;
         sha1.process_bytes(e.first.c_str(), e.first.size());
         HashVisitor<DataSet> visitor(sha1);
         visit(visitor, value);
@@ -157,28 +157,28 @@ namespace mtconnect::entity {
 
   struct UniqueIdVisitor
   {
-    std::unordered_map<string, string> &m_idMap;
-    const boost::uuids::detail::sha1 &m_sha1;
-    UniqueIdVisitor(std::unordered_map<string, string> &idMap,
-                    const boost::uuids::detail::sha1 &sha1)
+    std::unordered_map<string, string>& m_idMap;
+    const boost::uuids::detail::sha1& m_sha1;
+    UniqueIdVisitor(std::unordered_map<string, string>& idMap,
+                    const boost::uuids::detail::sha1& sha1)
       : m_idMap(idMap), m_sha1(sha1)
     {}
 
-    void operator()(EntityPtr &p) { p->createUniqueId(m_idMap, m_sha1); }
+    void operator()(EntityPtr& p) { p->createUniqueId(m_idMap, m_sha1); }
 
-    void operator()(EntityList &l)
+    void operator()(EntityList& l)
     {
-      for (auto &e : l)
+      for (auto& e : l)
         e->createUniqueId(m_idMap, m_sha1);
     }
 
     template <typename T>
-    void operator()(const T &)
+    void operator()(const T&)
     {}
   };
 
   std::optional<std::string> Entity::createUniqueId(
-      std::unordered_map<std::string, std::string> &idMap, const boost::uuids::detail::sha1 &sha1)
+      std::unordered_map<std::string, std::string>& idMap, const boost::uuids::detail::sha1& sha1)
   {
     optional<string> res;
 
@@ -206,7 +206,7 @@ namespace mtconnect::entity {
     UniqueIdVisitor visitor(idMap, sha1);
 
     // Recurse properties
-    for (auto &p : m_properties)
+    for (auto& p : m_properties)
     {
       std::visit(visitor, p.second);
     }
@@ -216,26 +216,26 @@ namespace mtconnect::entity {
 
   struct ReferenceIdVisitor
   {
-    const std::unordered_map<string, string> &m_idMap;
-    ReferenceIdVisitor(const std::unordered_map<string, string> &idMap) : m_idMap(idMap) {}
+    const std::unordered_map<string, string>& m_idMap;
+    ReferenceIdVisitor(const std::unordered_map<string, string>& idMap) : m_idMap(idMap) {}
 
-    void operator()(EntityPtr &p) { p->updateReferences(m_idMap); }
+    void operator()(EntityPtr& p) { p->updateReferences(m_idMap); }
 
-    void operator()(EntityList &l)
+    void operator()(EntityList& l)
     {
-      for (auto &e : l)
+      for (auto& e : l)
         e->updateReferences(m_idMap);
     }
 
     template <typename T>
-    void operator()(T &)
+    void operator()(T&)
     {}
   };
 
   void Entity::updateReferences(std::unordered_map<std::string, std::string> idMap)
   {
     using namespace boost::algorithm;
-    for (auto &prop : m_properties)
+    for (auto& prop : m_properties)
     {
       if (prop.first != "originalId" && (iends_with(prop.first, "idref") ||
                                          (prop.first.length() > 2 && iends_with(prop.first, "id"))))
@@ -251,7 +251,7 @@ namespace mtconnect::entity {
     ReferenceIdVisitor visitor(idMap);
 
     // Recurse all
-    for (auto &p : m_properties)
+    for (auto& p : m_properties)
     {
       std::visit(visitor, p.second);
     }

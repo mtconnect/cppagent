@@ -31,7 +31,7 @@ namespace mtconnect {
     };
 
     /// @brief Guard is a lambda function returning a `GuardAction` taking an entity
-    using Guard = std::function<GuardAction(const entity::Entity *entity)>;
+    using Guard = std::function<GuardAction(const entity::Entity* entity)>;
 
     /// @brief A simple GuardClass returning a simple match
     ///
@@ -42,19 +42,19 @@ namespace mtconnect {
       /// @brief Construct a GuardCls
       /// @param match the action if matched
       GuardCls(GuardAction action) : m_action(action) {}
-      GuardCls(const GuardCls &) = default;
+      GuardCls(const GuardCls&) = default;
 
-      GuardAction operator()(const entity::Entity *entity) { return m_action; }
+      GuardAction operator()(const entity::Entity* entity) { return m_action; }
 
       /// @brief set the alternative guard
       /// @param alt alternative
-      void setAlternative(Guard &alt) { m_alternative = alt; }
+      void setAlternative(Guard& alt) { m_alternative = alt; }
 
       /// @brief check the matched state and if matched then return action.
       /// @param matched if `true` return the action otherwise check an alternative
       /// @param entity an entity
       /// @return the guard action
-      GuardAction check(bool matched, const entity::Entity *entity)
+      GuardAction check(bool matched, const entity::Entity* entity)
       {
         if (matched)
           return m_action;
@@ -67,7 +67,7 @@ namespace mtconnect {
       /// @brief set the alternative to the other
       /// @param other a guard
       /// @return this
-      auto &operator||(Guard other)
+      auto& operator||(Guard other)
       {
         m_alternative = other;
         return *this;
@@ -75,7 +75,7 @@ namespace mtconnect {
       /// @brief Set the alternative to a static action
       /// @param other the guard action
       /// @return this
-      auto &operator||(GuardAction other)
+      auto& operator||(GuardAction other)
       {
         m_alternative = GuardCls(other);
         return *this;
@@ -102,29 +102,29 @@ namespace mtconnect {
       /// @param ti the type info we're checking
       /// @return `true` if matches
       template <typename T, typename... R>
-      constexpr bool match(const entity::Entity *ep)
+      constexpr bool match(const entity::Entity* ep)
       {
         if constexpr ((sizeof...(R)) == 0)
-          return dynamic_cast<const T *>(ep);
+          return dynamic_cast<const T*>(ep);
         else
-          return dynamic_cast<const T *>(ep) != nullptr || match<R...>(ep);
+          return dynamic_cast<const T*>(ep) != nullptr || match<R...>(ep);
       }
 
       /// @brief constexpr expanded type match
       /// @param entity the entity
       /// @return `true` if matches
-      constexpr bool matches(const entity::Entity *entity) { return match<Ts...>(entity); }
+      constexpr bool matches(const entity::Entity* entity) { return match<Ts...>(entity); }
 
       /// @brief Check if the entity matches one of the types
       /// @param[in] entity pointer to the entity
       /// @returns the actionn to take if the types match
-      GuardAction operator()(const entity::Entity *entity)
+      GuardAction operator()(const entity::Entity* entity)
       {
         return check(matches(entity), entity);
       }
 
       /// @brief set the alternative action if this guard does not match
-      auto &operator||(Guard other)
+      auto& operator||(Guard other)
       {
         m_alternative = other;
         return *this;
@@ -145,7 +145,7 @@ namespace mtconnect {
       /// @param ti the type info we're checking
       /// @return `true` if matches
       template <typename T, typename... R>
-      constexpr bool match(const std::type_info &ti)
+      constexpr bool match(const std::type_info& ti)
       {
         if constexpr ((sizeof...(R)) == 0)
           return typeid(T) == ti;
@@ -156,23 +156,23 @@ namespace mtconnect {
       /// @brief constexpr expanded type match
       /// @param entity the entity
       /// @return `true` if matches
-      constexpr bool matches(const entity::Entity *entity)
+      constexpr bool matches(const entity::Entity* entity)
       {
-        auto &e = *entity;
-        auto &ti = typeid(e);
+        auto& e = *entity;
+        auto& ti = typeid(e);
         return match<Ts...>(ti);
       }
 
       /// @brief Check if the entity exactly matches one of the types
       /// @param[in] entity pointer to the entity
       /// @returns the action to take if the types match
-      GuardAction operator()(const entity::Entity *entity)
+      GuardAction operator()(const entity::Entity* entity)
       {
         return check(matches(entity), entity);
       }
 
       /// @brief set the alternative action if this guard does not match
-      auto &operator||(Guard other)
+      auto& operator||(Guard other)
       {
         m_alternative = other;
         return *this;
@@ -183,20 +183,20 @@ namespace mtconnect {
     class EntityNameGuard : public GuardCls
     {
     public:
-      EntityNameGuard(const std::string &name, GuardAction match) : GuardCls(match), m_name(name) {}
+      EntityNameGuard(const std::string& name, GuardAction match) : GuardCls(match), m_name(name) {}
 
-      bool matches(const entity::Entity *entity) { return entity->getName() == m_name; }
+      bool matches(const entity::Entity* entity) { return entity->getName() == m_name; }
 
       /// @brief Check if the entity name matches
       /// @param[in] entity pointer to the entity
       /// @returns the action to take if the types match
-      GuardAction operator()(const entity::Entity *entity)
+      GuardAction operator()(const entity::Entity* entity)
       {
         return check(matches(entity), entity);
       }
 
       /// @brief set the alternative action if this guard does not match
-      auto &operator||(Guard other)
+      auto& operator||(Guard other)
       {
         m_alternative = other;
         return *this;
@@ -213,24 +213,24 @@ namespace mtconnect {
     class LambdaGuard : public B
     {
     public:
-      using Lambda = std::function<bool(const L &)>;
+      using Lambda = std::function<bool(const L&)>;
 
       /// @brief Construct a lambda guard with a function returning bool and an action
       /// @param guard the lambda function
       /// @param match the action if the lambda returns true
       LambdaGuard(Lambda guard, GuardAction match) : B(match), m_lambda(guard) {}
-      LambdaGuard(const LambdaGuard &) = default;
+      LambdaGuard(const LambdaGuard&) = default;
       ~LambdaGuard() = default;
 
       /// @brief call the `B::matches()` method with the entity
       /// @param entity the entity
       /// @return `true` if matched
-      bool matches(const entity::Entity *entity)
+      bool matches(const entity::Entity* entity)
       {
         bool matched = B::matches(entity);
         if (matched)
         {
-          auto o = dynamic_cast<const L *>(entity);
+          auto o = dynamic_cast<const L*>(entity);
           matched = o != nullptr && m_lambda(*o);
         }
 
@@ -240,13 +240,13 @@ namespace mtconnect {
       /// @brief Check if the entity name matches the base guard and the lambda
       /// @param[in] entity pointer to the entity
       /// @returns the action to take if the types match
-      GuardAction operator()(const entity::Entity *entity)
+      GuardAction operator()(const entity::Entity* entity)
       {
         return B::check(matches(entity), entity);
       }
 
       /// @brief set the alternative action if this guard does not match
-      auto &operator||(Guard other)
+      auto& operator||(Guard other)
       {
         B::m_alternative = other;
         return *this;

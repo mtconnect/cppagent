@@ -49,7 +49,7 @@ inline std::string getFile(std::string file)
 }
 
 // Fill the error
-inline void fillErrorText(std::string &errorXml, const std::string &text)
+inline void fillErrorText(std::string& errorXml, const std::string& text)
 {
   using namespace std;
 
@@ -77,8 +77,8 @@ inline void fillErrorText(std::string &errorXml, const std::string &text)
 }
 
 // Search the xml and insert a value into an attribute (attribute="")
-inline void fillAttribute(std::string &xmlString, const std::string &attribute,
-                          const std::string &value)
+inline void fillAttribute(std::string& xmlString, const std::string& attribute,
+                          const std::string& value)
 {
   using namespace std;
 
@@ -113,20 +113,20 @@ inline void fillAttribute(std::string &xmlString, const std::string &attribute,
 
 #define DUMP_XML(doc) dumpXml(doc)
 
-inline void failIf(bool condition, const std::string &message, const std::string &file, int line)
+inline void failIf(bool condition, const std::string& message, const std::string& file, int line)
 {
   ASSERT_FALSE(condition) << file << "(" << line << "): Failed " << message;
 }
 
-inline void failNotEqualIf(bool condition, const std::string &expected, const std::string &actual,
-                           const std::string &message, const std::string &file, int line)
+inline void failNotEqualIf(bool condition, const std::string& expected, const std::string& actual,
+                           const std::string& message, const std::string& file, int line)
 {
   ASSERT_FALSE(condition) << file << "(" << line << "): Failed not equal " << message << "\n"
                           << "  Expected: " << expected << "\n"
                           << "  Actual: " << actual;
 }
 
-inline void assertIf(bool condition, const std::string &message, const std::string &file, int line)
+inline void assertIf(bool condition, const std::string& message, const std::string& file, int line)
 {
   ASSERT_TRUE(condition) << file << "(" << line << "): Failed " << message;
 }
@@ -136,16 +136,16 @@ using ValueResponse = std::pair<std::optional<std::string>, std::optional<std::s
 inline std::string dumpXml(xmlDocPtr doc)
 {
   int size;
-  xmlChar *memory;
+  xmlChar* memory;
   xmlDocDumpFormatMemory(doc, &memory, &size, 1);
 
-  std::string s((const char *)memory, size);
+  std::string s((const char*)memory, size);
   xmlFree(memory);
 
   return s;
 }
 
-inline ValueResponse xpathValue(xmlDocPtr doc, const char *xpath, const std::string &file, int line,
+inline ValueResponse xpathValue(xmlDocPtr doc, const char* xpath, const std::string& file, int line,
                                 bool noValue = false)
 {
   using namespace std;
@@ -221,7 +221,7 @@ inline ValueResponse xpathValue(xmlDocPtr doc, const char *xpath, const std::str
         }
         else if (child->type == XML_TEXT_NODE)
         {
-          string res = (const char *)child->content;
+          string res = (const char*)child->content;
           has_content = !mtconnect::trim(res).empty();
         }
       }
@@ -229,7 +229,7 @@ inline ValueResponse xpathValue(xmlDocPtr doc, const char *xpath, const std::str
     else
     {
       message << "Xpath " << xpath << " was not supposed to have an attribute.";
-      xmlChar *text = xmlGetProp(first, BAD_CAST attribute.c_str());
+      xmlChar* text = xmlGetProp(first, BAD_CAST attribute.c_str());
 
       if (text)
       {
@@ -249,7 +249,7 @@ inline ValueResponse xpathValue(xmlDocPtr doc, const char *xpath, const std::str
   }
 
   string actual;
-  xmlChar *text = nullptr;
+  xmlChar* text = nullptr;
 
   switch (first->type)
   {
@@ -269,18 +269,18 @@ inline ValueResponse xpathValue(xmlDocPtr doc, const char *xpath, const std::str
 
       if (text)
       {
-        actual = (const char *)text;
+        actual = (const char*)text;
         xmlFree(text);
       }
 
       break;
 
     case XML_ATTRIBUTE_NODE:
-      actual = (const char *)first->content;
+      actual = (const char*)first->content;
       break;
 
     case XML_TEXT_NODE:
-      actual = (const char *)first->content;
+      actual = (const char*)first->content;
       break;
 
     default:
@@ -295,8 +295,8 @@ inline ValueResponse xpathValue(xmlDocPtr doc, const char *xpath, const std::str
   return ValueResponse(actual, std::nullopt);
 }
 
-inline void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
-                      const std::string &file, int line)
+inline void xpathTest(xmlDocPtr doc, const char* xpath, const char* expected,
+                      const std::string& file, int line)
 {
   using namespace std;
 
@@ -326,7 +326,7 @@ inline void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
   }
 }
 
-inline void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected, const std::string &file,
+inline void xpathTestCount(xmlDocPtr doc, const char* xpath, int expected, const std::string& file,
                            int line)
 
 {

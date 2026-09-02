@@ -30,7 +30,7 @@ namespace mtconnect {
 ///   stringizes `name`
 ///
 /// @param name name of configuration parameter
-#define DECLARE_CONFIGURATION(name) inline const char *name = #name;
+#define DECLARE_CONFIGURATION(name) inline const char* name = #name;
 
     /// @name Global Configuration Options
     ///@{
@@ -38,6 +38,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(DataPath);
     DECLARE_CONFIGURATION(ConfigPath);
     DECLARE_CONFIGURATION(PluginPath);
+    DECLARE_CONFIGURATION(MonitorResources);
     ///@}
 
     /// @name Agent Configuration

@@ -56,18 +56,18 @@ namespace mtconnect::ruby {
     void unlock() { m_mutex.unlock(); }
     [[nodiscard]] bool try_lock() { return m_mutex.try_lock(); }
 
-    static auto &rubyVM() { return *m_vm; }
+    static auto& rubyVM() { return *m_vm; }
     static bool hasVM() { return m_vm != nullptr; }
 
   protected:
     void createModule() { m_module = mrb_define_module(m_mrb, "MTConnect"); }
 
     template <typename L>
-    static inline void log(L level, mrb_state *mrb)
+    static inline void log(L level, mrb_state* mrb)
     {
       mrb_value msg;
       mrb_get_args(mrb, "S", &msg);
-      BOOST_LOG_SEV(agent_logger::get(), level) <<  mrb_str_to_cstr(mrb, msg);
+      BOOST_LOG_SEV(agent_logger::get(), level) << mrb_str_to_cstr(mrb, msg);
     }
 
     void defineLogger()
@@ -76,42 +76,42 @@ namespace mtconnect::ruby {
       auto logger = mrb_define_module_under(m_mrb, m_module, "Logger");
       mrb_define_class_method(
           m_mrb, logger, "debug",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             log(::boost::log::trivial::debug, mrb);
             return mrb_nil_value();
           },
           MRB_ARGS_REQ(1));
       mrb_define_class_method(
           m_mrb, logger, "trace",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             log(::boost::log::trivial::trace, mrb);
             return mrb_nil_value();
           },
           MRB_ARGS_REQ(1));
       mrb_define_class_method(
           m_mrb, logger, "info",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             log(::boost::log::trivial::info, mrb);
             return mrb_nil_value();
           },
           MRB_ARGS_REQ(1));
       mrb_define_class_method(
           m_mrb, logger, "warning",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             log(::boost::log::trivial::warning, mrb);
             return mrb_nil_value();
           },
           MRB_ARGS_REQ(1));
       mrb_define_class_method(
           m_mrb, logger, "error",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             log(::boost::log::trivial::error, mrb);
             return mrb_nil_value();
           },
           MRB_ARGS_REQ(1));
       mrb_define_class_method(
           m_mrb, logger, "fatal",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             log(::boost::log::trivial::fatal, mrb);
             return mrb_nil_value();
           },
@@ -119,10 +119,10 @@ namespace mtconnect::ruby {
     }
 
   protected:
-    Agent *m_agent;
-    RClass *m_module = nullptr;
-    mrb_state *m_mrb = nullptr;
+    Agent* m_agent;
+    RClass* m_module = nullptr;
+    mrb_state* m_mrb = nullptr;
     static std::recursive_mutex m_mutex;
-    static RubyVM *m_vm;
+    static RubyVM* m_vm;
   };
 }  // namespace mtconnect::ruby

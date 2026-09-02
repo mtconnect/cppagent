@@ -39,18 +39,18 @@ namespace mtconnect::parser {
     /// devices
     /// @param[in] filePath the path to the JSON file
     /// @returns a list of device pointers
-    std::list<device_model::DevicePtr> parseFile(const std::string &filePath);
+    std::list<device_model::DevicePtr> parseFile(const std::string& filePath);
 
     /// @brief Parses a JSON string containing an MTConnectDevices document and returns a list of
     /// devices. Navigates MTConnectDevices/Devices to find device nodes.
     /// @param[in] jsonDoc the JSON document string
     /// @returns a list of device pointers
-    std::list<device_model::DevicePtr> parseDocument(const std::string &jsonDoc);
+    std::list<device_model::DevicePtr> parseDocument(const std::string& jsonDoc);
 
     /// @brief Parses a JSON string containing a single device and returns the device
     /// @param[in] jsonDoc the JSON document string wrapping a single Device
     /// @returns a shared device pointer if successful
-    device_model::DevicePtr parseDevice(const std::string &jsonDoc)
+    device_model::DevicePtr parseDevice(const std::string& jsonDoc)
     {
       return parseDevice(jsonDoc, m_version);
     }
@@ -59,11 +59,11 @@ namespace mtconnect::parser {
     /// @param[in] jsonDoc the JSON document string wrapping a single Device
     /// @param[in] version the JSON serialization version to use
     /// @returns a shared device pointer if successful
-    device_model::DevicePtr parseDevice(const std::string &jsonDoc, uint32_t version);
+    device_model::DevicePtr parseDevice(const std::string& jsonDoc, uint32_t version);
 
     /// @brief get the schema version parsed from the document
     /// @return the version if found
-    const auto &getSchemaVersion() const { return m_schemaVersion; }
+    const auto& getSchemaVersion() const { return m_schemaVersion; }
 
   protected:
     uint32_t m_version;

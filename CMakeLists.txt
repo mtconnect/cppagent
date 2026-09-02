@@ -1,8 +1,8 @@
 # The version number.
 set(AGENT_VERSION_MAJOR 2)
-set(AGENT_VERSION_MINOR 7)
+set(AGENT_VERSION_MINOR 8)
 set(AGENT_VERSION_PATCH 0)
-set(AGENT_VERSION_BUILD 13)
+set(AGENT_VERSION_BUILD 1)
 set(AGENT_VERSION_RC "")
 
 # This minimum version is to support Visual Studio 2019 and C++ feature checking and FetchContent
@@ -27,7 +27,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CXX_COMPILE_FEATURES cxx_std_20)
-set(CMAKE_OSX_DEPLOYMENT_TARGET 15.0)
 
 project(cppagent LANGUAGES C CXX)
 

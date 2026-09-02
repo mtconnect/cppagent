@@ -34,7 +34,7 @@ namespace mtconnect::ruby {
   class AGENT_LIB_API RubyTransform : public pipeline::Transform
   {
   public:
-    static void initialize(mrb_state *mrb, RClass *module)
+    static void initialize(mrb_state* mrb, RClass* module)
     {
       using namespace std;
 
@@ -47,10 +47,10 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, transClass, "transform",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto trans = MRubySharedPtr<Transform>::unwrap(mrb, self);
 
-            EntityPtr *ent;
+            EntityPtr* ent;
             mrb_get_args(mrb, "d", &ent, MRubySharedPtr<Entity>::type());
             auto r = (*trans)(std::move(*ent));
             return MRubySharedPtr<Entity>::wrap(mrb, "Entity", r);
@@ -62,8 +62,8 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, rubyTrans, "initialize",
-          [](mrb_state *mrb, mrb_value self) {
-            const char *name;
+          [](mrb_state* mrb, mrb_value self) {
+            const char* name;
             mrb_value gv, block = mrb_nil_value();
             string guard;
 
@@ -87,10 +87,10 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, rubyTrans, "forward",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto trans = MRubySharedPtr<Transform>::unwrap<RubyTransform>(mrb, self);
 
-            EntityPtr *ent;
+            EntityPtr* ent;
             mrb_get_args(mrb, "d", &ent, MRubySharedPtr<Entity>::type());
             auto nxt = trans->next(std::move(*ent));
             return MRubySharedPtr<Entity>::wrap(mrb, "Entity", nxt);
@@ -99,10 +99,10 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, rubyTrans, "bind",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto trans = MRubySharedPtr<Transform>::unwrap<RubyTransform>(mrb, self);
 
-            TransformPtr *to;
+            TransformPtr* to;
             mrb_get_args(mrb, "d", &to, MRubySharedPtr<Transform>::type());
             auto nxt = trans->bind(*to);
             return MRubySharedPtr<Transform>::wrap(mrb, "Transform", nxt);
@@ -111,9 +111,9 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, rubyTrans, "guard=",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto trans = MRubySharedPtr<Transform>::unwrap<RubyTransform>(mrb, self);
-            const char *guard;
+            const char* guard;
             if (mrb_get_args(mrb, "z", &guard) > 0)
             {
               trans->m_guardString = guard;
@@ -127,9 +127,9 @@ namespace mtconnect::ruby {
 
       mrb_define_method(
           mrb, rubyTrans, "guard",
-          [](mrb_state *mrb, mrb_value self) {
+          [](mrb_state* mrb, mrb_value self) {
             auto trans = MRubySharedPtr<Transform>::unwrap<RubyTransform>(mrb, self);
-            const char *guard;
+            const char* guard;
             mrb_value block = mrb_nil_value();
             if (mrb_block_given_p(mrb))
             {
@@ -152,7 +152,7 @@ namespace mtconnect::ruby {
           MRB_ARGS_OPT(1) | MRB_ARGS_BLOCK());
     }
 
-    RubyTransform(mrb_state *mrb, mrb_value self, const std::string &name, const std::string &guard)
+    RubyTransform(mrb_state* mrb, mrb_value self, const std::string& name, const std::string& guard)
       : Transform(name),
         m_self(self),
         m_method(mrb_intern_lit(mrb, "transform")),
@@ -187,7 +187,7 @@ namespace mtconnect::ruby {
     {
       if (!mrb_nil_p(m_guardBlock))
       {
-        m_guard = [this, old = m_guard](const entity::Entity *entity) -> GuardAction {
+        m_guard = [this, old = m_guard](const entity::Entity* entity) -> GuardAction {
           using namespace entity;
           using namespace observation;
           std::lock_guard guard(RubyVM::rubyVM());
@@ -203,7 +203,7 @@ namespace mtconnect::ruby {
           mrb_value data = mrb_ary_new_from_values(mrb, 2, values);
           mrb_value rv = mrb_protect(
               mrb,
-              [](mrb_state *mrb, mrb_value data) {
+              [](mrb_state* mrb, mrb_value data) {
                 mrb_value block = mrb_ary_ref(mrb, data, 0);
                 mrb_value ev = mrb_ary_ref(mrb, data, 1);
 
@@ -250,9 +250,9 @@ namespace mtconnect::ruby {
         m_guard = GuardCls(RUN);
     }
 
-    using calldata = std::pair<RubyTransform *, EntityPtr>;
+    using calldata = std::pair<RubyTransform*, EntityPtr>;
 
-    entity::EntityPtr operator()(entity::EntityPtr &&entity) override
+    entity::EntityPtr operator()(entity::EntityPtr&& entity) override
     {
       NAMED_SCOPE("RubyTransform::operator()");
 
@@ -268,10 +268,10 @@ namespace mtconnect::ruby {
       try
       {
         mrb_value ev;
-        const char *klass = "Entity";
-        Entity *ptr = entity.get();
-        Observation *obs;
-        if (obs = dynamic_cast<Observation *>(ptr); obs != nullptr)
+        const char* klass = "Entity";
+        Entity* ptr = entity.get();
+        Observation* obs;
+        if (obs = dynamic_cast<Observation*>(ptr); obs != nullptr)
         {
           switch (obs->getDataItem()->getCategory())
           {
@@ -286,9 +286,9 @@ namespace mtconnect::ruby {
               break;
           }
         }
-        else if (dynamic_cast<pipeline::Timestamped *>(ptr) != nullptr)
+        else if (dynamic_cast<pipeline::Timestamped*>(ptr) != nullptr)
           klass = "Timestamped";
-        else if (dynamic_cast<pipeline::Tokens *>(ptr) != nullptr)
+        else if (dynamic_cast<pipeline::Tokens*>(ptr) != nullptr)
           klass = "Tokens";
 
         ev = MRubySharedPtr<Entity>::wrap(mrb, klass, entity);
@@ -301,7 +301,7 @@ namespace mtconnect::ruby {
           mrb_value data = mrb_ary_new_from_values(mrb, 3, values);
           rv = mrb_protect(
               mrb,
-              [](mrb_state *mrb, mrb_value data) {
+              [](mrb_state* mrb, mrb_value data) {
                 mrb_value self = mrb_ary_ref(mrb, data, 0);
                 mrb_value block = mrb_ary_ref(mrb, data, 1);
                 mrb_value ev = mrb_ary_ref(mrb, data, 2);
@@ -315,7 +315,7 @@ namespace mtconnect::ruby {
           mrb_value data = mrb_ary_new_from_values(mrb, 3, values);
           rv = mrb_protect(
               mrb,
-              [](mrb_state *mrb, mrb_value data) {
+              [](mrb_state* mrb, mrb_value data) {
                 mrb_value self = mrb_ary_ref(mrb, data, 0);
                 mrb_sym method = mrb_symbol(mrb_ary_ref(mrb, data, 1));
                 mrb_value ev = mrb_ary_ref(mrb, data, 2);
@@ -351,11 +351,11 @@ namespace mtconnect::ruby {
       return res;
     }
 
-    auto &object() { return m_self; }
+    auto& object() { return m_self; }
     void setObject(mrb_value obj) { m_self = obj; }
 
   protected:
-    PipelineContract *m_contract;
+    PipelineContract* m_contract;
     mrb_value m_self;
     mrb_sym m_method;
     mrb_value m_block;

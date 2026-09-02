@@ -23,6 +23,7 @@
 #include <boost/spirit/include/qi.hpp>
 
 #include <chrono>
+#include <cstddef>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -41,11 +42,25 @@
 // Don't include WinSock.h when processing <windows.h>
 #ifdef _WINDOWS
 #define _WINSOCKAPI_
+#include <psapi.h>
 #include <windows.h>
 #include <winsock2.h>
 
 #define DELTA_EPOCH_IN_MICROSECS 11644473600000000ull
-#endif
+#else  // _WINDOWS
+// Resource management required includes by OS
+#if defined(__linux__)
+#include <boost/filesystem.hpp>
+
+#include <fstream>
+#include <iterator>
+#elif defined(__APPLE__)
+#include <fcntl.h>
+#include <mach/mach.h>
+#else  // not __linux__ or __APPLE__
+#include <fcntl.h>
+#endif  // __linux__ or __APPLE__
+#endif  // _WINDOWS
 
 using namespace std;
 using namespace std::chrono;
@@ -74,7 +89,7 @@ BOOST_FUSION_ADAPT_STRUCT(mtconnect::url::Url,
                                                                                       m_fragment))
 
 namespace mtconnect {
-  inline string::size_type insertPrefix(string &aPath, string::size_type &aPos,
+  inline string::size_type insertPrefix(string& aPath, string::size_type& aPos,
                                         const string aPrefix)
   {
     aPath.insert(aPos, aPrefix);
@@ -84,7 +99,7 @@ namespace mtconnect {
     return aPos;
   }
 
-  inline bool hasNamespace(const string &aPath, string::size_type aStart)
+  inline bool hasNamespace(const string& aPath, string::size_type aStart)
   {
     string::size_type len = aPath.length(), pos = aStart;
 
@@ -141,7 +156,7 @@ namespace mtconnect {
     return newPath;
   }
 
-  std::string GetBestHostAddress(boost::asio::io_context &context, bool onlyV4)
+  std::string GetBestHostAddress(boost::asio::io_context& context, bool onlyV4)
   {
     using namespace boost;
     using namespace asio;
@@ -159,9 +174,9 @@ namespace mtconnect {
     }
     else
     {
-      for (auto &res : results)
+      for (auto& res : results)
       {
-        const auto &ad = res.endpoint().address();
+        const auto& ad = res.endpoint().address();
         if (!ad.is_unspecified() && !ad.is_loopback() && (!onlyV4 || !ad.is_v6()))
         {
           auto ads {ad.to_string()};
@@ -275,7 +290,7 @@ namespace mtconnect {
       bool has_user_name = false;
     };
 
-    Url Url::parse(const std::string_view &url)
+    Url Url::parse(const std::string_view& url)
     {
       Url ast;
       UriGrammar<std::string_view::const_iterator> grammar;
@@ -291,5 +306,71 @@ namespace mtconnect {
       return ast;
     }
   }  // namespace url
+
+  std::size_t openFdCount()
+  {
+#if defined(_WIN32)
+    // NOTE: counts ALL kernel handles (files, events, threads, mutexes...),
+    // not just file descriptors. There is no exact fd analogue.
+    DWORD n = 0;
+    if (!GetProcessHandleCount(GetCurrentProcess(), &n))
+      return 0;
+    return static_cast<std::size_t>(n);
+
+#elif defined(__linux__)
+    namespace fs = boost::filesystem;
+    boost::system::error_code ec;
+    fs::directory_iterator it("/proc/self/fd", ec), end;
+    if (ec)
+      return 0;
+    // the iterator itself holds one fd open on the directory
+    auto n = static_cast<std::size_t>(std::distance(it, end));
+    return n ? n - 1 : 0;
+
+#else
+    // /proc may be absent; scan up to the soft limit.
+    long maxfd = sysconf(_SC_OPEN_MAX);
+    if (maxfd < 0)
+      maxfd = 65536;
+    std::size_t n = 0;
+    for (int fd = 0; fd < maxfd; ++fd)
+      if (fcntl(fd, F_GETFD) != -1)
+        ++n;
+    return n;
+#endif
+  }
+
+  std::size_t residentBytes()
+  {
+#if defined(_WIN32)
+    // K32GetProcessMemoryInfo is exported from kernel32, so no psapi.lib link is needed.
+    PROCESS_MEMORY_COUNTERS pmc {};
+    if (!K32GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(pmc)))
+      return 0;
+    return static_cast<std::size_t>(pmc.WorkingSetSize);
+
+#elif defined(__APPLE__)
+    mach_task_basic_info_data_t info {};
+    mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
+    if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>(&info),
+                  &count) != KERN_SUCCESS)
+      return 0;
+    return static_cast<std::size_t>(info.resident_size);
+
+#elif defined(__linux__)
+    // /proc/self/statm: total resident shared text lib data dt; field 2 = resident pages
+    std::ifstream f("/proc/self/statm");
+    std::size_t total = 0, resident = 0;
+    if (!(f >> total >> resident))
+      return 0;
+    long pageSize = sysconf(_SC_PAGESIZE);
+    if (pageSize < 0)
+      return 0;
+    return resident * static_cast<std::size_t>(pageSize);
+
+#else
+    return 0;
+#endif
+  }
 
 }  // namespace mtconnect

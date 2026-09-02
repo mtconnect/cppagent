@@ -32,7 +32,7 @@ namespace mtconnect::device_model::data_item {
     {
     public:
       using entity::Entity::Entity;
-      const entity::Value &getIdentity() const override
+      const entity::Value& getIdentity() const override
       {
         auto it = m_properties.find("key");
         if (it == m_properties.end())
@@ -58,7 +58,7 @@ namespace mtconnect::device_model::data_item {
 
         auto cells = make_shared<Factory>(
             Requirements {{"CellDefinition", ValueType::ENTITY, cell, 1, Requirement::Infinite}});
-        cells->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        cells->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           auto ptr = make_shared<Entry>(name, props);
           return dynamic_pointer_cast<entity::Entity>(ptr);
         });
@@ -72,7 +72,7 @@ namespace mtconnect::device_model::data_item {
                           {"units", false},
                           {"CellDefinitions", ValueType::ENTITY_LIST, cells, false}});
         entry->setOrder({"Description", "CellDefinitions"});
-        entry->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+        entry->setFunction([](const std::string& name, Properties& props) -> EntityPtr {
           auto ptr = make_shared<Entry>(name, props);
           return dynamic_pointer_cast<entity::Entity>(ptr);
         });

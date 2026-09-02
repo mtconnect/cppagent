@@ -36,10 +36,10 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
 
-inline DataSetEntry operator""_E(const char *c, std::size_t) { return DataSetEntry(c); }
+inline DataSetEntry operator""_E(const char* c, std::size_t) { return DataSetEntry(c); }
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -71,7 +71,7 @@ TEST_F(KinematicsTest, z_axis_kinematics_motion_attributes_are_parsed_correctly)
   auto linear = m_device->getComponentById("z");
   ASSERT_TRUE(linear);
 
-  auto &ent = linear->get<EntityPtr>("Configuration");
+  auto& ent = linear->get<EntityPtr>("Configuration");
   ASSERT_TRUE(ent);
 
   auto motion = ent->get<EntityPtr>("Motion");
@@ -102,7 +102,7 @@ TEST_F(KinematicsTest, c_axis_rotary_kinematics_motion_is_parsed_with_transforma
   ASSERT_NE(nullptr, m_device);
 
   auto rot = m_device->getComponentById("c");
-  auto &ent = rot->get<EntityPtr>("Configuration");
+  auto& ent = rot->get<EntityPtr>("Configuration");
   ASSERT_TRUE(ent);
   auto motion = ent->get<EntityPtr>("Motion");
 
@@ -263,7 +263,7 @@ TEST_F(KinematicsTest, should_parse_kinematic_data_sets)
   ASSERT_NE(nullptr, m_device);
 
   auto rot = m_device->getComponentById("c");
-  auto &ent = rot->get<EntityPtr>("Configuration");
+  auto& ent = rot->get<EntityPtr>("Configuration");
   ASSERT_TRUE(ent);
   auto motion = ent->get<EntityPtr>("Motion");
 

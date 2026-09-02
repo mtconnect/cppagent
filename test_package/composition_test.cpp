@@ -40,7 +40,7 @@ using namespace device_model;
 using namespace entity;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -70,7 +70,7 @@ TEST_F(CompositionTest, composition_attributes_description_and_specifications_ar
   using namespace mtconnect::entity;
   ASSERT_NE(nullptr, m_component);
 
-  const auto &compositions = m_component->getList("Compositions");
+  const auto& compositions = m_component->getList("Compositions");
   ASSERT_TRUE(compositions);
 
   ASSERT_EQ(1, compositions->size());
@@ -91,7 +91,7 @@ TEST_F(CompositionTest, composition_attributes_description_and_specifications_ar
   EXPECT_EQ("A", get<string>(description->getProperty("station")));
   EXPECT_EQ("Hello There", get<string>(description->getValue()));
 
-  const auto &configuration = (*composition)->get<EntityPtr>("Configuration");
+  const auto& configuration = (*composition)->get<EntityPtr>("Configuration");
 
   auto specs = configuration->getList("Specifications");
   ASSERT_TRUE(specs);
@@ -166,7 +166,7 @@ TEST_F(CompositionTest, should_create_topic)
   using namespace mtconnect::device_model;
   ASSERT_NE(nullptr, m_component);
 
-  const auto &compositions = m_component->getList("Compositions");
+  const auto& compositions = m_component->getList("Compositions");
   ASSERT_TRUE(compositions);
 
   auto composition = dynamic_pointer_cast<Composition>(compositions->front());

@@ -25,12 +25,12 @@ namespace mtconnect::source::adapter {
   /// @brief Handler functions for handling data and connection status
   struct Handler
   {
-    using ProcessData = std::function<void(const std::string &data, const std::string &source)>;
-    using ProcessCommand = std::function<void(const std::string &command, const std::string &value,
-                                              const std::string &source)>;
-    using ProcessMessage = std::function<void(const std::string &topic, const std::string &data,
-                                              const std::string &source)>;
-    using Connect = std::function<void(const std::string &source)>;
+    using ProcessData = std::function<void(const std::string& data, const std::string& source)>;
+    using ProcessCommand = std::function<void(const std::string& command, const std::string& value,
+                                              const std::string& source)>;
+    using ProcessMessage = std::function<void(const std::string& topic, const std::string& data,
+                                              const std::string& source)>;
+    using Connect = std::function<void(const std::string& source)>;
 
     /// @brief Process Data Messages
     ProcessData m_processData;
@@ -55,24 +55,24 @@ namespace mtconnect::source::adapter {
     /// @brief Create and adapter pipeline
     /// @param context the pipeline context
     /// @param st boost asio strand
-    AdapterPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)
+    AdapterPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand& st)
       : Pipeline(context, st)
     {}
 
     /// @brief build the pipeline
     /// @param options the configuration options
-    void build(const ConfigOptions &options) override;
+    void build(const ConfigOptions& options) override;
     /// @brief Create a handler
     /// @return the handler handing over ownership
     virtual std::unique_ptr<Handler> makeHandler();
 
     /// @brief get the associated device
     /// @return the device
-    const auto &getDevice() const { return m_device; }
+    const auto& getDevice() const { return m_device; }
 
     /// @brief set the associated device
     /// @param d the device
-    void setDevice(const std::string &d) { m_device = d; }
+    void setDevice(const std::string& d) { m_device = d; }
 
   protected:
     void buildDeviceList();

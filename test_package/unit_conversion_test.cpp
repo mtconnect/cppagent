@@ -29,7 +29,7 @@ using namespace mtconnect::device_model::data_item;
 using namespace mtconnect::entity;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

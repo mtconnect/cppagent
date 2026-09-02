@@ -46,7 +46,7 @@ using namespace mtconnect::asset;
 using namespace mtconnect::printer;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -125,7 +125,7 @@ TEST_F(TaskAssetTest, should_parse_a_part_archetype)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   EXPECT_EQ("TaskArchetype", asset->getName());
@@ -199,11 +199,11 @@ TEST_F(TaskAssetTest, should_parse_a_part_archetype)
       auto table = (*tit)->getValue<DataSet>();
       ASSERT_EQ(2, table.size());
 
-      const auto &row1 = get<TableRow>(table.find(DataSetEntry("PAYLOAD"))->m_value);
+      const auto& row1 = get<TableRow>(table.find(DataSetEntry("PAYLOAD"))->m_value);
       ASSERT_EQ(1, row1.size());
       EXPECT_EQ(1000, get<int64_t>(row1.find(TableCell("maximum"))->m_value));
 
-      const auto &row2 = get<TableRow>(table.find(DataSetEntry("REACH"))->m_value);
+      const auto& row2 = get<TableRow>(table.find(DataSetEntry("REACH"))->m_value);
       ASSERT_EQ(1, row2.size());
       EXPECT_EQ(1500, get<int64_t>(row2.find(TableCell("minimum"))->m_value));
 
@@ -650,7 +650,7 @@ TEST_F(TaskAssetTest, task_archetype_should_have_optional_fields_for_sub_task_re
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   auto subtasks = asset->getList("SubTaskRefs");
@@ -713,7 +713,7 @@ TEST_F(TaskAssetTest, should_parse_simple_task)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   EXPECT_EQ("Task", asset->getName());
@@ -820,7 +820,7 @@ TEST_F(TaskAssetTest, should_parse_simple_task_with_subtasks)
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   auto subtasks = asset->getList("SubTasks");
@@ -1254,7 +1254,7 @@ TEST_F(TaskAssetTest, task_should_accept_all_task_states)
 
   list<string> states {"INACTIVE", "PREPARING", "COMMITTING", "COMMITTED", "COMPLETE", "FAIL"};
 
-  for (const auto &state : states)
+  for (const auto& state : states)
   {
     ErrorList errors;
     entity::XmlParser parser;
@@ -1288,7 +1288,7 @@ TEST_F(TaskAssetTest, task_should_not_accept_invalid_task_states)
 
   list<string> states {"BAD", "STATE", "123", "DONE", ""};
 
-  for (const auto &state : states)
+  for (const auto& state : states)
   {
     ErrorList errors;
     entity::XmlParser parser;

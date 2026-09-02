@@ -51,7 +51,7 @@ namespace sys = boost::system;
 using namespace chrono_literals;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 class TestConnector : public Connector
 {
 public:
-  TestConnector(boost::asio::io_context::strand &strand, const std::string &server,
+  TestConnector(boost::asio::io_context::strand& strand, const std::string& server,
                 unsigned int port, std::chrono::seconds legacyTimeout = std::chrono::seconds {5},
                 std::chrono::seconds reconnectInterval = std::chrono::seconds {10},
                 std::optional<std::chrono::milliseconds> heartbeat = std::nullopt)
@@ -76,7 +76,7 @@ public:
     return Connector::start();
   }
 
-  void processData(const std::string &data) override
+  void processData(const std::string& data) override
   {
     if (data[0] == '*')
       protocolCommand(data);
@@ -87,7 +87,7 @@ public:
     }
   }
 
-  void protocolCommand(const std::string &data) override { m_command = data; }
+  void protocolCommand(const std::string& data) override { m_command = data; }
 
   void connecting() override {}
 
@@ -95,7 +95,7 @@ public:
   void connected() override { m_disconnected = false; }
   bool heartbeats() { return m_heartbeats; }
 
-  void startHeartbeats(std::string &aString) { Connector::startHeartbeats(aString); }
+  void startHeartbeats(std::string& aString) { Connector::startHeartbeats(aString); }
 
   void resetHeartbeats() { m_heartbeats = false; }
 
@@ -105,7 +105,7 @@ public:
   std::string m_command;
   bool m_disconnected;
 
-  boost::asio::io_context::strand &m_strand;
+  boost::asio::io_context::strand& m_strand;
 };
 
 /// @brief Connector test runner
@@ -163,7 +163,7 @@ protected:
     EXPECT_TRUE(pred());
   }
 
-  void send(const std::string &s)
+  void send(const std::string& s)
   {
     ASSERT_TRUE(m_server);
 

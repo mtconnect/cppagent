@@ -42,7 +42,7 @@ namespace asio = boost::asio;
 using namespace std::literals;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -60,7 +60,7 @@ TEST(AdapterTest, should_handle_multiline_data)
 
   auto handler = make_unique<Handler>();
   string data;
-  handler->m_processData = [&](const string &d, const string &s) { data = d; };
+  handler->m_processData = [&](const string& d, const string& s) { data = d; };
   adapter->setHandler(handler);
 
   adapter->processData("Simple Pass Through");
@@ -92,7 +92,7 @@ TEST(AdapterTest, should_forward_multiline_command)
 
   auto handler = make_unique<Handler>();
   string command, value;
-  handler->m_command = [&](const string &c, const string &v, const string &s) {
+  handler->m_command = [&](const string& c, const string& v, const string& s) {
     command = c;
     value = v;
   };
@@ -143,7 +143,7 @@ TEST(AdapterTest, should_set_heartbeat_override_from_configuration)
   pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
   auto adapter = make_unique<ShdrAdapter>(ioc, context, options, tree);
 
-  const auto &over = adapter->getHeartbeatOverride();
+  const auto& over = adapter->getHeartbeatOverride();
   ASSERT_TRUE(over);
   ASSERT_EQ(123ms, *over);
 }

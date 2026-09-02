@@ -40,7 +40,7 @@ namespace mtconnect::source::adapter::shdr {
     /// @param port port to connect to
     /// @param legacyTimout connection timeout (defaulted to 5 minutes)
     /// @param reconnectInterval time between reconnection attempts (defaults to 10 seconds)
-    Connector(boost::asio::io_context::strand &strand, std::string server, unsigned int port,
+    Connector(boost::asio::io_context::strand& strand, std::string server, unsigned int port,
               std::chrono::seconds legacyTimout = std::chrono::seconds {600},
               std::chrono::seconds reconnectInterval = std::chrono::seconds {10},
               std::optional<std::chrono::milliseconds> heartbeat = std::nullopt);
@@ -58,8 +58,8 @@ namespace mtconnect::source::adapter::shdr {
     virtual bool connect();
 
     // Abstract method to handle what to do with each line of data from Socket
-    virtual void processData(const std::string &data) = 0;
-    virtual void protocolCommand(const std::string &data) = 0;
+    virtual void processData(const std::string& data) = 0;
+    virtual void protocolCommand(const std::string& data) = 0;
 
     // Set Reconnect intervals
     void setReconnectInterval(std::chrono::milliseconds interval)
@@ -81,13 +81,13 @@ namespace mtconnect::source::adapter::shdr {
     std::chrono::milliseconds heartbeatFrequency() const { return m_heartbeatFrequency; }
 
     // Collect data and until it is \n terminated
-    void parseBuffer(const char *buffer);
+    void parseBuffer(const char* buffer);
 
     // Send a command to the adapter
-    void sendCommand(const std::string &command);
+    void sendCommand(const std::string& command);
 
     unsigned int getPort() const { return m_port; }
-    const std::string &getServer() const { return m_server; }
+    const std::string& getServer() const { return m_server; }
 
     std::chrono::seconds getLegacyTimeout() const
     {
@@ -96,21 +96,21 @@ namespace mtconnect::source::adapter::shdr {
 
     void setRealTime(bool realTime = true) { m_realTime = realTime; }
 
-    const auto &getHeartbeatOverride() const { return m_heartbeatOverride; }
+    const auto& getHeartbeatOverride() const { return m_heartbeatOverride; }
 
   protected:
     void close();
     void reconnect();
     void asyncTryConnect();
-    void resolved(const boost::system::error_code &error,
+    void resolved(const boost::system::error_code& error,
                   boost::asio::ip::tcp::resolver::results_type results);
-    void connected(const boost::system::error_code &error,
-                   const boost::asio::ip::tcp::endpoint &endpoint);
+    void connected(const boost::system::error_code& error,
+                   const boost::asio::ip::tcp::endpoint& endpoint);
     void writer(boost::system::error_code ec, std::size_t length);
     void reader(boost::system::error_code ec, std::size_t length);
     bool parseSocketBuffer();
-    void processLine(const std::string &line);
-    void startHeartbeats(const std::string &buf);
+    void processLine(const std::string& line);
+    void startHeartbeats(const std::string& buf);
     void heartbeat(boost::system::error_code ec);
     void setReceiveTimeout();
 
@@ -119,7 +119,7 @@ namespace mtconnect::source::adapter::shdr {
     std::string m_server;
 
     // Connection – reference to the owning Source's strand (not a copy)
-    boost::asio::io_context::strand &m_strand;
+    boost::asio::io_context::strand& m_strand;
     boost::asio::ip::tcp::socket m_socket;
     boost::asio::ip::tcp::endpoint m_endpoint;
     boost::asio::ip::tcp::resolver::results_type m_results;

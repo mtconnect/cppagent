@@ -99,7 +99,7 @@ namespace mtconnect::sink::rest_sink {
       m_run = true;
       listen();
     }
-    catch (exception &e)
+    catch (exception& e)
     {
       LOG(fatal) << "Cannot start server: " << e.what();
       throw FatalException(e.what());
@@ -156,7 +156,7 @@ namespace mtconnect::sink::rest_sink {
                             beast::bind_front_handler(&Server::accept, this));
   }
 
-  bool Server::allowPutFrom(const std::string &host)
+  bool Server::allowPutFrom(const std::string& host)
   {
     NAMED_SCOPE("Server::allowPutFrom");
 
@@ -172,7 +172,7 @@ namespace mtconnect::sink::rest_sink {
     }
 
     // Add the results to the set of allowed hosts
-    for (auto &addr : results)
+    for (auto& addr : results)
     {
       m_allowPutsFrom.insert(addr.endpoint().address());
     }
@@ -232,7 +232,7 @@ namespace mtconnect::sink::rest_sink {
   //------------------------------------------------------------------------------
 
   // Report a failure
-  void Server::fail(beast::error_code ec, char const *what)
+  void Server::fail(beast::error_code ec, char const* what)
   {
     LOG(error) << " error: " << ec.message();
   }
@@ -240,7 +240,7 @@ namespace mtconnect::sink::rest_sink {
   using namespace mtconnect::printer;
 
   template <typename T>
-  void AddParameter(T &writer, const Parameter &param)
+  void AddParameter(T& writer, const Parameter& param)
   {
     AutoJsonObject<T> obj(writer);
 
@@ -278,7 +278,7 @@ namespace mtconnect::sink::rest_sink {
       {
         obj.Key("default");
         visit(
-            overloaded {[](const std::monostate &) {}, [&obj](const std::string &s) { obj.Add(s); },
+            overloaded {[](const std::monostate&) {}, [&obj](const std::string& s) { obj.Add(s); },
                         [&obj](int32_t i) { obj.Add(i); }, [&obj](uint64_t i) { obj.Add(i); },
                         [&obj](double d) { obj.Add(d); }, [&obj](bool b) { obj.Add(b); }},
             param.m_default);
@@ -289,7 +289,7 @@ namespace mtconnect::sink::rest_sink {
   }
 
   template <typename T>
-  void AddRouting(T &writer, const Routing &routing)
+  void AddRouting(T& writer, const Routing& routing)
   {
     string verb {to_string(routing.getVerb())};
     boost::to_lower(verb);
@@ -305,11 +305,11 @@ namespace mtconnect::sink::rest_sink {
       if (!routing.getPathParameters().empty() || !routing.getQueryParameters().empty())
       {
         AutoJsonArray<T> ary(writer, "parameters");
-        for (const auto &param : routing.getPathParameters())
+        for (const auto& param : routing.getPathParameters())
         {
           AddParameter(writer, param);
         }
-        for (const auto &param : routing.getQueryParameters())
+        for (const auto& param : routing.getQueryParameters())
         {
           AddParameter(writer, param);
         }
@@ -337,7 +337,7 @@ namespace mtconnect::sink::rest_sink {
 
   // Swagger stuff
   template <typename T>
-  const void Server::renderSwaggerResponse(T &writer)
+  const void Server::renderSwaggerResponse(T& writer)
   {
     {
       AutoJsonObject<T> obj(writer);
@@ -377,15 +377,15 @@ namespace mtconnect::sink::rest_sink {
       {
         AutoJsonObject<T> obj(writer, "paths");
 
-        multimap<string, const Routing *> routings;
-        for (const auto &routing : m_routings)
+        multimap<string, const Routing*> routings;
+        for (const auto& routing : m_routings)
         {
           if (!routing.isSwagger() && routing.getPath())
             routings.emplace(make_pair(*routing.getPath(), &routing));
         }
 
         AutoJsonObject<T> robj(writer, false);
-        for (const auto &[path, routing] : routings)
+        for (const auto& [path, routing] : routings)
         {
           robj.reset(path);
           AddRouting<T>(writer, *routing);
@@ -405,7 +405,7 @@ namespace mtconnect::sink::rest_sink {
         auto pretty = *request->parameter<bool>("pretty");
 
         StringBuffer output;
-        RenderJson(output, pretty, [this](auto &writer) { renderSwaggerResponse(writer); });
+        RenderJson(output, pretty, [this](auto& writer) { renderSwaggerResponse(writer); });
 
         session->writeResponse(
             make_unique<Response>(status::ok, string(output.GetString()), "application/json"));
@@ -442,7 +442,7 @@ namespace mtconnect::sink::rest_sink {
     using namespace adaptors;
     set<http::verb> specificVerbs;
     set<http::verb> catchAllVerbs;
-    for (const auto &r : m_routings)
+    for (const auto& r : m_routings)
     {
       if (!r.isSwagger() && r.matchesPath(request->m_path))
       {
@@ -454,7 +454,7 @@ namespace mtconnect::sink::rest_sink {
     }
 
     // If any specific route matched, use only those; otherwise fall back to catch-alls
-    auto &verbs = specificVerbs.empty() ? catchAllVerbs : specificVerbs;
+    auto& verbs = specificVerbs.empty() ? catchAllVerbs : specificVerbs;
 
     // OPTIONS is always allowed
     verbs.insert(http::verb::options);

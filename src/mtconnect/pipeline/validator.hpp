@@ -35,7 +35,7 @@ namespace mtconnect::pipeline {
   class AGENT_LIB_API Validator : public Transform
   {
   public:
-    Validator(const Validator &) = default;
+    Validator(const Validator&) = default;
     Validator(PipelineContextPtr context)
       : Transform("Validator"), m_contract(context->m_contract.get())
     {
@@ -45,12 +45,12 @@ namespace mtconnect::pipeline {
     /// @brief validate the Event
     /// @param entity The Event entity
     /// @returns modified entity with quality and deprecated properties
-    EntityPtr operator()(entity::EntityPtr &&entity) override
+    EntityPtr operator()(entity::EntityPtr&& entity) override
     {
       using namespace observation;
       using namespace mtconnect::validation::observations;
       auto obs = std::dynamic_pointer_cast<Observation>(entity);
-      auto &value = obs->getValue();
+      auto& value = obs->getValue();
 
       bool valid = true;
       auto di = obs->getDataItem();
@@ -62,7 +62,7 @@ namespace mtconnect::pipeline {
           if (vocab != ControlledVocabularies.end())
           {
             auto sv = std::get_if<std::string>(&value);
-            auto &lits = vocab->second;
+            auto& lits = vocab->second;
             if (lits.size() != 0 && sv != nullptr)
             {
               auto lit = lits.find(*sv);
@@ -105,7 +105,7 @@ namespace mtconnect::pipeline {
       {
         obs->setProperty("quality", std::string("INVALID"));
         // Log once
-        auto &id = di->getId();
+        auto& id = di->getId();
         if (m_logOnce.count(id) < 1)
         {
           LOG(warning) << "DataItem '" << id << "': Invalid value for '" << obs->getName() << "': '"
@@ -128,7 +128,7 @@ namespace mtconnect::pipeline {
   protected:
     // Logging Context
     std::set<std::string> m_logOnce;
-    PipelineContract *m_contract;
+    PipelineContract* m_contract;
     std::unordered_map<std::string, WeakDataItemPtr> m_dataItemMap;
   };
 }  // namespace mtconnect::pipeline

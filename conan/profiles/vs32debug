@@ -7,3 +7,11 @@ arch=x86
 compiler.runtime=static
 compiler.runtime_type=Debug
 build_type=Debug
+
+
+
+[platform_tool_requires]
+cmake/>4.3
+
+[replace_tool_requires]
+cmake/*: cmake/>4.3

@@ -36,7 +36,7 @@ namespace mtconnect::sink::rest_sink {
   struct Request
   {
     Request() = default;
-    Request(const Request &request) = default;
+    Request(const Request& request) = default;
 
     boost::beast::http::verb m_verb;       ///< GET, PUT, POST, or DELETE
     std::string m_body;                    ///< The body of the request
@@ -64,7 +64,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param s the name of the parameter
     /// @return an option type `T` if the parameter is found
     template <typename T>
-    std::optional<T> parameter(const std::string &s) const
+    std::optional<T> parameter(const std::string& s) const
     {
       auto v = m_parameters.find(s);
       if (v == m_parameters.end())
@@ -82,7 +82,7 @@ namespace mtconnect::sink::rest_sink {
       {
         std::stringstream uri;
         uri << m_path << '/' << *m_command << '?';
-        for (auto &p : m_parameters)
+        for (auto& p : m_parameters)
         {
           uri << p.first << '=' << Parameter::toString(p.second) << '&';
         }
@@ -93,7 +93,7 @@ namespace mtconnect::sink::rest_sink {
       {
         std::stringstream uri;
         uri << m_path << '?';
-        for (auto &q : m_query)
+        for (auto& q : m_query)
           uri << q.first << '=' << q.second << '&';
         s = uri.str();
         s.erase(s.length() - 1);

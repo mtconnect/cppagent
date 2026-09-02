@@ -50,5 +50,5 @@ namespace mtconnect {
         return motion;
       }
     }  // namespace configuration
-  }    // namespace device_model
+  }  // namespace device_model
 }  // namespace mtconnect

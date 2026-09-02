@@ -80,7 +80,7 @@ namespace mtconnect {
       /// @return the MTConnect Error document
       virtual std::string printErrors(
           const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-          const entity::EntityList &list, bool pretty = false,
+          const entity::EntityList& list, bool pretty = false,
           const std::optional<std::string> requestId = std::nullopt) const = 0;
       /// @brief Generate an MTConnect Devices document
       /// @param[in] instanceId the instance id
@@ -94,7 +94,7 @@ namespace mtconnect {
       virtual std::string printProbe(
           const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
           const unsigned int assetBufferSize, const unsigned int assetCount,
-          const std::list<DevicePtr> &devices, const std::map<std::string, size_t> *count = nullptr,
+          const std::list<DevicePtr>& devices, const std::map<std::string, size_t>* count = nullptr,
           bool includeHidden = false, bool pretty = false,
           const std::optional<std::string> requestId = std::nullopt) const = 0;
       /// @brief Print a MTConnect Streams document
@@ -107,7 +107,7 @@ namespace mtconnect {
       /// @return the MTConnect Streams document
       virtual std::string printSample(
           const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-          const uint64_t firstSeq, const uint64_t lastSeq, observation::ObservationList &results,
+          const uint64_t firstSeq, const uint64_t lastSeq, observation::ObservationList& results,
           bool pretty = false, const std::optional<std::string> requestId = std::nullopt) const = 0;
       /// @brief Generate an MTConnect Assets document
       /// @param[in] anInstanceId the instance id
@@ -117,32 +117,32 @@ namespace mtconnect {
       /// @return the MTConnect Assets document
       virtual std::string printAssets(
           const uint64_t anInstanceId, const unsigned int bufferSize, const unsigned int assetCount,
-          asset::AssetList const &asset, bool pretty = false,
+          asset::AssetList const& asset, bool pretty = false,
           const std::optional<std::string> requestId = std::nullopt) const = 0;
       /// @brief get the mime type for the documents
       /// @return the mime type
       virtual std::string mimeType() const = 0;
       /// @brief Set the last model change time
       /// @param t the time
-      void setModelChangeTime(const std::string &t) { m_modelChangeTime = t; }
+      void setModelChangeTime(const std::string& t) { m_modelChangeTime = t; }
       /// @brief Get the last model change time
       /// @return the time
-      const std::string &getModelChangeTime() { return m_modelChangeTime; }
+      const std::string& getModelChangeTime() { return m_modelChangeTime; }
 
       /// @brief set the schema version we are generating
       /// @param s the version
-      void setSchemaVersion(const std::string &s) { m_schemaVersion = s; }
+      void setSchemaVersion(const std::string& s) { m_schemaVersion = s; }
       /// @brief Get the schema version
       /// @return the schema version
-      const auto &getSchemaVersion() const { return m_schemaVersion; }
+      const auto& getSchemaVersion() const { return m_schemaVersion; }
 
       /// @brief sets the sener name for the header
       /// @param name the name of the sender
-      void setSenderName(const std::string &s) { m_senderName = s; }
+      void setSenderName(const std::string& s) { m_senderName = s; }
 
       /// @brief gets the sender name
       /// @returns the name of the sender in the header
-      const auto &getSenderName() const { return m_senderName; }
+      const auto& getSenderName() const { return m_senderName; }
 
       /// @brief Use the agent version to default the schema version
       void defaultSchemaVersion() const
@@ -151,7 +151,7 @@ namespace mtconnect {
         {
           std::string ver =
               std::to_string(AGENT_VERSION_MAJOR) + "." + std::to_string(AGENT_VERSION_MINOR);
-          const_cast<Printer *>(this)->m_schemaVersion.emplace(ver);
+          const_cast<Printer*>(this)->m_schemaVersion.emplace(ver);
         }
       }
 

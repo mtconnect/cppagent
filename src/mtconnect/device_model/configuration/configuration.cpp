@@ -54,5 +54,5 @@ namespace mtconnect {
         return root;
       }
     }  // namespace configuration
-  }    // namespace device_model
+  }  // namespace device_model
 }  // namespace mtconnect

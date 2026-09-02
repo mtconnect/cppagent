@@ -27,7 +27,7 @@ using namespace std;
 
 namespace mtconnect {
   namespace entity {
-    void Factory::_dupFactory(FactoryPtr &factory, FactoryMap &factories)
+    void Factory::_dupFactory(FactoryPtr& factory, FactoryMap& factories)
     {
       auto old = factories.find(factory);
       if (old != factories.end())
@@ -43,9 +43,9 @@ namespace mtconnect {
       }
     }
 
-    void Factory::_deepCopy(FactoryMap &factories)
+    void Factory::_deepCopy(FactoryMap& factories)
     {
-      for (auto &r : m_requirements)
+      for (auto& r : m_requirements)
       {
         auto factory = r.getFactory();
         if (factory)
@@ -55,12 +55,12 @@ namespace mtconnect {
         }
       }
 
-      for (auto &f : m_matchFactory)
+      for (auto& f : m_matchFactory)
       {
         _dupFactory(f.second, factories);
       }
 
-      for (auto &f : m_stringFactory)
+      for (auto& f : m_stringFactory)
       {
         _dupFactory(f.second, factories);
       }
@@ -75,11 +75,11 @@ namespace mtconnect {
       return copy;
     }
 
-    void Factory::LogError(const std::string &what) { LOG(warning) << what; }
+    void Factory::LogError(const std::string& what) { LOG(warning) << what; }
 
-    void Factory::performConversions(Properties &properties, ErrorList &errors) const
+    void Factory::performConversions(Properties& properties, ErrorList& errors) const
     {
-      for (const auto &r : m_requirements)
+      for (const auto& r : m_requirements)
       {
         if (r.getType() != ValueType::ENTITY && r.getType() != ValueType::ENTITY_LIST)
         {
@@ -88,10 +88,10 @@ namespace mtconnect {
           {
             try
             {
-              Value &v = p->second;
+              Value& v = p->second;
               ConvertValueToType(v, r.getType());
             }
-            catch (PropertyError &e)
+            catch (PropertyError& e)
             {
               LOG(warning) << "Error occurred converting " << r.getName() << ": " << e.what();
               e.setProperty(r.getName());
@@ -103,11 +103,11 @@ namespace mtconnect {
       }
     }
 
-    bool Factory::isSufficient(Properties &properties, ErrorList &errors) const
+    bool Factory::isSufficient(Properties& properties, ErrorList& errors) const
     {
       NAMED_SCOPE("EntityFactory");
       bool success {true};
-      for (auto &p : properties)
+      for (auto& p : properties)
         p.first.clearMark();
 
       if (m_isList && m_minListSize > 0)
@@ -121,7 +121,7 @@ namespace mtconnect {
         else
         {
           p->first.setMark();
-          auto &list = get<EntityList>(p->second);
+          auto& list = get<EntityList>(p->second);
           if (list.size() < m_minListSize)
           {
             errors.emplace_back(new PropertyError("The list must have at least " +
@@ -131,7 +131,7 @@ namespace mtconnect {
         }
       }
 
-      for (const auto &r : m_requirements)
+      for (const auto& r : m_requirements)
       {
         Properties::const_iterator p;
         if (m_isList && r.getType() == ValueType::ENTITY)
@@ -157,7 +157,7 @@ namespace mtconnect {
               success = false;
             }
           }
-          catch (PropertyError &e)
+          catch (PropertyError& e)
           {
             LogError(e.what());
             if (r.isRequired())
@@ -180,7 +180,7 @@ namespace mtconnect {
         list<PropertyKey> extra;
         list<PropertyKey> remove;
         namespace ba = boost::algorithm;
-        for (auto &p : properties)
+        for (auto& p : properties)
         {
           // Check for extra properties
           if (!p.first.m_mark)
@@ -205,7 +205,7 @@ namespace mtconnect {
         };
 
         // Remove extranous properties
-        for (auto &p : remove)
+        for (auto& p : remove)
           properties.erase(p);
 
         // Check if additional properties exist
@@ -213,7 +213,7 @@ namespace mtconnect {
         {
           std::stringstream os;
           os << "The following keys were present and not expected: ";
-          for (auto &k : extra)
+          for (auto& k : extra)
             os << k << ",";
           errors.emplace_back(new PropertyError(os.str()));
           success = false;

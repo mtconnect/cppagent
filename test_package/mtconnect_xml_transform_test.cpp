@@ -34,7 +34,7 @@ using namespace std;
 using namespace std::literals;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -44,8 +44,8 @@ class MockPipelineContract : public PipelineContract
 {
 public:
   MockPipelineContract(DevicePtr device) : m_device(device) {}
-  DevicePtr findDevice(const std::string &) override { return m_device; }
-  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+  DevicePtr findDevice(const std::string&) override { return m_device; }
+  DataItemPtr findDataItem(const std::string& device, const std::string& name) override
   {
     return m_device->getDeviceDataItem(name);
   }
@@ -57,9 +57,9 @@ public:
   void deliverDevice(DevicePtr) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
-  void sourceFailed(const std::string &id) override {}
-  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
+  void deliverConnectStatus(entity::EntityPtr, const StringList&, bool) override {}
+  void sourceFailed(const std::string& id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr& obs) const override { return obs; }
   bool isValidating() const override { return false; }
 
   DevicePtr m_device;
@@ -122,7 +122,7 @@ TEST_F(MTConnectXmlTransformTest, should_return_errors)
   EXPECT_THROW((*m_xform)(std::move(entity)), std::system_error);
 
   ASSERT_EQ(1, m_feedback.m_errors.size());
-  auto &error = m_feedback.m_errors.front();
+  auto& error = m_feedback.m_errors.front();
   ASSERT_EQ("OUT_OF_RANGE", error.m_code);
   ASSERT_EQ("'at' must be greater than 4871368", error.m_message);
 }

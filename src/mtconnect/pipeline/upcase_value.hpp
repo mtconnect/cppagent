@@ -27,7 +27,7 @@
 #include "transform.hpp"
 
 namespace mtconnect::pipeline {
-  inline static std::string &upcase(std::string &s)
+  inline static std::string& upcase(std::string& s)
   {
     std::transform(s.begin(), s.end(), s.begin(),
                    [](unsigned char c) -> unsigned char { return std::toupper(c); });
@@ -38,14 +38,14 @@ namespace mtconnect::pipeline {
   class AGENT_LIB_API UpcaseValue : public Transform
   {
   public:
-    UpcaseValue(const UpcaseValue &) = default;
+    UpcaseValue(const UpcaseValue&) = default;
     UpcaseValue() : Transform("UpcaseValue")
     {
       using namespace observation;
       m_guard = ExactTypeGuard<Event>(RUN) || TypeGuard<Observation>(SKIP);
     }
 
-    EntityPtr operator()(entity::EntityPtr &&entity) override
+    EntityPtr operator()(entity::EntityPtr&& entity) override
     {
       using namespace observation;
       auto event = std::dynamic_pointer_cast<Event>(entity);

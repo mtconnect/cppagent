@@ -40,9 +40,9 @@ namespace mtconnect::sink::rest_sink {
     /// @param[in] list the header fields
     /// @param[in] dispatch a dispatcher function
     /// @param[in] error an error function
-    TlsDector(boost::asio::ip::tcp::socket &&socket, boost::asio::ssl::context &context,
-              bool tlsOnly, bool allowPuts, const std::set<boost::asio::ip::address> &allowPutsFrom,
-              const FieldList &list, Dispatch dispatch, ErrorFunction error)
+    TlsDector(boost::asio::ip::tcp::socket&& socket, boost::asio::ssl::context& context,
+              bool tlsOnly, bool allowPuts, const std::set<boost::asio::ip::address>& allowPutsFrom,
+              const FieldList& list, Dispatch dispatch, ErrorFunction error)
       : m_stream(std::move(socket)),
         m_tlsContext(context),
         m_tlsOnly(tlsOnly),
@@ -58,7 +58,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief Method to call when TLS operation fails
     /// @param[in] ec the erro code
     /// @param[in] message the message
-    void fail(boost::system::error_code ec, const std::string &message)
+    void fail(boost::system::error_code ec, const std::string& message)
     {
       NAMED_SCOPE("TlsDector::fail");
 
@@ -81,7 +81,7 @@ namespace mtconnect::sink::rest_sink {
 
   protected:
     boost::beast::tcp_stream m_stream;
-    boost::asio::ssl::context &m_tlsContext;
+    boost::asio::ssl::context& m_tlsContext;
     boost::beast::flat_buffer m_buffer;
 
     bool m_tlsOnly;

@@ -40,7 +40,7 @@ namespace mtconnect {
   using namespace pipeline;
 
   namespace source::adapter::shdr {
-    void ShdrPipeline::build(const ConfigOptions &options)
+    void ShdrPipeline::build(const ConfigOptions& options)
     {
       AdapterPipeline::build(options);
       buildDeviceList();

@@ -39,9 +39,9 @@ namespace mtconnect::pipeline {
   class AGENT_LIB_API ShdrTokenMapper : public Transform
   {
   public:
-    ShdrTokenMapper(const ShdrTokenMapper &) = default;
+    ShdrTokenMapper(const ShdrTokenMapper&) = default;
     ShdrTokenMapper(PipelineContextPtr context,
-                    const std::optional<std::string> &device = std::nullopt, int version = 1)
+                    const std::optional<std::string>& device = std::nullopt, int version = 1)
       : Transform("ShdrTokenMapper"),
         m_contract(context->m_contract.get()),
         m_defaultDevice(device),
@@ -49,7 +49,7 @@ namespace mtconnect::pipeline {
     {
       m_guard = TypeGuard<Timestamped>(RUN);
     }
-    EntityPtr operator()(entity::EntityPtr &&entity) override;
+    EntityPtr operator()(entity::EntityPtr&& entity) override;
 
     /// @brief Takes a tokenized set of fields and maps them data items
     /// @param[in] timestamp the timestamp from prior extraction
@@ -58,10 +58,10 @@ namespace mtconnect::pipeline {
     /// @param[in] end the sentinal end token
     /// @param[in,out] errors
     /// @return returns an observation list
-    EntityPtr mapTokensToDataItem(const Timestamp &timestamp,
-                                  const std::optional<std::string> &source,
-                                  TokenList::const_iterator &token,
-                                  const TokenList::const_iterator &end, ErrorList &errors);
+    EntityPtr mapTokensToDataItem(const Timestamp& timestamp,
+                                  const std::optional<std::string>& source,
+                                  TokenList::const_iterator& token,
+                                  const TokenList::const_iterator& end, ErrorList& errors);
     /// @brief Takes a tokenized set of fields and maps them to assets
     /// @param timestamp the timestamp
     /// @param source the optional source
@@ -69,14 +69,14 @@ namespace mtconnect::pipeline {
     /// @param[in] end the sentinal end token
     /// @param[in,out] errors
     /// @return An asset
-    EntityPtr mapTokensToAsset(const Timestamp &timestamp, const std::optional<std::string> &source,
-                               TokenList::const_iterator &token,
-                               const TokenList::const_iterator &end, ErrorList &errors);
+    EntityPtr mapTokensToAsset(const Timestamp& timestamp, const std::optional<std::string>& source,
+                               TokenList::const_iterator& token,
+                               const TokenList::const_iterator& end, ErrorList& errors);
 
   protected:
     // Logging Context
     std::set<std::string> m_logOnce;
-    PipelineContract *m_contract;
+    PipelineContract* m_contract;
     std::optional<std::string> m_defaultDevice;
     std::unordered_map<std::string, WeakDataItemPtr> m_dataItemMap;
     int m_shdrVersion {1};

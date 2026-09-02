@@ -26,6 +26,7 @@
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/observation/observation.hpp"
+#include "mtconnect/source/adapter/adapter_pipeline.hpp"
 #include "shdr_tokenizer.hpp"
 #include "timestamp_extractor.hpp"
 #include "topic_mapper.hpp"
@@ -37,14 +38,14 @@ namespace mtconnect::pipeline {
   class AGENT_LIB_API DataMapper : public Transform
   {
   public:
-    DataMapper(const DataMapper &) = default;
-    DataMapper(PipelineContextPtr context, source::adapter::Handler *handler)
+    DataMapper(const DataMapper&) = default;
+    DataMapper(PipelineContextPtr context, source::adapter::Handler* handler)
       : Transform("DataMapper"), m_context(context), m_handler(handler)
     {
       m_guard = TypeGuard<DataMessage>(RUN);
     }
 
-    EntityPtr operator()(entity::EntityPtr &&entity) override
+    EntityPtr operator()(entity::EntityPtr&& entity) override
     {
       auto source = entity->maybeGet<std::string>("source");
       auto data = std::dynamic_pointer_cast<DataMessage>(entity);
@@ -63,11 +64,11 @@ namespace mtconnect::pipeline {
             return next(std::move(obs));
           }
         }
-        catch (entity::EntityError &e)
+        catch (entity::EntityError& e)
         {
           LOG(error) << "Could not create observation: " << e.what();
         }
-        for (auto &e : errors)
+        for (auto& e : errors)
         {
           LOG(warning) << "Error while parsing message data: " << e->what();
         }
@@ -112,6 +113,6 @@ namespace mtconnect::pipeline {
 
   protected:
     PipelineContextPtr m_context;
-    source::adapter::Handler *m_handler;
+    source::adapter::Handler* m_handler;
   };
 }  // namespace mtconnect::pipeline

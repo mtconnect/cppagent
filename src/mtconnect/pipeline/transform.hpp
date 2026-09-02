@@ -45,41 +45,41 @@ namespace mtconnect {
 
     using ApplyDataItem = std::function<void(const DataItemPtr di)>;
     using EachDataItem = std::function<void(ApplyDataItem)>;
-    using FindDataItem = std::function<DataItemPtr(const std::string &, const std::string &)>;
+    using FindDataItem = std::function<DataItemPtr(const std::string&, const std::string&)>;
 
     /// @brief Abstract entity transformation
     class AGENT_LIB_API Transform : public std::enable_shared_from_this<Transform>
     {
     public:
-      Transform(const Transform &) = default;
+      Transform(const Transform&) = default;
       /// @brief Construct a transform with a name
       /// @param[in] name transform name
-      Transform(const std::string &name) : m_name(name) {}
+      Transform(const std::string& name) : m_name(name) {}
       virtual ~Transform() = default;
 
       /// @brief Get the transform name
       /// @return the name
-      auto &getName() const { return m_name; }
+      auto& getName() const { return m_name; }
 
       /// @brief stop this transform and all the following transforms
       virtual void stop()
       {
-        for (auto &t : m_next)
+        for (auto& t : m_next)
           t->stop();
       }
 
       /// @brief start the transform on a strand and all the following transforms
       /// @param st the strand
-      virtual void start(boost::asio::io_context::strand &st)
+      virtual void start(boost::asio::io_context::strand& st)
       {
-        for (auto &t : m_next)
+        for (auto& t : m_next)
           t->start(st);
       }
 
       /// @brief remove all the next transforms
       virtual void clear()
       {
-        for (auto &t : m_next)
+        for (auto& t : m_next)
           t->clear();
         unlink();
       }
@@ -90,17 +90,17 @@ namespace mtconnect {
       /// @brief the transform method must be overloaded
       /// @param entity the entity
       /// @return the resulting entity
-      virtual entity::EntityPtr operator()(entity::EntityPtr &&entity) = 0;
+      virtual entity::EntityPtr operator()(entity::EntityPtr&& entity) = 0;
       TransformPtr getptr() { return shared_from_this(); }
 
       /// @brief get the list of next transforms
       /// @return the list of following transforms
-      TransformList &getNext() { return m_next; }
+      TransformList& getNext() { return m_next; }
 
       /// @brief Find the next transform to forward the entity on to
       /// @param entity the entity
       /// @return return the result of the transformation
-      entity::EntityPtr next(entity::EntityPtr &&entity)
+      entity::EntityPtr next(entity::EntityPtr&& entity)
       {
         if (m_next.empty())
           return entity;
@@ -108,7 +108,7 @@ namespace mtconnect {
         using namespace std;
         using namespace entity;
 
-        for (auto &t : m_next)
+        for (auto& t : m_next)
         {
           switch (t->check(entity.get()))
           {
@@ -141,7 +141,7 @@ namespace mtconnect {
       /// @brief get the guard action for an entity
       /// @param[in] entity the entity
       /// @return the action to perform
-      GuardAction check(const entity::Entity *entity)
+      GuardAction check(const entity::Entity* entity)
       {
         if (!m_guard)
           return RUN;
@@ -151,10 +151,10 @@ namespace mtconnect {
 
       /// @brief Get a reference to the guard
       /// @return the guard
-      const Guard &getGuard() const { return m_guard; }
+      const Guard& getGuard() const { return m_guard; }
       /// @brief set the guard
       /// @param guard a guard
-      void setGuard(const Guard &guard) { m_guard = guard; }
+      void setGuard(const Guard& guard) { m_guard = guard; }
 
       using TransformPair = std::pair<TransformPtr, TransformPtr>;
       using ListOfTransforms = std::list<TransformPair>;
@@ -162,9 +162,9 @@ namespace mtconnect {
       /// @brief recursive step to find all transforms with a given name
       /// @param[in] target the target transform name
       /// @param[out] xforms the list of transform pairs
-      void findRec(const std::string &target, ListOfTransforms &xforms)
+      void findRec(const std::string& target, ListOfTransforms& xforms)
       {
-        for (auto &t : m_next)
+        for (auto& t : m_next)
         {
           if (t->getName() == target)
           {
@@ -177,7 +177,7 @@ namespace mtconnect {
       /// @brief find all transforms with a given name
       /// @param[in] target the target transform name
       /// @param[out] xforms the transform pairs
-      void find(const std::string &target, ListOfTransforms &xforms)
+      void find(const std::string& target, ListOfTransforms& xforms)
       {
         if (m_name == target)
         {
@@ -271,7 +271,7 @@ namespace mtconnect {
     {
     public:
       NullTransform(Guard guard) : Transform("NullTransform") { m_guard = guard; }
-      entity::EntityPtr operator()(entity::EntityPtr &&entity) override { return entity; }
+      entity::EntityPtr operator()(entity::EntityPtr&& entity) override { return entity; }
     };
 
     /// @brief A transform that forwards an enetity baed on a guard. Used to merge streams..
@@ -279,7 +279,7 @@ namespace mtconnect {
     {
     public:
       MergeTransform(Guard guard) : Transform("MergeTransform") { m_guard = guard; }
-      entity::EntityPtr operator()(entity::EntityPtr &&entity) override
+      entity::EntityPtr operator()(entity::EntityPtr&& entity) override
       {
         return next(std::move(entity));
       }

@@ -34,9 +34,9 @@ namespace mtconnect {
     class Source;
     using SourcePtr = std::shared_ptr<Source>;
     using SourceFactoryFn = boost::function<std::shared_ptr<Source>(
-        const std::string &name, boost::asio::io_context &io,
-        std::shared_ptr<pipeline::PipelineContext> pipelineContext, const ConfigOptions &options,
-        const boost::property_tree::ptree &block)>;
+        const std::string& name, boost::asio::io_context& io,
+        std::shared_ptr<pipeline::PipelineContext> pipelineContext, const ConfigOptions& options,
+        const boost::property_tree::ptree& block)>;
 
     /// @brief Abstract agent data source
     class AGENT_LIB_API Source : public std::enable_shared_from_this<Source>
@@ -44,25 +44,25 @@ namespace mtconnect {
     public:
       /// @brief Create a source with an io context
       /// @param io boost asio io context
-      Source(boost::asio::io_context &io) : m_strand(io) {}
+      Source(boost::asio::io_context& io) : m_strand(io) {}
       /// @brief Create a source with a strand
       /// @param io boost asio strand
-      Source(boost::asio::io_context::strand &io) : m_strand(io) {}
+      Source(boost::asio::io_context::strand& io) : m_strand(io) {}
       /// @brief Create a named source with an io context
       /// @param name source name
       /// @param io boost asio io context
-      Source(const std::string &name, boost::asio::io_context &io) : m_name(name), m_strand(io) {}
+      Source(const std::string& name, boost::asio::io_context& io) : m_name(name), m_strand(io) {}
       /// @brief Create a named source with a strand
       /// @param name source name
       /// @param io boost asio strand
-      Source(const std::string &name, boost::asio::io_context::strand &io)
+      Source(const std::string& name, boost::asio::io_context::strand& io)
         : m_name(name), m_strand(io)
       {}
       virtual ~Source() {}
 
       /// @brief get a shared pointer to the source
       /// @return shared pointer to this
-      SourcePtr getptr() const { return const_cast<Source *>(this)->shared_from_this(); }
+      SourcePtr getptr() const { return const_cast<Source*>(this)->shared_from_this(); }
 
       /// @brief start the source
       /// @return `true` if it succeeded
@@ -74,22 +74,22 @@ namespace mtconnect {
       virtual bool isLoopback() { return false; }
       /// @brief get the identity of the source
       /// @return the identity
-      virtual const std::string &getIdentity() const { return m_name; }
+      virtual const std::string& getIdentity() const { return m_name; }
 
       /// @brief get the pipeline associated with the source
       /// @return pointer to the pipeline
-      virtual pipeline::Pipeline *getPipeline() = 0;
+      virtual pipeline::Pipeline* getPipeline() = 0;
 
       /// @brief get the name of the source
       /// @return the name
-      const auto &getName() const { return m_name; }
+      const auto& getName() const { return m_name; }
       /// @brief get the source's strand
       /// @return the asio strand
-      boost::asio::io_context::strand &getStrand();
+      boost::asio::io_context::strand& getStrand();
 
       /// @brief changes the options in the source
       /// @param[in] options the options to update
-      virtual void setOptions(const ConfigOptions &options) {}
+      virtual void setOptions(const ConfigOptions& options) {}
 
     protected:
       std::string m_name;
@@ -99,7 +99,7 @@ namespace mtconnect {
     /// @brief create a unique identity hash for an XML id starting with an `_` and 10 hex digits
     /// @param text the text to create the hashed id
     /// @returns a string with the hashed result
-    AGENT_LIB_API std::string CreateIdentityHash(const std::string &input);
+    AGENT_LIB_API std::string CreateIdentityHash(const std::string& input);
 
     /// @brief A factory for creating the source
     class AGENT_LIB_API SourceFactory
@@ -113,15 +113,15 @@ namespace mtconnect {
       /// @param options configuration options
       /// @param block additional options
       /// @return shared pointer to the source
-      SourcePtr make(const std::string &factoryName, const std::string &sourceName,
-                     boost::asio::io_context &io,
+      SourcePtr make(const std::string& factoryName, const std::string& sourceName,
+                     boost::asio::io_context& io,
                      std::shared_ptr<pipeline::PipelineContext> context,
-                     const ConfigOptions &options, const boost::property_tree::ptree &block);
+                     const ConfigOptions& options, const boost::property_tree::ptree& block);
 
       /// @brief Register the factory with the factory name
       /// @param name the name of the factory
       /// @param function factory function to create a source
-      void registerFactory(const std::string &name, SourceFactoryFn function)
+      void registerFactory(const std::string& name, SourceFactoryFn function)
       {
         m_factories.insert_or_assign(name, function);
       }
@@ -131,7 +131,7 @@ namespace mtconnect {
       /// @brief check if a factory exists
       /// @param name the name of the factory
       /// @return `true` if the factory is registered
-      bool hasFactory(const std::string &name) { return m_factories.count(name) > 0; }
+      bool hasFactory(const std::string& name) { return m_factories.count(name) > 0; }
 
     private:
       std::map<std::string, SourceFactoryFn> m_factories;

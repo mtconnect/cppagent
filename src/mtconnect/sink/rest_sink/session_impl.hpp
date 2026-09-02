@@ -51,12 +51,12 @@ namespace mtconnect {
       /// @param list http fields
       /// @param dispatch dispatch method
       /// @param error error function
-      SessionImpl(boost::beast::flat_buffer &&buffer, const FieldList &list, Dispatch dispatch,
+      SessionImpl(boost::beast::flat_buffer&& buffer, const FieldList& list, Dispatch dispatch,
                   ErrorFunction error)
         : Session(dispatch, error), m_fields(list), m_buffer(std::move(buffer))
       {}
       /// @brief Sessions cannot be copied
-      SessionImpl(const SessionImpl &) = delete;
+      SessionImpl(const SessionImpl&) = delete;
       virtual ~SessionImpl() {}
 
       /// @brief get a shared pointer to this
@@ -67,16 +67,16 @@ namespace mtconnect {
       }
       /// @brief get this as the `Derived` type
       /// @return the subclass
-      Derived &derived() { return static_cast<Derived &>(*this); }
+      Derived& derived() { return static_cast<Derived&>(*this); }
 
       /// @name Session Interface
       ///@{
       void run() override;
-      void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override;
-      void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override;
-      void beginStreaming(const std::string &mimeType, Complete complete,
+      void writeResponse(ResponsePtr&& response, Complete complete = nullptr) override;
+      void writeFailureResponse(ResponsePtr&& response, Complete complete = nullptr) override;
+      void beginStreaming(const std::string& mimeType, Complete complete,
                           std::optional<std::string> requestId = std::nullopt) override;
-      void writeChunk(const std::string &chunk, Complete complete,
+      void writeChunk(const std::string& chunk, Complete complete,
                       std::optional<std::string> requestId = std::nullopt) override;
       void closeStream() override;
       ///@}
@@ -84,13 +84,13 @@ namespace mtconnect {
       using RequestMessage = boost::beast::http::request<boost::beast::http::string_body>;
 
       template <typename T>
-      void addHeaders(const Response &response, T &res);
+      void addHeaders(const Response& response, T& res);
 
       void requested(boost::system::error_code ec, size_t len);
       void sent(boost::system::error_code ec, size_t len);
       void read();
       void reset();
-      void upgrade(RequestMessage &&msg);
+      void upgrade(RequestMessage&& msg);
 
     protected:
       using RequestParser = boost::beast::http::request_parser<boost::beast::http::string_body>;
@@ -126,8 +126,8 @@ namespace mtconnect {
       /// @param list list of fields
       /// @param dispatch dispatch function
       /// @param error error format function
-      HttpSession(boost::beast::tcp_stream &&stream, boost::beast::flat_buffer &&buffer,
-                  const FieldList &list, Dispatch dispatch, ErrorFunction error)
+      HttpSession(boost::beast::tcp_stream&& stream, boost::beast::flat_buffer&& buffer,
+                  const FieldList& list, Dispatch dispatch, ErrorFunction error)
         : SessionImpl<HttpSession>(std::move(buffer), list, dispatch, error),
           m_stream(std::move(stream))
       {
@@ -149,12 +149,30 @@ namespace mtconnect {
       virtual ~HttpSession() { close(); }
       /// @brief get the stream
       /// @return the stream
-      auto &stream() { return m_stream; }
+      auto& stream() { return m_stream; }
 
       /// @brief close the session and shutdown the socket
       void close() override
       {
         NAMED_SCOPE("HttpSession::close");
+
+        if (m_closing)
+          return;
+        m_closing = true;
+
+        // Release all references from observers. Streaming (interval) requests hold a
+        // shared_ptr back to this session via the AsyncObserver, and this session holds
+        // the observer's completion handler in m_complete, forming a reference cycle.
+        // Cancelling the observers resets that back-reference so the session (and its
+        // socket fd) can be destroyed. Without this the fd leaks on client disconnect.
+        for (auto& obs : m_observers)
+        {
+          auto optr = obs.lock();
+          if (optr)
+          {
+            optr->cancel();
+          }
+        }
 
         m_request.reset();
         boost::beast::error_code ec;
@@ -162,10 +180,11 @@ namespace mtconnect {
       }
 
       /// @brief Upgrade the current connection to a websocket connection.
-      SessionPtr upgradeToWebsocket(RequestMessage &&msg);
+      SessionPtr upgradeToWebsocket(RequestMessage&& msg);
 
     protected:
       boost::beast::tcp_stream m_stream;
+      bool m_closing {false};
     };
   }  // namespace sink::rest_sink
 }  // namespace mtconnect

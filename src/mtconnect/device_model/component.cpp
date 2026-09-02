@@ -36,7 +36,7 @@ namespace mtconnect {
     using namespace data_item;
 
     // Component public methods
-    Component::Component(const std::string &name, const entity::Properties &props)
+    Component::Component(const std::string& name, const entity::Properties& props)
       : Entity(name, props)
     {
       m_id = get<string>("id");
@@ -49,7 +49,7 @@ namespace mtconnect {
       auto items = getList("DataItems");
       if (items)
       {
-        for (auto &item : *items)
+        for (auto& item : *items)
           dynamic_pointer_cast<data_item::DataItem>(item)->setComponent(getptr());
       }
     }
@@ -59,7 +59,7 @@ namespace mtconnect {
       auto comps = getList("Compositions");
       if (comps)
       {
-        for (auto &comp : *comps)
+        for (auto& comp : *comps)
           dynamic_pointer_cast<Composition>(comp)->setComponent(getptr());
       }
     }
@@ -70,7 +70,7 @@ namespace mtconnect {
       auto items = getList("DataItems");
       if (items)
       {
-        for (auto &item : *items)
+        for (auto& item : *items)
         {
           auto di = dynamic_pointer_cast<data_item::DataItem>(item);
           device->registerDataItem(di);
@@ -81,7 +81,7 @@ namespace mtconnect {
       auto children = getChildren();
       if (children)
       {
-        for (auto &child : *children)
+        for (auto& child : *children)
         {
           auto cp = dynamic_pointer_cast<Component>(child);
           cp->setParent(getptr());
@@ -114,7 +114,7 @@ namespace mtconnect {
                           {"Compositions", ValueType::ENTITY_LIST, compositions, false},
                           {"References", ValueType::ENTITY_LIST, references, false},
                           {"Configuration", ValueType::ENTITY, configuration, false}},
-            [](const std::string &name, Properties &props) -> EntityPtr {
+            [](const std::string& name, Properties& props) -> EntityPtr {
               auto ptr = make_shared<Component>(name, props);
               ptr->initialize();
               return dynamic_pointer_cast<Entity>(ptr);
@@ -138,7 +138,7 @@ namespace mtconnect {
       auto references = getList("References");
       if (references)
       {
-        for (auto &reference : *references)
+        for (auto& reference : *references)
         {
           dynamic_pointer_cast<Reference>(reference)->resolve(device);
         }
@@ -146,12 +146,12 @@ namespace mtconnect {
       auto children = getChildren();
       if (children)
       {
-        for (const auto &child : *children)
+        for (const auto& child : *children)
           dynamic_pointer_cast<Component>(child)->resolveReferences(device);
       }
     }
 
-    void Component::addDataItem(DataItemPtr dataItem, entity::ErrorList &errors)
+    void Component::addDataItem(DataItemPtr dataItem, entity::ErrorList& errors)
     {
       if (addToList("DataItems", Component::getFactory(), dataItem, errors))
       {

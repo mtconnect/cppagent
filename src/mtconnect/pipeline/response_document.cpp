@@ -51,7 +51,7 @@ namespace mtconnect::pipeline {
     return false;
   }
 
-  inline bool eachElement(xmlNodePtr node, const char *name, std::function<bool(xmlNodePtr)> cb)
+  inline bool eachElement(xmlNodePtr node, const char* name, std::function<bool(xmlNodePtr)> cb)
   {
     for (auto child = node->children; child != nullptr; child = child->next)
     {
@@ -79,13 +79,13 @@ namespace mtconnect::pipeline {
     return false;
   }
 
-  inline string attributeValue(xmlNodePtr node, const char *name, bool optional = false)
+  inline string attributeValue(xmlNodePtr node, const char* name, bool optional = false)
   {
     string res;
     if (!eachAttribute(node, [&name, &res](xmlAttrPtr attr) {
           if (xmlStrcmp(BAD_CAST name, attr->name) == 0)
           {
-            res = (const char *)(attr->children->content);
+            res = (const char*)(attr->children->content);
             return false;
           }
           return true;
@@ -98,7 +98,7 @@ namespace mtconnect::pipeline {
     return res;
   }
 
-  inline static xmlNodePtr findChild(xmlNodePtr node, const char *name, bool optional = false)
+  inline static xmlNodePtr findChild(xmlNodePtr node, const char* name, bool optional = false)
   {
     xmlNodePtr child;
     if (!eachElement(node, name, [&child](xmlNodePtr node) {
@@ -114,7 +114,7 @@ namespace mtconnect::pipeline {
     return child;
   }
 
-  static inline bool parseHeader(ResponseDocument &out, xmlNodePtr root)
+  static inline bool parseHeader(ResponseDocument& out, xmlNodePtr root)
   {
     auto header = findChild(root, "Header");
     if (header)
@@ -131,7 +131,7 @@ namespace mtconnect::pipeline {
       return true;
     }
 
-    LOG(error) << "Received incorred document: " << (const char *)root->name;
+    LOG(error) << "Received incorred document: " << (const char*)root->name;
 
     return false;
   }
@@ -142,17 +142,17 @@ namespace mtconnect::pipeline {
     {
       if (n->type == XML_TEXT_NODE)
       {
-        return trim((const char *)n->content);
+        return trim((const char*)n->content);
       }
     }
 
     return "";
   }
 
-  inline static bool parseDevices(ResponseDocument &out, xmlNodePtr node,
+  inline static bool parseDevices(ResponseDocument& out, xmlNodePtr node,
                                   pipeline::PipelineContextPtr context,
-                                  const std::optional<std::string> &device,
-                                  const std::optional<std::string> &uuid)
+                                  const std::optional<std::string>& device,
+                                  const std::optional<std::string>& uuid)
   {
     using namespace entity;
     using namespace device_model;
@@ -184,8 +184,8 @@ namespace mtconnect::pipeline {
         auto dev = parser.parseXmlNode(Device::getRoot(), n, errors);
         if (!errors.empty())
         {
-          LOG(warning) << "Could not parse asset: " << (const char *)n->name;
-          for (auto &e : errors)
+          LOG(warning) << "Could not parse asset: " << (const char*)n->name;
+          for (auto& e : errors)
           {
             LOG(warning) << "    Message: " << e->what();
           }
@@ -223,7 +223,7 @@ namespace mtconnect::pipeline {
   }
 
   template <typename VT>
-  inline VT type(const string &s)
+  inline VT type(const string& s)
   {
     using namespace boost;
     if (s.empty())
@@ -252,7 +252,7 @@ namespace mtconnect::pipeline {
       return lexical_cast<int64_t>(s);
   }
 
-  inline void dataSet(xmlNodePtr node, bool table, DataSet &ds)
+  inline void dataSet(xmlNodePtr node, bool table, DataSet& ds)
   {
     eachElement(node, "Entry", [table, &ds](xmlNodePtr n) {
       DataSetEntry entry;
@@ -261,7 +261,7 @@ namespace mtconnect::pipeline {
 
       if (table)
       {
-        TableRow &row = entry.m_value.emplace<TableRow>();
+        TableRow& row = entry.m_value.emplace<TableRow>();
 
         eachElement(n, "Cell", [&row](xmlNodePtr c) {
           row.emplace(attributeValue(c, "key"), type<TableCellValue>(text(c)));
@@ -281,13 +281,13 @@ namespace mtconnect::pipeline {
     });
   }
 
-  inline static DataItemPtr findDataItem(const std::string &name, DevicePtr device,
-                                         const entity::Properties &properties)
+  inline static DataItemPtr findDataItem(const std::string& name, DevicePtr device,
+                                         const entity::Properties& properties)
   {
     auto id = properties.find("dataItemId");
     if (id == properties.end())
     {
-      const string &uuid = *(device->getUuid());
+      const string& uuid = *(device->getUuid());
       LOG(warning) << "Device: " << uuid << ": Cannot find dataItemId for " << name;
       return nullptr;
     }
@@ -298,7 +298,7 @@ namespace mtconnect::pipeline {
       auto diName = properties.find("name");
       if (diName == properties.end())
       {
-        const string &uuid = *(device->getUuid());
+        const string& uuid = *(device->getUuid());
         LOG(warning) << "Device: " << uuid
                      << ": Cannot data item for id and no name:" << get<std::string>(id->second);
         return nullptr;
@@ -306,7 +306,7 @@ namespace mtconnect::pipeline {
       di = device->getDeviceDataItem(get<std::string>(diName->second));
       if (!di)
       {
-        const string &uuid = *(device->getUuid());
+        const string& uuid = *(device->getUuid());
         LOG(warning) << "Device: " << uuid << ": Cannot data item for id "
                      << get<std::string>(id->second)
                      << " or name:" << get<std::string>(diName->second);
@@ -317,9 +317,9 @@ namespace mtconnect::pipeline {
     return di;
   }
 
-  inline static bool parseObservations(ResponseDocument &out, xmlNodePtr node,
+  inline static bool parseObservations(ResponseDocument& out, xmlNodePtr node,
                                        pipeline::PipelineContextPtr context,
-                                       const std::optional<std::string> &deviceName)
+                                       const std::optional<std::string>& deviceName)
   {
     auto streams = findChild(node, "Streams");
     if (streams == nullptr)
@@ -359,15 +359,15 @@ namespace mtconnect::pipeline {
             eachAttribute(o, [&properties](xmlAttrPtr attr) {
               if (xmlStrcmp(BAD_CAST "sequence", attr->name) != 0)
               {
-                string s((const char *)attr->children->content);
-                properties.insert({(const char *)attr->name, s});
+                string s((const char*)attr->children->content);
+                properties.insert({(const char*)attr->name, s});
               }
 
               return true;
             });
 
             // Check for table or data set
-            string name((const char *)o->name);
+            string name((const char*)o->name);
             auto di = findDataItem(name, device, properties);
             if (!di)
             {
@@ -397,9 +397,9 @@ namespace mtconnect::pipeline {
             }
             else  // isDataSet
             {
-              Value &v = properties["VALUE"];
+              Value& v = properties["VALUE"];
               v.emplace<DataSet>();
-              DataSet &ds = get<DataSet>(v);
+              DataSet& ds = get<DataSet>(v);
               dataSet(o, di->isTable(), ds);
             }
 
@@ -407,7 +407,7 @@ namespace mtconnect::pipeline {
             auto obs = observation::Observation::make(di, properties, timestamp, errors);
             if (!errors.empty())
             {
-              for (auto &e : errors)
+              for (auto& e : errors)
               {
                 LOG(warning) << "Error while parsing XML: " << e->what();
               }
@@ -432,8 +432,8 @@ namespace mtconnect::pipeline {
     return true;
   }
 
-  inline static bool parseAssets(ResponseDocument &out, xmlNodePtr node,
-                                 const std::optional<std::string> &device)
+  inline static bool parseAssets(ResponseDocument& out, xmlNodePtr node,
+                                 const std::optional<std::string>& device)
   {
     using namespace entity;
     using namespace asset;
@@ -448,8 +448,8 @@ namespace mtconnect::pipeline {
       auto res = parser.parseXmlNode(Asset::getRoot(), n, errors);
       if (!errors.empty())
       {
-        LOG(warning) << "Could not parse asset: " << (const char *)n->name;
-        for (auto &e : errors)
+        LOG(warning) << "Could not parse asset: " << (const char*)n->name;
+        for (auto& e : errors)
         {
           LOG(warning) << "    Message: " << e->what();
         }
@@ -463,7 +463,7 @@ namespace mtconnect::pipeline {
     return true;
   }
 
-  inline static void parseErrors(ResponseDocument &out, xmlNodePtr node)
+  inline static void parseErrors(ResponseDocument& out, xmlNodePtr node)
   {
     auto errors = findChild(node, "Errors");
     if (errors == nullptr)
@@ -492,10 +492,10 @@ namespace mtconnect::pipeline {
     }
   }
 
-  bool ResponseDocument::parse(const std::string_view &content, ResponseDocument &out,
+  bool ResponseDocument::parse(const std::string_view& content, ResponseDocument& out,
                                pipeline::PipelineContextPtr context,
-                               const std::optional<std::string> &device,
-                               const std::optional<std::string> &uuid)
+                               const std::optional<std::string>& device,
+                               const std::optional<std::string>& uuid)
   {
     unique_ptr<xmlDoc, function<void(xmlDocPtr)>> doc(
         xmlReadMemory(content.data(), static_cast<int>(content.length()), "incoming.xml", nullptr,
@@ -532,7 +532,7 @@ namespace mtconnect::pipeline {
       }
       else
       {
-        LOG(error) << "Unknown document type: " << (const char *)root->name;
+        LOG(error) << "Unknown document type: " << (const char*)root->name;
         return false;
       }
     }

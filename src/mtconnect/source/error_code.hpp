@@ -51,7 +51,7 @@ namespace mtconnect::source {
   /// @brief Error categories for error reporting using std:error_code and std::error_condition
   struct ErrorCategory : std::error_category
   {
-    const char *name() const noexcept override { return "MTConnect::Error"; }
+    const char* name() const noexcept override { return "MTConnect::Error"; }
     std::string message(int ec) const override
     {
       switch (static_cast<ErrorCode>(ec))
@@ -83,7 +83,7 @@ namespace mtconnect::source {
     }
   };
 
-  AGENT_SYMBOL_VISIBLE inline const std::error_category &TheErrorCategory()
+  AGENT_SYMBOL_VISIBLE inline const std::error_category& TheErrorCategory()
   {
     static const ErrorCategory theErrorCategory {};
     return theErrorCategory;

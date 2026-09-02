@@ -36,8 +36,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     /// @param ex the strand to run in
     /// @param url the url to connect to
     /// @param ctx the TLS context
-    explicit HttpsSession(boost::asio::io_context::strand &ex, const url::Url &url,
-                          ssl::context &ctx)
+    explicit HttpsSession(boost::asio::io_context::strand& ex, const url::Url& url,
+                          ssl::context& ctx)
       : super(ex, url), m_stream(ex.context(), ctx)
     {}
     ~HttpsSession()
@@ -48,13 +48,13 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     /// @brief Get the boost asio ssl tcp stream
     /// @return reference to the stream
-    auto &stream() { return m_stream; }
+    auto& stream() { return m_stream; }
     /// @brief Get the lowest protocol layer to the ssl tcp stream
     /// @return lowest protocol layer
-    auto &lowestLayer() { return beast::get_lowest_layer(m_stream); }
+    auto& lowestLayer() { return beast::get_lowest_layer(m_stream); }
     /// @brief Get an immutable lowest protocol layer to the ssl tcp stream
     /// @return const lowest protocol layer
-    const auto &lowestLayer() const { return beast::get_lowest_layer(m_stream); }
+    const auto& lowestLayer() const { return beast::get_lowest_layer(m_stream); }
 
     std::shared_ptr<HttpsSession> getptr()
     {

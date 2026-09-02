@@ -32,7 +32,7 @@ using namespace std;
 using namespace std::literals;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -52,19 +52,19 @@ protected:
   shared_ptr<ShdrTokenizer> m_tokenizer;
 };
 
-inline std::list<std::string> extract(const Properties &props)
+inline std::list<std::string> extract(const Properties& props)
 {
   std::list<string> list;
-  for (auto &p : props)
+  for (auto& p : props)
     list.emplace_back(get<string>(p.second));
 
   return list;
 }
 
 template <typename T>
-inline bool isOfType(const EntityPtr &p)
+inline bool isOfType(const EntityPtr& p)
 {
-  const auto &o = *p;
+  const auto& o = *p;
   return typeid(T) == typeid(o);
 }
 
@@ -80,7 +80,7 @@ TEST_F(ShdrTokenizerTest, should_handle_simple_tokens)
        {"hello", R"D(xxx={b="12345", c="xxxxx"}})D", "bbb"}},
   };
 
-  for (const auto &test : data)
+  for (const auto& test : data)
   {
     auto data = std::make_shared<entity::Entity>("Data", Properties {{"VALUE", test.first}});
     auto entity = (*m_tokenizer)(std::move(data));
@@ -144,7 +144,7 @@ TEST_F(ShdrTokenizerTest, should_handle_escaped_characters_in_SHDR_line)
   data[R"(y|"a\|"z)"] = {"y", "\"a\\", "\"z"};
   data["x|y||z"] = {"x", "y", "", "z"};
 
-  for (const auto &test : data)
+  for (const auto& test : data)
   {
     auto data = std::make_shared<entity::Entity>("Data", Properties {{"VALUE", test.first}});
     auto entity = (*m_tokenizer)(std::move(data));

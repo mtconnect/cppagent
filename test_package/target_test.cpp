@@ -48,7 +48,7 @@ using namespace mtconnect::asset;
 using namespace mtconnect::printer;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -350,7 +350,7 @@ TEST_F(TargetTest, verify_target_requirement)
   auto rowIt = table.begin();
   ASSERT_EQ("R1", rowIt->m_key);
   ASSERT_TRUE(holds_alternative<TableRow>(rowIt->m_value));
-  auto &row = get<TableRow>(rowIt->m_value);
+  auto& row = get<TableRow>(rowIt->m_value);
   ASSERT_EQ(1, row.size());
 
   auto cellIt = row.begin();
@@ -361,7 +361,7 @@ TEST_F(TargetTest, verify_target_requirement)
   rowIt++;
   ASSERT_EQ("R2", rowIt->m_key);
   ASSERT_TRUE(holds_alternative<TableRow>(rowIt->m_value));
-  auto &row2 = get<TableRow>(rowIt->m_value);
+  auto& row2 = get<TableRow>(rowIt->m_value);
   ASSERT_EQ(1, row2.size());
 
   cellIt = row2.begin();

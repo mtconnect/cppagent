@@ -45,7 +45,7 @@ using namespace date::literals;
 using namespace nlohmann;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -96,13 +96,13 @@ protected:
   pipeline::ConvertSample m_converter;
 
   // Helper to test values
-  void testValueHelper(std::map<std::string, std::string> &attributes, const std::string &units,
-                       const std::string &nativeUnits, float expected, const double value,
-                       const char *file, int line)
+  void testValueHelper(std::map<std::string, std::string>& attributes, const std::string& units,
+                       const std::string& nativeUnits, float expected, const double value,
+                       const char* file, int line)
   {
     ErrorList errors;
     Properties ps;
-    for (auto &p : attributes)
+    for (auto& p : attributes)
       ps.emplace(p.first, p.second);
     ps["nativeUnits"] = nativeUnits;
     ps["units"] = units;
@@ -278,7 +278,7 @@ TEST_F(ObservationTest, should_treat_events_with_non_count_units_as_doubles)
   ASSERT_TRUE(dynamic_pointer_cast<DoubleEvent>(event));
   ASSERT_EQ(0, errors.size());
 
-  auto &value = event->getValue();
+  auto& value = event->getValue();
   ASSERT_TRUE(holds_alternative<double>(value));
   ASSERT_EQ(123.555, get<double>(value));
 
@@ -319,7 +319,7 @@ TEST_F(ObservationTest, should_treat_events_with_count_as_integer)
   ASSERT_TRUE(dynamic_pointer_cast<IntEvent>(event));
   ASSERT_EQ(0, errors.size());
 
-  auto &value = event->getValue();
+  auto& value = event->getValue();
   ASSERT_TRUE(holds_alternative<int64_t>(value));
   ASSERT_EQ(123.0, get<int64_t>(value));
 
@@ -363,10 +363,10 @@ TEST_F(ObservationTest, should_use_three_space_sample_for_3_space_events)
   ASSERT_TRUE(dynamic_pointer_cast<ThreeSpaceSample>(event));
   ASSERT_EQ(0, errors.size());
 
-  auto &value = event->getValue();
+  auto& value = event->getValue();
   ASSERT_TRUE(holds_alternative<Vector>(value));
 
-  auto &vector = get<Vector>(value);
+  auto& vector = get<Vector>(value);
   ASSERT_EQ(3, vector.size());
   ASSERT_EQ(1.2, vector[0]);
   ASSERT_EQ(2.3, vector[1]);
@@ -418,7 +418,7 @@ TEST_F(ObservationTest, should_represent_inf_values_in_json_correctly)
   ASSERT_TRUE(dynamic_pointer_cast<Sample>(sample));
   ASSERT_EQ(0, errors.size());
 
-  auto &value = sample->getValue();
+  auto& value = sample->getValue();
   ASSERT_TRUE(holds_alternative<double>(value));
   ASSERT_TRUE(std::isinf(get<double>(value)));
   ASSERT_FALSE(std::signbit(get<double>(value)));
@@ -462,7 +462,7 @@ TEST_F(ObservationTest, should_represent_nan_values_in_json_correctly)
   ASSERT_TRUE(dynamic_pointer_cast<Sample>(sample));
   ASSERT_EQ(0, errors.size());
 
-  auto &value = sample->getValue();
+  auto& value = sample->getValue();
   ASSERT_TRUE(holds_alternative<double>(value));
   ASSERT_TRUE(std::isnan(get<double>(value)));
 
@@ -505,7 +505,7 @@ TEST_F(ObservationTest, should_represent_negative_inf_values_in_json_correctly)
   ASSERT_TRUE(dynamic_pointer_cast<Sample>(sample));
   ASSERT_EQ(0, errors.size());
 
-  auto &value = sample->getValue();
+  auto& value = sample->getValue();
   ASSERT_TRUE(holds_alternative<double>(value));
   ASSERT_TRUE(std::isinf(get<double>(value)));
   ASSERT_TRUE(std::signbit(get<double>(value)));

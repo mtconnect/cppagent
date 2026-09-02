@@ -42,7 +42,7 @@ using namespace mtconnect::pipeline;
 using namespace mtconnect::url;
 
 namespace mtconnect::source::adapter::agent_adapter {
-  void AgentAdapterPipeline::build(const ConfigOptions &options)
+  void AgentAdapterPipeline::build(const ConfigOptions& options)
   {
     m_options = options;
     m_uuid = GetOption<string>(options, configuration::UUID);
@@ -60,8 +60,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     applySplices();
   }
 
-  AgentAdapter::AgentAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr context,
-                             const ConfigOptions &options, const boost::property_tree::ptree &block)
+  AgentAdapter::AgentAdapter(boost::asio::io_context& io, pipeline::PipelineContextPtr context,
+                             const ConfigOptions& options, const boost::property_tree::ptree& block)
     : Adapter("AgentAdapter", io, options),
       m_pipeline(context, Source::m_strand, m_feedback),
       m_reconnectTimer(io),
@@ -269,7 +269,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     }
   }
 
-  void AgentAdapter::assetsFailed(std::error_code &ec)
+  void AgentAdapter::assetsFailed(std::error_code& ec)
   {
     if (m_stopped)
       return;
@@ -299,7 +299,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     }
   }
 
-  void AgentAdapter::streamsFailed(std::error_code &ec)
+  void AgentAdapter::streamsFailed(std::error_code& ec)
   {
     if (m_stopped)
       return;

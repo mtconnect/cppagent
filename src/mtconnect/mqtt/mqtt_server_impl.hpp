@@ -84,7 +84,7 @@ namespace mtconnect {
       /// - Port, defaults to 0/1883
       /// - MqttTls, defaults to false
       /// - ServerIp, defaults to 127.0.0.1/LocalHost
-      MqttServerImpl(boost::asio::io_context &ioContext, const ConfigOptions &options)
+      MqttServerImpl(boost::asio::io_context& ioContext, const ConfigOptions& options)
         : MqttServer(ioContext),
           m_options(options),
           m_host(*GetOption<std::string>(options, configuration::ServerIp))
@@ -96,7 +96,7 @@ namespace mtconnect {
 
       ~MqttServerImpl() { stop(); }
 
-      Derived &derived() { return static_cast<Derived &>(*this); }
+      Derived& derived() { return static_cast<Derived&>(*this); }
 
       /// @brief Start the Mqtt server
 
@@ -104,10 +104,10 @@ namespace mtconnect {
       {
         NAMED_SCOPE("MqttServer::start");
 
-        auto &server = derived().createServer();
+        auto& server = derived().createServer();
 
         server.set_accept_handler([&server, this](con_sp_t spep) {
-          auto &ep = *spep;
+          auto& ep = *spep;
           std::weak_ptr<con_t> wp = spep;
           using packet_id_t = typename std::remove_reference_t<decltype(ep)>::packet_id_t;
           LOG(info) << "Server: Accepted" << std::endl;
@@ -156,7 +156,7 @@ namespace mtconnect {
               return false;
             }
             m_connections.erase(con);
-            auto &idx = m_subs.get<tag_con>();
+            auto& idx = m_subs.get<tag_con>();
             auto r = idx.equal_range(con);
             idx.erase(r.first, r.second);
 
@@ -172,7 +172,7 @@ namespace mtconnect {
               return false;
             }
             m_connections.erase(con);
-            auto &idx = m_subs.get<tag_con>();
+            auto& idx = m_subs.get<tag_con>();
             auto r = idx.equal_range(con);
             idx.erase(r.first, r.second);
 
@@ -191,7 +191,7 @@ namespace mtconnect {
                   LOG(error) << "Server Endpoint has been deleted";
                   return false;
                 }
-                for (auto const &e : entries)
+                for (auto const& e : entries)
                 {
                   LOG(debug) << "Server: topic_filter: " << e.topic_filter
                              << " qos: " << e.subopts.get_qos() << std::endl;
@@ -215,7 +215,7 @@ namespace mtconnect {
             LOG(debug) << "Server topic_name: " << topic_name;
             LOG(debug) << "Server contents: " << contents;
 
-            for (const auto &sub : m_subs)
+            for (const auto& sub : m_subs)
             {
               if (mqtt::broker::compare_topic_filter(sub.topic, topic_name))
               {
@@ -238,7 +238,7 @@ namespace mtconnect {
       /// @brief Stop the Mqtt server
       void stop() override
       {
-        auto &server = derived().getServer();
+        auto& server = derived().getServer();
         auto url = m_url;
 
         if (server)
@@ -271,7 +271,7 @@ namespace mtconnect {
       /// - Port, defaults to 0/1883
       /// - MqttTls, defaults to false
       /// - ServerIp, defaults to 127.0.0.1/LocalHost
-      MqttTcpServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
+      MqttTcpServer(boost::asio::io_context& ioContext, const ConfigOptions& options)
         : base(ioContext, options)
       {
         m_port = GetOption<int>(options, configuration::MqttPort).value_or(1883);
@@ -279,9 +279,9 @@ namespace mtconnect {
 
       /// @brief Get the Mqtt TCP Server
       /// @return pointer to the Mqtt TCP Server
-      auto &getServer() { return m_server; }
+      auto& getServer() { return m_server; }
 
-      auto &createServer()
+      auto& createServer()
       {
         if (!m_server)
         {
@@ -308,7 +308,7 @@ namespace mtconnect {
       /// - Port, defaults to 0/1883
       /// - MqttTls, defaults to True
       /// - ServerIp, defaults to 127.0.0.1/LocalHost
-      MqttTlsServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
+      MqttTlsServer(boost::asio::io_context& ioContext, const ConfigOptions& options)
         : base(ioContext, options)
       {
         m_port = GetOption<int>(options, configuration::Port).value_or(8883);
@@ -319,9 +319,9 @@ namespace mtconnect {
 
       /// @brief Get the Mqtt TLS Server
       /// @return pointer to the Mqtt TLS Server
-      auto &getServer() { return m_server; }
+      auto& getServer() { return m_server; }
 
-      auto &createServer()
+      auto& createServer()
       {
         if (!m_server)
         {
@@ -338,7 +338,8 @@ namespace mtconnect {
             {
               ctx.set_password_callback(
                   [this](size_t, boost::asio::ssl::context_base::password_purpose) -> std::string {
-                    return *GetOption<std::string>(m_options, configuration::TlsCertificatePassword);
+                    return *GetOption<std::string>(m_options,
+                                                   configuration::TlsCertificatePassword);
                   });
             }
 
@@ -358,7 +359,8 @@ namespace mtconnect {
               if (HasOption(m_options, configuration::TlsClientCAs))
               {
                 LOG(info) << "Server: Adding Client Certificates.";
-                ctx.load_verify_file(*GetOption<std::string>(m_options, configuration::TlsClientCAs));
+                ctx.load_verify_file(
+                    *GetOption<std::string>(m_options, configuration::TlsClientCAs));
               }
             }
           }
@@ -385,7 +387,7 @@ namespace mtconnect {
       /// - Port, defaults to 0/1883
       /// - MqttTls, defaults to True
       /// - ServerIp, defaults to 127.0.0.1/LocalHost
-      MqttTlsWSServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
+      MqttTlsWSServer(boost::asio::io_context& ioContext, const ConfigOptions& options)
         : base(ioContext, options)
       {
         m_port = GetOption<int>(options, configuration::Port).value_or(8883);
@@ -396,9 +398,9 @@ namespace mtconnect {
 
       /// @brief Get the Mqtt TLS WebSocket Server
       /// @return pointer to the Mqtt TLS WebSocket Server
-      auto &getServer() { return m_server; }
+      auto& getServer() { return m_server; }
 
-      auto &createServer()
+      auto& createServer()
       {
         if (!m_server)
         {

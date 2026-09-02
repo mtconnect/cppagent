@@ -36,7 +36,7 @@ namespace mtconnect::source {
   using namespace observation;
   using namespace asset;
   using namespace pipeline;
-  void LoopbackPipeline::build(const ConfigOptions &options)
+  void LoopbackPipeline::build(const ConfigOptions& options)
   {
     m_options = options;
 
@@ -86,7 +86,7 @@ namespace mtconnect::source {
     else
     {
       LOG(error) << "Cannot add observation: ";
-      for (auto &e : errors)
+      for (auto& e : errors)
       {
         LOG(error) << "Cannot add observation: " << e->what();
       }
@@ -95,7 +95,7 @@ namespace mtconnect::source {
     return 0;
   }
 
-  SequenceNumber_t LoopbackSource::receive(DataItemPtr dataItem, const std::string &value,
+  SequenceNumber_t LoopbackSource::receive(DataItemPtr dataItem, const std::string& value,
                                            std::optional<Timestamp> timestamp)
   {
     if (dataItem->isCondition())
@@ -104,7 +104,7 @@ namespace mtconnect::source {
       return receive(dataItem, {{"VALUE", value}}, timestamp);
   }
 
-  SequenceNumber_t LoopbackSource::receive(const std::string &data)
+  SequenceNumber_t LoopbackSource::receive(const std::string& data)
   {
     auto ent = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", getIdentity()}});
     auto res = m_pipeline.run(std::move(ent));
@@ -120,11 +120,11 @@ namespace mtconnect::source {
 
   void LoopbackSource::receive(DevicePtr device) { m_pipeline.run(device); }
 
-  AssetPtr LoopbackSource::receiveAsset(DevicePtr device, const std::string &document,
-                                        const std::optional<std::string> &id,
-                                        const std::optional<std::string> &type,
-                                        const std::optional<std::string> &time,
-                                        entity::ErrorList &errors)
+  AssetPtr LoopbackSource::receiveAsset(DevicePtr device, const std::string& document,
+                                        const std::optional<std::string>& id,
+                                        const std::optional<std::string>& type,
+                                        const std::optional<std::string>& time,
+                                        entity::ErrorList& errors)
   {
     // Parse the asset
     auto entity = entity::XmlParser::parse(asset::Asset::getRoot(), document, errors);
@@ -132,7 +132,7 @@ namespace mtconnect::source {
     {
       LOG(warning) << "Asset could not be parsed";
       LOG(warning) << document;
-      for (auto &e : errors)
+      for (auto& e : errors)
         LOG(warning) << e->what();
       return nullptr;
     }
@@ -175,7 +175,7 @@ namespace mtconnect::source {
     return asset;
   }
 
-  void LoopbackSource::removeAsset(const std::optional<std::string> device, const std::string &id)
+  void LoopbackSource::removeAsset(const std::optional<std::string> device, const std::string& id)
   {
     auto ac = make_shared<AssetCommand>("AssetCommand", Properties {});
     ac->m_timestamp = chrono::system_clock::now();

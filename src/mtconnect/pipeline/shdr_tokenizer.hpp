@@ -32,9 +32,9 @@ namespace mtconnect::pipeline {
   {
   public:
     using entity::Entity::Entity;
-    Tokens(const Tokens &) = default;
+    Tokens(const Tokens&) = default;
     Tokens() = default;
-    Tokens(const Tokens &ts, const TokenList &list) : Entity(ts), m_tokens(list) {}
+    Tokens(const Tokens& ts, const TokenList& list) : Entity(ts), m_tokens(list) {}
 
     TokenList m_tokens;
   };
@@ -43,13 +43,13 @@ namespace mtconnect::pipeline {
   class AGENT_LIB_API ShdrTokenizer : public Transform
   {
   public:
-    ShdrTokenizer(const ShdrTokenizer &) = default;
+    ShdrTokenizer(const ShdrTokenizer&) = default;
     ShdrTokenizer() : Transform("ShdrTokenizer") { m_guard = EntityNameGuard("Data", RUN); }
     ~ShdrTokenizer() = default;
 
-    entity::EntityPtr operator()(entity::EntityPtr &&data) override
+    entity::EntityPtr operator()(entity::EntityPtr&& data) override
     {
-      auto &body = data->getValue<std::string>();
+      auto& body = data->getValue<std::string>();
       entity::Properties props;
       if (auto source = data->maybeGet<std::string>("source"))
         props["source"] = *source;
@@ -59,7 +59,7 @@ namespace mtconnect::pipeline {
     }
 
     template <typename T>
-    inline static std::string remove(const T &range, const char c)
+    inline static std::string remove(const T& range, const char c)
     {
       using namespace std;
       string res;
@@ -69,7 +69,7 @@ namespace mtconnect::pipeline {
       return res;
     }
 
-    inline static std::string trim(const std::string &str)
+    inline static std::string trim(const std::string& str)
     {
       using namespace std;
 
@@ -84,7 +84,7 @@ namespace mtconnect::pipeline {
         return str.substr(first, last - first + 1);
     }
 
-    static inline void tokenize(const std::string &data, TokenList &tokens)
+    static inline void tokenize(const std::string& data, TokenList& tokens)
     {
       using namespace std;
       auto cp = data.c_str();
@@ -96,7 +96,7 @@ namespace mtconnect::pipeline {
           cp++;
 
         auto start = cp, orig = cp;
-        const char *end = 0;
+        const char* end = 0;
         if (*cp == '"')
         {
           cp = ++start;
@@ -112,7 +112,7 @@ namespace mtconnect::pipeline {
                 cp = start + dist;
                 copied = true;
               }
-              memmove(const_cast<char *>(cp), cp + 1, strlen(cp));
+              memmove(const_cast<char*>(cp), cp + 1, strlen(cp));
             }
             else if (*cp == '|')
             {

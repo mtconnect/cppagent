@@ -52,7 +52,7 @@ const string ServerDhFile {TEST_RESOURCE_DIR "/dh2048.pem"};
 const string ClientCA(TEST_RESOURCE_DIR "/clientca.crt");
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -96,7 +96,7 @@ protected:
     }
   }
 
-  void createServer(const ConfigOptions &options)
+  void createServer(const ConfigOptions& options)
   {
     bool withTlsOption = IsOptionSet(options, configuration::MqttTls);
 
@@ -113,7 +113,7 @@ protected:
   }
 
   template <typename Rep, typename Period>
-  bool waitFor(const chrono::duration<Rep, Period> &time, function<bool()> pred)
+  bool waitFor(const chrono::duration<Rep, Period>& time, function<bool()> pred)
   {
     boost::asio::steady_timer timer(m_agentTestHelper->m_ioContext);
     timer.expires_after(time);
@@ -147,7 +147,7 @@ protected:
     }
   }
 
-  void createClient(const ConfigOptions &options, unique_ptr<ClientHandler> &&handler,
+  void createClient(const ConfigOptions& options, unique_ptr<ClientHandler>&& handler,
                     const std::optional<std::string> willTopic = std::nullopt,
                     const std::optional<std::string> willPayload = std::nullopt)
   {
@@ -253,7 +253,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
   client->set_suback_handler(
       [&client, &pid_sub1](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
         std::cout << "suback received. packet_id: " << packet_id << std::endl;
-        for (auto const &e : results)
+        for (auto const& e : results)
         {
           std::cout << "subscribe result: " << e << std::endl;
         }
@@ -425,7 +425,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authenticates_with_credentials)
   client->set_clean_session(true);
   client->set_keep_alive_sec(30);
 
-  MqttAuthorization *mqttAuct = new MqttAuthorization(options);
+  MqttAuthorization* mqttAuct = new MqttAuthorization(options);
   MqttTopicPermission permission = mqttAuct->getPermissionsForClient("mqtt_tcp_client_cpp/topic1");
 
   client->set_connack_handler([&](bool sp, mqtt::connect_return_code connack_return_code) {
@@ -436,7 +436,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authenticates_with_credentials)
     {
       pid_sub1 = client->acquire_unique_packet_id();
 
-      MqttAuthentication *mqttAuth = new MqttAuthentication(options);
+      MqttAuthentication* mqttAuth = new MqttAuthentication(options);
 
       if (!mqttAuth->checkCredentials())
       {
@@ -467,7 +467,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authenticates_with_credentials)
       [&client, &pid_sub1, &permission](std::uint16_t packet_id,
                                         std::vector<mqtt::suback_return_code> results) {
         std::cout << "suback received. packet_id: " << packet_id << std::endl;
-        for (auto const &e : results)
+        for (auto const& e : results)
         {
           std::cout << "subscribe result: " << e << std::endl;
         }

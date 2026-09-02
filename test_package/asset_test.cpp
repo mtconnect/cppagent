@@ -43,7 +43,7 @@ using namespace mtconnect::entity;
 using namespace mtconnect::asset;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -76,7 +76,7 @@ TEST_F(AssetTest, extended_asset_with_arbitrary_content_is_parsed_and_printed)
 
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   entity::XmlPrinter printer;
@@ -104,6 +104,6 @@ TEST_F(AssetTest, asset_should_parse_and_load_if_asset_id_is_missing_from_xml)
 
   auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
-  auto asset = dynamic_cast<Asset *>(entity.get());
+  auto asset = dynamic_cast<Asset*>(entity.get());
   ASSERT_NE(nullptr, asset);
 }

@@ -43,7 +43,7 @@ namespace mtconnect::sink::rest_sink {
     std::string m_uri;
     std::string m_doc;
 
-    MTConnectSchema(SchemaType type, const std::string &uri, const std::string &doc)
+    MTConnectSchema(SchemaType type, const std::string& uri, const std::string& doc)
       : m_type(type), m_uri(uri), m_doc(doc)
     {}
   };
@@ -65,8 +65,8 @@ namespace mtconnect::sink::rest_sink {
     /// @param path the path on the file system
     /// @param version schema version when registering MTConnect files
     /// @return A namespace list associated with the files
-    MTConnectSchemaList registerFiles(const std::string &uri, const std::filesystem::path &path,
-                                      const std::string &version)
+    MTConnectSchemaList registerFiles(const std::string& uri, const std::filesystem::path& path,
+                                      const std::string& version)
     {
       return registerDirectory(uri, path, version);
     }
@@ -75,35 +75,35 @@ namespace mtconnect::sink::rest_sink {
     /// @param path the path on the file system
     /// @param version schema version when registering MTConnect files
     /// @return A namespace list associated with the files
-    MTConnectSchemaList registerDirectory(const std::string &uri, const std::filesystem::path &path,
-                                          const std::string &version);
+    MTConnectSchemaList registerDirectory(const std::string& uri, const std::filesystem::path& path,
+                                          const std::string& version);
     /// @brief Register a single file
     /// @param uri the uri for the file
     /// @param pathName the std filesystem path of file
     /// @param version the schema version when registering MTConnect files
     /// @return an optional XmlNamespace if successful
-    std::optional<MTConnectSchema> registerFile(const std::string &uri,
-                                                const std::filesystem::path &path,
-                                                const std::string &version);
+    std::optional<MTConnectSchema> registerFile(const std::string& uri,
+                                                const std::filesystem::path& path,
+                                                const std::string& version);
     /// @brief get a cached file given a filename and optional encoding
     /// @param name the name of the file from the server
     /// @param acceptEncoding optional accepted encodings
     /// @param context optional context to perform async io
     /// @return shared pointer to the cached file
-    CachedFilePtr getFile(const std::string &name,
+    CachedFilePtr getFile(const std::string& name,
                           const std::optional<std::string> acceptEncoding = std::nullopt,
-                          boost::asio::io_context *context = nullptr);
+                          boost::asio::io_context* context = nullptr);
     /// @brief check if the file is cached
     /// @param name the name of the file from the server
     /// @return `true` if the file is cached
-    bool hasFile(const std::string &name) const
+    bool hasFile(const std::string& name) const
     {
       return (m_fileCache.count(name) > 0) || (m_fileMap.count(name) > 0);
     }
     /// @brief Register an file name extension with a mime type
     /// @param ext the extension (will insert a leading dot if one is not provided)
     /// @param type the mime type
-    void addMimeType(const std::string &ext, const std::string &type)
+    void addMimeType(const std::string& ext, const std::string& type)
     {
       std::string s(ext);
       if (s[0] != '.')
@@ -116,7 +116,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param path the path on the files system
     /// @param index the default file to return for the directory if one is not given. For example,
     /// `index.html`
-    void addDirectory(const std::string &uri, const std::string &path, const std::string &index);
+    void addDirectory(const std::string& uri, const std::string& path, const std::string& index);
 
     /// @brief Set the maximum size of the cache
     /// @param s the maximum size
@@ -141,8 +141,8 @@ namespace mtconnect::sink::rest_sink {
     void clear() { m_fileCache.clear(); }
     ///@}
   protected:
-    CachedFilePtr findFileInDirectories(const std::string &name);
-    const std::string &getMimeType(std::string ext)
+    CachedFilePtr findFileInDirectories(const std::string& name);
+    const std::string& getMimeType(std::string ext)
     {
       static std::string octStream("application/octet-stream");
       auto mt = m_mimeTypes.find(ext);
@@ -152,8 +152,8 @@ namespace mtconnect::sink::rest_sink {
         return octStream;
     }
 
-    CachedFilePtr redirect(const std::string &name, const Directory &directory);
-    void compressFile(CachedFilePtr file, boost::asio::io_context *context);
+    CachedFilePtr redirect(const std::string& name, const Directory& directory);
+    void compressFile(CachedFilePtr file, boost::asio::io_context* context);
 
   protected:
     std::map<std::string, std::pair<std::filesystem::path, std::string>> m_directories;

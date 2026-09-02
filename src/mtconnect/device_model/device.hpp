@@ -67,7 +67,7 @@ namespace mtconnect {
       struct ExtractId
       {
         using result_type = std::string;
-        const result_type &operator()(const WeakDataItemPtr d) const { return d.lock()->getId(); }
+        const result_type& operator()(const WeakDataItemPtr d) const { return d.lock()->getId(); }
       };
       /// @brief multi-index data item id extractor
       ///
@@ -76,7 +76,7 @@ namespace mtconnect {
       struct ExtractOriginalId
       {
         using result_type = std::string;
-        const result_type operator()(const WeakDataItemPtr &d) const
+        const result_type operator()(const WeakDataItemPtr& d) const
         {
           const static result_type none {};
           if (d.expired())
@@ -98,7 +98,7 @@ namespace mtconnect {
       struct ExtractName
       {
         using result_type = std::string;
-        const result_type operator()(const WeakDataItemPtr &d) const
+        const result_type operator()(const WeakDataItemPtr& d) const
         {
           const static result_type none {};
           if (d.expired())
@@ -120,7 +120,7 @@ namespace mtconnect {
       struct ExtractSource
       {
         using result_type = std::string;
-        const result_type &operator()(const WeakDataItemPtr &d) const
+        const result_type& operator()(const WeakDataItemPtr& d) const
         {
           const static result_type none {};
           if (d.expired())
@@ -139,7 +139,7 @@ namespace mtconnect {
       struct ExtractType
       {
         using result_type = std::string;
-        const result_type &operator()(const WeakDataItemPtr &d) const
+        const result_type& operator()(const WeakDataItemPtr& d) const
         {
           const static result_type none {};
           if (d.expired())
@@ -164,7 +164,7 @@ namespace mtconnect {
       struct ExtractComponentId
       {
         using result_type = std::string;
-        const result_type &operator()(const std::weak_ptr<Component> &c) const
+        const result_type& operator()(const std::weak_ptr<Component>& c) const
         {
           return c.lock()->getId();
         }
@@ -172,7 +172,7 @@ namespace mtconnect {
       struct ExtractComponentType
       {
         using result_type = std::string;
-        const result_type &operator()(const std::weak_ptr<Component> &c) const
+        const result_type& operator()(const std::weak_ptr<Component>& c) const
         {
           return c.lock()->getName();
         }
@@ -180,7 +180,7 @@ namespace mtconnect {
       struct ExtractComponentName
       {
         using result_type = std::string;
-        const result_type operator()(const std::weak_ptr<Component> &c) const
+        const result_type operator()(const std::weak_ptr<Component>& c) const
         {
           auto comp = c.lock();
           if (comp->hasProperty("name"))
@@ -199,7 +199,7 @@ namespace mtconnect {
       /// @brief Constructor that sets variables from an attribute map
       /// @param[in] name the name of the device
       /// @param[in] props the device properties
-      Device(const std::string &name, entity::Properties &props);
+      Device(const std::string& name, entity::Properties& props);
       ~Device() override = default;
 
       /// @brief get a shared pointer to the device
@@ -222,7 +222,7 @@ namespace mtconnect {
       /// @brief set any configuration options related to this device
       /// @param[in] options the options
       /// - `PreserveUUID` can be set to lock the uuid of this device
-      void setOptions(const ConfigOptions &options);
+      void setOptions(const ConfigOptions& options);
 
       /// @brief Add a data item to the device
       /// @param[in] dataItem shared pointer to the data item
@@ -236,15 +236,15 @@ namespace mtconnect {
       ///  4. source
       /// @param[in] name the source, name, or id of the data item
       /// @return shared pointer to the data item if found
-      DataItemPtr getDeviceDataItem(const std::string &name) const;
+      DataItemPtr getDeviceDataItem(const std::string& name) const;
 
       /// @brief associate an adapter with the device
       /// @param[in] anAdapter an adapter
-      void addAdapter(source::adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
+      void addAdapter(source::adapter::Adapter* anAdapter) { m_adapters.emplace_back(anAdapter); }
       /// @brief get a component by id
       /// @param[in] aId the component id
       /// @return shared pointer to the component if found
-      ComponentPtr getComponentById(const std::string &aId) const
+      ComponentPtr getComponentById(const std::string& aId) const
       {
         auto comp = m_componentIndex.get<ById>().find(aId);
         if (comp != m_componentIndex.get<ById>().end())
@@ -255,7 +255,7 @@ namespace mtconnect {
       /// @brief get a component by name
       /// @param[in] name the component name
       /// @return shared pointer to the component if found
-      ComponentPtr getComponentByName(const std::string &name) const
+      ComponentPtr getComponentByName(const std::string& name) const
       {
         auto comp = m_componentIndex.get<ByName>().find(name);
         if (comp != m_componentIndex.get<ByName>().end())
@@ -266,7 +266,7 @@ namespace mtconnect {
       /// @brief get a component by name
       /// @param[in] name the component name
       /// @return shared pointer to the component if found
-      std::list<ComponentPtr> getComponentByType(const std::string &type) const
+      std::list<ComponentPtr> getComponentByType(const std::string& type) const
       {
         std::list<ComponentPtr> res;
         auto [first, last] = m_componentIndex.get<ByType>().equal_range(type);
@@ -296,15 +296,15 @@ namespace mtconnect {
 
       /// @brief get the data item index by id
       /// @return data item index by id
-      const auto &getDeviceDataItems() const { return m_dataItems.get<ById>(); }
+      const auto& getDeviceDataItems() const { return m_dataItems.get<ById>(); }
       /// @brief get the multi-index for data items
       /// @return data item multi-index
-      const auto &getDataItemIndex() const { return m_dataItems; }
+      const auto& getDataItemIndex() const { return m_dataItems; }
 
       /// @brief
       /// @param[in] dataItem
       /// @param[in,out] errors
-      void addDataItem(DataItemPtr dataItem, entity::ErrorList &errors) override;
+      void addDataItem(DataItemPtr dataItem, entity::ErrorList& errors) override;
 
       /// @brief get the version of this device
       /// @return mtconnet version
@@ -341,7 +341,7 @@ namespace mtconnect {
       ///
       /// Converts the id attribute to a unique value and caches the original value
       /// in case it is required later
-      void createUniqueIds(std::unordered_map<std::string, std::string> &idMap);
+      void createUniqueIds(std::unordered_map<std::string, std::string>& idMap);
 
     protected:
       void cachePointers(DataItemPtr dataItem);
@@ -357,7 +357,7 @@ namespace mtconnect {
 
       DataItemIndex m_dataItems;
       ComponentIndex m_componentIndex;
-      std::vector<source::adapter::Adapter *> m_adapters;
+      std::vector<source::adapter::Adapter*> m_adapters;
     };
 
     using DevicePtr = std::shared_ptr<Device>;

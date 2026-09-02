@@ -57,7 +57,7 @@
 #endif
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -79,9 +79,9 @@ namespace {
   class MockPipelineContract : public PipelineContract
   {
   public:
-    MockPipelineContract(const Agent *agent) : m_agent(agent) {}
-    DevicePtr findDevice(const std::string &device) override { return nullptr; }
-    DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+    MockPipelineContract(const Agent* agent) : m_agent(agent) {}
+    DevicePtr findDevice(const std::string& device) override { return nullptr; }
+    DataItemPtr findDataItem(const std::string& device, const std::string& name) override
     {
       return m_agent->getDataItemForDevice(device, name);
     }
@@ -94,11 +94,11 @@ namespace {
     int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
     bool isValidating() const override { return false; }
     void deliverCommand(entity::EntityPtr c) override { m_command = c; }
-    void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
-    void sourceFailed(const std::string &id) override {}
-    const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
+    void deliverConnectStatus(entity::EntityPtr, const StringList&, bool) override {}
+    void sourceFailed(const std::string& id) override {}
+    const ObservationPtr checkDuplicate(const ObservationPtr& obs) const override { return obs; }
 
-    const Agent *m_agent;
+    const Agent* m_agent;
     ObservationPtr m_observation;
     entity::EntityPtr m_command;
     AssetPtr m_asset;
@@ -117,7 +117,7 @@ namespace {
       m_context->m_contract = make_unique<MockPipelineContract>(m_config->getAgent());
     }
 
-    void load(const char *file)
+    void load(const char* file)
     {
       string str("Devices = " TEST_RESOURCE_DIR
                  "/samples/test_config.xml\n"
@@ -160,7 +160,7 @@ namespace {
     for (int i = 0; i < size; i++)
     {
       auto pipeline = MRubyPtr<pipeline::Pipeline>::unwrap(mrb, values[i]);
-      ASSERT_NE(nullptr, dynamic_cast<pipeline::Pipeline *>(pipeline));
+      ASSERT_NE(nullptr, dynamic_cast<pipeline::Pipeline*>(pipeline));
     }
   }
 
@@ -214,7 +214,7 @@ namespace {
     auto cent1 = MRubySharedPtr<Entity>::unwrap(mrb, ent1);
     ASSERT_TRUE(cent1);
 
-    const DataSet &ds = cent1->getValue<DataSet>();
+    const DataSet& ds = cent1->getValue<DataSet>();
     ASSERT_EQ(3, ds.size());
 
     ASSERT_EQ("value1", ds.get<string>("string"));
@@ -238,16 +238,16 @@ namespace {
     auto cent1 = MRubySharedPtr<Entity>::unwrap(mrb, ent1);
     ASSERT_TRUE(cent1);
 
-    const DataSet &ds = cent1->getValue<DataSet>();
+    const DataSet& ds = cent1->getValue<DataSet>();
     ASSERT_EQ(2, ds.size());
 
-    const auto &row1 = ds.get<TableRow>("row1");
+    const auto& row1 = ds.get<TableRow>("row1");
     ASSERT_EQ(2, row1.size());
 
     ASSERT_EQ("text1", row1.get<string>("string"));
     ASSERT_NEAR(1.0, row1.get<double>("float"), 0.000001);
 
-    const auto &row2 = ds.get<TableRow>("row2");
+    const auto& row2 = ds.get<TableRow>("row2");
     ASSERT_EQ(2, row2.size());
 
     ASSERT_EQ("text2", row2.get<string>("string"));
@@ -283,7 +283,7 @@ $source.pipeline.splice_after('Start', $trans)
     auto di = m_config->getAgent()->getDataItemForDevice("LinuxCNC", "execution");
     [[maybe_unused]] auto out = loopback->receive(di, "1"s);
 
-    auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+    auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
     ASSERT_TRUE(contract->m_observation);
     ASSERT_EQ("READY", contract->m_observation->getValue<string>());
   }
@@ -314,7 +314,7 @@ $source.pipeline.splice_after('Start', FixExecution.new('FixExec', :Event))
     auto di = m_config->getAgent()->getDataItemForDevice("LinuxCNC", "execution");
     [[maybe_unused]] auto out = loopback->receive(di, "1"s);
 
-    auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+    auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
     ASSERT_TRUE(contract->m_observation);
     ASSERT_EQ("READY", contract->m_observation->getValue<string>());
   }
@@ -346,7 +346,7 @@ $source.pipeline.splice_after('Start', $trans)
 
     loopback->getPipeline()->run(tokens);
 
-    auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+    auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
     ASSERT_TRUE(contract->m_observation);
     ASSERT_EQ(100.0, contract->m_observation->getValue<double>());
     ASSERT_EQ("Xact", contract->m_observation->getDataItem()->getName());
@@ -384,7 +384,7 @@ $source.pipeline.splice_after('Start', $trans)
 
     loopback->getPipeline()->run(std::move(entity));
 
-    auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+    auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
     ASSERT_TRUE(contract->m_observation);
     ASSERT_EQ("G0X100Y100", contract->m_observation->getValue<string>());
     ASSERT_EQ("block", contract->m_observation->getDataItem()->getName());
@@ -417,7 +417,7 @@ $source.pipeline.splice_after('Start', $trans)
 
     loopback->getPipeline()->run(std::move(entity));
 
-    auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+    auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
 
     ASSERT_TRUE(contract->m_observation);
     auto cond = dynamic_pointer_cast<Condition>(contract->m_observation);

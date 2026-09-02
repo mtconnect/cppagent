@@ -51,7 +51,7 @@ namespace mtconnect {
     {
     public:
       /// @brief A splice function type for resplicing the pipeline after it is rebuilt
-      using Splice = std::function<void(Pipeline *)>;
+      using Splice = std::function<void(Pipeline*)>;
 
       /// @brief Pipeline constructor
       /// @param context The pipeline context
@@ -59,25 +59,25 @@ namespace mtconnect {
       /// @note All pipelines run in a single strand (thread) and therefor all operations are
       ///       thread-safe in one pipeline.
 
-      Pipeline(PipelineContextPtr context, boost::asio::io_context::strand &st)
+      Pipeline(PipelineContextPtr context, boost::asio::io_context::strand& st)
         : m_start(std::make_shared<Start>()), m_context(context), m_strand(st)
       {}
       /// @brief Destructor stops the pipeline
       virtual ~Pipeline() { m_start->stop(); }
       /// @brief Build the pipeline
       /// @param options A set of configuration options
-      virtual void build(const ConfigOptions &options) = 0;
+      virtual void build(const ConfigOptions& options) = 0;
       /// @brief Has the pipeline started?
       /// @return `true` if started
       bool started() const { return m_started; }
       /// @brief Get a reference to the strand
       /// @return the strand
-      boost::asio::io_context::strand &getStrand() { return m_strand; }
+      boost::asio::io_context::strand& getStrand() { return m_strand; }
 
       /// @brief Apply the splices after rebuilding
       void applySplices()
       {
-        for (auto &splice : m_splices)
+        for (auto& splice : m_splices)
         {
           splice(this);
         }
@@ -124,7 +124,7 @@ namespace mtconnect {
       /// @brief Find all transforms that match the target
       /// @param[in] target the named transforms to find
       /// @return a list of all matching transforms
-      Transform::ListOfTransforms find(const std::string &target)
+      Transform::ListOfTransforms find(const std::string& target)
       {
         Transform::ListOfTransforms xforms;
         m_start->find(target, xforms);
@@ -136,7 +136,7 @@ namespace mtconnect {
       /// @param[in] transform the transform to add before
       /// @param[in] reapplied `true` if the pipeline is being rebuilt
       /// @returns `true` if the target is found and spliced
-      bool spliceBefore(const std::string &target, TransformPtr transform, bool reapplied = false)
+      bool spliceBefore(const std::string& target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
         m_start->find(target, xforms);
@@ -144,7 +144,7 @@ namespace mtconnect {
           return false;
 
         transform->unlink();
-        for (auto &pair : xforms)
+        for (auto& pair : xforms)
         {
           pair.first->spliceBefore(pair.second, transform);
         }
@@ -152,7 +152,7 @@ namespace mtconnect {
         if (!reapplied)
         {
           m_splices.emplace_back(
-              [target, transform](Pipeline *pipe) { pipe->spliceBefore(target, transform, true); });
+              [target, transform](Pipeline* pipe) { pipe->spliceBefore(target, transform, true); });
         }
 
         return true;
@@ -163,7 +163,7 @@ namespace mtconnect {
       /// @param[in] transform the transform to add before
       /// @param[in] reapplied `true` if the pipeline is being rebuilt
       /// @returns `true` if the target is found and spliced
-      bool spliceAfter(const std::string &target, TransformPtr transform, bool reapplied = false)
+      bool spliceAfter(const std::string& target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
         m_start->find(target, xforms);
@@ -171,7 +171,7 @@ namespace mtconnect {
           return false;
 
         transform->unlink();
-        for (auto &pair : xforms)
+        for (auto& pair : xforms)
         {
           pair.second->spliceAfter(transform);
         }
@@ -179,7 +179,7 @@ namespace mtconnect {
         if (!reapplied)
         {
           m_splices.emplace_back(
-              [target, transform](Pipeline *pipe) { pipe->spliceAfter(target, transform, true); });
+              [target, transform](Pipeline* pipe) { pipe->spliceAfter(target, transform, true); });
         }
 
         return true;
@@ -190,14 +190,14 @@ namespace mtconnect {
       /// @param[in] transform the transform to add before
       /// @param[in] reapplied `true` if the pipeline is being rebuilt
       /// @returns `true` if the target is found and spliced
-      bool firstAfter(const std::string &target, TransformPtr transform, bool reapplied = false)
+      bool firstAfter(const std::string& target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
         m_start->find(target, xforms);
         if (xforms.empty())
           return false;
 
-        for (auto &pair : xforms)
+        for (auto& pair : xforms)
         {
           pair.second->firstAfter(transform);
         }
@@ -205,7 +205,7 @@ namespace mtconnect {
         if (!reapplied)
         {
           m_splices.emplace_back(
-              [target, transform](Pipeline *pipe) { pipe->firstAfter(target, transform, true); });
+              [target, transform](Pipeline* pipe) { pipe->firstAfter(target, transform, true); });
         }
         return true;
       }
@@ -215,14 +215,14 @@ namespace mtconnect {
       /// @param[in] transform the transform to add before
       /// @param[in] reapplied `true` if the pipeline is being rebuilt
       /// @returns `true` if the target is found and spliced
-      bool lastAfter(const std::string &target, TransformPtr transform, bool reapplied = false)
+      bool lastAfter(const std::string& target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
         m_start->find(target, xforms);
         if (xforms.empty())
           return false;
 
-        for (auto &pair : xforms)
+        for (auto& pair : xforms)
         {
           pair.second->bind(transform);
         }
@@ -230,7 +230,7 @@ namespace mtconnect {
         if (!reapplied)
         {
           m_splices.emplace_back(
-              [target, transform](Pipeline *pipe) { pipe->lastAfter(target, transform, true); });
+              [target, transform](Pipeline* pipe) { pipe->lastAfter(target, transform, true); });
         }
         return true;
       }
@@ -240,7 +240,7 @@ namespace mtconnect {
       /// @param[in] transform the transform to add before
       /// @param[in] reapplied `true` if the pipeline is being rebuilt
       /// @returns `true` if the target is found and spliced
-      bool replace(const std::string &target, TransformPtr transform, bool reapplied = false)
+      bool replace(const std::string& target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
         m_start->find(target, xforms);
@@ -248,7 +248,7 @@ namespace mtconnect {
           return false;
 
         transform->unlink();
-        for (auto &pair : xforms)
+        for (auto& pair : xforms)
         {
           pair.first->replace(pair.second, transform);
         }
@@ -256,7 +256,7 @@ namespace mtconnect {
         if (!reapplied)
         {
           m_splices.emplace_back(
-              [target, transform](Pipeline *pipe) { pipe->replace(target, transform, true); });
+              [target, transform](Pipeline* pipe) { pipe->replace(target, transform, true); });
         }
 
         return true;
@@ -265,19 +265,19 @@ namespace mtconnect {
       /// @brief removes the named transform.
       /// @param[in] target the named transforms to replace
       /// @returns `true` if the target is found and spliced
-      bool remove(const std::string &target)
+      bool remove(const std::string& target)
       {
         Transform::ListOfTransforms xforms;
         m_start->find(target, xforms);
         if (xforms.empty())
           return false;
 
-        for (auto &pair : xforms)
+        for (auto& pair : xforms)
         {
           pair.first->remove(pair.second);
         }
 
-        m_splices.emplace_back([target](Pipeline *pipe) { pipe->remove(target); });
+        m_splices.emplace_back([target](Pipeline* pipe) { pipe->remove(target); });
 
         return true;
       }
@@ -285,7 +285,7 @@ namespace mtconnect {
       /// @brief Sends the entity through the pipeline
       /// @param[in] entity the entity to send through the pipeline
       /// @return the entity returned from the transform
-      entity::EntityPtr run(entity::EntityPtr &&entity) { return m_start->next(std::move(entity)); }
+      entity::EntityPtr run(entity::EntityPtr&& entity) { return m_start->next(std::move(entity)); }
 
       /// @brief Bind the transform to the start
       /// @param[in] transform the transform to bind
@@ -308,7 +308,7 @@ namespace mtconnect {
       PipelineContextPtr getContext() { return m_context; }
       /// @brief gets the pipeline contract
       /// @returns the pipeline contract
-      const auto &getContract() { return m_context->m_contract; }
+      const auto& getContract() { return m_context->m_contract; }
 
     protected:
       class AGENT_LIB_API Start : public Transform
@@ -316,11 +316,11 @@ namespace mtconnect {
       public:
         Start() : Transform("Start")
         {
-          m_guard = [](const entity::Entity *entity) { return SKIP; };
+          m_guard = [](const entity::Entity* entity) { return SKIP; };
         }
         ~Start() override = default;
 
-        entity::EntityPtr operator()(entity::EntityPtr &&entity) override
+        entity::EntityPtr operator()(entity::EntityPtr&& entity) override
         {
           return entity::EntityPtr();
         }

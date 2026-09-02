@@ -42,7 +42,7 @@ namespace asio = boost::asio;
 using namespace std::literals;
 
 // main
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
@@ -52,8 +52,8 @@ class MockPipelineContract : public PipelineContract
 {
 public:
   MockPipelineContract(int32_t schemaVersion) : m_schemaVersion(schemaVersion) {}
-  DevicePtr findDevice(const std::string &) override { return nullptr; }
-  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+  DevicePtr findDevice(const std::string&) override { return nullptr; }
+  DataItemPtr findDataItem(const std::string& device, const std::string& name) override
   {
     return nullptr;
   }
@@ -65,9 +65,9 @@ public:
   int32_t getSchemaVersion() const override { return m_schemaVersion; }
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
-  void sourceFailed(const std::string &id) override {}
-  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
+  void deliverConnectStatus(entity::EntityPtr, const StringList&, bool) override {}
+  void sourceFailed(const std::string& id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr& obs) const override { return obs; }
   bool isValidating() const override { return false; }
 
   int32_t m_schemaVersion;
