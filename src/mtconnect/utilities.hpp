@@ -40,6 +40,8 @@
 #include <string>
 #include <string_view>
 #include <variant>
+#include <deque>
+#include <cstddef>
 
 #include "mtconnect/config.hpp"
 #include "mtconnect/logging.hpp"
@@ -1021,4 +1023,45 @@ namespace mtconnect {
     }
 
   }  // namespace url
+    
+  class FdMonitor {
+  public:
+    explicit FdMonitor(std::size_t window = 30) : m_window(window) {}
+    
+    // call on a timer (e.g. every 10–30s)
+    struct Report { std::size_t m_current, m_highWater; double m_slope; bool m_suspect; };
+    
+    Report sample() {
+      std::size_t n = openFdCount();
+      m_highWater = std::max(m_highWater, n);
+      
+      m_samples.push_back(n);
+      if (m_samples.size() > m_window) m_samples.pop_front();
+      
+      double s = slope();
+      // suspect if steadily rising AND at a new high across the whole window
+      bool suspect = m_samples.size() == m_window
+                      && s > 0.5                       // fds gained per sample
+                      && m_samples.back() == m_highWater;
+      return { n, m_highWater, s, suspect };
+    }
+    
+  private:
+    static std::size_t openFdCount();
+    
+    double slope() const {                 // least-squares over the window
+      std::size_t m = m_samples.size();
+      if (m < 2) return 0.0;
+      double sx=0, sy=0, sxy=0, sxx=0;
+      for (std::size_t i = 0; i < m; ++i) {
+        double x = double(i), y = double(m_samples[i]);
+        sx+=x; sy+=y; sxy+=x*y; sxx+=x*x;
+      }
+      double d = m*sxx - sx*sx;
+      return d == 0.0 ? 0.0 : (m*sxy - sx*sy) / d;
+    }
+    
+    std::size_t m_window, m_highWater = 0;
+    std::deque<std::size_t> m_samples;
+  };
 }  // namespace mtconnect

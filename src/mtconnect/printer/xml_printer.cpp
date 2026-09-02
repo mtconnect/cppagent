@@ -538,7 +538,7 @@ namespace mtconnect::printer {
     // Create the header
     AutoElement header(writer, "Header");
 
-    addAttribute(writer, "creationTime", getCurrentTime(GMT));
+    addAttribute(writer, "creationTime", getCurrentTime(GMT_UV_SEC));
 
     addAttribute(writer, "sender", m_senderName);
     addAttribute(writer, "instanceId", instanceId);

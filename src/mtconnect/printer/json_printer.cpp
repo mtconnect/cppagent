@@ -64,7 +64,7 @@ namespace mtconnect::printer {
                      const string &schemaVersion, const string modelChangeTime, bool validation,
                      const std::optional<std::string> &requestId)
   {
-    obj.AddPairs("version", version, "creationTime", getCurrentTime(GMT), "testIndicator", false,
+    obj.AddPairs("version", version, "creationTime", getCurrentTime(GMT_UV_SEC), "testIndicator", false,
                  "instanceId", instanceId, "sender", hostname, "schemaVersion", schemaVersion);
 
     if (IntSchemaVersion(schemaVersion) >= SCHEMA_VERSION(1, 7))

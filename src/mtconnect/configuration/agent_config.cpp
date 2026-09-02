@@ -104,7 +104,8 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp", logr::attributes::utc_cl
 namespace mtconnect::configuration {
 
   AgentConfiguration::AgentConfiguration()
-    : m_context {make_unique<AsyncContext>()}, m_monitorTimer(m_context->get())
+    : m_context {make_unique<AsyncContext>()}, m_monitorFilesTimer(m_context->get()),
+      m_monitorResourceTimer(m_context->get())
   {
     NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
     using namespace source;
@@ -370,8 +371,8 @@ namespace mtconnect::configuration {
 
             using std::placeholders::_1;
 
-            m_monitorTimer.expires_after(100ms);
-            m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
+            m_monitorFilesTimer.expires_after(100ms);
+            m_monitorFilesTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
           }
           else
           {
@@ -392,8 +393,26 @@ namespace mtconnect::configuration {
 
     using std::placeholders::_1;
 
-    m_monitorTimer.expires_after(m_monitorInterval);
-    m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
+    m_monitorFilesTimer.expires_after(m_monitorInterval);
+    m_monitorFilesTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
+  }
+  
+  void AgentConfiguration::monitorResources(boost::system::error_code ec)
+  {
+    using namespace chrono;
+    using namespace chrono_literals;
+    
+    using std::placeholders::_1;
+    
+    auto report = m_fdMonitor.sample();
+    LOG(info) << "Open file descriptors: Current: " << report.m_current
+              << ", high water: " << report.m_highWater
+              << ", slope: " << report.m_slope
+              << ", suspect: " << report.m_suspect;
+    
+    // m_current, m_highWater; double m_slope; bool m_suspect
+    m_monitorFilesTimer.expires_after(15s);
+    m_monitorFilesTimer.async_wait(boost::bind(&AgentConfiguration::monitorResources, this, _1));
   }
 
   int AgentConfiguration::start()
@@ -409,7 +428,13 @@ namespace mtconnect::configuration {
       });
 
       boost::system::error_code ec;
-      AgentConfiguration::monitorFiles(ec);
+      monitorFiles(ec);
+    }
+
+    if (m_monitorResources)
+    {
+      boost::system::error_code ec;
+      monitorResources(ec);
     }
 
     m_context->setThreadCount(m_workerThreadCount);
@@ -422,7 +447,7 @@ namespace mtconnect::configuration {
   {
     LOG(info) << "Agent stopping";
     m_beforeStopHooks.exec(*this);
-    m_monitorTimer.cancel();
+    m_monitorFilesTimer.cancel();
     m_restart = false;
     if (m_agent)
       m_agent->stop();
@@ -823,6 +848,7 @@ namespace mtconnect::configuration {
     GetOptions(config, options,
                {{configuration::PreserveUUID, true},
                 {configuration::DisableAgentDevice, false},
+                {configuration::MonitorResources, false},
                 {configuration::WorkingDirectory, m_working.string()},
                 {configuration::DataPath, StringList()},
                 {configuration::AgentDeviceUUID, ""s},
@@ -875,6 +901,7 @@ namespace mtconnect::configuration {
     m_monitorFiles = *GetOption<bool>(options, configuration::MonitorConfigFiles);
     m_monitorInterval = *GetOption<Seconds>(options, configuration::MonitorInterval);
     m_monitorDelay = *GetOption<Seconds>(options, configuration::MinimumConfigReloadAge);
+    m_monitorResources = *GetOption<bool>(options, configuration::MonitorResources);
 
     addPathFront(m_configPaths, m_working);
 

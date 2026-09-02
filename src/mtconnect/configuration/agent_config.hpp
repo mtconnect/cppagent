@@ -295,6 +295,7 @@ namespace mtconnect {
       void loadPlugins(const ptree &tree);
       bool loadPlugin(const std::string &name, const ptree &tree);
       void monitorFiles(boost::system::error_code ec);
+      void monitorResources(boost::system::error_code ec);
       void scheduleMonitorTimer();
 
     protected:
@@ -400,11 +401,13 @@ namespace mtconnect {
       std::list<std::filesystem::path> m_pluginPaths;
 
       // File monitoring
-      boost::asio::steady_timer m_monitorTimer;
+      boost::asio::steady_timer m_monitorFilesTimer;
+      boost::asio::steady_timer m_monitorResourceTimer;
       bool m_monitorFiles = false;
       std::chrono::seconds m_monitorInterval;
       std::chrono::seconds m_monitorDelay;
       bool m_restart = false;
+      bool m_monitorResources { false };
       std::optional<std::filesystem::file_time_type> m_configTime;
       std::optional<std::filesystem::file_time_type> m_deviceTime;
 
@@ -424,6 +427,8 @@ namespace mtconnect {
       std::unique_ptr<python::Embedded> m_python;
 #endif
 
+      FdMonitor m_fdMonitor;
+      
       HookManager<AgentConfiguration> m_afterAgentHooks;
       HookManager<AgentConfiguration> m_afterConfigHooks;
       HookManager<AgentConfiguration> m_beforeStartHooks;

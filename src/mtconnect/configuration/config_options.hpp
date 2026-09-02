@@ -38,6 +38,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(DataPath);
     DECLARE_CONFIGURATION(ConfigPath);
     DECLARE_CONFIGURATION(PluginPath);
+    DECLARE_CONFIGURATION(MonitorResources);
     ///@}
 
     /// @name Agent Configuration

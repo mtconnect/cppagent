@@ -98,8 +98,8 @@ namespace mtconnect {
           auto delta = count - m_last;
 
           double avg = delta + exp(-(dt.count() / 60.0)) * (m_lastAvg - delta);
-          LOG(info) << *m_dataItem << " - Average for last 1 minutes: " << (avg / dt.count());
-          LOG(info) << *m_dataItem
+          LOG(debug) << *m_dataItem << " - Average for last 1 minutes: " << (avg / dt.count());
+          LOG(debug) << *m_dataItem
                     << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
 
           m_last = count;

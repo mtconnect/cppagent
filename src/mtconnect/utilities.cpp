@@ -35,6 +35,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cstddef>
 
 #include "logging.hpp"
 
@@ -45,6 +46,14 @@
 #include <winsock2.h>
 
 #define DELTA_EPOCH_IN_MICROSECS 11644473600000000ull
+#endif
+
+#if defined(__linux__)
+#include <boost/filesystem.hpp>
+#include <iterator>
+#else                       // macOS, *BSD
+#include <unistd.h>
+#include <fcntl.h>
 #endif
 
 using namespace std;
@@ -291,5 +300,35 @@ namespace mtconnect {
       return ast;
     }
   }  // namespace url
+  
+  std::size_t FdMonitor::openFdCount()
+  {
+#if defined(_WIN32)
+    // NOTE: counts ALL kernel handles (files, events, threads, mutexes...),
+    // not just file descriptors. There is no exact fd analogue.
+    DWORD n = 0;
+    if (!GetProcessHandleCount(GetCurrentProcess(), &n))
+      return 0;
+    return static_cast<std::size_t>(n);
+    
+#elif defined(__linux__)
+    namespace fs = boost::filesystem;
+    boost::system::error_code ec;
+    fs::directory_iterator it("/proc/self/fd", ec), end;
+    if (ec) return 0;
+    // the iterator itself holds one fd open on the directory
+    auto n = static_cast<std::size_t>(std::distance(it, end));
+    return n ? n - 1 : 0;
+    
+#else
+    // /proc may be absent; scan up to the soft limit.
+    long maxfd = sysconf(_SC_OPEN_MAX);
+    if (maxfd < 0) maxfd = 65536;
+    std::size_t n = 0;
+    for (int fd = 0; fd < maxfd; ++fd)
+      if (fcntl(fd, F_GETFD) != -1) ++n;
+    return n;
+#endif
+  }
 
 }  // namespace mtconnect

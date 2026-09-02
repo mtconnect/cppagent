@@ -156,6 +156,24 @@ namespace mtconnect {
       {
         NAMED_SCOPE("HttpSession::close");
 
+        if (m_closing)
+          return;
+        m_closing = true;
+
+        // Release all references from observers. Streaming (interval) requests hold a
+        // shared_ptr back to this session via the AsyncObserver, and this session holds
+        // the observer's completion handler in m_complete, forming a reference cycle.
+        // Cancelling the observers resets that back-reference so the session (and its
+        // socket fd) can be destroyed. Without this the fd leaks on client disconnect.
+        for (auto &obs : m_observers)
+        {
+          auto optr = obs.lock();
+          if (optr)
+          {
+            optr->cancel();
+          }
+        }
+
         m_request.reset();
         boost::beast::error_code ec;
         m_stream.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
@@ -166,6 +184,7 @@ namespace mtconnect {
 
     protected:
       boost::beast::tcp_stream m_stream;
+      bool m_closing {false};
     };
   }  // namespace sink::rest_sink
 }  // namespace mtconnect
