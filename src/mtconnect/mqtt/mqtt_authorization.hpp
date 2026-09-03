@@ -64,7 +64,7 @@ namespace mtconnect {
         m_mode = mode;
       }
 
-      bool hasAuthorization()
+      bool hasAuthorization() const
       {
         if (m_type == AuthorizationType::Allow)
           return true;
@@ -92,19 +92,19 @@ namespace mtconnect {
 
       virtual ~MqttAuthorization() = default;
 
-      MqttTopicPermission getPermissionsForClient(const std::string& topic)
+      MqttTopicPermission getPermissionsForClient(const std::string& topic) const
       {
-        MqttTopicPermission mqttTopicPerm = *new MqttTopicPermission(topic);
-        return mqttTopicPerm;
+        return MqttTopicPermission {topic};
       }
 
-      std::list<MqttTopicPermission> getPermissionsForClient(const std::list<std::string>& topics)
+      std::list<MqttTopicPermission> getPermissionsForClient(
+          const std::list<std::string>& topics) const
       {
         std::list<MqttTopicPermission> mqttTopicPermissions;
 
-        for (auto& topic : topics)
+        for (const auto& topic : topics)
         {
-          mqttTopicPermissions.push_back(*new MqttTopicPermission(topic));
+          mqttTopicPermissions.emplace_back(topic);
         }
 
         return mqttTopicPermissions;

@@ -26,6 +26,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/system/error_code.hpp>
 
+#include <algorithm>
 #include <chrono>
 #include <future>
 #include <regex>
@@ -269,8 +270,37 @@ namespace mtconnect::sink::rest_sink {
           fileName = dir.second.second;
         }
 
-        optional<string> contentEncoding;
-        fs::path path {dir.second.first / fileName};
+        fs::path requested {fileName};
+        if (requested.is_absolute())
+        {
+          LOG(warning) << "Rejecting absolute path in static file request: " << name;
+          continue;
+        }
+
+        std::error_code error;
+        auto root = fs::weakly_canonical(dir.second.first, error);
+        if (error)
+        {
+          LOG(warning) << "Cannot resolve static file root " << dir.second.first << ": "
+                       << error.message();
+          continue;
+        }
+
+        auto path = fs::weakly_canonical(root / requested, error);
+        if (error)
+        {
+          LOG(warning) << "Cannot resolve static file request " << name << ": " << error.message();
+          continue;
+        }
+
+        auto relative = path.lexically_relative(root);
+        if (relative.empty() || relative.is_absolute() ||
+            std::any_of(relative.begin(), relative.end(),
+                        [](const auto& component) { return component == ".."; }))
+        {
+          LOG(warning) << "Rejecting static file request outside configured directory: " << name;
+          continue;
+        }
 
         if (fs::exists(path))
         {
