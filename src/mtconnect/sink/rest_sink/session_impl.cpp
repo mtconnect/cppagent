@@ -233,7 +233,7 @@ namespace mtconnect::sink::rest_sink {
 
     if (auto f = msg.find(http::field::content_type);
         f != msg.end() && f->value() == "application/x-www-form-urlencoded" &&
-        m_request->m_body[0] != '<')
+        !m_request->m_body.empty() && m_request->m_body[0] != '<')
     {
       parseQueries(m_request->m_body, m_request->m_query);
     }

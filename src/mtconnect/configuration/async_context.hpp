@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <atomic>
+
 #include <boost/asio.hpp>
 #include <boost/thread/thread.hpp>
 
@@ -43,11 +45,11 @@ namespace mtconnect::configuration {
 
     /// @brief is the context running
     /// @returns running status
-    auto isRunning() { return m_running; }
+    bool isRunning() const { return m_running.load(); }
 
     /// @brief return the paused state
     /// @returns the paused state
-    auto isPauased() { return m_paused; }
+    bool isPauased() const { return m_paused.load(); }
 
     /// @brief Testing only: method to remove the run guard from the context
     void removeGuard() { m_guard.reset(); }
@@ -239,9 +241,9 @@ namespace mtconnect::configuration {
     std::thread m_delayedStop;
 
     int m_threadCount = 1;
-    bool m_running = false;
-    bool m_paused = false;
-    int m_exitCode = 0;
+    std::atomic_bool m_running {false};
+    std::atomic_bool m_paused {false};
+    std::atomic_int m_exitCode {0};
   };
 
 }  // namespace mtconnect::configuration

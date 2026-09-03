@@ -574,6 +574,27 @@ TEST_F(HttpServerTest, put_content_with_put_values)
   ASSERT_EQ("application/x-www-form-urlencoded", ct);
 }
 
+TEST_F(HttpServerTest, accepts_empty_form_encoded_body)
+{
+  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
+    EXPECT_TRUE(request->m_body.empty());
+    EXPECT_TRUE(request->m_query.empty());
+    session->writeResponse(make_unique<Response>(status::ok, "Empty form accepted"));
+    return true;
+  };
+
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", handler});
+
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::get, "/probe", "", false,
+                         "application/x-www-form-urlencoded");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(int(http::status::ok), m_client->m_status);
+  EXPECT_EQ("Empty form accepted", m_client->m_result);
+}
+
 TEST_F(HttpServerTest, streaming_response)
 {
   struct context

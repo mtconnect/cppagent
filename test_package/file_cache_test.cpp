@@ -116,6 +116,13 @@ TEST_F(FileCacheTest, base_directory_should_redirect)
   ASSERT_TRUE(std::string_view(file->m_buffer).starts_with("<html>"));
 }
 
+TEST_F(FileCacheTest, rejects_paths_outside_configured_directory)
+{
+  m_cache->addDirectory("/schemas", TEST_RESOURCE_DIR "/schemas", "index.html");
+
+  EXPECT_FALSE(m_cache->getFile("/schemas/../styles/favicon.ico"));
+}
+
 TEST_F(FileCacheTest, file_cache_should_compress_file)
 {
   namespace fs = std::filesystem;

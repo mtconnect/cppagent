@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <list>
 #include <string>
 
 #include <nlohmann/json.hpp>
@@ -56,6 +57,16 @@ int main(int argc, char* argv[])
 {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
+}
+
+TEST(MqttAuthorizationTest, constructs_permissions_without_dynamic_allocation)
+{
+  ConfigOptions options {{MqttClientId, "authorization-test"s}};
+  const MqttAuthorization authorization(options);
+
+  EXPECT_TRUE(authorization.getPermissionsForClient("topic/a").hasAuthorization());
+  const std::list<std::string> topics {"topic/a", "topic/b"};
+  EXPECT_EQ(2u, authorization.getPermissionsForClient(topics).size());
 }
 
 class MqttIsolatedUnitTest : public testing::Test
