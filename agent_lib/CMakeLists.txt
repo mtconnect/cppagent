@@ -438,13 +438,6 @@ target_compile_definitions(
     BOOST_FILESYSTEM_VERSION=3
     )
 
-if(WITH_PYTHON)
-  target_compile_definitions(
-    agent_lib
-    PUBLIC
-    WITH_PYTHON )
-endif()
-
 if(WITH_RUBY)
   target_compile_definitions(
     agent_lib

@@ -17,19 +17,22 @@
 
 #pragma once
 
+#include <boost/asio/thread_pool.hpp>
+
 #include <filesystem>
+#include <future>
 #include <list>
+#include <map>
+#include <mutex>
 #include <optional>
 #include <string>
 
 #include "cached_file.hpp"
 #include "mtconnect/config.hpp"
 
-namespace boost {
-  namespace asio {
-    class io_context;
-  }
-}  // namespace boost
+namespace boost::asio {
+  class io_context;
+}
 
 namespace mtconnect::sink::rest_sink {
   enum class SchemaType
@@ -58,6 +61,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief Create a file cache
     /// @param max optional maxumimum size of the cache, defaults to 20k.
     FileCache(size_t max = 20 * 1024);
+    ~FileCache();
 
     /// @brief register files to be served by the agent.
     /// @note Cover method for `registerDirectory()`.
@@ -88,7 +92,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief get a cached file given a filename and optional encoding
     /// @param name the name of the file from the server
     /// @param acceptEncoding optional accepted encodings
-    /// @param context optional context to perform async io
+    /// @param context context to run while waiting for a compression job
     /// @return shared pointer to the cached file
     CachedFilePtr getFile(const std::string& name,
                           const std::optional<std::string> acceptEncoding = std::nullopt,
@@ -153,17 +157,19 @@ namespace mtconnect::sink::rest_sink {
     }
 
     CachedFilePtr redirect(const std::string& name, const Directory& directory);
-    void compressFile(CachedFilePtr file, boost::asio::io_context* context);
+    std::shared_future<bool> compressFile(const CachedFilePtr& file);
 
   protected:
     std::map<std::string, std::pair<std::filesystem::path, std::string>> m_directories;
     std::map<std::string, std::filesystem::path> m_fileMap;
     std::map<std::string, CachedFilePtr> m_fileCache;
     std::map<std::string, std::string> m_mimeTypes;
+    std::map<std::filesystem::path, std::shared_future<bool>> m_compressions;
     size_t m_maxCachedFileSize;
     size_t m_minCompressedFileSize;
 
     // Access control to the buffer
     mutable std::recursive_mutex m_cacheLock;
+    boost::asio::thread_pool m_compressionPool {1};
   };
 }  // namespace mtconnect::sink::rest_sink

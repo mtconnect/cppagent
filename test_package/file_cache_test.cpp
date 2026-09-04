@@ -22,7 +22,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
 
+#include <barrier>
 #include <cstdio>
+#include <future>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -56,6 +58,20 @@ protected:
 
   unique_ptr<FileCache> m_cache;
 };
+
+static CachedFilePtr waitForGzip(FileCache& cache)
+{
+  const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+  do
+  {
+    auto file = cache.getFile("/resources/zipped_file.txt", "gzip, deflate"s);
+    if (file && file->m_pathGz)
+      return file;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  } while (std::chrono::steady_clock::now() < deadline);
+
+  return nullptr;
+}
 
 TEST_F(FileCacheTest, finds_registered_files_by_uri)
 {
@@ -144,7 +160,7 @@ TEST_F(FileCacheTest, file_cache_should_compress_file)
   EXPECT_TRUE(file->m_cached);
   EXPECT_FALSE(file->m_pathGz);
 
-  auto gzFile = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
+  auto gzFile = waitForGzip(*m_cache);
 
   ASSERT_TRUE(gzFile);
   EXPECT_EQ("text/plain", gzFile->m_mimeType);
@@ -158,7 +174,7 @@ TEST_F(FileCacheTest, file_cache_should_compress_file)
   }
 }
 
-TEST_F(FileCacheTest, file_cache_should_compress_file_async)
+TEST_F(FileCacheTest, file_cache_should_compress_file_from_io_context)
 {
   namespace fs = std::filesystem;
 
@@ -176,7 +192,8 @@ TEST_F(FileCacheTest, file_cache_should_compress_file_async)
   boost::asio::io_context context;
 
   boost::asio::post(context, [&context, this]() {
-    auto gzFile = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s, &context);
+    auto gzFile =
+        m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s, &context);
 
     ASSERT_TRUE(gzFile);
     EXPECT_EQ("text/plain", gzFile->m_mimeType);
@@ -190,13 +207,62 @@ TEST_F(FileCacheTest, file_cache_should_compress_file_async)
   boost::asio::post(context, [&ran] { ran = true; });
 
   context.run();
-  // EXPECT_TRUE(ran);
+  EXPECT_TRUE(ran);
 
   // Cleanup
   if (fs::exists(zipped))
   {
     fs::remove(zipped);
   }
+}
+
+TEST_F(FileCacheTest, concurrent_requests_share_one_gzip_generation)
+{
+  namespace fs = std::filesystem;
+
+  const fs::path zipped = fs::path(TEST_RESOURCE_DIR) / "zipped_file.txt.gz";
+  fs::remove(zipped);
+
+  m_cache->addDirectory("/resources", TEST_RESOURCE_DIR, "none.txt");
+  m_cache->setMinCompressedFileSize(1024);
+
+  std::barrier ready {3};
+  auto request = [this, &ready] {
+    ready.arrive_and_wait();
+    return m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
+  };
+
+  auto first = std::async(std::launch::async, request);
+  auto second = std::async(std::launch::async, request);
+  ready.arrive_and_wait();
+
+  ASSERT_TRUE(first.get());
+  ASSERT_TRUE(second.get());
+  const auto compressedFile = waitForGzip(*m_cache);
+  ASSERT_TRUE(compressedFile->m_pathGz);
+  EXPECT_TRUE(fs::exists(*compressedFile->m_pathGz));
+
+  fs::remove(zipped);
+}
+
+TEST_F(FileCacheTest, destroys_compression_pool_without_leaving_temporary_file)
+{
+  namespace fs = std::filesystem;
+
+  const fs::path zipped = fs::path(TEST_RESOURCE_DIR) / "zipped_file.txt.gz";
+  const fs::path temporary = fs::path(TEST_RESOURCE_DIR) / "zipped_file.txt.gz.tmp";
+  fs::remove(zipped);
+  fs::remove(temporary);
+
+  {
+    FileCache cache;
+    cache.addDirectory("/resources", TEST_RESOURCE_DIR, "none.txt");
+    cache.setMinCompressedFileSize(1024);
+    ASSERT_TRUE(cache.getFile("/resources/zipped_file.txt", "gzip, deflate"s));
+  }
+
+  EXPECT_FALSE(fs::exists(temporary));
+  fs::remove(zipped);
 }
 
 static inline void touch(const std::filesystem::path& file)
@@ -223,7 +289,7 @@ TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)
 
   m_cache->addDirectory("/resources", TEST_RESOURCE_DIR, "none.txt");
   m_cache->setMinCompressedFileSize(1024);
-  auto gzFile = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
+  auto gzFile = waitForGzip(*m_cache);
 
   ASSERT_TRUE(gzFile);
   EXPECT_EQ("text/plain", gzFile->m_mimeType);
@@ -239,7 +305,7 @@ TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)
   std::this_thread::sleep_for(1s);
   touch(gzFile->m_path);
   std::this_thread::sleep_for(1s);
-  auto gzFile2 = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
+  auto gzFile2 = waitForGzip(*m_cache);
   ASSERT_TRUE(gzFile2);
 
   auto zipTime2 = fs::last_write_time(*gzFile2->m_pathGz);
@@ -253,7 +319,7 @@ TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)
   std::this_thread::sleep_for(1s);
   touch(gzFile->m_path);
   std::this_thread::sleep_for(1s);
-  auto gzFile3 = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
+  auto gzFile3 = waitForGzip(*m_cache);
   ASSERT_TRUE(gzFile3);
 
   auto zipTime3 = fs::last_write_time(*gzFile3->m_pathGz);

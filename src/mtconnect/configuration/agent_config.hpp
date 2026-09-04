@@ -48,11 +48,6 @@ namespace mtconnect {
     class Device;
   }
 
-#ifdef WITH_PYTHON
-  namespace python {
-    class Embedded;
-  }
-#endif
 #ifdef WITH_RUBY
   namespace ruby {
     class Embedded;
@@ -285,9 +280,6 @@ namespace mtconnect {
       void loadAdapters(const ptree& tree, const ConfigOptions& options);
       void loadSinks(const ptree& sinks, ConfigOptions& options);
 
-#ifdef WITH_PYTHON
-      void configurePython(const ptree& tree, ConfigOptions& options);
-#endif
 #ifdef WITH_RUBY
       void configureRuby(const ptree& tree, ConfigOptions& options);
 #endif
@@ -423,10 +415,6 @@ namespace mtconnect {
 #ifdef WITH_RUBY
       std::unique_ptr<ruby::Embedded> m_ruby;
 #endif
-#ifdef WITH_PYTHON
-      std::unique_ptr<python::Embedded> m_python;
-#endif
-
       TrendMonitor m_fdMonitor {makeFdMonitor()};
       TrendMonitor m_memoryMonitor {makeMemoryMonitor()};
 

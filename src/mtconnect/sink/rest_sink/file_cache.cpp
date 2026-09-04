@@ -27,10 +27,7 @@
 #include <boost/system/error_code.hpp>
 
 #include <algorithm>
-#include <chrono>
-#include <future>
 #include <regex>
-#include <thread>
 
 #include "cached_file.hpp"
 #include "mtconnect/logging.hpp"
@@ -56,6 +53,12 @@ namespace mtconnect::sink::rest_sink {
       m_maxCachedFileSize(max)
   {
     NAMED_SCOPE("file_cache");
+  }
+
+  FileCache::~FileCache()
+  {
+    m_compressionPool.stop();
+    m_compressionPool.join();
   }
 
   namespace fs = std::filesystem;
@@ -167,85 +170,84 @@ namespace mtconnect::sink::rest_sink {
     return file;
   }
 
-  void FileCache::compressFile(CachedFilePtr file, boost::asio::io_context* context)
+  std::shared_future<bool> FileCache::compressFile(const CachedFilePtr& file)
   {
     NAMED_SCOPE("FileCache::compressFile")
 
     namespace fs = std::filesystem;
     namespace io = boost::iostreams;
-    using namespace std::chrono_literals;
 
-    fs::path zipped(file->m_path.string() + ".gz");
+    std::lock_guard<std::recursive_mutex> lock(m_cacheLock);
 
-    if (!fs::exists(zipped))
+    const fs::path zipped(file->m_path.string() + ".gz");
+    if (fs::exists(zipped) && fs::last_write_time(file->m_path) <= fs::last_write_time(zipped))
     {
-      promise<bool> promise;
-      auto future = promise.get_future();
+      file->m_pathGz = zipped;
+      return {};
+    }
 
-      thread work([file, &zipped, &promise, context] {
-        try
-        {
-          NAMED_SCOPE("work");
-          LOG(debug) << "gzipping " << file->m_path << " to " << zipped;
+    if (const auto existing = m_compressions.find(file->m_path); existing != m_compressions.end())
+      return existing->second;
 
-          ifstream input(file->m_path, ios_base::in | ios_base::binary);
+    const fs::path temporary(file->m_path.string() + ".gz.tmp");
+    const auto sourceTime = fs::last_write_time(file->m_path);
+    auto promise = make_shared<std::promise<bool>>();
+    auto future = promise->get_future().share();
+    m_compressions.emplace(file->m_path, future);
 
-          io::filtering_ostream output;
-          output.push(io::gzip_compressor(io::gzip_params(io::gzip::best_compression)));
-          output.push(io::file_sink(zipped.string(), ios_base::out | ios_base::binary));
-
-          io::copy(input, output);
-
-          promise.set_value(true);
-
-          LOG(debug) << "done";
-        }
-        catch (...)
-        {
-          LOG(error) << "Error occurred compressing file " << file->m_path;
-          promise.set_exception(std::current_exception());
-        }
-
-        if (context != nullptr)
-        {
-          boost::asio::post(*context, [] {});
-        }
-      });
-
-      if (context)
+    boost::asio::post(m_compressionPool, [this, file, zipped, temporary, sourceTime, promise] {
+      bool generated = false;
+      try
       {
-        while (future.wait_for(1ms) == std::future_status::timeout)
-          context->run_one_for(1s);
+        fs::remove(temporary);
+        LOG(debug) << "gzipping " << file->m_path << " to " << zipped;
+
+        ifstream input(file->m_path, ios_base::in | ios_base::binary);
+        if (!input)
+          throw std::runtime_error("Cannot open source file");
+
+        io::filtering_ostream output;
+        output.push(io::gzip_compressor(io::gzip_params(io::gzip::best_compression)));
+        output.push(io::file_sink(temporary.string(), ios_base::out | ios_base::binary));
+        io::copy(input, output);
+        output.reset();
+        generated = true;
+      }
+      catch (const std::exception& e)
+      {
+        LOG(error) << "Error compressing " << file->m_path << ": " << e.what();
       }
 
       try
       {
-        if (future.get())
-          file->m_pathGz.emplace(zipped);
+        std::lock_guard<std::recursive_mutex> lock(m_cacheLock);
+        m_compressions.erase(file->m_path);
+        bool published = false;
+        if (generated && fs::last_write_time(file->m_path) == sourceTime)
+        {
+          fs::remove(zipped);
+          fs::rename(temporary, zipped);
+          published = true;
+          LOG(debug) << "done";
+        }
+        else
+        {
+          std::error_code error;
+          fs::remove(temporary, error);
+        }
+        promise->set_value(published);
       }
-      catch (std::runtime_error& e)
+      catch (const std::exception& e)
       {
-        LOG(error) << "Error occurred compressing: " << e.what();
+        std::lock_guard<std::recursive_mutex> lock(m_cacheLock);
+        m_compressions.erase(file->m_path);
+        std::error_code error;
+        fs::remove(temporary, error);
+        LOG(error) << "Error publishing compressed file " << file->m_path << ": " << e.what();
+        promise->set_value(false);
       }
-      catch (...)
-      {
-        LOG(error) << "Error occurred gettting future for " << file->m_path;
-      }
-
-      work.join();
-    }
-    else
-    {
-      if (fs::last_write_time(file->m_path) > fs::last_write_time(zipped))
-      {
-        fs::remove(zipped);
-        compressFile(file, context);
-      }
-      else if (!file->m_pathGz)
-      {
-        file->m_pathGz.emplace(zipped);
-      }
-    }
+    });
+    return future;
   }
 
   CachedFilePtr FileCache::findFileInDirectories(const std::string& name)
@@ -349,8 +351,12 @@ namespace mtconnect::sink::rest_sink {
             auto lastWrite = std::filesystem::last_write_time(fp->m_path);
             if (lastWrite == fp->m_lastWrite)
               file = fp;
-            else if (fp->m_pathGz && fs::exists(*fp->m_pathGz))
-              fs::remove(*fp->m_pathGz);
+            else
+            {
+              if (fp->m_pathGz && fs::exists(*fp->m_pathGz))
+                fs::remove(*fp->m_pathGz);
+              fp->m_pathGz.reset();
+            }
           }
         }
 
@@ -377,7 +383,26 @@ namespace mtconnect::sink::rest_sink {
         if (acceptEncoding && acceptEncoding->find("gzip") != string::npos &&
             file->m_size >= m_minCompressedFileSize)
         {
-          compressFile(file, context);
+          auto future = compressFile(file);
+          if (future.valid())
+          {
+            if (context)
+            {
+              using namespace std::chrono_literals;
+              while (future.wait_for(1ms) == std::future_status::timeout)
+                context->run_one_for(1s);
+            }
+            else
+            {
+              future.wait();
+            }
+
+            if (future.get())
+            {
+              std::lock_guard<std::recursive_mutex> lock(m_cacheLock);
+              file->m_pathGz = file->m_path.string() + ".gz";
+            }
+          }
         }
       }
       else

@@ -13,13 +13,6 @@ if(AGENT_PREFIX)
   set_target_properties(agent PROPERTIES OUTPUT_NAME "${AGENT_PREFIX}agent")
 endif()
 
-if(WITH_PYTHON)
-  target_compile_definitions(
-    agent
-    PUBLIC
-    WITH_PYTHON )
-endif()
-
 if(WITH_RUBY)
   target_compile_definitions(
     agent
