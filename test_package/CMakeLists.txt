@@ -311,10 +311,6 @@ if (WITH_RUBY)
   add_agent_test(embedded_ruby TRUE ruby)
 endif()
 
-if( WITH_PYTHON)
-  add_agent_test(python_transform TRUE python)
-endif()
-
 # TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
 add_custom_command(
   TARGET adapter_test POST_BUILD

@@ -67,10 +67,6 @@
 #include "mtconnect/source/adapter/shdr/shdr_adapter.hpp"
 #include "mtconnect/version.h"
 
-#ifdef WITH_PYTHON
-#include "mtconnect/python/embedded.hpp"
-#endif
-
 #ifdef WITH_RUBY
 #include "mtconnect/ruby/embedded.hpp"
 #endif
@@ -1044,9 +1040,6 @@ namespace mtconnect::configuration {
 
     m_afterAgentHooks.exec(*this);
 
-#ifdef WITH_PYTHON
-    configurePython(config, options);
-#endif
 #ifdef WITH_RUBY
     configureRuby(config, options);
 #endif
@@ -1214,13 +1207,6 @@ namespace mtconnect::configuration {
       LOG(warning) << "Starting with no devices or adapters";
     }
   }
-
-#ifdef WITH_PYTHON
-  void AgentConfiguration::configurePython(const ptree& tree, ConfigOptions& options)
-  {
-    m_python = make_unique<python::Embedded>(m_agent.get(), options);
-  }
-#endif
 
 #ifdef WITH_RUBY
   void AgentConfiguration::configureRuby(const ptree& tree, ConfigOptions& options)
