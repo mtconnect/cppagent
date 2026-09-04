@@ -16,6 +16,7 @@
 //
 
 #include "rest_service.hpp"
+#include "rest_request_helpers.hpp"
 
 #include <regex>
 
@@ -498,13 +499,6 @@ namespace mtconnect {
     // -----------------------------------------------------------
     // Request Routings
     // -----------------------------------------------------------
-
-    static inline void respond(rest_sink::SessionPtr session, rest_sink::ResponsePtr&& response,
-                               std::optional<std::string> id = std::nullopt)
-    {
-      response->m_requestId = id;
-      session->writeResponse(std::move(response));
-    }
 
     void RestService::createFileRoutings()
     {
@@ -1542,22 +1536,6 @@ namespace mtconnect {
 
     // For debugging
     void RestService::setLogStreamData(bool log) { m_logStreamData = log; }
-
-    // Get the printer for a type
-    const std::string RestService::acceptFormat(const std::string& accepts) const
-    {
-      std::stringstream list(accepts);
-      std::string accept;
-      while (std::getline(list, accept, ','))
-      {
-        for (const auto& p : m_sinkContract->getPrinters())
-        {
-          if (accept.ends_with(p.first))
-            return p.first;
-        }
-      }
-      return "xml";
-    }
 
     // -----------------------------------------------
     // Validation methods
