@@ -37,6 +37,7 @@
 #include <vector>
 
 #include "mtconnect/asset/asset_buffer.hpp"
+#include "mtconnect/agent_types.hpp"
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/buffer/circular_buffer.hpp"
 #include "mtconnect/config.hpp"
@@ -66,16 +67,6 @@ namespace mtconnect {
   namespace sink {
     class Sink;
   }
-
-  namespace device_model {
-    namespace data_item {
-      class DataItem;
-    }
-  };  // namespace device_model
-  using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
-  using WeakDataItemPtr = std::weak_ptr<device_model::data_item::DataItem>;
-
-  using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
   /// Agent Class controls message flow and owns all sources and sinks.
   class AGENT_LIB_API Agent

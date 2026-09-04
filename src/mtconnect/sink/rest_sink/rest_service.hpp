@@ -19,6 +19,8 @@
 
 #include <boost/asio/io_context.hpp>
 
+#include <sstream>
+
 #include "mtconnect/buffer/circular_buffer.hpp"
 #include "mtconnect/config.hpp"
 #include "mtconnect/sink/sink.hpp"
@@ -259,7 +261,20 @@ namespace mtconnect {
       /// @brief Check the accepts header for a matching printer key
       /// @param accepts the accepts header
       /// @return printer key or `xml` if one is not found
-      const std::string acceptFormat(const std::string& accepts) const;
+      const std::string acceptFormat(const std::string& accepts) const
+      {
+        std::stringstream list(accepts);
+        std::string accept;
+        while (std::getline(list, accept, ','))
+        {
+          for (const auto& printer : m_sinkContract->getPrinters())
+          {
+            if (accept.ends_with(printer.first))
+              return printer.first;
+          }
+        }
+        return "xml";
+      }
       /// @brief get a printer given a list of formats from the Accepts header
       /// @param accepts the accepts header
       /// @return pointer to a printer

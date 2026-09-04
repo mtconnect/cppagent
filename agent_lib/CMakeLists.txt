@@ -4,6 +4,7 @@ set(AGENT_SOURCES
  # src HEADER_FILE_ONLY
         
         "${SOURCE_DIR}/agent.hpp"
+        "${SOURCE_DIR}/agent_types.hpp"
         "${SOURCE_DIR}/config.hpp"
         "${SOURCE_DIR}/logging.hpp"
         "${SOURCE_DIR}/utilities.hpp"
@@ -11,6 +12,7 @@ set(AGENT_SOURCES
 # src SOURCE_FILES_ONLY
 
         "${SOURCE_DIR}/agent.cpp"
+        "${SOURCE_DIR}/agent_lifecycle.cpp"
         "${SOURCE_DIR}/utilities.cpp"
         "${SOURCE_DIR}/version.cpp"
         
@@ -61,6 +63,7 @@ set(AGENT_SOURCES
 # src/configuration HEADER_FILE_ONLY
 
         "${SOURCE_DIR}/configuration/agent_config.hpp"
+        "${SOURCE_DIR}/configuration/config_expansion.hpp"
         "${SOURCE_DIR}/configuration/async_context.hpp"
         "${SOURCE_DIR}/configuration/config_options.hpp"
         "${SOURCE_DIR}/configuration/hook_manager.hpp"
@@ -284,6 +287,7 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/sink/rest_sink/request.hpp"
         "${SOURCE_DIR}/sink/rest_sink/response.hpp"
         "${SOURCE_DIR}/sink/rest_sink/rest_service.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/rest_request_helpers.hpp"
         "${SOURCE_DIR}/sink/rest_sink/routing.hpp"
         "${SOURCE_DIR}/sink/rest_sink/server.hpp"
         "${SOURCE_DIR}/sink/rest_sink/session.hpp"
