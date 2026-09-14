@@ -132,9 +132,6 @@ end
     end
   end
 
-  # Add require
-  conf.gem :github => 'mattn/mruby-require'
-
   # C compiler settings
   conf.compilers.each do |c|
     c.defines << 'MRB_USE_DEBUG_HOOK'
