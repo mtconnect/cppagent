@@ -99,7 +99,7 @@ namespace mtconnect::sink::rest_sink {
         }
       }
     }
-    catch (fs::filesystem_error e)
+    catch (const fs::filesystem_error& e)
     {
       LOG(warning) << "The following path " << pathName << " cannot be accessed: " << e.what();
     }
@@ -412,7 +412,7 @@ namespace mtconnect::sink::rest_sink {
 
       return file;
     }
-    catch (fs::filesystem_error e)
+    catch (const fs::filesystem_error& e)
     {
       LOG(warning) << "Cannot open file " << name << ": " << e.what();
     }

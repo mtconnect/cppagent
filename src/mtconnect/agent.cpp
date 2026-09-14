@@ -1422,7 +1422,7 @@ namespace mtconnect {
                      device_model::data_item::UnitConversion conv(fact_value, off_value);
                      di->setConverter(conv);
                    }
-                   catch (std::exception e)
+                   catch (const std::exception& e)
                    {
                      LOG(error) << "Cannot convert factor " << factor << " or " << offset
                                 << " to double: " << e.what();

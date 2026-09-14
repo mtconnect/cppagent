@@ -92,7 +92,7 @@ namespace mtconnect::ruby {
 
             EntityPtr* ent;
             mrb_get_args(mrb, "d", &ent, MRubySharedPtr<Entity>::type());
-            auto nxt = trans->next(std::move(*ent));
+            auto nxt = trans->next(EntityPtr(*ent));
             return MRubySharedPtr<Entity>::wrap(mrb, "Entity", nxt);
           },
           MRB_ARGS_REQ(1));
@@ -252,6 +252,13 @@ namespace mtconnect::ruby {
 
     using calldata = std::pair<RubyTransform*, EntityPtr>;
 
+    /// @brief Is the ruby value a wrapped MTConnect entity (C data of the Entity type)?
+    /// @note Does not raise, unlike mrb_data_get_ptr, so it is safe to call outside mrb_protect.
+    static bool isEntity(mrb_state *mrb, mrb_value value)
+    {
+      return mrb_data_p(value) && DATA_TYPE(value) == MRubySharedPtr<Entity>::type();
+    }
+
     entity::EntityPtr operator()(entity::EntityPtr&& entity) override
     {
       NAMED_SCOPE("RubyTransform::operator()");
@@ -335,10 +342,53 @@ namespace mtconnect::ruby {
           rv = mrb_nil_value();
         }
 
-        if (!mrb_nil_p(rv))
-          res = MRubySharedPtr<Entity>::unwrap(rv);
+        // A ruby transform may return nil, a single Entity, or an Array of
+        // entities. Anything else (e.g. a stray Array of non-entities left over
+        // from an `each`/`map`) must not reach the raising unwrap, which would
+        // reinterpret an mruby word as a shared_ptr<Entity> and smash memory --
+        // or abort here, since this runs outside mrb_protect. Check the types
+        // without raising and drop a bad return with a warning.
+        if (isEntity(mrb, rv))
+        {
+          res = MRubySharedPtr<Entity>::unwrap<Entity>(mrb, rv);
+        }
+        else if (mrb_array_p(rv))
+        {
+          // Collect the entity elements into an EntityList carried on a
+          // container entity (mirrors JsonMapper's "JsonEntities" result).
+          EntityList list;
+          bool ok = true;
+          auto len = RARRAY_LEN(rv);
+          for (mrb_int i = 0; i < len; i++)
+          {
+            mrb_value el = mrb_ary_ref(mrb, rv, i);
+            if (isEntity(mrb, el))
+            {
+              list.emplace_back(MRubySharedPtr<Entity>::unwrap<Entity>(mrb, el));
+            }
+            else
+            {
+              ok = false;
+              LOG(warning) << "Ruby transform " << m_name << " returned an array with a non-entity ("
+                           << mrb_obj_classname(mrb, el) << ") at index " << i << " -- ignoring array";
+              break;
+            }
+          }
+          if (ok && !list.empty())
+          {
+            auto entities = std::make_shared<Entity>("Entities");
+            entities->setValue(list);
+            res = entities;
+          }
+        }
+        else if (!mrb_nil_p(rv))
+        {
+          LOG(warning) << "Ruby transform " << m_name << " returned a non-entity ("
+                       << mrb_obj_classname(mrb, rv)
+                       << "); expected an Entity, an array of entities, or nil -- ignoring return value";
+        }
       }
-      catch (std::exception e)
+      catch (const std::exception& e)
       {
         LOG(error) << "Exception thrown in transform" << e.what();
       }

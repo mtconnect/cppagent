@@ -189,7 +189,7 @@ namespace mtconnect::ruby {
               throw FatalException("Fatal error loading module");
             }
           }
-          catch (std::exception ex)
+          catch (const std::exception& ex)
           {
             LOG(fatal) << "Failed to load module: " << *modulePath << ": " << ex.what();
             throw FatalException("Fatal error loading module");

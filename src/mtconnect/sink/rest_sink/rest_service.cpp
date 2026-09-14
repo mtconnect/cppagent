@@ -391,7 +391,7 @@ namespace mtconnect {
                   oi, sv.begin(), sv.end(), reg, "$01" + m_schemaVersion + "$2",
                   std::regex_constants::match_default | std::regex_constants::match_any);
             }
-            catch (std::runtime_error ec)
+            catch (const std::runtime_error& ec)
             {
               LOG(error) << "Cannot update sylesheet: " << ec.what() << " (" << fc->m_path << ')';
             }
