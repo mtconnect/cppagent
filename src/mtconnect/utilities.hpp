@@ -619,7 +619,7 @@ namespace mtconnect {
           if (v.index() != 0)
             options.insert_or_assign(e.first, v);
         }
-        catch (std::exception ex)
+        catch (const std::exception& ex)
         {
           LOG(error) << "Cannot convert option " << val << ": " << ex.what();
         }
@@ -645,7 +645,7 @@ namespace mtconnect {
           if (v.index() != 0)
             options.insert_or_assign(e.first, v);
         }
-        catch (std::exception ex)
+        catch (const std::exception& ex)
         {
           LOG(error) << "Cannot convert option " << val << ": " << ex.what();
         }

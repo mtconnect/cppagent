@@ -118,7 +118,7 @@ namespace mtconnect::device_model::data_item {
         unit.remove_suffix(unit.length() - p);
       }
     }
-    catch (std::exception e)
+    catch (const std::exception& e)
     {
       LOG(error) << "Invalid unit: " << unit << " -- " << e.what();
       LOG(error) << "  ignoring";
