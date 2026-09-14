@@ -320,6 +320,7 @@ if(WITH_RUBY)
         "${SOURCE_DIR}/ruby/ruby_entity.hpp"
         "${SOURCE_DIR}/ruby/ruby_observation.hpp"
         "${SOURCE_DIR}/ruby/ruby_pipeline.hpp"
+        "${SOURCE_DIR}/ruby/ruby_require.hpp"
         "${SOURCE_DIR}/ruby/ruby_smart_ptr.hpp"
         "${SOURCE_DIR}/ruby/ruby_transform.hpp"
         "${SOURCE_DIR}/ruby/ruby_type.hpp"
