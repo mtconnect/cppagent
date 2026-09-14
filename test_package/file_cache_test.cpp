@@ -52,7 +52,21 @@ int main(int argc, char* argv[])
 class FileCacheTest : public testing::Test
 {
 protected:
-  void SetUp() override { m_cache = make_unique<FileCache>(); }
+  void SetUp() override
+  {
+    m_cache = make_unique<FileCache>();
+
+    // The gzip resource is shared and mutable: the tests below touch() it, and a
+    // prior run (or clock skew on a shared checkout, e.g. across VMs) can leave it
+    // with a future mtime -- which git does not track. A future source mtime makes
+    // a freshly compressed .gz look older than its source and breaks the timing
+    // assumptions of the compression tests. Normalize it to the past so every test
+    // starts deterministically.
+    namespace fs = std::filesystem;
+    const fs::path source = fs::path(TEST_RESOURCE_DIR) / "zipped_file.txt";
+    if (fs::exists(source))
+      fs::last_write_time(source, fs::file_time_type::clock::now() - 2s);
+  }
 
   void TearDown() override { m_cache.reset(); }
 
