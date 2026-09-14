@@ -54,6 +54,7 @@
 #include "ruby_entity.hpp"
 #include "ruby_observation.hpp"
 #include "ruby_pipeline.hpp"
+#include "ruby_require.hpp"
 #include "ruby_transform.hpp"
 #include "ruby_vm.hpp"
 
@@ -159,6 +160,7 @@ namespace mtconnect::ruby {
       RubyEntity::initialize(mrb, m_rubyVM->mtconnect());
       RubyObservation::initialize(mrb, m_rubyVM->mtconnect());
       RubyTransform::initialize(mrb, m_rubyVM->mtconnect());
+      RubyRequire::initialize(mrb);
 
       if (modulePath)
       {
@@ -173,6 +175,8 @@ namespace mtconnect::ruby {
         else
         {
           LOG(info) << "Resolved module path: " << file;
+          // Seed $LOAD_PATH with the module's directory so it can require siblings.
+          RubyRequire::addLoadPath(mrb, file.parent_path().string());
           FILE* fp = nullptr;
           try
           {
