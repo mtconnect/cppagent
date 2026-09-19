@@ -254,7 +254,7 @@ namespace mtconnect::ruby {
 
     /// @brief Is the ruby value a wrapped MTConnect entity (C data of the Entity type)?
     /// @note Does not raise, unlike mrb_data_get_ptr, so it is safe to call outside mrb_protect.
-    static bool isEntity(mrb_state *mrb, mrb_value value)
+    static bool isEntity(mrb_state* mrb, mrb_value value)
     {
       return mrb_data_p(value) && DATA_TYPE(value) == MRubySharedPtr<Entity>::type();
     }
@@ -369,8 +369,9 @@ namespace mtconnect::ruby {
             else
             {
               ok = false;
-              LOG(warning) << "Ruby transform " << m_name << " returned an array with a non-entity ("
-                           << mrb_obj_classname(mrb, el) << ") at index " << i << " -- ignoring array";
+              LOG(warning) << "Ruby transform " << m_name
+                           << " returned an array with a non-entity (" << mrb_obj_classname(mrb, el)
+                           << ") at index " << i << " -- ignoring array";
               break;
             }
           }
@@ -383,9 +384,10 @@ namespace mtconnect::ruby {
         }
         else if (!mrb_nil_p(rv))
         {
-          LOG(warning) << "Ruby transform " << m_name << " returned a non-entity ("
-                       << mrb_obj_classname(mrb, rv)
-                       << "); expected an Entity, an array of entities, or nil -- ignoring return value";
+          LOG(warning)
+              << "Ruby transform " << m_name << " returned a non-entity ("
+              << mrb_obj_classname(mrb, rv)
+              << "); expected an Entity, an array of entities, or nil -- ignoring return value";
         }
       }
       catch (const std::exception& e)

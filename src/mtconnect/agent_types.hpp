@@ -18,4 +18,4 @@ namespace mtconnect {
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
   using WeakDataItemPtr = std::weak_ptr<device_model::data_item::DataItem>;
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
-}
+}  // namespace mtconnect

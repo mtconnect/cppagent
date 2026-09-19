@@ -36,8 +36,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "mtconnect/asset/asset_buffer.hpp"
 #include "mtconnect/agent_types.hpp"
+#include "mtconnect/asset/asset_buffer.hpp"
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/buffer/circular_buffer.hpp"
 #include "mtconnect/config.hpp"

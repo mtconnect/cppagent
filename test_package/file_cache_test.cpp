@@ -24,8 +24,8 @@
 
 #include <barrier>
 #include <cstdio>
-#include <future>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -206,8 +206,7 @@ TEST_F(FileCacheTest, file_cache_should_compress_file_from_io_context)
   boost::asio::io_context context;
 
   boost::asio::post(context, [&context, this]() {
-    auto gzFile =
-        m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s, &context);
+    auto gzFile = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s, &context);
 
     ASSERT_TRUE(gzFile);
     EXPECT_EQ("text/plain", gzFile->m_mimeType);

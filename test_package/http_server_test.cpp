@@ -588,8 +588,7 @@ TEST_F(HttpServerTest, accepts_empty_form_encoded_body)
   start();
   startClient();
 
-  m_client->spawnRequest(http::verb::get, "/probe", "", false,
-                         "application/x-www-form-urlencoded");
+  m_client->spawnRequest(http::verb::get, "/probe", "", false, "application/x-www-form-urlencoded");
   ASSERT_TRUE(m_client->m_done);
   EXPECT_EQ(int(http::status::ok), m_client->m_status);
   EXPECT_EQ("Empty form accepted", m_client->m_result);

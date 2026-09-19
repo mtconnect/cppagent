@@ -52,7 +52,8 @@ namespace mtconnect::configuration {
       for (auto& block : node)
       {
         expandConfigurationValues(values, block.second);
-        if (const auto value = block.second.get_value_optional<std::string>(); value && !value->empty())
+        if (const auto value = block.second.get_value_optional<std::string>();
+            value && !value->empty())
           values[block.first] = *value;
       }
     }
@@ -63,4 +64,4 @@ namespace mtconnect::configuration {
   {
     detail::expandConfigurationValues({}, config);
   }
-}
+}  // namespace mtconnect::configuration

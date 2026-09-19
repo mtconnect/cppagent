@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include <atomic>
-
 #include <boost/asio.hpp>
 #include <boost/thread/thread.hpp>
+
+#include <atomic>
 
 #include "mtconnect/config.hpp"
 #include "mtconnect/logging.hpp"
