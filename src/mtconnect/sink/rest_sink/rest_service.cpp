@@ -16,7 +16,6 @@
 //
 
 #include "rest_service.hpp"
-#include "rest_request_helpers.hpp"
 
 #include <regex>
 
@@ -28,6 +27,7 @@
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
 #include "mtconnect/printer/json_printer.hpp"
 #include "mtconnect/printer/xml_printer.hpp"
+#include "rest_request_helpers.hpp"
 #include "server.hpp"
 
 namespace asio = boost::asio;

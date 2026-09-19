@@ -53,11 +53,11 @@ namespace mtconnect::ruby {
   struct RubyRequire
   {
     /// @brief Define the Kernel methods and load-path globals on the VM.
-    static void initialize(mrb_state *mrb)
+    static void initialize(mrb_state* mrb)
     {
       // LoadError < ScriptError (ScriptError is provided by mruby core).
-      RClass *scriptError = mrb_class_get(mrb, "ScriptError");
-      RClass *loadError = mrb_define_class(mrb, "LoadError", scriptError);
+      RClass* scriptError = mrb_class_get(mrb, "ScriptError");
+      RClass* loadError = mrb_define_class(mrb, "LoadError", scriptError);
       (void)loadError;
 
       auto krn = mrb->kernel_module;
@@ -74,7 +74,7 @@ namespace mtconnect::ruby {
 
     /// @brief Append a directory to `$LOAD_PATH`. Used by the agent to seed the
     ///        module's own directory so a module can `require` its siblings.
-    static void addLoadPath(mrb_state *mrb, const std::string &dir)
+    static void addLoadPath(mrb_state* mrb, const std::string& dir)
     {
       mrb_value lp = mrb_gv_get(mrb, loadPathSym(mrb));
       if (!mrb_array_p(lp))
@@ -86,12 +86,12 @@ namespace mtconnect::ruby {
     }
 
   protected:
-    static mrb_sym loadPathSym(mrb_state *mrb) { return mrb_intern_lit(mrb, "$:"); }
-    static mrb_sym loadedSym(mrb_state *mrb) { return mrb_intern_lit(mrb, "$\""); }
+    static mrb_sym loadPathSym(mrb_state* mrb) { return mrb_intern_lit(mrb, "$:"); }
+    static mrb_sym loadedSym(mrb_state* mrb) { return mrb_intern_lit(mrb, "$\""); }
 
     /// @brief Candidate leaf names for a required feature: try `<name>.rb`
     ///        (adding the extension when missing) and then `<name>` verbatim.
-    static std::vector<std::string> candidates(const std::string &base)
+    static std::vector<std::string> candidates(const std::string& base)
     {
       std::vector<std::string> names;
       if (base.size() >= 3 && base.compare(base.size() - 3, 3, ".rb") == 0)
@@ -104,7 +104,7 @@ namespace mtconnect::ruby {
       return names;
     }
 
-    static bool alreadyLoaded(mrb_state *mrb, const std::string &canon)
+    static bool alreadyLoaded(mrb_state* mrb, const std::string& canon)
     {
       mrb_value loaded = mrb_gv_get(mrb, loadedSym(mrb));
       if (!mrb_array_p(loaded))
@@ -119,7 +119,7 @@ namespace mtconnect::ruby {
       return false;
     }
 
-    static void markLoaded(mrb_state *mrb, const std::string &canon)
+    static void markLoaded(mrb_state* mrb, const std::string& canon)
     {
       mrb_value loaded = mrb_gv_get(mrb, loadedSym(mrb));
       if (!mrb_array_p(loaded))
@@ -132,7 +132,7 @@ namespace mtconnect::ruby {
 
     /// @brief Resolve a candidate path to a regular file and return its
     ///        canonical absolute form, if it exists.
-    static std::optional<std::string> resolve(const std::filesystem::path &p)
+    static std::optional<std::string> resolve(const std::filesystem::path& p)
     {
       std::error_code ec;
       if (!std::filesystem::is_regular_file(p, ec))
@@ -143,9 +143,9 @@ namespace mtconnect::ruby {
 
     /// @brief Load and execute a ruby source file. Leaves any raised exception
     ///        in `mrb->exc` so it propagates to the caller.
-    static void executeFile(mrb_state *mrb, const std::string &path)
+    static void executeFile(mrb_state* mrb, const std::string& path)
     {
-      FILE *fp = fopen(path.c_str(), "r");
+      FILE* fp = fopen(path.c_str(), "r");
       if (fp == nullptr)
       {
         mrb_raisef(mrb, mrb_class_get(mrb, "LoadError"), "cannot open file -- %s", path.c_str());
@@ -164,17 +164,17 @@ namespace mtconnect::ruby {
     /// @brief The source file of the ruby frame that called us, for
     ///        `require_relative`. Returns nullopt for C-function callers or when
     ///        no debug filename is available.
-    static std::optional<std::string> callerFile(mrb_state *mrb)
+    static std::optional<std::string> callerFile(mrb_state* mrb)
     {
       if (mrb->c == nullptr || mrb->c->ci <= mrb->c->cibase)
         return std::nullopt;
 
-      mrb_callinfo *caller = mrb->c->ci - 1;
-      const struct RProc *proc = caller->proc;
+      mrb_callinfo* caller = mrb->c->ci - 1;
+      const struct RProc* proc = caller->proc;
       if (proc == nullptr || MRB_PROC_CFUNC_P(proc))
         return std::nullopt;
 
-      const mrb_irep *irep = proc->body.irep;
+      const mrb_irep* irep = proc->body.irep;
       if (irep == nullptr)
         return std::nullopt;
 
@@ -182,7 +182,7 @@ namespace mtconnect::ruby {
       if (caller->pc != nullptr && irep->iseq != nullptr)
         pc = static_cast<uint32_t>(caller->pc - irep->iseq);
 
-      const char *fn = mrb_debug_get_filename(mrb, irep, pc);
+      const char* fn = mrb_debug_get_filename(mrb, irep, pc);
       if (fn == nullptr)
         return std::nullopt;
       return std::string(fn);
@@ -190,18 +190,18 @@ namespace mtconnect::ruby {
 
     /// @brief `require` -- searches `$LOAD_PATH` (unless an explicit relative or
     ///        absolute path is given), loads once, tracks `$"`.
-    static mrb_value require_method(mrb_state *mrb, mrb_value self)
+    static mrb_value require_method(mrb_state* mrb, mrb_value self)
     {
       namespace fs = std::filesystem;
-      const char *name = nullptr;
+      const char* name = nullptr;
       mrb_get_args(mrb, "z", &name);
       std::string req(name);
 
-      auto loadResolved = [&](const std::optional<std::string> &canon) -> int {
+      auto loadResolved = [&](const std::optional<std::string>& canon) -> int {
         if (!canon)
           return -1;  // not a file
         if (alreadyLoaded(mrb, *canon))
-          return 0;  // already loaded
+          return 0;               // already loaded
         markLoaded(mrb, *canon);  // mark before executing to break require cycles
         executeFile(mrb, *canon);
         return 1;  // loaded
@@ -213,7 +213,7 @@ namespace mtconnect::ruby {
 
       if (explicitPath)
       {
-        for (auto &c : candidates(req))
+        for (auto& c : candidates(req))
         {
           int r = loadResolved(resolve(fs::path(c)));
           if (r >= 0)
@@ -232,7 +232,7 @@ namespace mtconnect::ruby {
             if (!mrb_string_p(d))
               continue;
             fs::path dir(RSTRING_CSTR(mrb, d));
-            for (auto &c : candidates(req))
+            for (auto& c : candidates(req))
             {
               int r = loadResolved(resolve(dir / c));
               if (r >= 0)
@@ -247,10 +247,10 @@ namespace mtconnect::ruby {
     }
 
     /// @brief `require_relative` -- resolves relative to the calling file.
-    static mrb_value require_relative_method(mrb_state *mrb, mrb_value self)
+    static mrb_value require_relative_method(mrb_state* mrb, mrb_value self)
     {
       namespace fs = std::filesystem;
-      const char *name = nullptr;
+      const char* name = nullptr;
       mrb_get_args(mrb, "z", &name);
 
       auto base = callerFile(mrb);
@@ -259,7 +259,7 @@ namespace mtconnect::ruby {
         baseDir = fs::path(*base).parent_path();
 
       fs::path target = baseDir.empty() ? fs::path(name) : baseDir / name;
-      for (auto &c : candidates(target.string()))
+      for (auto& c : candidates(target.string()))
       {
         auto canon = resolve(fs::path(c));
         if (!canon)
@@ -277,10 +277,10 @@ namespace mtconnect::ruby {
 
     /// @brief `load` -- always executes, no `$"` tracking; searches `$LOAD_PATH`
     ///        when the argument is not an explicit path.
-    static mrb_value load_method(mrb_state *mrb, mrb_value self)
+    static mrb_value load_method(mrb_state* mrb, mrb_value self)
     {
       namespace fs = std::filesystem;
-      const char *name = nullptr;
+      const char* name = nullptr;
       mrb_get_args(mrb, "z", &name);
       std::string arg(name);
 
@@ -326,7 +326,7 @@ namespace mtconnect::ruby {
       return mrb_false_value();
     }
 
-    static bool startsWith(const std::string &s, const char *prefix)
+    static bool startsWith(const std::string& s, const char* prefix)
     {
       return s.rfind(prefix, 0) == 0;
     }

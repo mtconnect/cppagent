@@ -16,7 +16,6 @@
 //
 
 #include "agent_config.hpp"
-#include "config_expansion.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/dll.hpp>
@@ -35,6 +34,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
+#include "config_expansion.hpp"
 #include "mtconnect/config.hpp"
 
 #ifdef __APPLE__

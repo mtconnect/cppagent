@@ -306,7 +306,7 @@ namespace mtconnect::sink::rest_sink {
 
         if (fs::exists(path))
         {
-          size_t size = (size_t) fs::file_size(path);
+          size_t size = (size_t)fs::file_size(path);
           auto ext = path.extension().string();
 
           auto file =
