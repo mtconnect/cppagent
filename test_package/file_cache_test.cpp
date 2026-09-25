@@ -205,23 +205,27 @@ TEST_F(FileCacheTest, file_cache_should_compress_file_from_io_context)
 
   boost::asio::io_context context;
 
-  boost::asio::post(context, [&context, this]() {
-    auto gzFile = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s, &context);
+  bool ran {false};
+  CachedFilePtr gzFile;
+  boost::asio::post(context, [&context, &ran, &gzFile, this]() {
+    gzFile = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s, &context);
 
     ASSERT_TRUE(gzFile);
     EXPECT_EQ("text/plain", gzFile->m_mimeType);
     EXPECT_TRUE(gzFile->m_cached);
     EXPECT_TRUE(gzFile->m_pathGz);
 
+    ran = true;
     context.stop();
   });
 
-  bool ran {false};
-  boost::asio::post(context, [&ran] { ran = true; });
-
   context.run();
   EXPECT_TRUE(ran);
-
+  EXPECT_TRUE(gzFile);
+  EXPECT_TRUE(gzFile->m_pathGz);
+  EXPECT_TRUE(fs::exists(*gzFile->m_pathGz));
+  EXPECT_EQ(zipped, *gzFile->m_pathGz);
+  
   // Cleanup
   if (fs::exists(zipped))
   {
