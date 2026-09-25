@@ -36,6 +36,9 @@ namespace mtconnect::configuration {
     using SyncCallback = std::function<void(AsyncContext& context)>;
     using WorkGuard = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
 
+    /// @brief Minimum stack size for worker threads (matches the glibc default)
+    static constexpr std::size_t WorkerStackSize = 8 * 1024 * 1024;
+
     /// @brief creates an asio context and a guard to prevent it from
     ///        stopping
     AsyncContext() { m_guard.emplace(m_context.get_executor()); }
@@ -78,7 +81,14 @@ namespace mtconnect::configuration {
         {
           for (int i = 0; i < m_threadCount; i++)
           {
-            m_workers.emplace_back(boost::thread([this]() {
+            boost::thread::attributes attrs;
+#ifndef _WINDOWS
+            // Some platforms (e.g. musl/Alpine with 128KB) have small default thread stacks
+            // that are not sufficient for deep recursion in regex, parsers, and scripting.
+            if (attrs.get_stack_size() < WorkerStackSize)
+              attrs.set_stack_size(WorkerStackSize);
+#endif
+            m_workers.emplace_back(boost::thread(attrs, [this]() {
               try
               {
                 m_context.run();

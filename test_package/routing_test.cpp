@@ -26,6 +26,8 @@
 #include <sstream>
 #include <string>
 
+#include <boost/thread/thread.hpp>
+
 #include "mtconnect/sink/rest_sink/response.hpp"
 #include "mtconnect/sink/rest_sink/routing.hpp"
 
@@ -359,4 +361,83 @@ TEST_F(RoutingTest, matchesPath_with_query_parameters_in_pattern)
   EXPECT_TRUE(r.matchesPath("/ABC123/sample"));
   EXPECT_TRUE(r.matchesPath("/device1/sample/"));
   EXPECT_FALSE(r.matchesPath("/sample"));
+}
+
+TEST_F(RoutingTest, should_match_segments_with_literal_prefix_and_suffix)
+{
+  Routing r(verb::get, "/cancel/id={id}", m_func);
+  RequestPtr request = make_shared<Request>();
+  request->m_verb = verb::get;
+
+  request->m_path = "/cancel/id=abc";
+  ASSERT_TRUE(r.matches(0, request));
+  ASSERT_EQ("abc", get<string>(request->m_parameters["id"]));
+
+  request->m_path = "/cancel/id=";
+  ASSERT_FALSE(r.matches(0, request));
+  request->m_path = "/cancel/xx=abc";
+  ASSERT_FALSE(r.matches(0, request));
+  request->m_path = "/cancel/id=abc/more";
+  ASSERT_FALSE(r.matches(0, request));
+
+  // Literals are matched exactly, not as regular expressions
+  Routing swagger(verb::get, "/swagger.yaml", m_func);
+  EXPECT_TRUE(swagger.matchesPath("/swagger.yaml"));
+  EXPECT_TRUE(swagger.matchesPath("/swagger.yaml/"));
+  EXPECT_FALSE(swagger.matchesPath("/swaggerXyaml"));
+  EXPECT_FALSE(swagger.matchesPath("/swagger.yaml//"));
+
+  Routing root(verb::get, "/?pretty={bool:false}", m_func);
+  EXPECT_TRUE(root.matchesPath("/"));
+  EXPECT_TRUE(root.matchesPath(""));
+  EXPECT_FALSE(root.matchesPath("/probe"));
+}
+
+TEST_F(RoutingTest, should_match_path_predicate)
+{
+  Routing r(
+      verb::get, Routing::PathMatcher([](const string& p) { return p.size() > 1; }), m_func);
+  EXPECT_TRUE(r.isCatchAll());
+  EXPECT_TRUE(r.matchesPath("/some/deep/path"));
+  EXPECT_FALSE(r.matchesPath("/"));
+}
+
+// Regression: libstdc++ std::regex recurses per character, so matching a long path on a
+// thread with a small stack (musl/Alpine defaults to 128KB) crashed the agent.
+TEST_F(RoutingTest, should_match_very_long_paths_on_a_small_stack)
+{
+  string ids;
+  for (int i = 0; i < 5000; i++)
+  {
+    if (i > 0)
+      ids += ';';
+    ids += "M8015P520ZN1." + to_string(i);
+  }
+  string path = "/assets/" + ids;
+
+  bool matched = false, other = true, predicate = false;
+  string value;
+
+  boost::thread::attributes attrs;
+  attrs.set_stack_size(128 * 1024);
+  boost::thread thread(attrs, [&]() {
+    Routing r(verb::get, "/assets/{assetIds}", m_func);
+    Routing device(verb::get, "/{device}/sample", m_func);
+    Routing files(
+        verb::get, Routing::PathMatcher([](const string& p) { return p.size() > 1; }), m_func);
+
+    RequestPtr request = make_shared<Request>();
+    request->m_verb = verb::get;
+    request->m_path = path;
+    matched = r.matches(0, request);
+    value = get<string>(request->m_parameters["assetIds"]);
+    other = device.matches(0, request);
+    predicate = files.matches(0, request);
+  });
+  thread.join();
+
+  EXPECT_TRUE(matched);
+  EXPECT_EQ(ids, value);
+  EXPECT_FALSE(other);
+  EXPECT_TRUE(predicate);
 }
