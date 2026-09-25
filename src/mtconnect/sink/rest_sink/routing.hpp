@@ -28,6 +28,7 @@
 #include <sstream>
 #include <string>
 #include <variant>
+#include <vector>
 
 #include "mtconnect/config.hpp"
 #include "mtconnect/logging.hpp"
@@ -45,6 +46,7 @@ namespace mtconnect::sink::rest_sink {
   {
   public:
     using Function = std::function<bool(SessionPtr, RequestPtr)>;
+    using PathMatcher = std::function<bool(const std::string&)>;
 
     Routing(const Routing& r) = default;
     /// @brief Create a routing with a string
@@ -84,6 +86,25 @@ namespace mtconnect::sink::rest_sink {
             bool swagger = false, std::optional<std::string> request = std::nullopt)
       : m_verb(verb),
         m_pattern(pattern),
+        m_command(request),
+        m_function(function),
+        m_swagger(swagger),
+        m_catchAll(true)
+    {}
+
+    /// @brief Create a routing with a path predicate
+    ///
+    /// Creates a catch-all routing that matches any path for which the predicate returns `true`.
+    /// Prefer this to a regular expression for routes that match arbitrary length paths since
+    /// some `std::regex` implementations recurse per character and can exhaust the stack.
+    /// @param[in] verb The `GET`, `PUT`, `POST`, and `DELETE` version of the HTTP request
+    /// @param[in] matcher predicate called with the request path
+    /// @param[in] function the function to call if matches
+    /// @param[in] swagger `true` if swagger related
+    Routing(boost::beast::http::verb verb, const PathMatcher& matcher, const Function function,
+            bool swagger = false, std::optional<std::string> request = std::nullopt)
+      : m_verb(verb),
+        m_matcher(matcher),
         m_command(request),
         m_function(function),
         m_swagger(swagger),
@@ -191,16 +212,15 @@ namespace mtconnect::sink::rest_sink {
       else
       {
         request->m_parameters.clear();
-        std::smatch m;
-        if (m_verb == request->m_verb && std::regex_match(request->m_path, m, m_pattern))
+        std::vector<std::string> values;
+        if (m_verb == request->m_verb && matchPath(request->m_path, &values))
         {
-          auto s = m.begin();
-          s++;
+          auto s = values.begin();
           for (auto& p : m_pathParameters)
           {
-            if (s != m.end())
+            if (s != values.end())
             {
-              ParameterValue v(s->str());
+              ParameterValue v(*s);
               request->m_parameters.emplace(make_pair(p.m_name, v));
               s++;
             }
@@ -301,11 +321,7 @@ namespace mtconnect::sink::rest_sink {
     /// @brief check if the routing's path pattern matches a given path (ignoring verb)
     /// @param[in] path the request path to test
     /// @return `true` if the path matches this routing's pattern
-    bool matchesPath(const std::string& path) const
-    {
-      std::smatch m;
-      return std::regex_match(path, m, m_pattern);
-    }
+    bool matchesPath(const std::string& path) const { return matchPath(path, nullptr); }
 
     /// @brief check if this is related to a swagger API
     /// @returns `true` if related to swagger
@@ -333,10 +349,89 @@ namespace mtconnect::sink::rest_sink {
     }
 
   protected:
+    /// @brief match a path against the segments without using `std::regex`
+    ///
+    /// Equivalent to matching `/seg1/seg2/.../?` where a parameter segment is
+    /// `prefix([^/]+)suffix`. Iterative so arbitrarily long paths are safe.
+    /// @param[in] path the request path
+    /// @param[out] values if not null, the parameter values in order
+    /// @returns `true` if the path matches
+    bool matchSegments(std::string_view path, std::vector<std::string>* values) const
+    {
+      if (m_segments.empty())
+        return path.empty();
+
+      for (const auto& segment : m_segments)
+      {
+        if (path.empty() || path.front() != '/')
+          return false;
+        path.remove_prefix(1);
+
+        auto next = path.find('/');
+        auto part = path.substr(0, next);
+        path = next == std::string_view::npos ? std::string_view() : path.substr(next);
+
+        if (segment.m_param)
+        {
+          if (part.size() <= segment.m_prefix.size() + segment.m_suffix.size() ||
+              !part.starts_with(segment.m_prefix) || !part.ends_with(segment.m_suffix))
+            return false;
+          if (values != nullptr)
+          {
+            part.remove_prefix(segment.m_prefix.size());
+            part.remove_suffix(segment.m_suffix.size());
+            values->emplace_back(part);
+          }
+        }
+        else if (part != segment.m_prefix)
+        {
+          return false;
+        }
+      }
+
+      return path.empty();
+    }
+
+    /// @brief check if the path matches this routing
+    /// @param[in] path the request path
+    /// @param[out] values if not null, the parameter values in order
+    /// @returns `true` if the path matches
+    bool matchPath(const std::string& path, std::vector<std::string>* values) const
+    {
+      if (m_matcher)
+        return m_matcher(path);
+      if (m_segments.empty() && !m_path)
+      {
+        // Created from a regular expression
+        std::smatch m;
+        if (!std::regex_match(path, m, m_pattern))
+          return false;
+        if (values != nullptr)
+          for (auto s = std::next(m.begin()); s != m.end(); s++)
+            values->emplace_back(s->str());
+        return true;
+      }
+
+      std::string_view sv(path);
+      if (values != nullptr)
+        values->clear();
+      if (matchSegments(sv, values))
+        return true;
+
+      // Allow a single optional trailing slash
+      if (!sv.empty() && sv.back() == '/')
+      {
+        sv.remove_suffix(1);
+        if (values != nullptr)
+          values->clear();
+        return matchSegments(sv, values);
+      }
+
+      return false;
+    }
+
     void pathParameters(std::string s)
     {
-      std::stringstream pat;
-
       using namespace boost::algorithm;
       using SplitList = std::list<boost::iterator_range<std::string::iterator>>;
 
@@ -359,33 +454,24 @@ namespace mtconnect::sink::rest_sink {
         if (openBrace != end && std::distance(openBrace, end) > 2)
           closeBrace = std::find(openBrace + 1, end, '}');
 
-        pat << "/";
+        Segment segment;
         if (openBrace != end && closeBrace != end)
         {
-          if (openBrace > start)
-          {
-            pat << std::string_view(start, openBrace);
+          segment.m_param = true;
+          segment.m_prefix = std::string(start, openBrace);
+          segment.m_suffix = std::string(closeBrace + 1, end);
+          if (!segment.m_prefix.empty() || !segment.m_suffix.empty())
             hasLiteral = true;
-          }
           std::string_view param(openBrace + 1, closeBrace);
-          pat << "([^/]+)";
-          if (closeBrace + 1 < end)
-          {
-            pat << std::string_view(closeBrace + 1, end);
-            hasLiteral = true;
-          }
           m_pathParameters.emplace_back(param);
         }
         else
         {
-          pat << std::string_view(start, end);
+          segment.m_prefix = std::string(start, end);
           hasLiteral = true;
         }
+        m_segments.emplace_back(std::move(segment));
       }
-      pat << "/?";
-
-      m_patternText = pat.str();
-      m_pattern = std::regex(m_patternText);
 
       // A route is catch-all if it has parameters but no literal path segments
       m_catchAll = !m_pathParameters.empty() && !hasLiteral;
@@ -556,8 +642,16 @@ namespace mtconnect::sink::rest_sink {
 
   protected:
     boost::beast::http::verb m_verb;
+    struct Segment
+    {
+      std::string m_prefix;  ///< literal text, or text before the parameter
+      std::string m_suffix;  ///< text after the parameter
+      bool m_param = false;
+    };
+
     std::regex m_pattern;
-    std::string m_patternText;
+    PathMatcher m_matcher;
+    std::vector<Segment> m_segments;
     std::optional<std::string> m_path;
     ParameterList m_pathParameters;
     QuerySet m_queryParameters;

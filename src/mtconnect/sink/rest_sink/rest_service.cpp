@@ -522,7 +522,12 @@ namespace mtconnect {
         }
         return bool(file);
       };
-      m_server->addRouting({boost::beast::http::verb::get, regex("/.+"), handler});
+      // Match any path of the form `/.+` without std::regex: libstdc++ regex recursion on long
+      // paths can overflow small thread stacks (e.g. musl/Alpine).
+      auto matcher = [](const string& path) -> bool {
+        return path.size() > 1 && path.front() == '/' && path.find('\n') == string::npos;
+      };
+      m_server->addRouting({boost::beast::http::verb::get, Routing::PathMatcher(matcher), handler});
     }
 
     void RestService::createProbeRoutings()

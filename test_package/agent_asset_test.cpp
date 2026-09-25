@@ -1132,3 +1132,35 @@ TEST_F(AgentAssetTest, assets_endpoint_accepts_post_requests_for_asset_storage)
     ASSERT_EQ((unsigned int)2, storage->getCount());
   }
 }
+
+TEST_F(AgentAssetTest, should_return_many_assets_by_id_with_removed_query)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 64, "2.6", 4, true, true,
+                                 {{configuration::Validation, false}});
+
+  const char* idList[] = {"1",  "10", "11", "12", "13", "14", "15", "16", "17", "18",
+                          "19", "2",  "20", "21", "22", "23", "24", "25", "26", "29",
+                          "3",  "36", "37", "4",  "40", "41", "42", "43", "44", "45",
+                          "46", "47", "48", "5",  "50", "6",  "60", "64", "65", "66",
+                          "7",  "70", "75", "77", "78", "87", "88", "89", "9",  "90"};
+  string path = "/assets/";
+  bool first = true;
+  for (auto s : idList)
+  {
+    string id = string("M8015P520ZN1.") + s;
+    string body = "<FakeAsset assetId='" + id + "'>" + id + "</FakeAsset>";
+    QueryMap q {{"device", "LinuxCNC"}, {"type", "FakeAsset"}};
+    PARSE_XML_RESPONSE_PUT("/asset", body, q);
+    if (!first)
+      path += ";";
+    path += id;
+    first = false;
+  }
+
+  for (auto removed : {"tru", "true"})
+  {
+    QueryMap query {{"removed", removed}};
+    PARSE_XML_RESPONSE_QUERY(path.c_str(), query);
+    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 50);
+  }
+}
