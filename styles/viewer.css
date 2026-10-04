@@ -1,0 +1,144 @@
+/* Additions for viewer.html. Everything is a class because the page runs under a strict
+   Content-Security-Policy that does not allow inline style attributes. */
+
+.navbar-brand {
+  padding: 5px 10px;
+}
+
+.mtc-path {
+  width: 18em;
+  margin-right: 6px;
+}
+
+.mtc-small {
+  width: 6em;
+  margin-right: 6px;
+}
+
+.mtc-format {
+  display: inline-block;
+  width: auto;
+  margin-right: 6px;
+}
+
+.navbar-form .btn {
+  margin-right: 6px;
+}
+
+.mtc-notice {
+  margin: 0;
+  padding: 6px 12px;
+  background: #fff4cc;
+  border-bottom: 1px solid #e6d28a;
+}
+
+.mtc-notice.mtc-error {
+  background: #ffd9d6;
+  border-bottom-color: #e59a94;
+}
+
+.mtc-bold {
+  font-weight: bold;
+}
+
+.mtc-right {
+  text-align: right;
+}
+
+/* +/- markers for rows with and without children */
+.mtc-branch::before {
+  content: '\229F';
+  margin-right: 0.4em;
+}
+
+.mtc-leaf::before {
+  content: '\2002';
+  margin-right: 0.4em;
+}
+
+/* observation values */
+.mtc-value-NORMAL,
+.mtc-value-ACTIVE {
+  background: #9fe473;
+}
+
+.mtc-value-WARNING {
+  background: #ffe989;
+}
+
+.mtc-value-FAULT {
+  background: #ff4c41;
+}
+
+.mtc-value-AVAILABLE {
+  background: #e7f38b;
+}
+
+.mtc-value-UNAVAILABLE {
+  color: #aaa;
+}
+
+.mtc-value-INACTIVE {
+  background: #f0f0f0;
+}
+
+dialog {
+  max-width: 60em;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+dialog.mtc-wide {
+  width: 90vw;
+  height: 80vh;
+}
+
+dialog pre {
+  max-height: 65vh;
+  overflow: auto;
+}
+
+dialog {
+  position: fixed;
+  padding: 1.5em 2em 1em;
+}
+
+.mtc-close {
+  position: absolute;
+  top: 0.25em;
+  right: 0.5em;
+  border: none;
+  background: none;
+  font-size: 2em;
+  line-height: 1;
+  color: #666;
+  cursor: pointer;
+}
+
+.mtc-close:hover,
+.mtc-close:focus-visible {
+  color: #000;
+}
+
+dialog.mtc-wide pre {
+  margin-top: 0.5em;
+}
+
+/* Header and detail subtables scroll inside their row instead of widening the page */
+.mtc-scroll {
+  overflow-x: auto;
+}
+
+.mtc-scroll > .subtable {
+  width: auto;
+  margin: 8px 8px 8px 1.5em;
+}
+
+.mtc-scroll th,
+.mtc-scroll td {
+  white-space: nowrap;
+}
+
+.mtc-scroll th {
+  padding: 1px 8px;
+}
