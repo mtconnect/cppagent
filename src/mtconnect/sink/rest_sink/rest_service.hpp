@@ -352,6 +352,17 @@ namespace mtconnect {
       void loadStyle(const boost::property_tree::ptree& tree, const char* styleName,
                      printer::XmlPrinter* xmlPrinter, StyleFunction styleFunction);
 
+      void loadStyleType(const boost::property_tree::ptree& tree, printer::XmlPrinter* xmlPrinter);
+
+      void loadBrowserView(const boost::property_tree::ptree& tree);
+
+      /// @brief Serve the browser view shell when the client prefers HTML
+      ///
+      /// The shell is a static page that requests the same document again with an explicit
+      /// `Accept` header, so API clients are never affected.
+      /// @return `true` if the shell was written to the session
+      bool serveBrowserView(SessionPtr session, const RequestPtr& request);
+
       void loadTypes(const boost::property_tree::ptree& tree);
 
       void loadAllowPut();
@@ -423,6 +434,7 @@ namespace mtconnect {
 
       // Buffers
       FileCache m_fileCache;
+      std::string m_browserViewLocation;
       bool m_logStreamData {false};
     };
   }  // namespace sink::rest_sink
