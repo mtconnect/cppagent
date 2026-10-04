@@ -191,6 +191,8 @@ namespace mtconnect::printer {
 
   void XmlPrinter::setAssetsStyle(const std::string& style) { m_assetStyle = style; }
 
+  void XmlPrinter::setStyleType(const std::string& type) { m_styleType = type; }
+
   std::string XmlPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
                                       const uint64_t nextSeq, const entity::EntityList& list,
                                       bool pretty, const std::optional<std::string> requestId) const
@@ -466,8 +468,9 @@ namespace mtconnect::printer {
     if (!style.empty())
     {
       string pi;
-      pi.reserve(42 + style.size());
-      pi.append(R"(xml-stylesheet type="text/xsl" href=")").append(style).append("\"");
+      pi.reserve(42 + m_styleType.size() + style.size());
+      pi.append(R"(xml-stylesheet type=")").append(m_styleType).append(R"(" href=")");
+      pi.append(style).append("\"");
       THROW_IF_XML2_ERROR(xmlTextWriterStartPI(writer, BAD_CAST pi.c_str()));
       THROW_IF_XML2_ERROR(xmlTextWriterEndPI(writer));
     }

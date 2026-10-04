@@ -108,6 +108,9 @@ namespace mtconnect {
       /// @brief Set the Error style sheet to add as a processing instruction
       /// @param style the stype sheet
       void setErrorStyle(const std::string& style);
+      /// @brief Set the mime type used for the style sheet processing instruction
+      /// @param type the type attribute, defaults to `text/xsl`
+      void setStyleType(const std::string& type);
 
       /// @name For testing
       ///@{
@@ -200,6 +203,7 @@ namespace mtconnect {
       std::string m_devicesStyle;
       std::string m_errorStyle;
       std::string m_assetStyle;
+      std::string m_styleType {"text/xsl"};
     };
   }  // namespace printer
 }  // namespace mtconnect
