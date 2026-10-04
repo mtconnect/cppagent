@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+    <title>MTConnect Agent</title>
+    <link href="/styles/bootstrap.min.css" rel="stylesheet">
+    <link href="/styles/styles.css" rel="stylesheet">
+    <link href="/styles/viewer.css" rel="stylesheet">
+    <script type="module" src="/styles/mtc-app.js"></script>
+  </head>
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="https://mtconnect.org" target="_blank" rel="noopener noreferrer">
+            <img alt="MTConnect" src="/styles/MTConnect_Logo.png">
+          </a>
+        </div>
+        <ul class="nav navbar-nav">
+          <li id="tab-probe"><a>Probe</a></li>
+          <li id="tab-current"><a>Current</a></li>
+          <li id="tab-sample"><a>Sample</a></li>
+        </ul>
+        <form id="query" class="navbar-form navbar-left">
+          <div class="form-group">
+            <input id="path" type="text" class="form-control mtc-path" placeholder="Path">
+            <input id="from" type="text" class="form-control mtc-small" placeholder="From">
+            <input id="count" type="text" class="form-control mtc-small" placeholder="Count">
+            <button id="fetch" type="submit" class="btn">Fetch</button>
+            <button id="autorefresh" type="button" class="btn">Autorefresh</button>
+            <select id="format" class="form-control mtc-format" aria-label="Format">
+              <option value="xml">XML</option>
+              <option value="json">JSON</option>
+            </select>
+            <button id="raw" type="button" class="btn">Raw</button>
+            <button id="help" type="button" class="btn">?</button>
+          </div>
+        </form>
+      </div>
+    </nav>
+
+    <div class="container-fluid page-container">
+      <div id="main-container" class="table-responsive stickytable-container"></div>
+    </div>
+
+    <dialog id="help-dialog">
+      <button type="button" class="mtc-close" data-close aria-label="Close">&times;</button>
+      <h3>MTConnect Agent</h3>
+      <p>The agent receives data from one or more devices and publishes it as XML or JSON. This page reads that data and shows it as a grid.</p>
+      <h4>Probe, Current, Sample</h4>
+      <p>Probe shows the structure of the devices and their data items. Current shows the latest value of each data item. Sample shows a sequence of values with their timestamps.</p>
+      <h4>Path</h4>
+      <p>An XPath filter such as <code>//DataItem[@type="AVAILABILITY"]</code>. The agent returns an error if the path matches nothing.</p>
+      <h4>From and Count</h4>
+      <p>The agent keeps a buffer of observations identified by sequence number. From and Count choose which ones Sample returns.</p>
+      <h4>Format</h4>
+      <p>Choose whether this page reads the agent's XML or JSON. If JSON cannot be read, the page falls back to XML.</p>
+      <h4>Raw</h4>
+      <p>Shows the document exactly as the agent sent it, in the chosen format.</p>
+      <h4>Note</h4>
+      <p>Conditions appear as Condition rows with a value of NORMAL, WARNING, FAULT or UNAVAILABLE.</p>
+      <h4>MTConnect model</h4>
+      <p>The names in these documents are defined by the MTConnect SysML model. Browse it at <a id="model-link" href="https://model.mtconnect.org/" target="_blank" rel="noopener noreferrer">model.mtconnect.org</a>. The model source is on <a href="https://github.com/mtconnect/mtconnect_sysml_model" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+      <p>For more information on MTConnect, see <a href="https://mtconnect.org" target="_blank" rel="noopener noreferrer">MTConnect.org</a>.</p>
+    </dialog>
+
+    <dialog id="raw-dialog" class="mtc-wide">
+      <button type="button" class="mtc-close" data-close aria-label="Close">&times;</button>
+      <pre id="raw-text"></pre>
+    </dialog>
+
+    <button id="gotoTop" title="Go to top"><img alt="Go to top" src="/styles/icon-up.webp"></button>
+  </body>
+</html>
