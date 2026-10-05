@@ -85,6 +85,7 @@ The viewer then requests the same URL again with an explicit `Accept` header, so
 - **Format**: the dropdown chooses whether the page reads XML or JSON. XML is the default. If JSON cannot be read the page falls back to XML and says so. The choice is kept in the URL fragment, for example `/current?path=//DataItem[@type="AVAILABILITY"]#format=json`. The fragment is never sent to the Agent. Do not use `?format=` for this, because the Agent treats it as a request for the raw document.
 - **Path, From, Count**: as in the XSL view. Path is an XPath filter and applies to Current and Sample.
 - **Raw**: shows the document exactly as the Agent sent it, in the chosen format.
+- **Collapse**: the ⊟ marker on a row with children collapses the rows below it, and ⊞ expands them again. Autorefresh keeps the rows you collapsed.
 - **JSON**: both `JsonVersion` 1 and 2 are handled. Version 1 has not been checked against a running Agent.
 
 ### Files
