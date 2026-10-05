@@ -45,10 +45,28 @@
   text-align: right;
 }
 
-/* +/- markers for rows with and without children */
+/* +/- markers for rows with and without children. Branches are buttons that collapse the rows below. */
+.mtc-branch {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 .mtc-branch::before {
   content: '\229F';
   margin-right: 0.4em;
+}
+
+.mtc-branch[aria-expanded='false']::before {
+  content: '\229E';
+}
+
+tr[hidden] {
+  display: none;
 }
 
 .mtc-leaf::before {
