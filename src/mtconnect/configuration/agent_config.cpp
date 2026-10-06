@@ -800,6 +800,7 @@ namespace mtconnect::configuration {
                 {configuration::ConfigPath, StringList()},
                 {configuration::ServerIp, "0.0.0.0"s},
                 {configuration::Devices, "Devices.xml"s},
+                {configuration::BrowserView, ""s},
                 {configuration::BufferSize, int(DEFAULT_SLIDING_BUFFER_EXP)},
                 {configuration::MaxAssets, int(DEFAULT_MAX_ASSETS)},
                 {configuration::CheckpointFrequency, 1000},

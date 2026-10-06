@@ -30,13 +30,12 @@ Directories {
   }
 }
 
+BrowserView = ../../styles/viewer.html
+
 Sinks {
 #  MqttService {
 #  }
 }
-
-DevicesStyle { Location = /styles/styles.xsl }
-StreamsStyle { Location = /styles/styles.xsl }
 
 Adapters {
   OKUMA {

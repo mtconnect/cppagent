@@ -275,12 +275,23 @@ namespace mtconnect {
         }
         return "xml";
       }
+      
       /// @brief get a printer given a list of formats from the Accepts header
       /// @param accepts the accepts header
       /// @return pointer to a printer
       const printer::Printer* printerForAccepts(const std::string& accepts) const
       {
-        return m_sinkContract->getPrinter(acceptFormat(accepts));
+        std::stringstream list(accepts);
+        std::string accept;
+        while (std::getline(list, accept, ','))
+        {
+          for (const auto& printer : m_sinkContract->getPrinters())
+          {
+            if (accept.ends_with(printer.first))
+              return printer.second.get();
+          }
+        }
+        return m_sinkContract->getPrinter("xml");
       }
 
       /// @brief get a printer for a format or using the accepts header. Falls back to header accept
@@ -353,15 +364,6 @@ namespace mtconnect {
                      printer::XmlPrinter* xmlPrinter, StyleFunction styleFunction);
 
       void loadStyleType(const boost::property_tree::ptree& tree, printer::XmlPrinter* xmlPrinter);
-
-      void loadBrowserView(const boost::property_tree::ptree& tree);
-
-      /// @brief Serve the browser view shell when the client prefers HTML
-      ///
-      /// The shell is a static page that requests the same document again with an explicit
-      /// `Accept` header, so API clients are never affected.
-      /// @return `true` if the shell was written to the session
-      bool serveBrowserView(SessionPtr session, const RequestPtr& request);
 
       void loadTypes(const boost::property_tree::ptree& tree);
 
