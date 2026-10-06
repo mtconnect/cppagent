@@ -27,7 +27,7 @@
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
 #include "mtconnect/printer/json_printer.hpp"
 #include "mtconnect/printer/xml_printer.hpp"
-#include "rest_request_helpers.hpp"
+#include "mtconnect/printer/html_printer.hpp"
 #include "server.hpp"
 
 namespace asio = boost::asio;
@@ -44,6 +44,14 @@ namespace mtconnect {
   using namespace buffer;
 
   namespace sink::rest_sink {
+    /// Completes a routed request while consistently propagating the request id.
+    inline void respond(SessionPtr session, ResponsePtr&& response,
+                        std::optional<std::string> requestId = std::nullopt)
+    {
+      response->m_requestId = std::move(requestId);
+      session->writeResponse(std::move(response));
+    }
+
     RestService::RestService(asio::io_context& context, SinkContractPtr&& contract,
                              const ConfigOptions& options, const ptree& config)
       : Sink("RestService", std::move(contract)),
@@ -63,6 +71,20 @@ namespace mtconnect {
 
       m_fileCache.setMaxCachedFileSize(maxSize);
       m_fileCache.setMinCompressedFileSize(compressSize);
+      
+      // Check for html printer
+      if (auto printer = m_sinkContract->getPrinter("html"); printer != nullptr)
+      {
+        if (auto htmlPrinter = dynamic_cast<HtmlPrinter*>(printer); htmlPrinter != nullptr)
+        {
+          htmlPrinter->resolveBrowserView([&contract = m_sinkContract](const std::string &file) {
+            auto resolved = contract->m_findDataFile(file);
+            if (!resolved)
+              resolved = contract->m_findConfigFile(file);
+            return resolved;
+          });
+        }
+      }
 
       // Unique id number for agent instance
       m_instanceId = getCurrentTimeInSec();
@@ -114,8 +136,6 @@ namespace mtconnect {
       loadStyle(config, "StreamsStyle", xmlPrinter, &XmlPrinter::setStreamStyle);
       loadStyle(config, "AssetsStyle", xmlPrinter, &XmlPrinter::setAssetsStyle);
       loadStyle(config, "ErrorStyle", xmlPrinter, &XmlPrinter::setErrorStyle);
-
-      loadBrowserView(config);
 
       loadTypes(config);
       loadAllowPut();
@@ -417,68 +437,6 @@ namespace mtconnect {
         xmlPrinter->setStyleType(*type);
     }
 
-    void RestService::loadBrowserView(const ptree& tree)
-    {
-      auto view = tree.get_child_optional("BrowserView");
-      if (!view)
-        return;
-
-      auto location = view->get_optional<string>("Location");
-      if (!location)
-      {
-        LOG(error) << "BrowserView must have a Location";
-        return;
-      }
-
-      // The file is usually already served by a `Files` entry, `Path` is only needed otherwise.
-      if (auto path = view->get_optional<string>("Path"))
-        m_fileCache.registerFile(*location, *path, m_schemaVersion);
-
-      if (m_fileCache.getFile(*location))
-        m_browserViewLocation = *location;
-      else
-        LOG(warning) << "Cannot find file for BrowserView: " << *location;
-    }
-
-    namespace {
-      /// @brief Check if the first media type in the Accept header that we can serve is HTML
-      ///
-      /// Browsers list `text/html` first. API clients send `*/*` or an explicit data type.
-      bool prefersHtml(const string& accepts)
-      {
-        std::stringstream list(accepts);
-        string entry;
-        while (std::getline(list, entry, ','))
-        {
-          auto start = entry.find_first_not_of(" \t");
-          if (start == string::npos)
-            continue;
-          auto end = entry.find_first_of("; \t", start);
-          auto type = entry.substr(start, end == string::npos ? end : end - start);
-          if (type == "text/html")
-            return true;
-          if (type == "application/xml" || type == "text/xml" || type == "application/json" ||
-              type == "*/*")
-            return false;
-        }
-        return false;
-      }
-    }  // namespace
-
-    bool RestService::serveBrowserView(SessionPtr session, const RequestPtr& request)
-    {
-      if (m_browserViewLocation.empty() || request->m_verb != boost::beast::http::verb::get ||
-          request->parameter<string>("format") || !prefersHtml(request->m_accepts))
-        return false;
-
-      auto file = m_fileCache.getFile(m_browserViewLocation, request->m_acceptsEncoding, &m_context);
-      if (!file)
-        return false;
-
-      session->writeResponse(make_unique<Response>(rest_sink::status::ok, file));
-      return true;
-    }
-
     void RestService::loadTypes(const ptree& tree)
     {
       auto types = tree.get_child_optional("MimeTypes");
@@ -623,9 +581,6 @@ namespace mtconnect {
           return false;
         }
 
-        if (serveBrowserView(session, request))
-          return true;
-
         respond(session, probeRequest(printer, device, pretty, deviceType, request->m_requestId),
                 request->m_requestId);
         return true;
@@ -667,8 +622,6 @@ namespace mtconnect {
       using namespace rest_sink;
 
       auto idHandler = [this](SessionPtr session, RequestPtr request) -> bool {
-        if (serveBrowserView(session, request))
-          return true;
         auto asset = request->parameter<string>("assetIds");
         request->m_request = "MTConnectAssets";
 
@@ -696,8 +649,6 @@ namespace mtconnect {
       };
 
       auto handler = [this, idHandler](SessionPtr session, RequestPtr request) -> bool {
-        if (serveBrowserView(session, request))
-          return true;
         auto assets = request->parameter<string>("assetIds");
         if (assets)
         {
@@ -839,9 +790,6 @@ namespace mtconnect {
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
         request->m_request = "MTConnectStreams";
 
-        if (serveBrowserView(session, request))
-          return true;
-
         auto interval = request->parameter<int32_t>("interval");
         if (interval)
         {
@@ -890,9 +838,6 @@ namespace mtconnect {
 
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
         request->m_request = "MTConnectStreams";
-
-        if (serveBrowserView(session, request))
-          return true;
 
         if (!request->parameter<int32_t>("count"))
           request->m_parameters["count"] = 100;

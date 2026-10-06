@@ -214,6 +214,7 @@ set(AGENT_SOURCES
 
 # src/printer HEADER_FILE_ONLY
 
+        "${SOURCE_DIR}/printer/html_printer.hpp"
         "${SOURCE_DIR}/printer/json_printer.hpp"
         "${SOURCE_DIR}/printer/json_printer_helper.hpp"
         "${SOURCE_DIR}/printer/printer.hpp"
@@ -223,8 +224,9 @@ set(AGENT_SOURCES
 
 # src/printer SOURCE_FILES_ONLY
 
-        "${SOURCE_DIR}/printer/xml_printer.cpp"
+        "${SOURCE_DIR}/printer/html_printer.cpp"
         "${SOURCE_DIR}/printer/json_printer.cpp"
+        "${SOURCE_DIR}/printer/xml_printer.cpp"
 
 # src/source HEADER_FILE_ONLY
 
@@ -287,7 +289,6 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/sink/rest_sink/request.hpp"
         "${SOURCE_DIR}/sink/rest_sink/response.hpp"
         "${SOURCE_DIR}/sink/rest_sink/rest_service.hpp"
-        "${SOURCE_DIR}/sink/rest_sink/rest_request_helpers.hpp"
         "${SOURCE_DIR}/sink/rest_sink/routing.hpp"
         "${SOURCE_DIR}/sink/rest_sink/server.hpp"
         "${SOURCE_DIR}/sink/rest_sink/session.hpp"

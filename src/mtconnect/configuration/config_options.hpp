@@ -47,6 +47,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(DisableAgentDevice);
     DECLARE_CONFIGURATION(AllowPut);
     DECLARE_CONFIGURATION(AllowPutFrom);
+    DECLARE_CONFIGURATION(BrowserView);
     DECLARE_CONFIGURATION(BufferSize);
     DECLARE_CONFIGURATION(CheckpointFrequency);
     DECLARE_CONFIGURATION(Devices);
