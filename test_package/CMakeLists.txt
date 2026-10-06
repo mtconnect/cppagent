@@ -268,6 +268,7 @@ add_agent_test(json_printer_stream TRUE json)
 add_agent_test(json_device_parser TRUE json)
 add_agent_test(xml_parser TRUE xml)
 add_agent_test(xml_printer TRUE xml)
+add_agent_test(html_printer TRUE html)
 
 add_agent_test(adapter FALSE adapter)
 add_agent_test(connector FALSE adapter)
