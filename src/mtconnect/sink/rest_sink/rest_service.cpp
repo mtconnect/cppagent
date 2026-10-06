@@ -79,7 +79,7 @@ namespace mtconnect {
         {
           htmlPrinter->resolveBrowserView([&contract = m_sinkContract](const std::string &file) {
             auto resolved = contract->m_findDataFile(file);
-            if (!resolved)
+            if (!resolved && contract->m_findConfigFile)
               resolved = contract->m_findConfigFile(file);
             return resolved;
           });
