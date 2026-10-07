@@ -131,11 +131,21 @@ namespace mtconnect {
       loadJsonSchema(config, "ErrorJsonSchema", jsonPrinter, &JsonPrinter::setErrorSchema);
 
       // Load the XML style sheets
-      loadStyleType(config, xmlPrinter);
-      loadStyle(config, "DevicesStyle", xmlPrinter, &XmlPrinter::setDevicesStyle);
-      loadStyle(config, "StreamsStyle", xmlPrinter, &XmlPrinter::setStreamStyle);
-      loadStyle(config, "AssetsStyle", xmlPrinter, &XmlPrinter::setAssetsStyle);
-      loadStyle(config, "ErrorStyle", xmlPrinter, &XmlPrinter::setErrorStyle);
+      if (!HasOption(options, config::BrowserView))
+      {
+        loadStyleType(config, xmlPrinter);
+        loadStyle(config, "DevicesStyle", xmlPrinter, &XmlPrinter::setDevicesStyle);
+        loadStyle(config, "StreamsStyle", xmlPrinter, &XmlPrinter::setStreamStyle);
+        loadStyle(config, "AssetsStyle", xmlPrinter, &XmlPrinter::setAssetsStyle);
+        loadStyle(config, "ErrorStyle", xmlPrinter, &XmlPrinter::setErrorStyle);
+      }
+      else if (config.get_child_optional("DevicesStyle") ||
+               config.get_child_optional("StreamsStyle") ||
+               config.get_child_optional("AssetsStyle") || config.get_child_optional("ErrorStyle"))
+      {
+        LOG(warning) << "Stylesheets are disabled when BrowserView is active. Ingoring "
+                        "DevicesStyle, StreamsStyle, AssetsStyle, and ErrorStyle.";
+      }
 
       loadTypes(config);
       loadAllowPut();
