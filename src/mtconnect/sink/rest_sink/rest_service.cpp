@@ -25,9 +25,9 @@
 #include "mtconnect/pipeline/shdr_token_mapper.hpp"
 #include "mtconnect/pipeline/shdr_tokenizer.hpp"
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
+#include "mtconnect/printer/html_printer.hpp"
 #include "mtconnect/printer/json_printer.hpp"
 #include "mtconnect/printer/xml_printer.hpp"
-#include "mtconnect/printer/html_printer.hpp"
 #include "server.hpp"
 
 namespace asio = boost::asio;
@@ -71,13 +71,13 @@ namespace mtconnect {
 
       m_fileCache.setMaxCachedFileSize(maxSize);
       m_fileCache.setMinCompressedFileSize(compressSize);
-      
+
       // Check for html printer
       if (auto printer = m_sinkContract->getPrinter("html"); printer != nullptr)
       {
         if (auto htmlPrinter = dynamic_cast<HtmlPrinter*>(printer); htmlPrinter != nullptr)
         {
-          htmlPrinter->resolveBrowserView([&contract = m_sinkContract](const std::string &file) {
+          htmlPrinter->resolveBrowserView([&contract = m_sinkContract](const std::string& file) {
             auto resolved = contract->m_findDataFile(file);
             if (!resolved && contract->m_findConfigFile)
               resolved = contract->m_findConfigFile(file);

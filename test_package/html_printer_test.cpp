@@ -27,6 +27,7 @@
 #include "agent_test_helper.hpp"
 #include "mtconnect/agent.hpp"
 #include "mtconnect/printer/html_printer.hpp"
+#include "mtconnect/printer/xml_printer.hpp"
 #include "test_utilities.hpp"
 
 using namespace std;
@@ -115,8 +116,8 @@ protected:
   {
     string body = "<FakeAsset assetId='P1' deviceUuid='LinuxCNC'>TEST</FakeAsset>";
     QueryMap queries {{"type", "FakeAsset"}, {"device", "LinuxCNC"}};
-    m_agentTestHelper->makeRequest(__FILE__, __LINE__, boost::beast::http::verb::put, body,
-                                   queries, "/asset/P1", "text/xml");
+    m_agentTestHelper->makeRequest(__FILE__, __LINE__, boost::beast::http::verb::put, body, queries,
+                                   "/asset/P1", "text/xml");
     ASSERT_EQ(status::ok, m_agentTestHelper->session()->m_code);
     ASSERT_EQ(1u, m_agentTestHelper->getAgent()->getAssetStorage()->getCount());
   }
@@ -126,8 +127,8 @@ protected:
   string m_suffix;
 };
 
-#define PARSE_HTML_RESPONSE(...)                    \
-  auto doc = parseEmbedded(request(__VA_ARGS__));   \
+#define PARSE_HTML_RESPONSE(...)                      \
+  auto doc = parseEmbedded(request(__VA_ARGS__));     \
   ASSERT_TRUE(doc) << "Embedded document is not XML"; \
   XmlDocFreer cleanup(doc)
 
@@ -137,6 +138,15 @@ TEST_F(HtmlPrinterTest, should_register_html_printer_when_browser_view_is_config
   ASSERT_NE(nullptr, printer);
   ASSERT_NE(nullptr, dynamic_cast<const printer::HtmlPrinter*>(printer));
   ASSERT_EQ("text/html", printer->mimeType());
+}
+
+TEST_F(HtmlPrinterTest, should_rest_sink_should_default_to_xml_printer)
+{
+  auto rest = m_agentTestHelper->getRestService();
+  auto printer = rest->printerForAccepts("application/foomoo,text/glop");
+  ASSERT_NE(nullptr, printer);
+  ASSERT_NE(nullptr, dynamic_cast<const printer::XmlPrinter*>(printer));
+  ASSERT_EQ("application/xml", printer->mimeType());
 }
 
 TEST_F(HtmlPrinterTest, should_embed_probe_document_in_browser_view)
@@ -184,8 +194,10 @@ TEST_F(HtmlPrinterTest, should_embed_sample_document_in_browser_view)
   ASSERT_EQ(status::ok, m_agentTestHelper->session()->m_code);
   ASSERT_EQ("MTConnectStreams", rootName(doc));
   ASSERT_XML_PATH_COUNT(doc, "//m:Execution[@dataItemId='p5']", 2);
-  ASSERT_XML_PATH_EQUAL(doc, ("//m:Execution[@sequence='" + to_string(seq - 1) + "']").c_str(), "READY");
-  ASSERT_XML_PATH_EQUAL(doc, ("//m:Execution[@sequence='" + to_string(seq) + "']").c_str(), "ACTIVE");
+  ASSERT_XML_PATH_EQUAL(doc, ("//m:Execution[@sequence='" + to_string(seq - 1) + "']").c_str(),
+                        "READY");
+  ASSERT_XML_PATH_EQUAL(doc, ("//m:Execution[@sequence='" + to_string(seq) + "']").c_str(),
+                        "ACTIVE");
 }
 
 TEST_F(HtmlPrinterTest, should_embed_assets_document_in_browser_view)

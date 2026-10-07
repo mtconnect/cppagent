@@ -225,7 +225,7 @@ TEST_F(FileCacheTest, file_cache_should_compress_file_from_io_context)
   EXPECT_TRUE(gzFile->m_pathGz);
   EXPECT_TRUE(fs::exists(*gzFile->m_pathGz));
   EXPECT_EQ(zipped, *gzFile->m_pathGz);
-  
+
   // Cleanup
   if (fs::exists(zipped))
   {
