@@ -15,15 +15,15 @@
 //    limitations under the License.
 //
 
-// Page controller: picks the view from the URL, loads the document through the transport and
-// decoders, and renders it. XML is the default format, JSON is selectable.
+// Page controller: picks the view from the URL, reads the document the agent embedded in the
+// page, and renders it. Autorefresh requests the page again and renders the document in it. The
+// format dropdown only applies to the Raw dialog, which requests the document in that format.
 import { h } from './mtc-dom.js'
-import { fetchDocument } from './mtc-transport.js'
+import { embeddedDocument, fetchDocument, fetchPage, FORMATS } from './mtc-transport.js'
 import { decodeXml } from './mtc-decode-xml.js'
 import { decodeJson } from './mtc-decode-json.js'
 import { renderDocument } from './mtc-views.js'
 
-const DECODERS = { xml: decodeXml, json: decodeJson }
 const TABS = ['probe', 'current', 'sample']
 const DOCUMENT_SEGMENTS = [...TABS, 'asset', 'assets']
 const REFRESH_MS = 2000
@@ -38,51 +38,29 @@ const base = '/' + (docIndex >= 0 ? segments.slice(0, docIndex) : segments).join
 const prefix = base === '/' ? '' : base
 const tab = docIndex >= 0 ? segments[docIndex] : 'probe'
 
-// The format lives in the URL fragment as #format=json or #format=xml, written like a query
-// string so more viewer settings can be added later. It keeps links and bookmarks on the same
-// format. The fragment is never sent to the agent, and a ?format= query parameter would make the
-// agent return the raw document instead of this page. A saved preference is the fallback.
-const FORMAT_NAMES = Object.keys(DECODERS)
-const fragment = () => new URLSearchParams(window.location.hash.slice(1))
-const formatFromUrl = () => {
-  const name = fragment().get('format')
-  return FORMAT_NAMES.includes(name) ? name : null
-}
-let format = formatFromUrl() || (localStorage.getItem('mtc-format') === 'json' ? 'json' : 'xml')
-const hash = () => {
-  const params = fragment()
-  params.set('format', format)
-  return '#' + params
-}
 let refreshTimer = null
 
-// Shown above the table only when something needs attention. The format dropdown already says
-// which format is in use.
-function notice(message, isError = false) {
-  return h('p', { class: 'mtc-notice' + (isError ? ' mtc-error' : ''), role: 'status' }, message)
+// The script element's type is the media type of the embedded document
+function decode({ type, text }) {
+  if (type.endsWith('xml')) return decodeXml(text)
+  if (type.endsWith('json')) return decodeJson(text)
+  throw new Error('Cannot read an embedded document of type ' + (type || 'unknown'))
 }
 
-async function load() {
+// Shown in place of the table when the document cannot be read
+function notice(message) {
+  return h('p', { class: 'mtc-notice mtc-error', role: 'status' }, message)
+}
+
+function render(embedded) {
   const container = $('main-container')
-  let result
-  let message = null
   try {
-    result = await readDocument(format)
+    const root = decode(embedded)
+    container.replaceChildren(renderDocument(root))
+    linkModel(root)
   } catch (err) {
-    // Fall back to XML, which every agent supports
-    if (format === 'json') {
-      try {
-        result = await readDocument('xml')
-        message = notice('JSON could not be read (' + err.message + '), showing XML')
-      } catch (xmlErr) {
-        return container.replaceChildren(notice(xmlErr.message, true))
-      }
-    } else {
-      return container.replaceChildren(notice(err.message, true))
-    }
+    container.replaceChildren(notice(err.message))
   }
-  container.replaceChildren(...[message, renderDocument(result.root)].filter(Boolean))
-  linkModel(result.root)
 }
 
 // model.mtconnect.org has one site per MTConnect version, from 2.0. The version comes from the
@@ -100,9 +78,12 @@ function linkModel(root) {
   }
 }
 
-async function readDocument(as) {
-  const response = await fetchDocument(window.location.pathname + window.location.search, as)
-  return { format: as, root: DECODERS[as](response.text) }
+async function refresh() {
+  try {
+    render(await fetchPage(window.location.pathname + window.location.search))
+  } catch (err) {
+    $('main-container').replaceChildren(notice(err.message))
+  }
 }
 
 function scheduleRefresh() {
@@ -110,7 +91,7 @@ function scheduleRefresh() {
   refreshTimer = null
   if (!$('autorefresh').classList.contains('active')) return
   refreshTimer = setTimeout(async () => {
-    await load()
+    await refresh()
     scheduleRefresh()
   }, REFRESH_MS)
 }
@@ -118,7 +99,7 @@ function scheduleRefresh() {
 function setupTabs() {
   for (const name of TABS) {
     const link = $('tab-' + name)
-    link.firstElementChild.setAttribute('href', prefix + '/' + name + hash())
+    link.firstElementChild.setAttribute('href', prefix + '/' + name)
     if (name === tab) link.classList.add('selected')
   }
 }
@@ -132,33 +113,23 @@ function setupForm() {
     for (const id of ['path', 'from', 'count']) if ($(id).value) query.set(id, $(id).value)
     const sample = query.has('from') || query.has('count')
     const qs = query.toString()
-    window.location.assign(
-      prefix + (sample ? '/sample' : '/current') + (qs ? '?' + qs : '') + hash()
-    )
+    window.location.assign(prefix + (sample ? '/sample' : '/current') + (qs ? '?' + qs : ''))
   })
 }
 
+// The format for the Raw dialog, remembered between pages
 function setupFormat() {
   const select = $('format')
-  select.value = format
-  select.addEventListener('change', () => useFormat(select.value))
-  // Back and forward buttons, or an edited fragment
-  window.addEventListener('hashchange', () => {
-    const next = formatFromUrl()
-    if (next && next !== format) useFormat(next, false)
+  let saved = null
+  try {
+    saved = localStorage.getItem('mtc-format')
+  } catch {}
+  select.value = saved in FORMATS ? saved : 'xml'
+  select.addEventListener('change', () => {
+    try {
+      localStorage.setItem('mtc-format', select.value)
+    } catch {}
   })
-}
-
-function useFormat(next, updateUrl = true) {
-  format = next
-  $('format').value = format
-  localStorage.setItem('mtc-format', format)
-  if (updateUrl) history.replaceState(null, '', window.location.pathname + window.location.search + hash())
-  for (const name of TABS) {
-    const link = $('tab-' + name).firstElementChild
-    link.setAttribute('href', prefix + '/' + name + hash())
-  }
-  load()
 }
 
 function setupAutorefresh() {
@@ -178,12 +149,10 @@ function setupDialogs() {
     pre.textContent = 'Loading...'
     $('raw-dialog').showModal()
     try {
-      const response = await fetchDocument(
+      pre.textContent = await fetchDocument(
         window.location.pathname + window.location.search,
-        format,
-        { pretty: true }
+        $('format').value
       )
-      pre.textContent = response.text
     } catch (err) {
       pre.textContent = err.message
     }
@@ -204,12 +173,14 @@ function fitHeader() {
 window.addEventListener('resize', fitHeader)
 fitHeader()
 
-// Make the format in use visible in the URL, even when it came from the saved preference
-if (!formatFromUrl()) history.replaceState(null, '', window.location.pathname + window.location.search + hash())
-
 setupTabs()
 setupForm()
 setupFormat()
 setupAutorefresh()
 setupDialogs()
-load().then(scheduleRefresh)
+try {
+  render(embeddedDocument())
+} catch (err) {
+  $('main-container').replaceChildren(notice(err.message))
+}
+scheduleRefresh()

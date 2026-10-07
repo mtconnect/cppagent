@@ -693,11 +693,12 @@ namespace mtconnect {
       m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler})
           .document("MTConnect asset request", "Returns up to `count` assets for deivce `device`")
           .command("asset");
-      m_server->addRouting({boost::beast::http::verb::get, "/assets/{assetIds}", idHandler})
+      string idQp("pretty={bool:false}&format={string}");
+      m_server->addRouting({boost::beast::http::verb::get, "/assets/{assetIds}?" + idQp, idHandler})
           .document(
               "MTConnect assets request",
               "Returns a set assets identified by asset ids `asset` separated by semi-colon (;)");
-      m_server->addRouting({boost::beast::http::verb::get, "/asset/{assetIds}", idHandler})
+      m_server->addRouting({boost::beast::http::verb::get, "/asset/{assetIds}?" + idQp, idHandler})
           .document("MTConnect asset request",
                     "Returns a set of assets identified by asset ids `asset` separated by "
                     "semi-colon (;)");

@@ -44,7 +44,7 @@ StreamsStyle { Location = /styles/styles.xsl }
 
 ## Browser view without XSLT
 
-Chrome is removing XSLT support (see [Chrome's deprecation notice](https://developer.chrome.com/docs/web-platform/deprecating-xslt)), which will stop `styles.xsl` from rendering in that browser. `viewer.html` is a replacement that does the same job with JavaScript. It reads the Agent's XML or JSON and shows the same Probe, Current, Sample, Assets and Error grids. The XSL files above are unchanged and still work for browsers that support XSLT.
+Chrome is removing XSLT support (see [Chrome's deprecation notice](https://developer.chrome.com/docs/web-platform/deprecating-xslt)), which will stop `styles.xsl` from rendering in that browser. `viewer.html` is a replacement that does the same job with JavaScript. The Agent embeds its response document in the page, and the page shows the same Probe, Current, Sample, Assets and Error grids. The XSL files above are unchanged and still work for browsers that support XSLT.
 
 ### Configuration
 
@@ -78,15 +78,14 @@ The Agent returns the viewer for a GET of `/probe`, `/current`, `/sample`, `/ass
 | `application/json` or `application/mtconnect+json` | JSON |
 | Any of the above plus `?format=xml` or `?format=json` | The raw document |
 
-The viewer then requests the same URL again with an explicit `Accept` header, so API clients are not affected. The Agent remains a read only source of data: the viewer only sends GET requests and only to its own origin.
+The Agent puts the document it would have returned in the page, in `<script id="mtconnect-data">`, and the viewer renders it from there without another request. API clients are not affected. Autorefresh requests the same URL again and renders the document embedded in the new page. The Agent remains a read only source of data: the viewer only sends GET requests and only to its own origin.
 
 ### Using the viewer
 
-- **Format**: the dropdown chooses whether the page reads XML or JSON. XML is the default. If JSON cannot be read the page falls back to XML and says so. The choice is kept in the URL fragment, for example `/current?path=//DataItem[@type="AVAILABILITY"]#format=json`. The fragment is never sent to the Agent. Do not use `?format=` for this, because the Agent treats it as a request for the raw document.
 - **Path, From, Count**: as in the XSL view. Path is an XPath filter and applies to Current and Sample.
-- **Raw**: shows the document exactly as the Agent sent it, in the chosen format.
+- **Raw**: requests the document again in the format chosen in the XML/JSON dropdown, pretty printed, and shows it as text. The dropdown only affects Raw; the page always renders the embedded document. The choice is remembered in the browser.
 - **Collapse**: the ⊟ marker on a row with children collapses the rows below it, and ⊞ expands them again. Autorefresh keeps the rows you collapsed.
-- **JSON**: both `JsonVersion` 1 and 2 are handled. Version 1 has not been checked against a running Agent.
+- **JSON**: the embedded document is XML. The script element's `type` chooses the decoder, so a JSON document (`JsonVersion` 1 or 2) is read the same way.
 
 ### Files
 
@@ -94,7 +93,7 @@ The viewer then requests the same URL again with an explicit `Accept` header, so
 |---|---|
 | `viewer.html`, `viewer.css` | The page and its styles |
 | `mtc-app.js` | Picks the view from the URL, handles the controls and refresh |
-| `mtc-transport.js` | GET only, same origin, explicit `Accept` |
+| `mtc-transport.js` | Reads the embedded document; GETs for autorefresh and Raw, same origin only |
 | `mtc-decode-xml.js`, `mtc-decode-json.js` | Turn XML or JSON into one neutral tree |
 | `mtc-views.js` | Turns that tree into the grids |
 | `mtc-dom.js` | DOM helper that only uses `textContent` |
