@@ -30,6 +30,9 @@ Directories {
   }
 }
 
+# DevicesStyle { Location = /styles/styles.xsl }
+# StreamsStyle { Location = /styles/styles.xsl }
+
 BrowserView = ../../styles/viewer.html
 
 Sinks {
