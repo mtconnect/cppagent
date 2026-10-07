@@ -317,18 +317,28 @@ namespace mtconnect {
       const std::pair<const std::string, std::unique_ptr<printer::Printer>>* findPrinterForAccepts(
           const std::string& accepts) const
       {
-        std::stringstream list(accepts);
-        std::string accept;
         const std::pair<const std::string, std::unique_ptr<printer::Printer>>* xml = nullptr;
-        while (std::getline(list, accept, ','))
+        if (!accepts.empty())
         {
-          for (const auto& printer : m_sinkContract->getPrinters())
+          std::string accept;
+          std::stringstream list(accepts);
+          while (std::getline(list, accept, ','))
           {
-            if (accept.ends_with(printer.first))
-              return &printer;
-            else if (printer.first == "xml")
-              xml = &printer;
+            for (const auto& printer : m_sinkContract->getPrinters())
+            {
+              if (accept.ends_with(printer.first))
+                return &printer;
+              else if (printer.first == "xml")
+                xml = &printer;
+            }
           }
+        }
+        else
+        {
+          auto &printers = m_sinkContract->getPrinters();
+          auto it = printers.find("xml");
+          if (it != printers.end())
+            xml = &(*it);
         }
 
         if (xml == nullptr)

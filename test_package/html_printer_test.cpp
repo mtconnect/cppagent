@@ -149,6 +149,15 @@ TEST_F(HtmlPrinterTest, should_rest_sink_should_default_to_xml_printer)
   ASSERT_EQ("application/xml", printer->mimeType());
 }
 
+TEST_F(HtmlPrinterTest, should_rest_sink_should_default_to_xml_printer_when_accepts_is_blank)
+{
+  auto rest = m_agentTestHelper->getRestService();
+  auto printer = rest->printerForAccepts("");
+  ASSERT_NE(nullptr, printer);
+  ASSERT_NE(nullptr, dynamic_cast<const printer::XmlPrinter*>(printer));
+  ASSERT_EQ("application/xml", printer->mimeType());
+}
+
 TEST_F(HtmlPrinterTest, should_embed_probe_document_in_browser_view)
 {
   PARSE_HTML_RESPONSE("/probe");
@@ -218,6 +227,48 @@ TEST_F(HtmlPrinterTest, should_embed_assets_document_in_browser_view)
     ASSERT_EQ(status::ok, m_agentTestHelper->session()->m_code);
     ASSERT_EQ("MTConnectAssets", rootName(doc));
     ASSERT_XML_PATH_EQUAL(doc, "//m:FakeAsset@assetId", "P1");
+  }
+}
+
+TEST_F(HtmlPrinterTest, should_use_format_and_pretty_parameters_for_asset_ids)
+{
+  // The agent wide Pretty option would hide whether the pretty parameter is used
+  m_agentTestHelper = make_unique<AgentTestHelper>();
+  m_agentTestHelper->createAgent(
+      "/samples/test_config.xml", 8, 4, "1.7", 25, true, true,
+      {{configuration::BrowserView, BrowserViewFile}, {configuration::Pretty, false}});
+  putAsset();
+
+  for (auto path : {"/asset/P1", "/assets/P1"})
+  {
+    {
+      auto& body = request(path, {{"format", "json"}, {"pretty", "true"}});
+      ASSERT_TRUE(m_agentTestHelper->session()->m_mimeType.ends_with("json")) << path;
+      ASSERT_NE(string::npos, body.find("\n  ")) << path << " is not pretty printed:\n" << body;
+      auto json = nlohmann::json::parse(body);
+      ASSERT_TRUE(json.contains("MTConnectAssets")) << path;
+    }
+
+    {
+      auto& body = request(path, {{"format", "json"}});
+      ASSERT_TRUE(m_agentTestHelper->session()->m_mimeType.ends_with("json")) << path;
+      ASSERT_EQ(string::npos, body.find('\n')) << path << " is pretty printed:\n" << body;
+    }
+
+    {
+      auto& body = request(path, {{"format", "xml"}, {"pretty", "true"}});
+      ASSERT_EQ("application/xml", m_agentTestHelper->session()->m_mimeType) << path;
+      ASSERT_NE(string::npos, body.find(">\n  <")) << path << " is not pretty printed:\n" << body;
+      auto doc = xmlParseMemory(body.c_str(), int32_t(body.size()));
+      ASSERT_TRUE(doc) << path;
+      XmlDocFreer cleanup(doc);
+      ASSERT_XML_PATH_EQUAL(doc, "//m:FakeAsset@assetId", "P1");
+    }
+
+    {
+      PARSE_HTML_RESPONSE(path);
+      ASSERT_EQ("MTConnectAssets", rootName(doc)) << path;
+    }
   }
 }
 

@@ -46,7 +46,7 @@
             <input id="count" type="text" class="form-control mtc-small" placeholder="Count">
             <button id="fetch" type="submit" class="btn">Fetch</button>
             <button id="autorefresh" type="button" class="btn">Autorefresh</button>
-            <select id="format" class="form-control mtc-format" aria-label="Format">
+            <select id="format" class="form-control mtc-format" aria-label="Raw format">
               <option value="xml">XML</option>
               <option value="json">JSON</option>
             </select>
@@ -76,10 +76,8 @@
       <p>An XPath filter such as <code>//DataItem[@type="AVAILABILITY"]</code>. The agent returns an error if the path matches nothing.</p>
       <h4>From and Count</h4>
       <p>The agent keeps a buffer of observations identified by sequence number. From and Count choose which ones Sample returns.</p>
-      <h4>Format</h4>
-      <p>Choose whether this page reads the agent's XML or JSON. If JSON cannot be read, the page falls back to XML.</p>
       <h4>Raw</h4>
-      <p>Shows the document exactly as the agent sent it, in the chosen format.</p>
+      <p>Requests the document from the agent again and shows it as text, in the format chosen next to the button.</p>
       <h4>Note</h4>
       <p>Conditions appear as Condition rows with a value of NORMAL, WARNING, FAULT or UNAVAILABLE.</p>
       <h4>MTConnect model</h4>
