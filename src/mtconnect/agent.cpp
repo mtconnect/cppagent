@@ -58,9 +58,9 @@
 #include "mtconnect/entity/xml_parser.hpp"
 #include "mtconnect/logging.hpp"
 #include "mtconnect/observation/observation.hpp"
+#include "mtconnect/printer/html_printer.hpp"
 #include "mtconnect/printer/json_printer.hpp"
 #include "mtconnect/printer/xml_printer.hpp"
-#include "mtconnect/printer/html_printer.hpp"
 #include "mtconnect/sink/rest_sink/file_cache.hpp"
 #include "mtconnect/sink/rest_sink/session.hpp"
 #include "mtconnect/utilities.hpp"
@@ -124,10 +124,11 @@ namespace mtconnect {
     // Create the Printers
     m_printers["xml"] = make_unique<printer::XmlPrinter>(m_pretty, m_validation);
     m_printers["json"] = make_unique<printer::JsonPrinter>(jsonVersion, m_pretty, m_validation);
-    
+
     if (auto view = GetOption<string>(options, config::BrowserView); view)
     {
-      m_printers["html"] = make_unique<printer::HtmlPrinter>(*view, m_printers["xml"].get(), m_pretty, m_validation);
+      m_printers["html"] =
+          make_unique<printer::HtmlPrinter>(*view, m_printers["xml"].get(), m_pretty, m_validation);
     }
 
     if (!m_schemaVersion)

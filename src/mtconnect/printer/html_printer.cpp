@@ -22,8 +22,8 @@
 
 namespace mtconnect::printer {
   using namespace std;
-  
-  void HtmlPrinter::loadFile(FileResolver &&resolver)
+
+  void HtmlPrinter::loadFile(FileResolver&& resolver)
   {
     m_loaded = false;
     m_prefix.clear();
@@ -60,7 +60,7 @@ namespace mtconnect::printer {
     m_loaded = true;
   }
 
-  inline std::string HtmlPrinter::formatResult(const std::string &content) const
+  inline std::string HtmlPrinter::formatResult(const std::string& content) const
   {
     if (!m_loaded)
       return content;
@@ -71,47 +71,49 @@ namespace mtconnect::printer {
     result.append(m_prefix).append(content).append(m_suffix);
     return result;
   }
-  
-  std::string HtmlPrinter::printErrors(
-                          const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-                          const entity::EntityList& list, bool pretty,
-                          const std::optional<std::string> requestId) const
+
+  std::string HtmlPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
+                                       const uint64_t nextSeq, const entity::EntityList& list,
+                                       bool pretty,
+                                       const std::optional<std::string> requestId) const
   {
     auto doc = m_delegate->printErrors(instanceId, bufferSize, nextSeq, list, pretty, requestId);
     return formatResult(doc);
   }
-  
-  std::string HtmlPrinter::printProbe(
-                         const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-                         const unsigned int assetBufferSize, const unsigned int assetCount,
-                         const std::list<DevicePtr>& devices, const std::map<std::string, size_t>* count,
-                         bool includeHidden, bool pretty,
-                         const std::optional<std::string> requestId) const
+
+  std::string HtmlPrinter::printProbe(const uint64_t instanceId, const unsigned int bufferSize,
+                                      const uint64_t nextSeq, const unsigned int assetBufferSize,
+                                      const unsigned int assetCount,
+                                      const std::list<DevicePtr>& devices,
+                                      const std::map<std::string, size_t>* count,
+                                      bool includeHidden, bool pretty,
+                                      const std::optional<std::string> requestId) const
   {
     auto doc = m_delegate->printProbe(instanceId, bufferSize, nextSeq, assetBufferSize, assetCount,
                                       devices, count, includeHidden, pretty, requestId);
 
     return formatResult(doc);
   }
-  
-  std::string HtmlPrinter::printSample(
-                          const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
-                          const uint64_t firstSeq, const uint64_t lastSeq, observation::ObservationList& results,
-                          bool pretty,
-                          const std::optional<std::string> requestId) const
+
+  std::string HtmlPrinter::printSample(const uint64_t instanceId, const unsigned int bufferSize,
+                                       const uint64_t nextSeq, const uint64_t firstSeq,
+                                       const uint64_t lastSeq,
+                                       observation::ObservationList& results, bool pretty,
+                                       const std::optional<std::string> requestId) const
   {
     auto doc = m_delegate->printSample(instanceId, bufferSize, nextSeq, firstSeq, lastSeq, results,
-                                      pretty, requestId);
-    return formatResult(doc);
-  }
-  
-  std::string HtmlPrinter::printAssets(
-                          const uint64_t instanceId, const unsigned int bufferSize, const unsigned int assetCount,
-                          const asset::AssetList& asset, bool pretty,
-                          const std::optional<std::string> requestId) const
-  {
-    auto doc = m_delegate->printAssets(instanceId, bufferSize, assetCount, asset, pretty, requestId);
+                                       pretty, requestId);
     return formatResult(doc);
   }
 
-}
+  std::string HtmlPrinter::printAssets(const uint64_t instanceId, const unsigned int bufferSize,
+                                       const unsigned int assetCount, const asset::AssetList& asset,
+                                       bool pretty,
+                                       const std::optional<std::string> requestId) const
+  {
+    auto doc =
+        m_delegate->printAssets(instanceId, bufferSize, assetCount, asset, pretty, requestId);
+    return formatResult(doc);
+  }
+
+}  // namespace mtconnect::printer

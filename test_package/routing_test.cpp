@@ -19,14 +19,14 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <boost/thread/thread.hpp>
+
 #include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
-
-#include <boost/thread/thread.hpp>
 
 #include "mtconnect/sink/rest_sink/response.hpp"
 #include "mtconnect/sink/rest_sink/routing.hpp"
@@ -395,8 +395,7 @@ TEST_F(RoutingTest, should_match_segments_with_literal_prefix_and_suffix)
 
 TEST_F(RoutingTest, should_match_path_predicate)
 {
-  Routing r(
-      verb::get, Routing::PathMatcher([](const string& p) { return p.size() > 1; }), m_func);
+  Routing r(verb::get, Routing::PathMatcher([](const string& p) { return p.size() > 1; }), m_func);
   EXPECT_TRUE(r.isCatchAll());
   EXPECT_TRUE(r.matchesPath("/some/deep/path"));
   EXPECT_FALSE(r.matchesPath("/"));
@@ -423,8 +422,8 @@ TEST_F(RoutingTest, should_match_very_long_paths_on_a_small_stack)
   boost::thread thread(attrs, [&]() {
     Routing r(verb::get, "/assets/{assetIds}", m_func);
     Routing device(verb::get, "/{device}/sample", m_func);
-    Routing files(
-        verb::get, Routing::PathMatcher([](const string& p) { return p.size() > 1; }), m_func);
+    Routing files(verb::get, Routing::PathMatcher([](const string& p) { return p.size() > 1; }),
+                  m_func);
 
     RequestPtr request = make_shared<Request>();
     request->m_verb = verb::get;

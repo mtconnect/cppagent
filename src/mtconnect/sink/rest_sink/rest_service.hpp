@@ -263,35 +263,29 @@ namespace mtconnect {
       /// @return printer key or `xml` if one is not found
       const std::string acceptFormat(const std::string& accepts) const
       {
-        std::stringstream list(accepts);
-        std::string accept;
-        while (std::getline(list, accept, ','))
+        auto printer = findPrinterForAccepts(accepts);
+        if (printer != nullptr)
+          return printer->first;
+        else
         {
-          for (const auto& printer : m_sinkContract->getPrinters())
-          {
-            if (accept.ends_with(printer.first))
-              return printer.first;
-          }
+          LOG(error) << "Cannot find printer name for " << accepts;
+          return "unknown";
         }
-        return "xml";
       }
-      
+
       /// @brief get a printer given a list of formats from the Accepts header
       /// @param accepts the accepts header
       /// @return pointer to a printer
       const printer::Printer* printerForAccepts(const std::string& accepts) const
       {
-        std::stringstream list(accepts);
-        std::string accept;
-        while (std::getline(list, accept, ','))
+        auto printer = findPrinterForAccepts(accepts);
+        if (printer != nullptr)
+          return printer->second.get();
+        else
         {
-          for (const auto& printer : m_sinkContract->getPrinters())
-          {
-            if (accept.ends_with(printer.first))
-              return printer.second.get();
-          }
+          LOG(error) << "Cannot find printer for " << accepts;
+          return nullptr;
         }
-        return m_sinkContract->getPrinter("xml");
       }
 
       /// @brief get a printer for a format or using the accepts header. Falls back to header accept
@@ -317,6 +311,36 @@ namespace mtconnect {
       ///@}
 
     protected:
+      /// @brief Internal method to find a printer pair given an accepts list.
+      /// @param in accepts A common seprarated list of formats from the HTTP request
+      /// @returns The map pair of the string and the unique ptr to the printer.
+      const std::pair<const std::string, std::unique_ptr<printer::Printer>>* findPrinterForAccepts(
+          const std::string& accepts) const
+      {
+        std::stringstream list(accepts);
+        std::string accept;
+        const std::pair<const std::string, std::unique_ptr<printer::Printer>>* xml = nullptr;
+        while (std::getline(list, accept, ','))
+        {
+          for (const auto& printer : m_sinkContract->getPrinters())
+          {
+            if (accept.ends_with(printer.first))
+              return &printer;
+            else if (printer.first == "xml")
+              xml = &printer;
+          }
+        }
+
+        if (xml == nullptr)
+        {
+          LOG(error) << "XML Printer not found";
+          throw std::runtime_error("No XML printer found");
+        }
+
+        // There should always be an xml printer
+        return xml;
+      }
+
       /// @brief Write an error response to the session
       ///
       /// This produces an MTConnect Error document using the error information and writes it the
