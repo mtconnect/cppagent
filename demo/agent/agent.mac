@@ -7,17 +7,19 @@ JsonVersion = 2
 
 MinCompressFileSize = 10k
 
+DataPath = ../../
+
 Files {
   schemas {
-    Path = ../../schemas
+    Path = schemas
     Location = /schemas/
   }
   styles {
-    Path = ../../styles
+    Path = styles
     Location = /styles/
   }
   Favicon {
-      Path = ../../styles/favicon.ico
+      Path = styles/favicon.ico
       Location = /favicon.ico
   }
 }
@@ -33,7 +35,7 @@ Directories {
 # DevicesStyle { Location = /styles/styles.xsl }
 # StreamsStyle { Location = /styles/styles.xsl }
 
-BrowserView = ../../styles/viewer.html
+BrowserView = styles/viewer.html
 
 Sinks {
 #  MqttService {

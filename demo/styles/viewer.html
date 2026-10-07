@@ -1,0 +1,106 @@
+<!DOCTYPE xhtml>
+<!--
+  Copyright 2009-2026, AMT – The Association For Manufacturing Technology ("AMT")
+  All rights reserved.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MTConnect Agent</title>
+    <link href="/styles/bootstrap.min.css" rel="stylesheet">
+    <link href="/styles/styles.css" rel="stylesheet">
+    <link href="/styles/viewer.css" rel="stylesheet">
+    <script type="module" src="/styles/mtc-app.js"></script>
+    <script id="mtconnect-data" type="application/xml">@MTCONNECT_CONTENT@</script>
+  </head>
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="https://mtconnect.org" target="_blank" rel="noopener noreferrer">
+            <img alt="MTConnect" src="/styles/MTConnect_Logo.png">
+          </a>
+        </div>
+        <ul class="nav navbar-nav">
+          <li id="tab-probe"><a>Probe</a></li>
+          <li id="tab-current"><a>Current</a></li>
+          <li id="tab-sample"><a>Sample</a></li>
+        </ul>
+        <form id="query" class="navbar-form navbar-left">
+          <div class="form-group">
+            <input id="path" type="text" class="form-control mtc-path" placeholder="Path">
+            <input id="from" type="text" class="form-control mtc-small" placeholder="From">
+            <input id="count" type="text" class="form-control mtc-small" placeholder="Count">
+            <button id="fetch" type="submit" class="btn">Fetch</button>
+            <button id="autorefresh" type="button" class="btn">Autorefresh</button>
+            <select id="format" class="form-control mtc-format" aria-label="Raw format">
+              <option value="xml">XML</option>
+              <option value="json">JSON</option>
+            </select>
+            <div style="padding: 5px 5px">
+              <li>
+                <a style="color: white" href="/twin/index.html?device=Mazak">Mazak Digital Twin</a>
+              </li>
+              <li>
+                <a style="color: white" href="/twin/index.html?device=OKUMA">Okuma Digital Twin</a>
+              </li>
+            </div>
+            <button id="raw" type="button" class="btn">Raw</button>
+            <button id="help" type="button" class="btn">?</button>
+          </div>
+        </form>
+      </div>
+    </nav>
+
+    <div class="container-fluid page-container">
+      <div id="main-container" class="table-responsive stickytable-container"></div>
+    </div>
+
+    <footer class="mtc-footer">
+      Copyright 2009-2026, AMT &ndash; The Association For Manufacturing Technology. Licensed under the
+      <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer">Apache License, Version 2.0</a>.
+    </footer>
+
+    <dialog id="help-dialog">
+      <button type="button" class="mtc-close" data-close aria-label="Close">&times;</button>
+      <h3>MTConnect Agent</h3>
+      <p>The agent receives data from one or more devices and publishes it as XML or JSON. This page reads that data and shows it as a grid.</p>
+      <h4>Probe, Current, Sample</h4>
+      <p>Probe shows the structure of the devices and their data items. Current shows the latest value of each data item. Sample shows a sequence of values with their timestamps.</p>
+      <h4>Path</h4>
+      <p>An XPath filter such as <code>//DataItem[@type="AVAILABILITY"]</code>. The agent returns an error if the path matches nothing.</p>
+      <h4>From and Count</h4>
+      <p>The agent keeps a buffer of observations identified by sequence number. From and Count choose which ones Sample returns.</p>
+      <h4>Raw</h4>
+      <p>Requests the document from the agent again and shows it as text, in the format chosen next to the button.</p>
+      <h4>Note</h4>
+      <p>Conditions appear as Condition rows with a value of NORMAL, WARNING, FAULT or UNAVAILABLE.</p>
+      <h4>MTConnect model</h4>
+      <p>The names in these documents are defined by the MTConnect SysML model. Browse it at <a id="model-link" href="https://model.mtconnect.org/" target="_blank" rel="noopener noreferrer">model.mtconnect.org</a>. The model source is on <a href="https://github.com/mtconnect/mtconnect_sysml_model" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+      <p>For more information on MTConnect, see <a href="https://mtconnect.org" target="_blank" rel="noopener noreferrer">MTConnect.org</a>.</p>
+      <h4>About</h4>
+      <p>The MTConnect C++ Agent is Copyright 2009-2026, AMT &ndash; The Association For Manufacturing Technology, and is licensed under the <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer">Apache License, Version 2.0</a>.</p>
+      <p>This page is based on a UI originally developed by <a href="https://mriiot.com" target="_blank" rel="noopener noreferrer">MRIIOT</a>, your agile digital transformation partner. License of the original UI: MIT.</p>
+    </dialog>
+
+    <dialog id="raw-dialog" class="mtc-wide">
+      <button type="button" class="mtc-close" data-close aria-label="Close">&times;</button>
+      <pre id="raw-text"></pre>
+    </dialog>
+
+    <button id="gotoTop" title="Go to top"><img alt="Go to top" src="/styles/icon-up.webp"></button>
+  </body>
+</html>
