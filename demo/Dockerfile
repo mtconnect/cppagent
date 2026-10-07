@@ -43,6 +43,7 @@ COPY --chown=agent:agent \
     /mtconnect/config/
 COPY --chown=agent:agent \
    ./demo/styles/styles.xsl \
+   ./demo/styles/viewer.html \
    /mtconnect/data/styles/
 
 USER agent

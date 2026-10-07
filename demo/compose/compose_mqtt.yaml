@@ -25,6 +25,7 @@ services:
       - ./agent/agentmqtt.cfg:/mtconnect/config/agent.cfg
       - ../agent/Devices.xml:/mtconnect/config/Devices.xml
       - ../styles/styles.xsl:/mtconnect/data/styles/styles.xsl
+      - ../styles/viewer.html:/mtconnect/data/styles/viewer.html
       - ./log:/mtconnect/log
       - ../twin:/mtconnect/data/demo/twin
     ports:
