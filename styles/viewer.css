@@ -22,17 +22,18 @@
   padding: 5px 10px;
 }
 
-.mtc-path {
+/* Bootstrap sets .navbar-form .form-control to width: auto, so these need the same specificity */
+.navbar-form .mtc-path {
   width: 18em;
   margin-right: 6px;
 }
 
-.mtc-small {
+.navbar-form .mtc-small {
   width: 6em;
   margin-right: 6px;
 }
 
-.mtc-format {
+.navbar-form .mtc-format {
   display: inline-block;
   width: auto;
   margin-right: 6px;
@@ -40,6 +41,21 @@
 
 .navbar-form .btn {
   margin-right: 6px;
+}
+
+/* Extra links at the right of the navbar, such as the demo's digital twins. No horizontal
+   padding, so the links are spaced by their margins and the bar fits on one row. */
+.navbar-nav.mtc-links {
+  margin-right: 12px;
+}
+
+.navbar-nav.mtc-links > li {
+  margin-left: 12px;
+}
+
+.navbar-nav.mtc-links > li > a {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .mtc-notice {
