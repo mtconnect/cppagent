@@ -65,6 +65,7 @@
 #include "mtconnect/sink/rest_sink/rest_service.hpp"
 #include "mtconnect/source/adapter/agent_adapter/agent_adapter.hpp"
 #include "mtconnect/source/adapter/mqtt/mqtt_adapter.hpp"
+#include "mtconnect/source/adapter/mqtt/mqtt_broker_adapter.hpp"
 #include "mtconnect/source/adapter/shdr/shdr_adapter.hpp"
 #include "mtconnect/version.h"
 
@@ -115,6 +116,7 @@ namespace mtconnect::configuration {
     sink::mqtt_entity_sink::MqttEntitySink::registerFactory(m_sinkFactory);
     adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
     adapter::mqtt_adapter::MqttAdapter::registerFactory(m_sourceFactory);
+    adapter::mqtt_adapter::MqttBrokerAdapter::registerFactory(m_sourceFactory);
     adapter::agent_adapter::AgentAdapter::registerFactory(m_sourceFactory);
 
 #if _WINDOWS

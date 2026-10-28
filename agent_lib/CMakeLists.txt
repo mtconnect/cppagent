@@ -238,6 +238,7 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/source/adapter/agent_adapter/session.hpp"
         "${SOURCE_DIR}/source/adapter/agent_adapter/session_impl.hpp"
         "${SOURCE_DIR}/source/adapter/mqtt/mqtt_adapter.hpp"
+        "${SOURCE_DIR}/source/adapter/mqtt/mqtt_broker_adapter.hpp"
         "${SOURCE_DIR}/source/adapter/shdr/connector.hpp"
         "${SOURCE_DIR}/source/adapter/shdr/shdr_adapter.hpp"
         "${SOURCE_DIR}/source/adapter/shdr/shdr_pipeline.hpp"
@@ -249,6 +250,7 @@ set(AGENT_SOURCES
         
         "${SOURCE_DIR}/source/adapter/adapter_pipeline.cpp"
         "${SOURCE_DIR}/source/adapter/mqtt/mqtt_adapter.cpp"
+        "${SOURCE_DIR}/source/adapter/mqtt/mqtt_broker_adapter.cpp"
         "${SOURCE_DIR}/source/adapter/shdr/connector.cpp"
         "${SOURCE_DIR}/source/adapter/shdr/shdr_adapter.cpp"
         "${SOURCE_DIR}/source/adapter/shdr/shdr_pipeline.cpp"
@@ -368,6 +370,7 @@ if(MSVC)
     "${SOURCE_DIR}/sink/mqtt_entity_sink/mqtt_entity_sink.cpp"
     "${SOURCE_DIR}/sink/rest_sink/session_impl.cpp"
     "${SOURCE_DIR}/source/adapter/mqtt/mqtt_adapter.cpp"
+    "${SOURCE_DIR}/source/adapter/mqtt/mqtt_broker_adapter.cpp"
     "${SOURCE_DIR}/source/adapter/agent_adapter/agent_adapter.cpp"
     "${SOURCE_DIR}/source/adapter/shdr/shdr_pipeline.cpp"
     "${SOURCE_DIR}/source/adapter/adapter_pipeline.cpp"
