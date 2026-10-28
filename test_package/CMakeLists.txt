@@ -273,6 +273,7 @@ add_agent_test(html_printer TRUE html)
 add_agent_test(adapter FALSE adapter)
 add_agent_test(connector FALSE adapter)
 add_agent_test(mqtt_adapter FALSE adapter)
+add_agent_test(mqtt_broker_adapter FALSE adapter TRUE)
 add_agent_test(url_parser FALSE adapter)
 add_agent_test(agent_adapter FALSE adapter)
 
