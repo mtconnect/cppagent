@@ -186,33 +186,43 @@ dialog pre {
   margin: 0;
   overflow: auto;
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  /* Bootstrap sets break-all on pre, which splits names mid-word */
+  word-break: normal;
+  overflow-wrap: break-word;
   tab-size: 2;
+}
+
+/* A wrapped Raw line continues just past its own indent, so the nesting stays easy to follow.
+   The limit keeps deeply nested lines readable in a narrow window. */
+.mtc-line {
+  min-height: 1.5em;
+  padding-left: min(var(--hang), 40%);
+  text-indent: calc(-1 * min(var(--hang), 40%));
 }
 
 dialog.mtc-wide pre {
   flex: 1 1 auto;
   min-height: 0;
   padding: 1em;
-  border: none;
+  border: 1px solid #d0d7de;
   border-radius: 4px;
-  background: #1e1e1e;
-  color: #d4d4d4;
+  background: #f6f8fa;
+  color: #24292f;
   font-size: 13px;
   line-height: 1.5;
 }
 
 /* Raw output colors */
-.tok-punct { color: #808080; }
-.tok-tag { color: #4fc1ff; }
-.tok-attr { color: #9cdcfe; }
-.tok-str { color: #ce9178; }
-.tok-num { color: #b5cea8; }
-.tok-lit { color: #569cd6; }
-.tok-key { color: #9cdcfe; }
-.tok-text { color: #dcdcaa; }
-.tok-comment { color: #6a9955; font-style: italic; }
-.tok-decl { color: #c586c0; }
+.tok-punct { color: #57606a; }
+.tok-tag { color: #116329; }
+.tok-attr { color: #0550ae; }
+.tok-str { color: #a40e26; }
+.tok-num { color: #953800; }
+.tok-lit { color: #8250df; }
+.tok-key { color: #0550ae; }
+.tok-text { color: #24292f; }
+.tok-comment { color: #57606a; font-style: italic; }
+.tok-decl { color: #8250df; }
 
 /* Header and detail subtables scroll inside their row instead of widening the page */
 .mtc-scroll {

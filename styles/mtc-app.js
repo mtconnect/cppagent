@@ -203,12 +203,41 @@ function highlightJson(text) {
   return out
 }
 
+// How far a wrapped line continues past its own indent, in characters
+const HANG = 4
+
+// Tokens can span lines, so each one is split at its line breaks into one block per line
+function intoLines(tokens) {
+  const out = document.createDocumentFragment()
+  let line = null
+  const startLine = () => {
+    line = document.createElement('div')
+    line.className = 'mtc-line'
+    out.append(line)
+  }
+  startLine()
+  for (const node of [...tokens.childNodes]) {
+    node.textContent.split('\n').forEach((part, i) => {
+      if (i > 0) startLine()
+      if (!part) return
+      const piece = node.cloneNode(false)
+      piece.textContent = part
+      line.append(piece)
+    })
+  }
+  for (const block of out.children) {
+    const indent = block.textContent.length - block.textContent.trimStart().length
+    block.style.setProperty('--hang', indent + HANG + 'ch')
+  }
+  return out
+}
+
 function showRaw(pre, text, format) {
   const trimmed = text.trimStart()
   if (format === 'json' || trimmed.startsWith('{') || trimmed.startsWith('[')) {
-    pre.replaceChildren(highlightJson(text))
+    pre.replaceChildren(intoLines(highlightJson(text)))
   } else if (trimmed.startsWith('<')) {
-    pre.replaceChildren(highlightXml(text))
+    pre.replaceChildren(intoLines(highlightXml(text)))
   } else {
     pre.textContent = text
   }
