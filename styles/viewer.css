@@ -137,26 +137,37 @@ dialog {
   max-width: 60em;
   border: 1px solid #ccc;
   border-radius: 6px;
+  position: fixed;
+  padding: 3em 2em 1.5em;
 }
 
+/* Raw dialog: sized to its content, close button above the text, long lines wrap */
 dialog.mtc-wide {
   width: 90vw;
-  height: 80vh;
+  max-width: 90em;
+  max-height: 85vh;
+  /* Equal border on all sides; the close button fits inside the top edge */
+  padding: 2em;
 }
 
-dialog pre {
-  max-height: 65vh;
-  overflow: auto;
+dialog.mtc-wide .mtc-close {
+  top: 0.15em;
+  right: 0.4em;
+  font-size: 1.5em;
 }
 
-dialog {
-  position: fixed;
-  padding: 1.5em 2em 1em;
+dialog.mtc-wide[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
 }
 
 .mtc-close {
   position: absolute;
-  top: 0.25em;
+  top: 0.3em;
   right: 0.5em;
   border: none;
   background: none;
@@ -171,13 +182,52 @@ dialog {
   color: #000;
 }
 
-dialog.mtc-wide pre {
-  margin-top: 0.5em;
+dialog pre {
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  /* Bootstrap sets break-all on pre, which splits names mid-word */
+  word-break: normal;
+  overflow-wrap: break-word;
+  tab-size: 2;
 }
+
+/* A wrapped Raw line continues just past its own indent, so the nesting stays easy to follow.
+   The limit keeps deeply nested lines readable in a narrow window. */
+.mtc-line {
+  min-height: 1.5em;
+  padding-left: min(var(--hang), 40%);
+  text-indent: calc(-1 * min(var(--hang), 40%));
+}
+
+dialog.mtc-wide pre {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1em;
+  border: 1px solid #d0d7de;
+  border-radius: 4px;
+  background: #f6f8fa;
+  color: #24292f;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Raw output colors */
+.tok-punct { color: #57606a; }
+.tok-tag { color: #116329; }
+.tok-attr { color: #0550ae; }
+.tok-str { color: #a40e26; }
+.tok-num { color: #953800; }
+.tok-lit { color: #8250df; }
+.tok-key { color: #0550ae; }
+.tok-text { color: #24292f; }
+.tok-comment { color: #57606a; font-style: italic; }
+.tok-decl { color: #8250df; }
 
 /* Header and detail subtables scroll inside their row instead of widening the page */
 .mtc-scroll {
   overflow-x: auto;
+  contain: inline-size;
 }
 
 .mtc-scroll > .subtable {
@@ -192,6 +242,130 @@ dialog.mtc-wide pre {
 
 .mtc-scroll th {
   padding: 1px 8px;
+}
+
+/* Long values wrap so the Value column stays on screen. Names stay whole: the Element column because
+   its indent already takes the width, and ids and names because they only break between words. */
+.table > tbody > tr > td {
+  overflow-wrap: anywhere;
+}
+
+.table > tbody > tr > td:first-child,
+.table > tbody > tr > td.mtc-name {
+  overflow-wrap: normal;
+}
+
+/* Long values show a few lines until clicked. The width limit stops one long value claiming the
+   width of the whole table. */
+.mtc-long {
+  display: block;
+  max-width: 24em;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.mtc-long > span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+
+.mtc-long[aria-expanded='true'] > span {
+  display: block;
+}
+
+/* Phones: logo and tabs share a row, and the query form packs into rows instead of a stack */
+@media (max-width: 767px) {
+  nav > .container-fluid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  nav > .container-fluid::before,
+  nav > .container-fluid::after {
+    display: none;
+  }
+
+  /* Bootstrap pulls the header out by 15px here, which clips the logo and lets the tabs cover its
+     registered trademark mark. The whole logo always shows. */
+  .container-fluid > .navbar-header {
+    flex: none;
+    margin: 0;
+  }
+
+  .navbar-brand {
+    padding: 5px 6px;
+  }
+
+  .navbar-nav {
+    display: flex;
+    flex: 1 1 0;
+    margin: 0;
+  }
+
+  .navbar-nav.mtc-links {
+    flex: 1 1 100%;
+    margin: 0;
+  }
+
+  .navbar-nav > li {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  .navbar-nav > li > a {
+    padding: 8px 4px;
+  }
+
+  .navbar-form {
+    flex: 1 1 100%;
+    margin: 0;
+    padding: 6px;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .navbar-form .form-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+  }
+
+  .navbar-form .form-control,
+  .navbar-form .btn {
+    width: auto;
+    margin: 0;
+  }
+
+  .navbar-form .mtc-path {
+    flex: 1 1 100%;
+    width: auto;
+    margin: 0;
+  }
+
+  .navbar-form .mtc-small {
+    flex: 1 1 5em;
+    width: 5em;
+    margin: 0;
+  }
+
+  .navbar-form .mtc-format {
+    margin: 0;
+  }
+
+  /* Six columns do not fit a phone, so the table scrolls sideways instead of crushing them */
+  .table {
+    min-width: 56em;
+  }
 }
 
 /* The copyright line stays visible below the scrolling table */

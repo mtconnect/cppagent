@@ -52,11 +52,27 @@ function notice(message) {
   return h('p', { class: 'mtc-notice mtc-error', role: 'status' }, message)
 }
 
+// Rendering replaces every row, so a focused control is found again by its row's key and its class
+function focusedControl(container) {
+  const active = document.activeElement
+  if (!container.contains(active)) return null
+  const key = active.closest('tr')?.dataset.key
+  return key && active.classList.length ? { key, cls: active.classList[0] } : null
+}
+
+function restoreFocus(container, focus) {
+  if (!focus) return
+  const row = container.querySelector('tr[data-key="' + CSS.escape(focus.key) + '"]')
+  row?.querySelector('.' + focus.cls)?.focus({ preventScroll: true })
+}
+
 function render(embedded) {
   const container = $('main-container')
   try {
     const root = decode(embedded)
+    const focus = focusedControl(container)
     container.replaceChildren(renderDocument(root))
+    restoreFocus(container, focus)
     linkModel(root)
   } catch (err) {
     container.replaceChildren(notice(err.message))
@@ -111,35 +127,145 @@ function setupForm() {
     event.preventDefault()
     const query = new URLSearchParams()
     for (const id of ['path', 'from', 'count']) if ($(id).value) query.set(id, $(id).value)
-    const sample = query.has('from') || query.has('count')
+    const sample = tab === 'sample' || query.has('from') || query.has('count')
     const qs = query.toString()
     window.location.assign(prefix + (sample ? '/sample' : '/current') + (qs ? '?' + qs : ''))
   })
 }
 
-// The format for the Raw dialog, remembered between pages
+// Settings are remembered between pages when the browser allows it. Storage access throws when it
+// is blocked, and the page has to work without it.
+function loadSetting(name) {
+  try {
+    return localStorage.getItem(name)
+  } catch {
+    return null
+  }
+}
+
+function saveSetting(name, value) {
+  try {
+    localStorage.setItem(name, value)
+  } catch {}
+}
+
+// The format for the Raw dialog
 function setupFormat() {
   const select = $('format')
-  let saved = null
-  try {
-    saved = localStorage.getItem('mtc-format')
-  } catch {}
+  const saved = loadSetting('mtc-format')
   select.value = saved in FORMATS ? saved : 'xml'
-  select.addEventListener('change', () => {
-    try {
-      localStorage.setItem('mtc-format', select.value)
-    } catch {}
-  })
+  select.addEventListener('change', () => saveSetting('mtc-format', select.value))
 }
 
 function setupAutorefresh() {
   const button = $('autorefresh')
-  if (localStorage.getItem('mtc-autorefresh') === 'on') button.classList.add('active')
+  if (loadSetting('mtc-autorefresh') === 'on') button.classList.add('active')
   button.addEventListener('click', () => {
     button.classList.toggle('active')
-    localStorage.setItem('mtc-autorefresh', button.classList.contains('active') ? 'on' : '')
+    saveSetting('mtc-autorefresh', button.classList.contains('active') ? 'on' : '')
     scheduleRefresh()
   })
+}
+
+// Raw output coloring. Built from spans with textContent so the document is never parsed as HTML.
+const XML_TOKENS =
+  /(<!--[\s\S]*?-->)|(<\?[\s\S]*?\?>)|(<\/?)([\w:.-]+)((?:\s+[\w:.-]+\s*=\s*(?:"[^"]*"|'[^']*'))*)(\s*\/?>)|([^<]+)|(<)/g
+const XML_ATTRS = /(\s+)([\w:.-]+)(\s*=\s*)("[^"]*"|'[^']*')/g
+const JSON_TOKENS =
+  /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[{}[\],:]/g
+
+function tok(parent, cls, text) {
+  if (!text) return
+  if (!cls) return parent.append(text)
+  const span = document.createElement('span')
+  span.className = 'tok-' + cls
+  span.textContent = text
+  parent.append(span)
+}
+
+function highlightXml(text) {
+  const out = document.createDocumentFragment()
+  let last = 0
+  for (const m of text.matchAll(XML_TOKENS)) {
+    tok(out, null, text.slice(last, m.index))
+    last = m.index + m[0].length
+    if (m[1]) tok(out, 'comment', m[1])
+    else if (m[2]) tok(out, 'decl', m[2])
+    else if (m[4]) {
+      tok(out, 'punct', m[3])
+      tok(out, 'tag', m[4])
+      let end = 0
+      for (const a of m[5].matchAll(XML_ATTRS)) {
+        tok(out, null, a[1])
+        tok(out, 'attr', a[2])
+        tok(out, 'punct', a[3])
+        tok(out, 'str', a[4])
+        end = a.index + a[0].length
+      }
+      tok(out, null, m[5].slice(end))
+      tok(out, 'punct', m[6])
+    } else if (m[7]) tok(out, m[7].trim() ? 'text' : null, m[7])
+    else tok(out, 'punct', m[8])
+  }
+  tok(out, null, text.slice(last))
+  return out
+}
+
+function highlightJson(text) {
+  const out = document.createDocumentFragment()
+  let last = 0
+  for (const m of text.matchAll(JSON_TOKENS)) {
+    tok(out, null, text.slice(last, m.index))
+    last = m.index + m[0].length
+    if (m[1]) {
+      tok(out, m[2] ? 'key' : 'str', m[1])
+      tok(out, 'punct', m[2])
+    } else if (m[3]) tok(out, 'lit', m[3])
+    else if (/^[-\d]/.test(m[0])) tok(out, 'num', m[0])
+    else tok(out, 'punct', m[0])
+  }
+  tok(out, null, text.slice(last))
+  return out
+}
+
+// How far a wrapped line continues past its own indent, in characters
+const HANG = 4
+
+// Tokens can span lines, so each one is split at its line breaks into one block per line
+function intoLines(tokens) {
+  const out = document.createDocumentFragment()
+  let line = null
+  const startLine = () => {
+    line = document.createElement('div')
+    line.className = 'mtc-line'
+    out.append(line)
+  }
+  startLine()
+  for (const node of [...tokens.childNodes]) {
+    node.textContent.split('\n').forEach((part, i) => {
+      if (i > 0) startLine()
+      if (!part) return
+      const piece = node.cloneNode(false)
+      piece.textContent = part
+      line.append(piece)
+    })
+  }
+  for (const block of out.children) {
+    const indent = block.textContent.length - block.textContent.trimStart().length
+    block.style.setProperty('--hang', indent + HANG + 'ch')
+  }
+  return out
+}
+
+function showRaw(pre, text, format) {
+  const trimmed = text.trimStart()
+  if (format === 'json' || trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    pre.replaceChildren(intoLines(highlightJson(text)))
+  } else if (trimmed.startsWith('<')) {
+    pre.replaceChildren(intoLines(highlightXml(text)))
+  } else {
+    pre.textContent = text
+  }
 }
 
 function setupDialogs() {
@@ -149,10 +275,9 @@ function setupDialogs() {
     pre.textContent = 'Loading...'
     $('raw-dialog').showModal()
     try {
-      pre.textContent = await fetchDocument(
-        window.location.pathname + window.location.search,
-        $('format').value
-      )
+      const format = $('format').value
+      const text = await fetchDocument(window.location.pathname + window.location.search, format)
+      showRaw(pre, text, format)
     } catch (err) {
       pre.textContent = err.message
     }
