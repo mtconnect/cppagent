@@ -52,11 +52,27 @@ function notice(message) {
   return h('p', { class: 'mtc-notice mtc-error', role: 'status' }, message)
 }
 
+// Rendering replaces every row, so a focused control is found again by its row's key and its class
+function focusedControl(container) {
+  const active = document.activeElement
+  if (!container.contains(active)) return null
+  const key = active.closest('tr')?.dataset.key
+  return key && active.classList.length ? { key, cls: active.classList[0] } : null
+}
+
+function restoreFocus(container, focus) {
+  if (!focus) return
+  const row = container.querySelector('tr[data-key="' + CSS.escape(focus.key) + '"]')
+  row?.querySelector('.' + focus.cls)?.focus({ preventScroll: true })
+}
+
 function render(embedded) {
   const container = $('main-container')
   try {
     const root = decode(embedded)
+    const focus = focusedControl(container)
     container.replaceChildren(renderDocument(root))
+    restoreFocus(container, focus)
     linkModel(root)
   } catch (err) {
     container.replaceChildren(notice(err.message))
