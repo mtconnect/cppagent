@@ -697,6 +697,23 @@ namespace mtconnect {
           LOG(warning) << "Free data item found in device data items";
       }
     }
+
+    // Remove the assets of the device this adapter is the primary adapter for
+    auto source = std::dynamic_pointer_cast<source::adapter::Adapter>(findSource(adapter));
+    if (source && IsOptionSet(source->getOptions(), config::DisconnectRemovesAllAssets))
+    {
+      auto name = GetOption<string>(source->getOptions(), config::Device);
+      DevicePtr device;
+      if (name)
+        device = findDeviceByUUIDorName(*name);
+      if (device && device->getUuid())
+      {
+        asset::AssetList list;
+        removeAllAssets(*device->getUuid(), nullopt, nullopt, list);
+        LOG(info) << "Adapter " << adapter << " disconnected, removed " << list.size()
+                  << " assets for device " << *device->getComponentName();
+      }
+    }
   }
 
   void Agent::connected(const std::string& adapter, const StringList& devices, bool autoAvailable)

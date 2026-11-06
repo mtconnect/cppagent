@@ -133,6 +133,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(Path);
     DECLARE_CONFIGURATION(PollingInterval);
     DECLARE_CONFIGURATION(PreserveUUID);
+    DECLARE_CONFIGURATION(DisconnectRemovesAllAssets);
     DECLARE_CONFIGURATION(Protocol);
     DECLARE_CONFIGURATION(RealTime);
     DECLARE_CONFIGURATION(ReconnectInterval);
