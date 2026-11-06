@@ -24,6 +24,29 @@ const INDENT_EM = 1.1
 // survives the re-render that autorefresh does.
 const collapsed = new Set()
 
+// Values longer than this show a few lines until clicked. Same keys, for the same reason.
+const LONG_VALUE = 120
+const expanded = new Set()
+
+function valueContent(text, key) {
+  if (!text || text.length <= LONG_VALUE) return text
+  const button = h(
+    'button',
+    {
+      type: 'button',
+      class: 'mtc-long',
+      title: 'Show or hide the whole value',
+      'aria-expanded': String(expanded.has(key)),
+    },
+    h('span', {}, text)
+  )
+  button.addEventListener('click', () => {
+    if (!expanded.delete(key)) expanded.add(key)
+    button.setAttribute('aria-expanded', String(expanded.has(key)))
+  })
+  return button
+}
+
 // Pre-order walk that reports the depth and a stable key for each node, like the stylesheet's `//*`
 function* walk(node, depth = 0, key = node.name) {
   yield { node, depth, key }
@@ -35,6 +58,14 @@ function* walk(node, depth = 0, key = node.name) {
     seen.set(id, n + 1)
     yield* walk(child, depth + 1, key + '/' + id + (n ? '#' + n : ''))
   }
+}
+
+// Lets a name wrap only between its words: after an underscore or before a capital. <wbr> adds no
+// characters, so copying the name still gives the exact name.
+function nameCell(text) {
+  if (!text) return h('td', { class: 'mtc-name' })
+  const parts = text.replace(/(_)|([a-z0-9])(?=[A-Z])/g, '$1$2\0').split('\0')
+  return h('td', { class: 'mtc-name' }, parts.flatMap((part, i) => (i ? [h('wbr', {}), part] : [part])))
 }
 
 // Rows carry their depth, so hiding a branch hides the rows below it until one is as shallow
@@ -149,12 +180,12 @@ function probeRows(root) {
         'tr',
         rowAttrs(depth, key, PROBE_BOLD.has(node.name) && 'mtc-bold'),
         elementCell(node.name, depth, node.children.length > 0),
-        h('td', {}, a.id),
-        h('td', {}, a.name),
-        h('td', {}, a.category),
-        h('td', {}, a.type),
-        h('td', {}, a.subType),
-        h('td', {}, value),
+        nameCell(a.id),
+        nameCell(a.name),
+        nameCell(a.category),
+        nameCell(a.type),
+        nameCell(a.subType),
+        h('td', {}, valueContent(value, key)),
         h('td', {}, a.units)
       )
     )
@@ -209,11 +240,11 @@ function streamRows(root) {
         'tr',
         rowAttrs(depth, key, STREAM_BOLD.has(label) && 'mtc-bold'),
         elementCell(label, depth, node.children.length > 0),
-        h('td', {}, node.attrs.dataItemId),
-        h('td', {}, node.attrs.name),
+        nameCell(node.attrs.dataItemId),
+        nameCell(node.attrs.name),
         h('td', {}, timestamp && h('span', { title: timestamp }, timestamp.substring(11, 21))),
         h('td', { class: node.name === 'Entry' ? 'mtc-right' : false }, sequence),
-        h('td', { class: 'mtc-value-' + value.replace(/[^A-Za-z]/g, '') }, streamDisplay(node, value))
+        h('td', { class: 'mtc-value-' + value.replace(/[^A-Za-z]/g, '') }, valueContent(streamDisplay(node, value), key))
       )
     )
     if (node.name === 'Header') rows.push(detail(depth, attrTable(6, node)))
@@ -232,11 +263,11 @@ function assetRows(root) {
         'tr',
         rowAttrs(depth, key, node.name === 'Header' && 'mtc-bold'),
         elementCell(node.name, depth, node.children.length > 0),
-        h('td', {}, a.assetId || a.id),
-        h('td', {}, a.name),
-        h('td', {}, a.type),
+        nameCell(a.assetId || a.id),
+        nameCell(a.name),
+        nameCell(a.type),
         h('td', {}, a.timestamp),
-        h('td', {}, node.text)
+        h('td', {}, valueContent(node.text, key))
       )
     )
     if (node.name === 'Header') rows.push(detail(depth, attrTable(6, node)))
