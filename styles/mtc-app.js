@@ -133,27 +133,36 @@ function setupForm() {
   })
 }
 
-// The format for the Raw dialog, remembered between pages
+// Settings are remembered between pages when the browser allows it. Storage access throws when it
+// is blocked, and the page has to work without it.
+function loadSetting(name) {
+  try {
+    return localStorage.getItem(name)
+  } catch {
+    return null
+  }
+}
+
+function saveSetting(name, value) {
+  try {
+    localStorage.setItem(name, value)
+  } catch {}
+}
+
+// The format for the Raw dialog
 function setupFormat() {
   const select = $('format')
-  let saved = null
-  try {
-    saved = localStorage.getItem('mtc-format')
-  } catch {}
+  const saved = loadSetting('mtc-format')
   select.value = saved in FORMATS ? saved : 'xml'
-  select.addEventListener('change', () => {
-    try {
-      localStorage.setItem('mtc-format', select.value)
-    } catch {}
-  })
+  select.addEventListener('change', () => saveSetting('mtc-format', select.value))
 }
 
 function setupAutorefresh() {
   const button = $('autorefresh')
-  if (localStorage.getItem('mtc-autorefresh') === 'on') button.classList.add('active')
+  if (loadSetting('mtc-autorefresh') === 'on') button.classList.add('active')
   button.addEventListener('click', () => {
     button.classList.toggle('active')
-    localStorage.setItem('mtc-autorefresh', button.classList.contains('active') ? 'on' : '')
+    saveSetting('mtc-autorefresh', button.classList.contains('active') ? 'on' : '')
     scheduleRefresh()
   })
 }
