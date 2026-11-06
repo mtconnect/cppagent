@@ -146,6 +146,14 @@ dialog.mtc-wide {
   width: 90vw;
   max-width: 90em;
   max-height: 85vh;
+  /* Equal border on all sides; the close button fits inside the top edge */
+  padding: 2em;
+}
+
+dialog.mtc-wide .mtc-close {
+  top: 0.15em;
+  right: 0.4em;
+  font-size: 1.5em;
 }
 
 dialog.mtc-wide[open] {
