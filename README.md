@@ -443,6 +443,12 @@ This section provides an overview of all the necessary configurable parameters.
 
   _Default_: 1000
 
+* `DisconnectRemovesAllAssets` - When an adapter disconnects, remove all assets for the
+  device it is the primary adapter for (the adapter's `Device`). Assets of devices listed in
+  `AdditionalDevices` are not removed. This can be overridden on a per adapter basis.
+
+  _Default_: false
+
 * `IgnoreTimestamps` - Overwrite timestamps with the agent time. This will correct
   clock drift but will not give as accurate relative time since it will not take into
   consideration network latencies. This can be overridden on a per adapter basis.

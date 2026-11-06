@@ -793,6 +793,7 @@ namespace mtconnect::configuration {
     ConfigOptions options;
     GetOptions(config, options,
                {{configuration::PreserveUUID, true},
+                {configuration::DisconnectRemovesAllAssets, false},
                 {configuration::DisableAgentDevice, false},
                 {configuration::MonitorResources, false},
                 {configuration::WorkingDirectory, m_working.string()},
