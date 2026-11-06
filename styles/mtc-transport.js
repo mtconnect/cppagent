@@ -15,19 +15,32 @@
 //    limitations under the License.
 //
 
-// Transport: the agent embeds the response document in the page it returns, in a script element
-// whose type is the document's media type. The page reads that document instead of asking the
+// Transport: the agent embeds the response document, base64 encoded, in the page it returns, in a
+// script element whose type is the document's media type. The page reads that document instead of asking the
 // agent for it again. The agent is a one-way data source, so this module only issues GET requests
 // and only to the page's own origin: the same page for autorefresh, and the raw document for the
 // Raw dialog.
 
 const DATA_ID = 'mtconnect-data'
 
+// The agent base64 encodes the document so nothing in it, such as </script> in an asset's CDATA,
+// can end the script element. atob gives one character per byte, decoded here as UTF-8.
+function decodeBase64(text) {
+  let binary
+  try {
+    binary = atob(text)
+  } catch {
+    throw new Error('The embedded MTConnect document is not base64 encoded')
+  }
+  const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0))
+  return new TextDecoder().decode(bytes)
+}
+
 // Read the document embedded in a page: this one, or one returned by fetchPage
 export function embeddedDocument(page = document) {
   const script = page.getElementById(DATA_ID)
   if (!script) throw new Error('The page does not contain an MTConnect document')
-  return { type: script.type, text: script.textContent.trim() }
+  return { type: script.type, text: decodeBase64(script.textContent.trim()) }
 }
 
 // Request a page from the agent and read the document embedded in it. MTConnectError documents
