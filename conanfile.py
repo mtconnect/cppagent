@@ -1,7 +1,7 @@
 from conan import ConanFile
 from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
-from conan.tools.files import copy
+from conan.tools.files import copy, load
 
 import os
 import io
@@ -9,7 +9,6 @@ import re
 
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
-    version = "2.7"
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type"
@@ -27,7 +26,6 @@ class MTConnectAgentConan(ConanFile):
                  "cpack_name": [None, "ANY"],
                  "cpack_generator": [None, "ANY"]
                  }
-    
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     build_policy = "missing"
@@ -74,7 +72,7 @@ class MTConnectAgentConan(ConanFile):
         }
 
     exports_sources = "*", "!build", "!test_package/build", "!*~"
-    exports = "conan/mqtt_cpp/*", "conan/mruby/*", "conan/oniguruma/*"
+    exports = "conan/mqtt_cpp/*", "conan/mruby/*", "conan/oniguruma/*", "agent_version.txt"
 
     def validate(self):
         if is_msvc(self) and self.options.shared and self.settings.compiler.runtime != 'dynamic':
@@ -89,6 +87,11 @@ class MTConnectAgentConan(ConanFile):
     def config_options(self):
         if is_msvc(self):
             self.options.rm_safe("fPIC")
+
+    def set_version(self):
+        if not self.version:
+            self.version = load(self, os.path.join(self.recipe_folder, "agent_version.txt")).splitlines()[0].strip()
+            print(f"Building MTConnect Version {self.version}")
 
     def tool_requires_version(self, package, version):
         self.output.info(f"Checking version of {package} > {version}")

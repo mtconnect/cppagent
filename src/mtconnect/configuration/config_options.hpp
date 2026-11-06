@@ -110,6 +110,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(MqttMaxTopicDepth);
     DECLARE_CONFIGURATION(MqttLastWillTopic);
     DECLARE_CONFIGURATION(MqttXPath);
+    DECLARE_CONFIGURATION(MqttBrokerSecurity);
     DECLARE_CONFIGURATION(ObservationTopicPrefix);
     DECLARE_CONFIGURATION(DeviceTopicPrefix);
     DECLARE_CONFIGURATION(AssetTopicPrefix);
@@ -132,6 +133,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(Path);
     DECLARE_CONFIGURATION(PollingInterval);
     DECLARE_CONFIGURATION(PreserveUUID);
+    DECLARE_CONFIGURATION(DisconnectRemovesAllAssets);
     DECLARE_CONFIGURATION(Protocol);
     DECLARE_CONFIGURATION(RealTime);
     DECLARE_CONFIGURATION(ReconnectInterval);

@@ -270,6 +270,44 @@ MqttService {
 
 Additional message mapping rules may be needed depending on your topic structure and payload format.
 
+### Embedded MQTT Broker Adapter
+
+The agent can also act as the MQTT broker itself (`Protocol = mqtt_broker`). Devices connect and publish directly to the agent; every publication is forwarded to any other subscribers, and publications matching `Topics` are ingested with the same topic and payload mapping as the MQTT client adapter (`Protocol = mqtt`).
+
+```
+Adapters {
+  Cell {
+    Protocol = mqtt_broker
+    Device = Mill
+    Topics = Mill/#
+    MqttHost = 0.0.0.0          # bind address, default 0.0.0.0
+    MqttPort = 8883             # default 1883, or 8883 with TLS
+    MqttTls = true
+    TlsCertificateChain = server.crt
+    TlsPrivateKey = server.key
+    MqttUserName = device
+    MqttPassword = secret
+  }
+}
+```
+
+* Listener, transport, and credential settings (`MqttHost`, `MqttPort`, `MqttTls`, `MqttWs`, `MqttUserName`, `MqttPassword`, `MqttBrokerSecurity`) are only read from the adapter block, so they do not conflict with the MQTT sink settings. TLS certificate settings fall back to the top level values.
+* `TlsVerifyClientCertificate = true` with `TlsClientCAs` rejects TLS clients without a valid client certificate. `TlsCertificatePassword` and `TlsDHKey` are optional.
+* `MqttBrokerSecurity` is the path to an mqtt_cpp broker security JSON file for multiple users, salted `sha256` passwords, groups, and per-topic publish/subscribe ACLs. It replaces `MqttUserName`/`MqttPassword`. For example:
+
+  ```
+  {
+    "authentication": [
+      { "name": "device", "method": "sha256", "salt": "abc", "digest": "<sha256(salt + password) in hex>" },
+      { "name": "dashboard", "method": "plain_password", "password": "viewer" }
+    ],
+    "authorization": [
+      { "topic": "Mill/#", "allow": { "pub": ["device"], "sub": ["device", "dashboard"] } }
+    ]
+  }
+  ```
+* With neither credentials nor a security file, clients connect anonymously and a warning is logged.
+
 ---
 
 ## Ruby Extensions
@@ -404,6 +442,12 @@ This section provides an overview of all the necessary configurable parameters.
   understand the internal workings of the agent.
 
   _Default_: 1000
+
+* `DisconnectRemovesAllAssets` - When an adapter disconnects, remove all assets for the
+  device it is the primary adapter for (the adapter's `Device`). Assets of devices listed in
+  `AdditionalDevices` are not removed. This can be overridden on a per adapter basis.
+
+  _Default_: false
 
 * `IgnoreTimestamps` - Overwrite timestamps with the agent time. This will correct
   clock drift but will not give as accurate relative time since it will not take into

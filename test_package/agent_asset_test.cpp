@@ -1164,3 +1164,46 @@ TEST_F(AgentAssetTest, should_return_many_assets_by_id_with_removed_query)
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 50);
   }
 }
+
+TEST_F(AgentAssetTest, should_remove_all_device_assets_when_primary_adapter_disconnects)
+{
+  addAdapter({{configuration::DisconnectRemovesAllAssets, true}});
+  auto agent = m_agentTestHelper->getAgent();
+  const auto& storage = agent->getAssetStorage();
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P1|FakeAsset|<FakeAsset assetId='P1'>TEST 1</FakeAsset>");
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P2|FakeAsset|<FakeAsset assetId='P2'>TEST 2</FakeAsset>");
+  ASSERT_EQ((unsigned int)2, storage->getCount());
+
+  m_agentTestHelper->m_adapter->disconnected();
+
+  ASSERT_EQ((unsigned int)0, storage->getCount());
+  ASSERT_EQ((unsigned int)2, storage->getCount(false));
+
+  {
+    PARSE_XML_RESPONSE("/asset");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "0");
+  }
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "P2");
+  }
+}
+
+TEST_F(AgentAssetTest, should_keep_assets_when_adapter_disconnects_by_default)
+{
+  addAdapter();
+  auto agent = m_agentTestHelper->getAgent();
+  const auto& storage = agent->getAssetStorage();
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P1|FakeAsset|<FakeAsset assetId='P1'>TEST 1</FakeAsset>");
+  ASSERT_EQ((unsigned int)1, storage->getCount());
+
+  m_agentTestHelper->m_adapter->disconnected();
+
+  ASSERT_EQ((unsigned int)1, storage->getCount());
+}

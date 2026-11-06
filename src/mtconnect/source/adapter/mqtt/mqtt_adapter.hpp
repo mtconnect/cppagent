@@ -80,11 +80,10 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     /// @brief subcribe to topics
     void subscribeToTopics();
 
-  protected:
     /// @brief load all topics
     /// @param ptree the property tree coming from configuration parser
     /// @param options configation options
-    void loadTopics(const boost::property_tree::ptree& tree, ConfigOptions& options);
+    static void loadTopics(const boost::property_tree::ptree& tree, ConfigOptions& options);
 
   protected:
     boost::asio::io_context& m_ioContext;

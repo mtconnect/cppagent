@@ -17,6 +17,8 @@
 
 #include "mtconnect/printer/html_printer.hpp"
 
+#include <boost/beast/core/detail/base64.hpp>
+
 #include <fstream>
 #include <iterator>
 
@@ -65,10 +67,20 @@ namespace mtconnect::printer {
     if (!m_loaded)
       return content;
 
-    // Single allocation and copy: prefix + content + suffix
+    // The document is base64 encoded so nothing in it can end the script element it is placed in.
+    // Extended assets keep their raw XML, including CDATA sections, so the document can contain
+    // any text, such as </script>. The base64 alphabet has no markup characters.
+    namespace base64 = boost::beast::detail::base64;
+    auto encodedSize = base64::encoded_size(content.size());
+
+    // Single allocation: prefix + encoded content + suffix
     string result;
-    result.reserve(m_prefix.size() + content.size() + m_suffix.size());
-    result.append(m_prefix).append(content).append(m_suffix);
+    result.reserve(m_prefix.size() + encodedSize + m_suffix.size());
+    result.append(m_prefix);
+    auto pos = result.size();
+    result.resize(pos + encodedSize);
+    result.resize(pos + base64::encode(result.data() + pos, content.data(), content.size()));
+    result.append(m_suffix);
     return result;
   }
 
