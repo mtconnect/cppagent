@@ -27,7 +27,15 @@ const DATA_ID = 'mtconnect-data'
 export function embeddedDocument(page = document) {
   const script = page.getElementById(DATA_ID)
   if (!script) throw new Error('The page does not contain an MTConnect document')
-  return { type: script.type, text: script.textContent.trim() }
+  return { type: script.type, text: decodeEmbedded(script.textContent.trim()) }
+}
+
+// The agent base64 encodes the document so it cannot end the script element. A document that starts
+// like XML or JSON is plain text, from a page that was not served through the agent's printer.
+function decodeEmbedded(text) {
+  if (/^[<{[]/.test(text)) return text
+  const bytes = Uint8Array.from(atob(text), c => c.charCodeAt(0))
+  return new TextDecoder().decode(bytes)
 }
 
 // Request a page from the agent and read the document embedded in it. MTConnectError documents

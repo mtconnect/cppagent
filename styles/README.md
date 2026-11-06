@@ -78,7 +78,7 @@ The Agent returns the viewer for a GET of `/probe`, `/current`, `/sample`, `/ass
 | `application/json` or `application/mtconnect+json` | JSON |
 | Any of the above plus `?format=xml` or `?format=json` | The raw document |
 
-The Agent puts the document it would have returned in the page, in `<script id="mtconnect-data">`, and the viewer renders it from there without another request. API clients are not affected. Autorefresh requests the same URL again and renders the document embedded in the new page. The Agent remains a read only source of data: the viewer only sends GET requests and only to its own origin.
+The Agent puts the document it would have returned in the page, in `<script id="mtconnect-data">`, base64 encoded so its content cannot end the script element, and the viewer renders it from there without another request. API clients are not affected. Autorefresh requests the same URL again and renders the document embedded in the new page. The Agent remains a read only source of data: the viewer only sends GET requests and only to its own origin.
 
 ### Using the viewer
 

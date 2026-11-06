@@ -19,6 +19,8 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <boost/beast/core/detail/base64.hpp>
+
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -84,8 +86,8 @@ protected:
   }
 
   /// @brief Check the body is the browser view with a document in place of the placeholder and
-  ///        return that document.
-  string embeddedDocument(const string& body)
+  ///        return that document as it appears in the page.
+  string embeddedContent(const string& body)
   {
     EXPECT_EQ("text/html", m_agentTestHelper->session()->m_mimeType);
     if (body.size() < m_prefix.size() + m_suffix.size() || !body.starts_with(m_prefix) ||
@@ -98,11 +100,21 @@ protected:
     return body.substr(m_prefix.size(), body.size() - m_prefix.size() - m_suffix.size());
   }
 
+  /// @brief Decode the document embedded in the browser view
+  string embeddedDocument(const string& body)
+  {
+    namespace base64 = boost::beast::detail::base64;
+    auto content = embeddedContent(body);
+    EXPECT_EQ(string::npos, content.find('<')) << "Content is not encoded";
+    string decoded(base64::decoded_size(content.size()), '\0');
+    decoded.resize(base64::decode(decoded.data(), content.data(), content.size()).first);
+    return decoded;
+  }
+
   /// @brief Parse the document embedded in the browser view
   xmlDocPtr parseEmbedded(const string& body)
   {
     auto content = embeddedDocument(body);
-    EXPECT_EQ(string::npos, content.find("</script")) << "Content would close the script element";
     return xmlParseMemory(content.c_str(), int32_t(content.size()));
   }
 
@@ -228,6 +240,22 @@ TEST_F(HtmlPrinterTest, should_embed_assets_document_in_browser_view)
     ASSERT_EQ("MTConnectAssets", rootName(doc));
     ASSERT_XML_PATH_EQUAL(doc, "//m:FakeAsset@assetId", "P1");
   }
+}
+
+TEST_F(HtmlPrinterTest, should_not_let_asset_cdata_end_the_script_element)
+{
+  const string closing {"</script><img src=x>"};
+  string body = "<FakeAsset assetId='P1' deviceUuid='LinuxCNC'><Note><![CDATA[" + closing +
+                "]]></Note></FakeAsset>";
+  QueryMap queries {{"type", "FakeAsset"}, {"device", "LinuxCNC"}};
+  m_agentTestHelper->makeRequest(__FILE__, __LINE__, boost::beast::http::verb::put, body, queries,
+                                 "/asset/P1", "text/xml");
+  ASSERT_EQ(status::ok, m_agentTestHelper->session()->m_code);
+
+  const auto& page = request("/assets");
+  ASSERT_EQ(status::ok, m_agentTestHelper->session()->m_code);
+  EXPECT_EQ(string::npos, embeddedContent(page).find("</script"));
+  EXPECT_NE(string::npos, embeddedDocument(page).find(closing)) << "The asset content is unchanged";
 }
 
 TEST_F(HtmlPrinterTest, should_use_format_and_pretty_parameters_for_asset_ids)
