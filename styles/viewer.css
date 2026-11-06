@@ -227,6 +227,7 @@ dialog.mtc-wide pre {
 /* Header and detail subtables scroll inside their row instead of widening the page */
 .mtc-scroll {
   overflow-x: auto;
+  contain: inline-size;
 }
 
 .mtc-scroll > .subtable {
@@ -241,6 +242,130 @@ dialog.mtc-wide pre {
 
 .mtc-scroll th {
   padding: 1px 8px;
+}
+
+/* Long values wrap so the Value column stays on screen. Names stay whole: the Element column because
+   its indent already takes the width, and ids and names because they only break between words. */
+.table > tbody > tr > td {
+  overflow-wrap: anywhere;
+}
+
+.table > tbody > tr > td:first-child,
+.table > tbody > tr > td.mtc-name {
+  overflow-wrap: normal;
+}
+
+/* Long values show a few lines until clicked. The width limit stops one long value claiming the
+   width of the whole table. */
+.mtc-long {
+  display: block;
+  max-width: 24em;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.mtc-long > span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+
+.mtc-long[aria-expanded='true'] > span {
+  display: block;
+}
+
+/* Phones: logo and tabs share a row, and the query form packs into rows instead of a stack */
+@media (max-width: 767px) {
+  nav > .container-fluid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  nav > .container-fluid::before,
+  nav > .container-fluid::after {
+    display: none;
+  }
+
+  /* Bootstrap pulls the header out by 15px here, which clips the logo and lets the tabs cover its
+     registered trademark mark. The whole logo always shows. */
+  .container-fluid > .navbar-header {
+    flex: none;
+    margin: 0;
+  }
+
+  .navbar-brand {
+    padding: 5px 6px;
+  }
+
+  .navbar-nav {
+    display: flex;
+    flex: 1 1 0;
+    margin: 0;
+  }
+
+  .navbar-nav.mtc-links {
+    flex: 1 1 100%;
+    margin: 0;
+  }
+
+  .navbar-nav > li {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  .navbar-nav > li > a {
+    padding: 8px 4px;
+  }
+
+  .navbar-form {
+    flex: 1 1 100%;
+    margin: 0;
+    padding: 6px;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .navbar-form .form-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+  }
+
+  .navbar-form .form-control,
+  .navbar-form .btn {
+    width: auto;
+    margin: 0;
+  }
+
+  .navbar-form .mtc-path {
+    flex: 1 1 100%;
+    width: auto;
+    margin: 0;
+  }
+
+  .navbar-form .mtc-small {
+    flex: 1 1 5em;
+    width: 5em;
+    margin: 0;
+  }
+
+  .navbar-form .mtc-format {
+    margin: 0;
+  }
+
+  /* Six columns do not fit a phone, so the table scrolls sideways instead of crushing them */
+  .table {
+    min-width: 56em;
+  }
 }
 
 /* The copyright line stays visible below the scrolling table */
