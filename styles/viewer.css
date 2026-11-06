@@ -137,26 +137,29 @@ dialog {
   max-width: 60em;
   border: 1px solid #ccc;
   border-radius: 6px;
+  position: fixed;
+  padding: 3em 2em 1.5em;
 }
 
+/* Raw dialog: sized to its content, close button above the text, long lines wrap */
 dialog.mtc-wide {
   width: 90vw;
-  height: 80vh;
+  max-width: 90em;
+  max-height: 85vh;
 }
 
-dialog pre {
-  max-height: 65vh;
-  overflow: auto;
+dialog.mtc-wide[open] {
+  display: flex;
+  flex-direction: column;
 }
 
-dialog {
-  position: fixed;
-  padding: 1.5em 2em 1em;
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.55);
 }
 
 .mtc-close {
   position: absolute;
-  top: 0.25em;
+  top: 0.3em;
   right: 0.5em;
   border: none;
   background: none;
@@ -171,9 +174,37 @@ dialog {
   color: #000;
 }
 
-dialog.mtc-wide pre {
-  margin-top: 0.5em;
+dialog pre {
+  margin: 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 2;
 }
+
+dialog.mtc-wide pre {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1em;
+  border: none;
+  border-radius: 4px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Raw output colors */
+.tok-punct { color: #808080; }
+.tok-tag { color: #4fc1ff; }
+.tok-attr { color: #9cdcfe; }
+.tok-str { color: #ce9178; }
+.tok-num { color: #b5cea8; }
+.tok-lit { color: #569cd6; }
+.tok-key { color: #9cdcfe; }
+.tok-text { color: #dcdcaa; }
+.tok-comment { color: #6a9955; font-style: italic; }
+.tok-decl { color: #c586c0; }
 
 /* Header and detail subtables scroll inside their row instead of widening the page */
 .mtc-scroll {

@@ -142,6 +142,78 @@ function setupAutorefresh() {
   })
 }
 
+// Raw output coloring. Built from spans with textContent so the document is never parsed as HTML.
+const XML_TOKENS =
+  /(<!--[\s\S]*?-->)|(<\?[\s\S]*?\?>)|(<\/?)([\w:.-]+)((?:\s+[\w:.-]+\s*=\s*(?:"[^"]*"|'[^']*'))*)(\s*\/?>)|([^<]+)|(<)/g
+const XML_ATTRS = /(\s+)([\w:.-]+)(\s*=\s*)("[^"]*"|'[^']*')/g
+const JSON_TOKENS =
+  /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|[{}[\],:]/g
+
+function tok(parent, cls, text) {
+  if (!text) return
+  if (!cls) return parent.append(text)
+  const span = document.createElement('span')
+  span.className = 'tok-' + cls
+  span.textContent = text
+  parent.append(span)
+}
+
+function highlightXml(text) {
+  const out = document.createDocumentFragment()
+  let last = 0
+  for (const m of text.matchAll(XML_TOKENS)) {
+    tok(out, null, text.slice(last, m.index))
+    last = m.index + m[0].length
+    if (m[1]) tok(out, 'comment', m[1])
+    else if (m[2]) tok(out, 'decl', m[2])
+    else if (m[4]) {
+      tok(out, 'punct', m[3])
+      tok(out, 'tag', m[4])
+      let end = 0
+      for (const a of m[5].matchAll(XML_ATTRS)) {
+        tok(out, null, a[1])
+        tok(out, 'attr', a[2])
+        tok(out, 'punct', a[3])
+        tok(out, 'str', a[4])
+        end = a.index + a[0].length
+      }
+      tok(out, null, m[5].slice(end))
+      tok(out, 'punct', m[6])
+    } else if (m[7]) tok(out, m[7].trim() ? 'text' : null, m[7])
+    else tok(out, 'punct', m[8])
+  }
+  tok(out, null, text.slice(last))
+  return out
+}
+
+function highlightJson(text) {
+  const out = document.createDocumentFragment()
+  let last = 0
+  for (const m of text.matchAll(JSON_TOKENS)) {
+    tok(out, null, text.slice(last, m.index))
+    last = m.index + m[0].length
+    if (m[1]) {
+      tok(out, m[2] ? 'key' : 'str', m[1])
+      tok(out, 'punct', m[2])
+    } else if (m[3]) tok(out, 'lit', m[3])
+    else if (/^[-\d]/.test(m[0])) tok(out, 'num', m[0])
+    else tok(out, 'punct', m[0])
+  }
+  tok(out, null, text.slice(last))
+  return out
+}
+
+function showRaw(pre, text, format) {
+  const trimmed = text.trimStart()
+  if (format === 'json' || trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    pre.replaceChildren(highlightJson(text))
+  } else if (trimmed.startsWith('<')) {
+    pre.replaceChildren(highlightXml(text))
+  } else {
+    pre.textContent = text
+  }
+}
+
 function setupDialogs() {
   $('help').addEventListener('click', () => $('help-dialog').showModal())
   $('raw').addEventListener('click', async () => {
@@ -149,10 +221,9 @@ function setupDialogs() {
     pre.textContent = 'Loading...'
     $('raw-dialog').showModal()
     try {
-      pre.textContent = await fetchDocument(
-        window.location.pathname + window.location.search,
-        $('format').value
-      )
+      const format = $('format').value
+      const text = await fetchDocument(window.location.pathname + window.location.search, format)
+      showRaw(pre, text, format)
     } catch (err) {
       pre.textContent = err.message
     }
