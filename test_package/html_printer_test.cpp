@@ -24,6 +24,8 @@
 #include <iterator>
 #include <string>
 
+#include <boost/beast/core/detail/base64.hpp>
+
 #include "agent_test_helper.hpp"
 #include "mtconnect/agent.hpp"
 #include "mtconnect/printer/html_printer.hpp"
@@ -83,9 +85,9 @@ protected:
     return m_agentTestHelper->session()->m_body;
   }
 
-  /// @brief Check the body is the browser view with a document in place of the placeholder and
-  ///        return that document.
-  string embeddedDocument(const string& body)
+  /// @brief Check the body is the browser view with base64 text in place of the placeholder and
+  ///        return that text.
+  string embeddedText(const string& body)
   {
     EXPECT_EQ("text/html", m_agentTestHelper->session()->m_mimeType);
     if (body.size() < m_prefix.size() + m_suffix.size() || !body.starts_with(m_prefix) ||
@@ -95,14 +97,32 @@ protected:
       return "";
     }
 
-    return body.substr(m_prefix.size(), body.size() - m_prefix.size() - m_suffix.size());
+    auto text = body.substr(m_prefix.size(), body.size() - m_prefix.size() - m_suffix.size());
+    EXPECT_EQ(string::npos, text.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                                   "abcdefghijklmnopqrstuvwxyz0123456789+/="))
+        << "Embedded content is not base64, it could close the script element:\n"
+        << text;
+    return text;
+  }
+
+  /// @brief Decode the document embedded in the browser view
+  string embeddedDocument(const string& body)
+  {
+    namespace base64 = boost::beast::detail::base64;
+    auto text = embeddedText(body);
+    string doc(base64::decoded_size(text.size()), '\0');
+    auto [written, read] = base64::decode(doc.data(), text.data(), text.size());
+    // decode stops at the padding, so the padding is not counted as read
+    auto unpadded = text.find_last_not_of('=') + 1;
+    EXPECT_EQ(unpadded, read) << "Embedded content is not valid base64";
+    doc.resize(written);
+    return doc;
   }
 
   /// @brief Parse the document embedded in the browser view
   xmlDocPtr parseEmbedded(const string& body)
   {
     auto content = embeddedDocument(body);
-    EXPECT_EQ(string::npos, content.find("</script")) << "Content would close the script element";
     return xmlParseMemory(content.c_str(), int32_t(content.size()));
   }
 
@@ -228,6 +248,38 @@ TEST_F(HtmlPrinterTest, should_embed_assets_document_in_browser_view)
     ASSERT_EQ("MTConnectAssets", rootName(doc));
     ASSERT_XML_PATH_EQUAL(doc, "//m:FakeAsset@assetId", "P1");
   }
+}
+
+TEST_F(HtmlPrinterTest, should_not_let_asset_content_close_the_script_element)
+{
+  // Extended assets keep their raw XML, including CDATA, so markup in an asset must not be able
+  // to end the script element the document is embedded in.
+  string payload = "</script><img src=x onerror=\"window.__pwned=1\">";
+  string body = "<Widget assetId='W1' deviceUuid='LinuxCNC'><Note><![CDATA[" + payload +
+                "]]></Note></Widget>";
+  QueryMap queries {{"type", "Widget"}, {"device", "LinuxCNC"}};
+  m_agentTestHelper->makeRequest(__FILE__, __LINE__, boost::beast::http::verb::put, body, queries,
+                                 "/asset/W1", "text/xml");
+  ASSERT_EQ(status::ok, m_agentTestHelper->session()->m_code);
+
+  auto& page = request("/assets");
+  ASSERT_EQ(status::ok, m_agentTestHelper->session()->m_code);
+
+  // The only script end tags are the ones in the browser view
+  auto count = [](const string& s) {
+    size_t n = 0;
+    for (auto pos = s.find("</script"); pos != string::npos; pos = s.find("</script", pos + 1))
+      n++;
+    return n;
+  };
+  ASSERT_EQ(count(m_prefix) + count(m_suffix), count(page));
+  ASSERT_EQ(string::npos, page.find("onerror"));
+
+  // The asset comes through unchanged once decoded
+  auto doc = parseEmbedded(page);
+  ASSERT_TRUE(doc) << "Embedded document is not XML";
+  XmlDocFreer cleanup(doc);
+  ASSERT_XML_PATH_EQUAL(doc, "//m:Widget/m:Note", payload.c_str());
 }
 
 TEST_F(HtmlPrinterTest, should_use_format_and_pretty_parameters_for_asset_ids)
