@@ -127,7 +127,7 @@ function setupForm() {
     event.preventDefault()
     const query = new URLSearchParams()
     for (const id of ['path', 'from', 'count']) if ($(id).value) query.set(id, $(id).value)
-    const sample = query.has('from') || query.has('count')
+    const sample = tab === 'sample' || query.has('from') || query.has('count')
     const qs = query.toString()
     window.location.assign(prefix + (sample ? '/sample' : '/current') + (qs ? '?' + qs : ''))
   })
