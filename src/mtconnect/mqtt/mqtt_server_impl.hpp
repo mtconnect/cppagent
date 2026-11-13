@@ -212,8 +212,8 @@ namespace mtconnect {
             if (packet_id)
               LOG(debug) << "Server packet_id: " << *packet_id;
 
-            LOG(debug) << "Server topic_name: " << topic_name;
-            LOG(debug) << "Server contents: " << contents;
+            LOG(trace) << "Server topic_name: " << topic_name;
+            LOG(trace) << "Server contents: " << contents;
 
             for (const auto& sub : m_subs)
             {
