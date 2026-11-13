@@ -188,8 +188,8 @@ namespace mtconnect {
                                            mqtt::buffer contents) {
           if (packet_id)
             LOG(debug) << "packet_id: " << *packet_id;
-          LOG(debug) << "topic_name: " << topic_name;
-          LOG(debug) << "contents: " << contents;
+          LOG(trace) << "topic_name: " << topic_name;
+          LOG(trace) << "contents: " << contents;
 
           if (m_running)
           {
