@@ -367,6 +367,38 @@ namespace mtconnect {
       std::list<std::weak_ptr<mb::endpoint_t>> m_connections;
     };
 
+    /// @brief The address to listen on: MqttHost as an IP address, or else the address the host
+    ///        name resolves to. IPv4 is preferred, on Windows localhost often resolves to ::1
+    ///        first and clients connecting to 127.0.0.1 would then be refused.
+    static std::optional<asio::ip::address> resolveBindAddress(const string& host)
+    {
+      boost::system::error_code ec;
+      auto address = asio::ip::make_address(host, ec);
+      if (!ec)
+        return address;
+
+      asio::io_context io;
+      asio::ip::tcp::resolver resolver(io);
+      auto results = resolver.resolve(host, "", ec);
+      if (ec || results.empty())
+      {
+        LOG(error) << "MQTT Broker: Cannot resolve bind address '" << host
+                   << "': " << (ec ? ec.message() : "no addresses"s);
+        return std::nullopt;
+      }
+
+      std::optional<asio::ip::address> result;
+      for (const auto& entry : results)
+      {
+        auto a = entry.endpoint().address();
+        if (a.is_v4())
+          return a;
+        if (!result)
+          result = a;
+      }
+      return result;
+    }
+
     MqttBrokerAdapter::MqttBrokerAdapter(boost::asio::io_context& io,
                                          pipeline::PipelineContextPtr pipelineContext,
                                          const ConfigOptions& options,
@@ -479,17 +511,13 @@ namespace mtconnect {
 
       m_pipeline.start();
 
-      boost::system::error_code ec;
-      auto address = asio::ip::make_address(m_host, ec);
-      if (ec)
-      {
-        LOG(error) << "MQTT Broker: Invalid bind address '" << m_host << "': " << ec.message();
+      auto address = resolveBindAddress(m_host);
+      if (!address)
         return false;
-      }
 
       try
       {
-        m_broker->start(address, static_cast<uint16_t>(m_port));
+        m_broker->start(*address, static_cast<uint16_t>(m_port));
       }
       catch (std::exception& e)
       {
