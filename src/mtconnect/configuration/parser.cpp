@@ -135,7 +135,11 @@ namespace mtconnect {
         using spirit::ascii::char_;
 
         m_name %= lexeme[+(char_ - (space | char_("=\\{}") | eol))];
-        m_line %= no_skip[+(char_ - (char_("}#") | eol))];
+        // A # only starts a comment at the start of a value or after a blank, so a value can
+        // contain one, eg. the MQTT topic filter Mill/#. Blanks are kept when more of the value
+        // follows them.
+        m_word = (char_ - (blank | char_("}#") | eol)) >> *(char_ - (blank | char_('}') | eol));
+        m_line %= no_skip[m_word >> *hold[+blank >> m_word]];
         m_string %= omit[char_("\"'")[_a = _1]] >> no_skip[*(char_ - char_(_a))] >> lit(_a);
         m_value %= *blank > (m_string | m_line);
         m_property = (m_name >> "=" > m_value > (eol | &char_("}#")))[property(_val, _1, _2)];
@@ -163,6 +167,7 @@ namespace mtconnect {
 
     protected:
       qi::rule<It, string(), Skipper> m_name;
+      qi::rule<It, string()> m_word;
       qi::rule<It, string(), Skipper> m_line;
       qi::rule<It, string(), Skipper, qi::locals<char>> m_string;
       qi::rule<It, string(), Skipper> m_value;

@@ -176,7 +176,7 @@ TEST_F(TopicMappingTest, should_map_json_object_to_json_message)
   ASSERT_TRUE(res);
   ASSERT_TRUE(dynamic_pointer_cast<JsonMessage>(res));
   ASSERT_FALSE(dynamic_pointer_cast<DataMessage>(res));
-  // The default device is attached; topic is not resolved for JSON messages
+  // The device is the one named in the topic, the default here; no data item is resolved
   ASSERT_EQ(dev, res->m_device.lock());
   ASSERT_FALSE(res->m_dataItem);
 }
@@ -280,4 +280,51 @@ TEST_F(TopicMappingTest, should_handle_message_without_topic)
   ASSERT_TRUE(res);
   ASSERT_TRUE(dynamic_pointer_cast<DataMessage>(res));
   ASSERT_FALSE(res->m_dataItem);
+}
+
+/// @test pretty-printed JSON, starting with whitespace, is still a JsonMessage
+TEST_F(TopicMappingTest, should_map_json_with_leading_whitespace_to_json_message)
+{
+  auto mapper = makeMapper();
+  for (const auto& body : {"\n{\n  \"a\": 1\n}\n"s, " [{\"a\":1}]"s, "\r\n\t{\"a\":1}"s})
+  {
+    auto res = map(mapper, body, "topic");
+    ASSERT_TRUE(res);
+    ASSERT_TRUE(dynamic_pointer_cast<JsonMessage>(res)) << body;
+  }
+}
+
+/// @test a UTF-8 byte order mark is removed and the body mapped as JSON
+TEST_F(TopicMappingTest, should_strip_byte_order_mark_from_json)
+{
+  auto mapper = makeMapper();
+  auto res = map(mapper, "\xEF\xBB\xBF{\"a\":1}", "topic");
+  ASSERT_TRUE(res);
+  ASSERT_TRUE(dynamic_pointer_cast<JsonMessage>(res));
+  ASSERT_EQ("{\"a\":1}", res->getValue<string>());
+}
+
+/// @test JSON goes to the device named in the topic, not the default device
+TEST_F(TopicMappingTest, should_route_json_to_the_device_in_the_topic)
+{
+  makeDevice("Device", {{"id", "mill"s}, {"name", "mill"s}, {"uuid", "mill"s}});
+  auto lathe = makeDevice("Device", {{"id", "lathe"s}, {"name", "lathe"s}, {"uuid", "lathe"s}});
+  auto mapper = makeMapper("mill");
+
+  auto res = map(mapper, R"({"a":"ACTIVE"})", "lathe/data");
+  ASSERT_TRUE(res);
+  ASSERT_TRUE(dynamic_pointer_cast<JsonMessage>(res));
+  ASSERT_EQ(lathe, res->m_device.lock());
+}
+
+/// @test JSON whose topic names no device goes to the default device
+TEST_F(TopicMappingTest, should_route_json_to_the_default_device_without_one_in_the_topic)
+{
+  auto mill = makeDevice("Device", {{"id", "mill"s}, {"name", "mill"s}, {"uuid", "mill"s}});
+  makeDevice("Device", {{"id", "lathe"s}, {"name", "lathe"s}, {"uuid", "lathe"s}});
+  auto mapper = makeMapper("mill");
+
+  auto res = map(mapper, R"({"a":"ACTIVE"})", "plant/data");
+  ASSERT_TRUE(res);
+  ASSERT_EQ(mill, res->m_device.lock());
 }

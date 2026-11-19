@@ -280,7 +280,7 @@ Adapters {
     Protocol = mqtt_broker
     Device = Mill
     Topics = Mill/#
-    MqttHost = 0.0.0.0          # bind address, default 0.0.0.0
+    MqttHost = 0.0.0.0          # bind address or host name, default 0.0.0.0
     MqttPort = 8883             # default 1883, or 8883 with TLS
     MqttTls = true
     TlsCertificateChain = server.crt
@@ -291,6 +291,9 @@ Adapters {
 }
 ```
 
+* `MqttHost` may be a host name such as `localhost`; it is resolved when the broker starts, preferring an IPv4 address.
+* A `#` in a value, as in `Topics = Mill/#`, is part of the value; a comment starts with a `#` at the start of a line or after a space.
+* A JSON payload is ingested for the device named by a segment of its topic (name or uuid), eg. `Lathe/data`, and otherwise for the adapter's `Device`. Device keys inside the JSON still take precedence.
 * Listener, transport, and credential settings (`MqttHost`, `MqttPort`, `MqttTls`, `MqttWs`, `MqttUserName`, `MqttPassword`, `MqttBrokerSecurity`) are only read from the adapter block, so they do not conflict with the MQTT sink settings. TLS certificate settings fall back to the top level values.
 * `TlsVerifyClientCertificate = true` with `TlsClientCAs` rejects TLS clients without a valid client certificate. `TlsCertificatePassword` and `TlsDHKey` are optional.
 * `MqttBrokerSecurity` is the path to an mqtt_cpp broker security JSON file for multiple users, salted `sha256` passwords, groups, and per-topic publish/subscribe ACLs. It replaces `MqttUserName`/`MqttPassword`. For example:
