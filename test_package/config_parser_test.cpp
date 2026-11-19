@@ -149,3 +149,26 @@ TEST(ConfigParserTest, single_line_block)
   auto mother = tree.get<string>("parents.mother");
   ASSERT_EQ("father", mother);
 }
+
+// A # only starts a comment at the start of a value or after a blank, so MQTT
+// topic filters such as Mill/# can be written without quotes.
+TEST(ConfigParserTest, should_keep_hash_inside_a_value)
+{
+  string cfg = R"DOC(
+Topics = Mill/#
+Wild = Mill/+/# # the comment after it is still a comment
+Hashed = a#b
+block {
+  Topics = Lathe/#
+}
+inline { Topics = Robot/# }
+)DOC";
+
+  auto tree = Parser::parse(cfg);
+
+  ASSERT_EQ("Mill/#", tree.get<string>("Topics"));
+  ASSERT_EQ("Mill/+/#", tree.get<string>("Wild"));
+  ASSERT_EQ("a#b", tree.get<string>("Hashed"));
+  ASSERT_EQ("Lathe/#", tree.get<string>("block.Topics"));
+  ASSERT_EQ("Robot/#", tree.get<string>("inline.Topics"));
+}

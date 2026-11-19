@@ -168,6 +168,18 @@ TEST_F(MqttBrokerAdapterTest, should_ingest_published_observations)
   ASSERT_TRUE(waitForValue("p3", "204"));
 }
 
+// MqttHost may be a host name; localhost must accept clients connecting to 127.0.0.1.
+TEST_F(MqttBrokerAdapterTest, should_bind_to_a_host_name)
+{
+  startBroker({{MqttHost, "localhost"}});
+
+  auto client = MQTT_NS::make_async_client(ioc(), "127.0.0.1", m_adapter->getPort());
+  ASSERT_EQ(MQTT_NS::connect_return_code::accepted, connect(client));
+
+  publish(client, "LinuxCNC/line", "205");
+  ASSERT_TRUE(waitForValue("p3", "205"));
+}
+
 TEST_F(MqttBrokerAdapterTest, should_only_ingest_matching_topics)
 {
   startBroker({{Topics, "LinuxCNC/program"}});

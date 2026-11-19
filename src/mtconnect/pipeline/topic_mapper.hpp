@@ -140,11 +140,34 @@ namespace mtconnect::pipeline {
       return std::make_tuple(device, dataItem);
     }
 
+    /// @brief the first device named, by name or uuid, by a segment of the topic
+    /// @param topic the topic
+    /// @return the device or nullptr if no segment names one
+    DevicePtr findTopicDevice(const std::string& topic)
+    {
+      std::vector<std::string> path;
+      boost::split(path, topic, boost::algorithm::is_any_of("/"));
+      for (const auto& tok : path)
+      {
+        if (tok.empty())
+          continue;
+        if (auto device = m_context->m_contract->findDevice(tok))
+          return device;
+      }
+      return nullptr;
+    }
+
     EntityPtr operator()(entity::EntityPtr&& entity) override
     {
       PipelineMessagePtr result;
       auto& body = entity->getValue<std::string>();
-      auto c = body[0];
+
+      // JSON may be pretty-printed, starting with whitespace, or start with a UTF-8 byte
+      // order mark, which the JSON parser does not accept and is removed.
+      static const std::string bom("\xEF\xBB\xBF");
+      size_t start = body.compare(0, bom.size(), bom) == 0 ? bom.size() : 0;
+      auto first = body.find_first_not_of(" \t\r\n", start);
+      auto c = first == std::string::npos ? '\0' : body[first];
 
       DataItemPtr dataItem;
       DevicePtr device;
@@ -152,7 +175,16 @@ namespace mtconnect::pipeline {
       if (c == '{' || c == '[')
       {
         entity::Properties props {entity->getProperties()};
+        if (start > 0)
+          props["VALUE"] = body.substr(start);
+
+        // A device named in the topic takes precedence over the default device
         device = m_defaultDevice;
+        if (auto topic = entity->maybeGet<std::string>("topic"))
+        {
+          if (auto topicDevice = findTopicDevice(*topic))
+            device = topicDevice;
+        }
         result = std::make_shared<JsonMessage>("JsonMessage", props);
       }
       else
