@@ -115,12 +115,20 @@ jobs:
         token: ${{ secrets.RELEASE_GITHUB_TOKEN }}
         
   build_linux:
-    runs-on: ubuntu-latest
-    name: "Ubuntu Latest, Shared: ${{ matrix.shared }}"
+    runs-on: ${{ matrix.runner }}
+    name: "Ubuntu ${{ matrix.arch }}, Shared: ${{ matrix.shared }}"
     strategy:
       matrix:
         shared: ["True", "False"]
-            
+        arch: ["amd64", "arm64"]
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          # Native arm64 runner for Raspberry Pi (64-bit OS). 22.04 keeps glibc at 2.35
+          # so the package runs on Raspberry Pi OS Bookworm (2.36) and newer.
+          - arch: arm64
+            runner: ubuntu-22.04-arm
+
     steps:
     - name: Install dependencies
       shell: bash
@@ -136,16 +144,16 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.conan2
-        key: ${{ runner.os }}-build-${{ matrix.shared }}-${{ hashFiles('**/conanfile.py') }}
+        key: ${{ runner.os }}-${{ runner.arch }}-build-${{ matrix.shared }}-${{ hashFiles('**/conanfile.py') }}
 
     - name: Install Conan
       uses: turtlebrowser/get-conan@v1.2
-      
+
     - name: Setup Conan
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         conan profile detect -f
-      
+
     - name: Cleanup Prior Build
       if: steps.cache.outputs.cache-hit == 'true'
       continue-on-error: true
@@ -156,7 +164,7 @@ jobs:
       shell: bash
       run: |
         export CTEST_OUTPUT_ON_FAILURE=TRUE
-        conan create . --build=missing -pr conan/profiles/gcc  -o '&:shared=${{ matrix.shared }}' -o '&:with_docs=False' -o '&:cpack=True' -o '&:cpack_name=dist' -o '&:cpack_destination=${{ github.workspace }}'
+        conan create . --build=missing -pr conan/profiles/gcc -o '&:shared=${{ matrix.shared }}' -o '&:with_docs=False' -o '&:cpack=True' -o '&:cpack_name=dist' -o '&:cpack_destination=${{ github.workspace }}'
 
     - name: Clean conan cache
       continue-on-error: true
@@ -194,8 +202,8 @@ jobs:
         package: mtconnect-agent
         package_root: ${{ github.workspace}}/pkgroot
         version: ${{ env.PACKAGE_VERSION }}
-        arch: amd64
-        desc: "MTConnect Agent for Ununtu"
+        arch: ${{ matrix.arch }}
+        desc: "MTConnect Agent for Ubuntu (${{ matrix.arch }})"
         maintainer: Datanomix <support@datanomix.io>
     
     - name: Release
