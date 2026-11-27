@@ -197,14 +197,26 @@ jobs:
     - name: Create Debian Package
       if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.shared == 'False' }}
       id: create_debian_package
-      uses: jiro4989/build-deb-action@v3
-      with:
-        package: mtconnect-agent
-        package_root: ${{ github.workspace}}/pkgroot
-        version: ${{ env.PACKAGE_VERSION }}
-        arch: ${{ matrix.arch }}
-        desc: "MTConnect Agent for Ubuntu (${{ matrix.arch }})"
-        maintainer: Datanomix <support@datanomix.io>
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      # Uses dpkg-deb directly (preinstalled on Ubuntu runners) instead of a Docker-based
+      # action, since those images are amd64-only and fail on the arm64 runner.
+      run: |
+        mkdir -p pkgroot/DEBIAN
+        cat > pkgroot/DEBIAN/control <<EOF
+        Package: mtconnect-agent
+        Version: ${PACKAGE_VERSION}
+        Section: misc
+        Priority: optional
+        Architecture: ${{ matrix.arch }}
+        Installed-Size: $(du -sk --exclude=DEBIAN pkgroot | cut -f1)
+        Maintainer: Datanomix <support@datanomix.io>
+        Description: MTConnect Agent for Ubuntu (${{ matrix.arch }})
+        EOF
+        FILE_NAME="mtconnect-agent_${PACKAGE_VERSION}_${{ matrix.arch }}.deb"
+        dpkg-deb --root-owner-group --build pkgroot "$FILE_NAME"
+        dpkg-deb --info "$FILE_NAME"
+        echo "file_name=$FILE_NAME" >> "$GITHUB_OUTPUT"
     
     - name: Release
       if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.shared == 'False' }}
